@@ -15,6 +15,9 @@ author = 'T. Franzel'
 author_email = 'tfranzel@gmail.com'
 license = 'BSD'
 
+with open('README.rst') as readme:
+    long_description = readme.read()
+
 
 def get_version(package):
     """
@@ -78,6 +81,7 @@ setup(
     url=url,
     license=license,
     description=description,
+    long_description=long_description,
     author=author,
     author_email=author_email,
     packages=get_packages(package),
