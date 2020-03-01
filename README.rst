@@ -206,7 +206,7 @@ globally, and then simply run:
 
 .. _tox: http://tox.readthedocs.org/en/latest/
 
-.. |build-status-image| image:: https://secure.travis-ci.org/tfranzel/drf_spectacular.svg?branch=master
-   :target: http://travis-ci.org/tfranzel/drf_spectacular?branch=master
+.. |build-status-image| image:: https://secure.travis-ci.org/tfranzel/drf-spectacular.svg?branch=master
+   :target: https://travis-ci.org/tfranzel/drf-spectacular?branch=master
 .. |pypi-version| image:: https://img.shields.io/pypi/v/drf-spectacular.svg
    :target: https://pypi.python.org/pypi/drf-spectacular
