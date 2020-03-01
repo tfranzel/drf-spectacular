@@ -1,0 +1,15 @@
+# Test requirements
+pytest-django>=3.8.0
+pytest>=5.3.5
+pytest-cov>=2.8.1
+flake8>=3.7.9
+
+# wheel for PyPI installs
+wheel>=0.34.2
+
+# contrib packages
+djangorestframework-simplejwt>=4.4.0
+django-polymorphic>=2.1.2
+django-rest-polymorphic>=0.1.8
+
+Sphinx>=2.4.3

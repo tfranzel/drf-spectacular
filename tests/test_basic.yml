@@ -1,0 +1,250 @@
+openapi: 3.0.3
+servers:
+- url: http://127.0.0.1:8000
+info:
+  title: ''
+  version: 0.0.0
+  description: ''
+paths:
+  /albums/:
+    get:
+      operationId: albums_list
+      description: ''
+      parameters: []
+      tags:
+      - albums
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Album'
+          description: ''
+    post:
+      operationId: albums_create
+      description: ''
+      parameters: []
+      tags:
+      - albums
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Album'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Album'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Album'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+          description: ''
+  /albums/{id}/:
+    get:
+      operationId: albums_retrieve
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      tags:
+      - albums
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+          description: ''
+    put:
+      operationId: albums_update
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      tags:
+      - albums
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Album'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Album'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Album'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+          description: ''
+    patch:
+      operationId: albums_partial_update
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      tags:
+      - albums
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAlbum'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAlbum'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAlbum'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchedAlbum'
+          description: ''
+    delete:
+      operationId: albums_destroy
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      tags:
+      - albums
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    Album:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        songs:
+          $ref: '#/components/schemas/Song'
+          type: object
+        title:
+          type: string
+          maxLength: 10
+        genre:
+          enum:
+          - POP
+          - ROCK
+          type: string
+        year:
+          type: integer
+        released:
+          type: boolean
+      required:
+      - id
+      - songs
+      - title
+      - genre
+      - year
+      - released
+    Song:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        length:
+          type: integer
+        top10:
+          type: boolean
+          readOnly: true
+      required:
+      - length
+    PatchedAlbum:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        songs:
+          $ref: '#/components/schemas/PatchedSong'
+          type: object
+        title:
+          type: string
+          maxLength: 10
+        genre:
+          enum:
+          - POP
+          - ROCK
+          type: string
+        year:
+          type: integer
+        released:
+          type: boolean
+    PatchedSong:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        length:
+          type: integer
+        top10:
+          type: boolean
+          readOnly: true

@@ -1,0 +1,4 @@
+# Minimum Django and REST framework version
+Django>=2.2
+djangorestframework>=3.10
+uritemplate>=3.0.0

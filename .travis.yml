@@ -1,0 +1,31 @@
+language: python
+
+sudo: false
+
+env:
+    - TOX_ENV=py3-flake8
+    - TOX_ENV=py3-docs
+    - TOX_ENV=py36-django2.2-drf3.10
+    - TOX_ENV=py36-django2.2-drf3.11
+    - TOX_ENV=py36-django3.0-drf3.10
+    - TOX_ENV=py36-django3.0-drf3.11
+    - TOX_ENV=py37-django2.2-drf3.10
+    - TOX_ENV=py37-django2.2-drf3.11
+    - TOX_ENV=py37-django3.0-drf3.10
+    - TOX_ENV=py37-django3.0-drf3.11
+    - TOX_ENV=py38-django2.2-drf3.10
+    - TOX_ENV=py38-django2.2-drf3.11
+    - TOX_ENV=py38-django3.0-drf3.10
+    - TOX_ENV=py38-django3.0-drf3.11
+    - TOX_ENV=py36-djmaster
+    - TOX_ENV=py37-djmaster
+    - TOX_ENV=py38-djmaster
+
+matrix:
+  fast_finish: true
+
+install:
+  - pip install tox
+
+script:
+    - tox -e $TOX_ENV
