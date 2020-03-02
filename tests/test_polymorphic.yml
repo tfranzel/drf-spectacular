@@ -1,0 +1,290 @@
+openapi: 3.0.3
+servers:
+- url: http://127.0.0.1:8000
+info:
+  title: ''
+  version: 0.0.0
+  description: ''
+paths:
+  /persons/:
+    get:
+      operationId: persons_list
+      description: ''
+      parameters: []
+      tags:
+      - persons
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                  - $ref: '#/components/schemas/LegalPerson'
+                  - $ref: '#/components/schemas/NaturalPerson'
+                  discriminator:
+                    propertyName: resourcetype
+          description: ''
+    post:
+      operationId: persons_create
+      description: ''
+      parameters: []
+      tags:
+      - persons
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/LegalPerson'
+              - $ref: '#/components/schemas/NaturalPerson'
+              discriminator:
+                propertyName: resourcetype
+          application/x-www-form-urlencoded:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/LegalPerson'
+              - $ref: '#/components/schemas/NaturalPerson'
+              discriminator:
+                propertyName: resourcetype
+          multipart/form-data:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/LegalPerson'
+              - $ref: '#/components/schemas/NaturalPerson'
+              discriminator:
+                propertyName: resourcetype
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/LegalPerson'
+                - $ref: '#/components/schemas/NaturalPerson'
+                discriminator:
+                  propertyName: resourcetype
+          description: ''
+  /persons/{id}/:
+    get:
+      operationId: persons_retrieve
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this person.
+        schema:
+          type: integer
+      tags:
+      - persons
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/LegalPerson'
+                - $ref: '#/components/schemas/NaturalPerson'
+                discriminator:
+                  propertyName: resourcetype
+          description: ''
+    put:
+      operationId: persons_update
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this person.
+        schema:
+          type: integer
+      tags:
+      - persons
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/LegalPerson'
+              - $ref: '#/components/schemas/NaturalPerson'
+              discriminator:
+                propertyName: resourcetype
+          application/x-www-form-urlencoded:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/LegalPerson'
+              - $ref: '#/components/schemas/NaturalPerson'
+              discriminator:
+                propertyName: resourcetype
+          multipart/form-data:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/LegalPerson'
+              - $ref: '#/components/schemas/NaturalPerson'
+              discriminator:
+                propertyName: resourcetype
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/LegalPerson'
+                - $ref: '#/components/schemas/NaturalPerson'
+                discriminator:
+                  propertyName: resourcetype
+          description: ''
+    patch:
+      operationId: persons_partial_update
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this person.
+        schema:
+          type: integer
+      tags:
+      - persons
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/PatchedLegalPerson'
+              - $ref: '#/components/schemas/PatchedNaturalPerson'
+              discriminator:
+                propertyName: resourcetype
+          application/x-www-form-urlencoded:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/PatchedLegalPerson'
+              - $ref: '#/components/schemas/PatchedNaturalPerson'
+              discriminator:
+                propertyName: resourcetype
+          multipart/form-data:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/PatchedLegalPerson'
+              - $ref: '#/components/schemas/PatchedNaturalPerson'
+              discriminator:
+                propertyName: resourcetype
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/PatchedLegalPerson'
+                - $ref: '#/components/schemas/PatchedNaturalPerson'
+                discriminator:
+                  propertyName: resourcetype
+          description: ''
+    delete:
+      operationId: persons_destroy
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this person.
+        schema:
+          type: integer
+      tags:
+      - persons
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    LegalPerson:
+      type: object
+      properties:
+        company_name:
+          type: string
+          maxLength: 30
+        address:
+          type: string
+          maxLength: 30
+        resourcetype:
+          type: string
+      required:
+      - company_name
+      - address
+    NaturalPerson:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 30
+        last_name:
+          type: string
+          maxLength: 30
+        address:
+          type: string
+          maxLength: 30
+        resourcetype:
+          type: string
+      required:
+      - first_name
+      - last_name
+      - address
+    PatchedLegalPerson:
+      type: object
+      properties:
+        company_name:
+          type: string
+          maxLength: 30
+        address:
+          type: string
+          maxLength: 30
+        resourcetype:
+          type: string
+    PatchedNaturalPerson:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 30
+        last_name:
+          type: string
+          maxLength: 30
+        address:
+          type: string
+          maxLength: 30
+        resourcetype:
+          type: string
