@@ -1,5 +1,6 @@
 import inspect
 import re
+import sys
 import typing
 import warnings
 from collections import OrderedDict
@@ -26,6 +27,10 @@ from drf_spectacular.utils import (
 AUTHENTICATION_SCHEMES = {
     cls.authentication_class: cls for cls in spectacular_settings.SCHEMA_AUTHENTICATION_CLASSES
 }
+
+
+def warn(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 
 class ComponentRegistry:
@@ -245,8 +250,12 @@ class AutoSchema(ViewInspector):
             description = ''
             schema = TYPE_MAPPING[str]
 
-            if model is not None:  # TODO: test this.
-                # Attempt to infer a field description if possible.
+            if not model:
+                warnings.warn(
+                    'WARNING: {} had no queryset attribute. could not estimate type of parameter "{}". '
+                    'defaulting to string.'.format(self.view.__class__, variable)
+                )
+            else:
                 try:
                     model_field = model._meta.get_field(variable)
                 except Exception:
@@ -257,9 +266,13 @@ class AutoSchema(ViewInspector):
                 elif model_field is not None and model_field.primary_key:
                     description = get_pk_description(model, model_field)
 
-                # TODO are there more relevant PK base classes?
-                if isinstance(model_field, models.IntegerField):
+                if isinstance(model_field, models.AutoField) or isinstance(model_field, models.IntegerField):
                     schema = TYPE_MAPPING[int]
+                # TODO robustify for versions missing those fields
+                # if isinstance(model_field, models.SmallAutoField) or isinstance(model_field, models.SmallIntegerField):
+                #     schema = TYPE_MAPPING[int]
+                # if isinstance(model_field, models.BigAutoField) or isinstance(model_field, models.BigIntegerField):
+                #     schema = TYPE_MAPPING[int]
                 elif isinstance(model_field, models.UUIDField):
                     schema = TYPE_MAPPING[UUID]
 

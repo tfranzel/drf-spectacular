@@ -60,9 +60,10 @@ paths:
       - name: id
         in: path
         required: true
-        description: ''
+        description: A UUID string identifying this album.
         schema:
           type: string
+          format: uuid
       tags:
       - albums
       security:
@@ -83,9 +84,10 @@ paths:
       - name: id
         in: path
         required: true
-        description: ''
+        description: A UUID string identifying this album.
         schema:
           type: string
+          format: uuid
       tags:
       - albums
       requestBody:
@@ -117,9 +119,10 @@ paths:
       - name: id
         in: path
         required: true
-        description: ''
+        description: A UUID string identifying this album.
         schema:
           type: string
+          format: uuid
       tags:
       - albums
       requestBody:
@@ -151,9 +154,10 @@ paths:
       - name: id
         in: path
         required: true
-        description: ''
+        description: A UUID string identifying this album.
         schema:
           type: string
+          format: uuid
       tags:
       - albums
       security:
@@ -179,6 +183,7 @@ components:
         id:
           type: string
           format: uuid
+          readOnly: true
         songs:
           $ref: '#/components/schemas/Song'
           type: object
@@ -195,7 +200,6 @@ components:
         released:
           type: boolean
       required:
-      - id
       - songs
       - title
       - genre
@@ -205,7 +209,8 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           readOnly: true
         length:
           type: integer
@@ -220,6 +225,7 @@ components:
         id:
           type: string
           format: uuid
+          readOnly: true
         songs:
           $ref: '#/components/schemas/PatchedSong'
           type: object
@@ -239,7 +245,8 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           readOnly: true
         length:
           type: integer

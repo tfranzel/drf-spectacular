@@ -1,3 +1,4 @@
+import uuid
 from unittest import mock
 
 from django.db import models
@@ -8,7 +9,7 @@ from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 
 
 class Album(models.Model):
-    id = models.UUIDField()
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=10)
     genre = models.CharField(
         choices=(('POP', 'Pop'), ('ROCK', 'Rock')),
@@ -19,6 +20,7 @@ class Album(models.Model):
 
 
 class Song(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     album = models.ForeignKey(Album, on_delete=models.CASCADE)
     length = models.IntegerField()
 
@@ -44,6 +46,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 
 class AlbumModelViewset(viewsets.ModelViewSet):
     serializer_class = AlbumSerializer
+    queryset = Album.objects.none()
 
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
