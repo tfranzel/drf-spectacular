@@ -54,5 +54,5 @@ def test_basics():
     schema = generator.get_schema(request=None, public=True)
     schema_yml = NoAliasOpenAPIRenderer().render(schema, renderer_context={})
 
-    with open('tests/test_basic.yml', 'rb') as fh:
-        assert schema_yml == fh.read()
+    with open('tests/test_basic.yml') as fh:
+        assert schema_yml.decode() == fh.read()
