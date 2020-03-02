@@ -78,10 +78,10 @@ def extend_schema(
 
     def decorator(f):
         class ExtendedSchema(api_settings.DEFAULT_SCHEMA_CLASS):
-            def get_operation(self, path, method):
+            def get_operation(self, path, method, registry):
                 if operation:
                     return operation
-                return super().get_operation(path, method)
+                return super().get_operation(path, method, registry)
 
             def get_operation_id(self, path, method):
                 if operation_id:

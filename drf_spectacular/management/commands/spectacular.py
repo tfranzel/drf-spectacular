@@ -3,6 +3,7 @@ from django.utils.module_loading import import_string
 from rest_framework import renderers
 
 from drf_spectacular.openapi import SchemaGenerator
+from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 
 
 class Command(BaseCommand):
@@ -41,7 +42,7 @@ class Command(BaseCommand):
 
     def get_renderer(self, format):
         renderer_cls = {
-            'openapi': renderers.OpenAPIRenderer,
+            'openapi': NoAliasOpenAPIRenderer,
             'openapi-json': renderers.JSONOpenAPIRenderer,
         }[format]
         return renderer_cls()
