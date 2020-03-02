@@ -7,7 +7,7 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 
 from drf_spectacular.contrib.rest_polymorphic import PolymorphicAutoSchema
 from drf_spectacular.openapi import SchemaGenerator
-from tests import dump
+from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 
 
 class Person(PolymorphicModel):
@@ -53,6 +53,7 @@ def test_polymorphic():
     router.register('persons', PersonViewSet, basename="person")
     generator = SchemaGenerator(patterns=router.urls)
     schema = generator.get_schema(request=None, public=True)
+    schema_yml = NoAliasOpenAPIRenderer().render(schema, renderer_context={})
 
     with open('tests/test_polymorphic.yml', 'rb') as fh:
-        assert dump(schema) == fh.read()
+        assert schema_yml == fh.read()

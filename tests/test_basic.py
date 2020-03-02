@@ -4,7 +4,7 @@ from django.db import models
 from rest_framework import serializers, viewsets, routers
 
 from drf_spectacular.openapi import SchemaGenerator, AutoSchema
-from tests import dump
+from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 
 
 class Album(models.Model):
@@ -52,6 +52,7 @@ def test_basics():
     router.register('albums', AlbumModelViewset, basename="album")
     generator = SchemaGenerator(patterns=router.urls)
     schema = generator.get_schema(request=None, public=True)
+    schema_yml = NoAliasOpenAPIRenderer().render(schema, renderer_context={})
 
     with open('tests/test_basic.yml', 'rb') as fh:
-        assert dump(schema) == fh.read()
+        assert schema_yml == fh.read()
