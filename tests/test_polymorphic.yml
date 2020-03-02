@@ -10,7 +10,6 @@ paths:
     get:
       operationId: persons_list
       description: ''
-      parameters: []
       tags:
       - persons
       security:
@@ -33,7 +32,6 @@ paths:
     post:
       operationId: persons_create
       description: ''
-      parameters: []
       tags:
       - persons
       requestBody:

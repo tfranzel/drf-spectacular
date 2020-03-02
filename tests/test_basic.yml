@@ -10,7 +10,6 @@ paths:
     get:
       operationId: albums_list
       description: ''
-      parameters: []
       tags:
       - albums
       security:
@@ -29,7 +28,6 @@ paths:
     post:
       operationId: albums_create
       description: ''
-      parameters: []
       tags:
       - albums
       requestBody:

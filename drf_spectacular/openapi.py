@@ -139,7 +139,8 @@ class AutoSchema(ViewInspector):
 
         operation['operationId'] = self.get_operation_id(path, method)
         operation['description'] = self.get_description(path, method)
-        operation['parameters'] = sorted(
+
+        parameters = sorted(
             [
                 *self._get_path_parameters(path, method),
                 *self._get_filter_parameters(path, method),
@@ -148,6 +149,8 @@ class AutoSchema(ViewInspector):
             ],
             key=lambda p: p.get('name')
         )
+        if parameters:
+            operation['parameters'] = parameters
 
         tags = self.get_tags(path, method)
         if tags:
