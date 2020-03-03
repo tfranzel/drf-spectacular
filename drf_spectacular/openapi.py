@@ -13,7 +13,7 @@ import uritemplate
 from django.core import validators
 from django.db import models
 from django.utils.encoding import force_str
-from rest_framework import exceptions, permissions, renderers, serializers
+from rest_framework import exceptions, permissions, renderers, serializers, views, viewsets
 from rest_framework.fields import _UnvalidatedField, empty
 from rest_framework.schemas.generators import BaseSchemaGenerator
 from rest_framework.schemas.inspectors import ViewInspector
@@ -60,16 +60,12 @@ class SchemaGenerator(BaseSchemaGenerator):
         """
         view = super().create_view(callback, method, request)
 
-        # circumvent import issues by locally importing
-        from rest_framework.views import APIView
-        from rest_framework.viewsets import GenericViewSet, ViewSet
-
-        if isinstance(view, GenericViewSet) or isinstance(view, ViewSet):
+        if isinstance(view, viewsets.GenericViewSet) or isinstance(view, viewsets.ViewSet):
             action = getattr(view, view.action)
-        elif isinstance(view, APIView):
+        elif isinstance(view, views.APIView):
             action = getattr(view, method.lower())
         else:
-            raise RuntimeError('not supported subclass. Must inherit from APIView')
+            raise RuntimeError('not supported subclass. Must inherit from APIView or subclass of APIView')
 
         if hasattr(action, 'kwargs') and 'schema' in action.kwargs:
             # might already be properly set in case of @action but overwrite for all cases
@@ -87,7 +83,6 @@ class SchemaGenerator(BaseSchemaGenerator):
             return None
 
         # Iterate endpoints generating per method path operations.
-        paths = {}
         for path, method, view in view_endpoints:
             if not self.has_view_permissions(path, method, view):
                 continue
@@ -127,8 +122,6 @@ class SchemaGenerator(BaseSchemaGenerator):
 
 
 class AutoSchema(ViewInspector):
-    request_media_types = []
-    response_media_types = []
 
     method_mapping = {
         'get': 'retrieve',
@@ -152,7 +145,7 @@ class AutoSchema(ViewInspector):
                 *self._get_pagination_parameters(path, method),
                 *self.get_extra_parameters(path, method),
             ],
-            key=lambda p: p.get('name')
+            key=lambda parameter: parameter.get('name')
         )
         if parameters:
             operation['parameters'] = parameters
@@ -168,8 +161,6 @@ class AutoSchema(ViewInspector):
         auth = self.get_auth(path, method)
         if auth:
             operation['security'] = auth
-
-        self.response_media_types = self.map_renderers(path, method)
 
         operation['responses'] = self._get_response_bodies(path, method)
 
@@ -630,8 +621,6 @@ class AutoSchema(ViewInspector):
         if method not in ('PUT', 'PATCH', 'POST'):
             return {}
 
-        request_media_types = self.map_parsers(path, method)
-
         serializer = self._get_serializer(path, method)
 
         if isinstance(serializer, serializers.Serializer):
@@ -652,7 +641,9 @@ class AutoSchema(ViewInspector):
             return {}
 
         return {
-            'content': {mt: {'schema': schema} for mt in request_media_types}
+            'content': {
+                request_media_types: {'schema': schema} for request_media_types in self.map_parsers(path, method)
+            }
         }
 
     def _get_response_bodies(self, path, method):
@@ -726,7 +717,7 @@ class AutoSchema(ViewInspector):
 
         return {
             'content': {
-                mt: {'schema': schema} for mt in self.response_media_types
+                mt: {'schema': schema} for mt in self.map_renderers(path, method)
             },
             # Description is required by spec, but descriptions for each response code don't really
             # fit into our model. Description is therefore put into the higher level slots.
