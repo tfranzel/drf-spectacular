@@ -1,0 +1,63 @@
+openapi: 3.0.3
+servers:
+- url: http://127.0.0.1:8000
+info:
+  title: ''
+  version: 0.0.0
+  description: ''
+paths:
+  /nodes/{id}/:
+    get:
+      operationId: nodes_retrieve
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A UUID string identifying this tree node.
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - nodes
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+          description: ''
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    TreeNode:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        label:
+          type: string
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+      required:
+      - label
+      - children

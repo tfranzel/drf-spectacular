@@ -357,12 +357,17 @@ class AutoSchema(ViewInspector):
                 'type': 'array',
                 'items': self._map_field(method, field.child_relation)
             }
+
         if isinstance(field, serializers.PrimaryKeyRelatedField):
             model = getattr(field.queryset, 'model', None)
             if model is not None:
                 model_field = model._meta.pk
                 if isinstance(model_field, models.AutoField):
                     return {'type': 'integer'}
+                elif isinstance(model_field, models.UUIDField):
+                    return {'type': 'string', 'format': 'uuid'}
+                else:
+                    warnings.warn('TODO PrimaryKeyRelatedField was not mapped properly')
 
         # ChoiceFields (single and multiple).
         # Q:
@@ -406,9 +411,6 @@ class AutoSchema(ViewInspector):
                 'format': 'date-time',
             }
 
-        # "Formats such as "email", "uuid", and so on, MAY be used even though undefined by this specification."
-        # see: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#data-types
-        # see also: https://swagger.io/docs/specification/data-models/data-types/#string
         if isinstance(field, serializers.EmailField):
             return {
                 'type': 'string',
@@ -512,6 +514,7 @@ class AutoSchema(ViewInspector):
                 schema['default'] = field.default
             if field.help_text:
                 schema['description'] = str(field.help_text)
+
             self._map_field_validators(field, schema)
 
             properties[field.field_name] = schema
