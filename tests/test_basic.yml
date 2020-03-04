@@ -27,7 +27,10 @@ paths:
           description: ''
     post:
       operationId: albums_create
-      description: ''
+      description: 'Special documentation about creating albums
+
+
+        There is even more info here'
       tags:
       - albums
       requestBody:
@@ -185,11 +188,13 @@ components:
           format: uuid
           readOnly: true
         songs:
-          $ref: '#/components/schemas/Song'
-          type: object
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+          readOnly: true
         title:
           type: string
-          maxLength: 10
+          maxLength: 100
         genre:
           enum:
           - POP
@@ -200,7 +205,6 @@ components:
         released:
           type: boolean
       required:
-      - songs
       - title
       - genre
       - year
@@ -212,12 +216,16 @@ components:
           type: string
           format: uuid
           readOnly: true
+        title:
+          type: string
+          maxLength: 100
         length:
           type: integer
         top10:
           type: boolean
           readOnly: true
       required:
+      - title
       - length
     PatchedAlbum:
       type: object
@@ -227,11 +235,13 @@ components:
           format: uuid
           readOnly: true
         songs:
-          $ref: '#/components/schemas/PatchedSong'
-          type: object
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+          readOnly: true
         title:
           type: string
-          maxLength: 10
+          maxLength: 100
         genre:
           enum:
           - POP
@@ -241,15 +251,3 @@ components:
           type: integer
         released:
           type: boolean
-    PatchedSong:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        length:
-          type: integer
-        top10:
-          type: boolean
-          readOnly: true

@@ -10,7 +10,7 @@ from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 
 class Album(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=10)
+    title = models.CharField(max_length=100)
     genre = models.CharField(
         choices=(('POP', 'Pop'), ('ROCK', 'Rock')),
         max_length=10
@@ -22,6 +22,8 @@ class Album(models.Model):
 class Song(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     album = models.ForeignKey(Album, on_delete=models.CASCADE)
+
+    title = models.CharField(max_length=100)
     length = models.IntegerField()
 
 
@@ -29,7 +31,7 @@ class SongSerializer(serializers.ModelSerializer):
     top10 = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ['id', 'length', 'top10']
+        fields = ['id', 'title', 'length', 'top10']
         model = Song
 
     def get_top10(self) -> bool:
@@ -37,7 +39,7 @@ class SongSerializer(serializers.ModelSerializer):
 
 
 class AlbumSerializer(serializers.ModelSerializer):
-    songs = SongSerializer()
+    songs = SongSerializer(many=True, read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -47,6 +49,14 @@ class AlbumSerializer(serializers.ModelSerializer):
 class AlbumModelViewset(viewsets.ModelViewSet):
     serializer_class = AlbumSerializer
     queryset = Album.objects.none()
+
+    def create(self, request, *args, **kwargs):
+        """
+        Special documentation about creating albums
+
+        There is even more info here
+        """
+        return super().create(request, *args, **kwargs)
 
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
