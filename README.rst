@@ -39,6 +39,10 @@ Incomplete features (in progress):
     - optional separate component versions for PATCH serializers (no required fields)
     - optional input/output serializer component split
 
+License
+-------
+
+Provided by `T. Franzel <https://github.com/tfranzel>`_, Cashlink Technologies GmbH. `Licensed under 3-Clause BSD <https://github.com/tfranzel/drf-spectacular/blob/master/LICENSE>`_.
 
 Requirements
 ------------
