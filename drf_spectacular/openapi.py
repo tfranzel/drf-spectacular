@@ -483,6 +483,30 @@ class AutoSchema(ViewInspector):
             content['minimum'] = field.min_value
 
     def _map_serializer(self, method, serializer, nested=False):
+        if isinstance(serializer, PolymorphicResponse):
+            return self._map_meta_serializer(method, serializer, nested=False)
+        else:
+            return self._map_concrete_serializer(method, serializer, nested=False)
+
+    def _map_meta_serializer(self, method, serializer, nested):
+        assert isinstance(serializer, PolymorphicResponse)
+
+        poly_list = []
+
+        for _, sub_serializer in serializer.model_serializer_mapping.items():
+            sub_schema = self.resolve_serializer(method, sub_serializer, nested)
+            sub_serializer_name = self._get_serializer_name(method, sub_serializer, nested)
+            poly_list.append((sub_serializer_name, sub_schema))
+
+        return {
+            'oneOf': [ref for _, ref in poly_list],
+            'discriminator': {
+                'propertyName': serializer.resource_type_field_name,
+                'mapping': {name: ref['$ref'] for name, ref in poly_list}
+            }
+        }
+
+    def _map_concrete_serializer(self, method, serializer, nested):
         required = []
         properties = {}
 
@@ -520,7 +544,6 @@ class AutoSchema(ViewInspector):
 
     def _map_field_validators(self, field, schema):
         for v in field.validators:
-            # "Formats such as "email", "uuid", and so on, MAY be used even though undefined by this specification."
             # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#data-types
             if isinstance(v, validators.EmailValidator):
                 schema['format'] = 'email'
@@ -605,6 +628,7 @@ class AutoSchema(ViewInspector):
             return None
 
     def _get_request_body(self, path, method):
+        # only unsafe methods can have a body
         if method not in ('PUT', 'PATCH', 'POST'):
             return {}
 
@@ -709,6 +733,9 @@ class AutoSchema(ViewInspector):
         }
 
     def _get_serializer_name(self, method, serializer, nested):
+        if isinstance(serializer, PolymorphicResponse):
+            return serializer.component_name
+
         name = serializer.__class__.__name__
 
         if name.endswith('Serializer'):
@@ -737,9 +764,11 @@ class AutoSchema(ViewInspector):
             self.registry.schemas[name] = None
 
             schema = self._map_serializer(method, serializer, nested)
-            # empty serializer - usually a transactional serializer.
-            # no need to put it explicitly in the spec
-            if not schema['properties']:
+            # 3 cases:
+            #   1. polymorphic container component -> use
+            #   2. concrete component with properties -> use
+            #   3. concrete component without properties -> prob. transactional so discard
+            if 'oneOf' not in schema and not schema['properties']:
                 del self.registry.schemas[name]
                 return {}
             else:

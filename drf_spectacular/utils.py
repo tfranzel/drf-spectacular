@@ -6,7 +6,8 @@ from drf_spectacular.types import resolve_basic_type
 
 
 class PolymorphicResponse:
-    def __init__(self, serializers, resource_type_field_name):
+    def __init__(self, component_name, serializers, resource_type_field_name):
+        self.component_name = component_name
         self.serializers = serializers
         self.resource_type_field_name = resource_type_field_name
 
