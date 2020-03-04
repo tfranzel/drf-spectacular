@@ -18,5 +18,7 @@ include/
 lib/
 local/
 
+generated_clients/
+
 !.gitignore
 !.travis.yml
