@@ -2,12 +2,10 @@ import inspect
 import re
 import sys
 import typing
-import warnings
 from collections import OrderedDict
 from decimal import Decimal
 from operator import attrgetter
 from urllib.parse import urljoin
-from uuid import UUID
 
 import uritemplate
 from django.core import validators
@@ -20,17 +18,20 @@ from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
-from drf_spectacular.utils import (
-    TYPE_MAPPING, PolymorphicResponse
-)
+from drf_spectacular.types import OpenApiTypes, resolve_basic_type, PYTHON_TYPE_MAPPING
+from drf_spectacular.utils import PolymorphicResponse
 
 AUTHENTICATION_SCHEMES = {
     cls.authentication_class: cls for cls in spectacular_settings.SCHEMA_AUTHENTICATION_CLASSES
 }
 
 
-def warn(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+def warn(msg):
+    print(f'WARNING: {msg}', file=sys.stderr)
+
+
+def anyisinstance(obj, type_list):
+    return any([isinstance(obj, t) for t in type_list])
 
 
 class ComponentRegistry:
@@ -236,45 +237,31 @@ class AutoSchema(ViewInspector):
         """
         model = getattr(getattr(self.view, 'queryset', None), 'model', None)
         parameters = []
+        schema = resolve_basic_type(OpenApiTypes.STR)
+        description = ''
 
         for variable in uritemplate.variables(path):
-            description = ''
-            schema = TYPE_MAPPING[str]
-
             if not model:
-                warnings.warn(
-                    'WARNING: {} had no queryset attribute. could not estimate type of parameter "{}". '
-                    'defaulting to string.'.format(self.view.__class__, variable)
-                )
+                warn(f'{self.view.__class__} had no queryset attribute. could not estimate type of parameter "{variable}". defaulting to string.')
             else:
                 try:
                     model_field = model._meta.get_field(variable)
+                    schema = self._map_model_field(model_field)
+
+                    if model_field.help_text:
+                        description = force_str(model_field.help_text)
+                    elif model_field.primary_key:
+                        description = get_pk_description(model, model_field)
                 except Exception:
-                    model_field = None
+                    pass
 
-                if model_field is not None and model_field.help_text:
-                    description = force_str(model_field.help_text)
-                elif model_field is not None and model_field.primary_key:
-                    description = get_pk_description(model, model_field)
-
-                if isinstance(model_field, models.AutoField) or isinstance(model_field, models.IntegerField):
-                    schema = TYPE_MAPPING[int]
-                # TODO robustify for versions missing those fields
-                # if isinstance(model_field, models.SmallAutoField) or isinstance(model_field, models.SmallIntegerField):
-                #     schema = TYPE_MAPPING[int]
-                # if isinstance(model_field, models.BigAutoField) or isinstance(model_field, models.BigIntegerField):
-                #     schema = TYPE_MAPPING[int]
-                elif isinstance(model_field, models.UUIDField):
-                    schema = TYPE_MAPPING[UUID]
-
-            parameter = {
+            parameters.append({
                 "name": variable,
                 "in": "path",
                 "required": True,
                 "description": description,
                 'schema': schema,
-            }
-            parameters.append(parameter)
+            })
 
         return parameters
 
@@ -339,8 +326,20 @@ class AutoSchema(ViewInspector):
             mapping['type'] = type
         return mapping
 
-    def _map_field(self, method, field):
-        # Nested Serializers, `many` or not.
+    def _map_model_field(self, field):
+        if anyisinstance(field, [models.AutoField, models.IntegerField]):
+            return resolve_basic_type(OpenApiTypes.INT)
+        elif anyisinstance(field, [models.SmallAutoField, models.SmallIntegerField]):
+            return resolve_basic_type(OpenApiTypes.INT)
+        elif anyisinstance(field, [models.BigAutoField, models.BigIntegerField]):
+            return resolve_basic_type(OpenApiTypes.INT)
+        elif isinstance(field, models.UUIDField):
+            return resolve_basic_type(OpenApiTypes.UUID)
+        else:
+            warn(f'could not resolve model field "{field}" due to missing mapping')
+            return resolve_basic_type(OpenApiTypes.STR)
+
+    def _map_serializer_field(self, method, field):
         if isinstance(field, serializers.ListSerializer):
             return {
                 'type': 'array',
@@ -355,19 +354,17 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.ManyRelatedField):
             return {
                 'type': 'array',
-                'items': self._map_field(method, field.child_relation)
+                'items': self._map_serializer_field(method, field.child_relation)
             }
 
         if isinstance(field, serializers.PrimaryKeyRelatedField):
             model = getattr(field.queryset, 'model', None)
-            if model is not None:
-                model_field = model._meta.pk
-                if isinstance(model_field, models.AutoField):
-                    return {'type': 'integer'}
-                elif isinstance(model_field, models.UUIDField):
-                    return {'type': 'string', 'format': 'uuid'}
-                else:
-                    warnings.warn('TODO PrimaryKeyRelatedField was not mapped properly')
+
+            if not model:
+                warn(f'unable to map model field {field} due to missing model. defaulting to "string"')
+                return resolve_basic_type(OpenApiTypes.STR)
+            else:
+                return self._map_model_field(model._meta.pk)
 
         # ChoiceFields (single and multiple).
         # Q:
@@ -389,7 +386,7 @@ class AutoSchema(ViewInspector):
             }
             # TODO check this
             if not isinstance(field.child, _UnvalidatedField):
-                map_field = self._map_field(method, field.child)
+                map_field = self._map_serializer_field(method, field.child)
                 items = {
                     "type": map_field.get('type')
                 }
@@ -400,42 +397,27 @@ class AutoSchema(ViewInspector):
 
         # DateField and DateTimeField type is string
         if isinstance(field, serializers.DateField):
-            return {
-                'type': 'string',
-                'format': 'date',
-            }
+            return resolve_basic_type(OpenApiTypes.DATE)
 
         if isinstance(field, serializers.DateTimeField):
-            return {
-                'type': 'string',
-                'format': 'date-time',
-            }
+            return resolve_basic_type(OpenApiTypes.DATETIME)
 
         if isinstance(field, serializers.EmailField):
-            return {
-                'type': 'string',
-                'format': 'email'
-            }
+            return resolve_basic_type(OpenApiTypes.EMAIL)
 
         if isinstance(field, serializers.URLField):
-            return {
-                'type': 'string',
-                'format': 'uri'
-            }
+            return resolve_basic_type(OpenApiTypes.URI)
 
         if isinstance(field, serializers.UUIDField):
-            return {
-                'type': 'string',
-                'format': 'uuid'
-            }
+            return resolve_basic_type(OpenApiTypes.UUID)
 
         if isinstance(field, serializers.IPAddressField):
-            content = {
-                'type': 'string',
-            }
-            if field.protocol != 'both':
-                content['format'] = field.protocol
-            return content
+            if 'IPv4' == field.protocol:
+                return resolve_basic_type(OpenApiTypes.IP4)
+            elif 'IPv6' == field.protocol:
+                return resolve_basic_type(OpenApiTypes.IP6)
+            else:
+                return resolve_basic_type(OpenApiTypes.STR)
 
         # DecimalField has multipleOf based on decimal_places
         if isinstance(field, serializers.DecimalField):
@@ -451,16 +433,12 @@ class AutoSchema(ViewInspector):
             return content
 
         if isinstance(field, serializers.FloatField):
-            content = {
-                'type': 'number'
-            }
+            content = resolve_basic_type(OpenApiTypes.FLOAT)
             self._map_min_max(field, content)
             return content
 
         if isinstance(field, serializers.IntegerField):
-            content = {
-                'type': 'integer'
-            }
+            content = resolve_basic_type(OpenApiTypes.INT)
             self._map_min_max(field, content)
             # 2147483647 is max for int32_size, so we use int64 for format
             if int(content.get('maximum', 0)) > 2147483647 or int(content.get('minimum', 0)) > 2147483647:
@@ -468,23 +446,29 @@ class AutoSchema(ViewInspector):
             return content
 
         if isinstance(field, serializers.FileField):
-            return {
-                'type': 'string',
-                'format': 'binary'
-            }
+            return resolve_basic_type(OpenApiTypes.BINARY)
 
         if isinstance(field, serializers.SerializerMethodField):
             method = getattr(field.parent, field.method_name)
             return self._map_type_hint(method)
 
-        # Simplest cases, default to 'string' type:
-        FIELD_CLASS_SCHEMA_TYPE = {
-            serializers.BooleanField: 'boolean',
-            serializers.JSONField: 'object',
-            serializers.DictField: 'object',
-            serializers.HStoreField: 'object',
-        }
-        return {'type': FIELD_CLASS_SCHEMA_TYPE.get(field.__class__, 'string')}
+        if isinstance(field, serializers.BooleanField):
+            return resolve_basic_type(OpenApiTypes.BOOL)
+
+        if anyisinstance(field, [serializers.JSONField, serializers.DictField, serializers.HStoreField]):
+            return resolve_basic_type(OpenApiTypes.OBJECT)
+
+        if isinstance(field, serializers.CharField):
+            return resolve_basic_type(OpenApiTypes.STR)
+
+        # TODO serializer fields
+        # serializers.ReadOnlyField
+        # serializers.CreateOnlyDefault
+        # serializers.RegexField
+
+        warn(f'could not resolve serializer field {field}. defaulting to "string"')
+        return resolve_basic_type(OpenApiTypes.STR)
+
 
     def _map_min_max(self, field, content):
         if field.max_value:
@@ -503,7 +487,7 @@ class AutoSchema(ViewInspector):
             if field.required:
                 required.append(field.field_name)
 
-            schema = self._map_field(method, field)
+            schema = self._map_serializer_field(method, field)
             if field.read_only:
                 schema['readOnly'] = True
             if field.write_only:
@@ -580,11 +564,8 @@ class AutoSchema(ViewInspector):
             else:
                 return {'oneOf': sub_hints}
         else:
-            warnings.warn(
-                'type hint for SerializerMethodField function "{}" is unknown. '
-                'defaulting to string.'.format(method.__name__)
-            )
-            return {'type': 'string'}
+            warn(f'type hint for SerializerMethodField function "{method.__name__}" is unknown. defaulting to string.')
+            return resolve_basic_type(OpenApiTypes.STR)
 
     def _get_paginator(self):
         pagination_class = getattr(self.view, 'pagination_class', None)
@@ -613,7 +594,7 @@ class AutoSchema(ViewInspector):
         try:
             return view.get_serializer()
         except exceptions.APIException:
-            warnings.warn(
+            warn(
                 '{}.get_serializer() raised an exception during '
                 'schema generation. Serializer fields will not be '
                 'generated for {} {}.'.format(view.__class__.__name__, method, path)
@@ -629,9 +610,9 @@ class AutoSchema(ViewInspector):
         if isinstance(serializer, serializers.Serializer):
             schema = self.resolve_serializer(method, serializer)
         else:
-            warnings.warn(
-                'could not resolve request body for {} {}. defaulting to generic '
-                'free-form object. (maybe annotate a Serializer class?)'.format(method, path)
+            warn(
+                f'could not resolve request body for {method} {path}. defaulting to generic '
+                'free-form object. (maybe annotate a Serializer class?)'
             )
             schema = {
                 'type': 'object',
@@ -663,10 +644,7 @@ class AutoSchema(ViewInspector):
                 for code, serializer in response_serializers.items()
             }
         else:
-            warnings.warn(
-                'could not resolve response for {} {}. defaulting '
-                'to generic free-form object.'.format(method, path)
-            )
+            warn(f'could not resolve response for {method} {path}. defaulting to generic free-form object.')
             schema = {
                 'type': 'object',
                 'description': 'Unspecified response body',

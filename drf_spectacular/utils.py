@@ -1,26 +1,8 @@
 import inspect
-import warnings
-from datetime import date, datetime
-from decimal import Decimal
-from uuid import UUID
 
 from rest_framework.settings import api_settings
 
-VALID_TYPES = ['integer', 'number', 'string', 'boolean']
-
-TYPE_MAPPING = {
-    float: {'type': 'number', 'format': 'float'},
-    bool: {'type': 'boolean'},
-    str: {'type': 'string'},
-    bytes: {'type': 'string', 'format': 'binary'},  # or byte?
-    int: {'type': 'integer'},
-    UUID: {'type': 'string', 'format': 'uuid'},
-    Decimal: {'type': 'number', 'format': 'double'},
-    datetime: {'type': 'string', 'format': 'date-time'},
-    date: {'type': 'string', 'format': 'date'},
-    None: {},
-    type(None): {},
-}
+from drf_spectacular.types import resolve_basic_type
 
 
 class PolymorphicResponse:
@@ -31,6 +13,7 @@ class PolymorphicResponse:
 
 class OpenApiSchemaBase:
     """ reusable base class for objects that can be translated to a schema """
+
     def to_schema(self):
         raise NotImplementedError('translation to schema required.')
 
@@ -43,14 +26,12 @@ class QueryParameter(OpenApiSchemaBase):
         self.type = type
 
     def to_schema(self):
-        if self.type not in TYPE_MAPPING:
-            warnings.warn('{} not a mappable type'.format(self.type))
         return {
             'name': self.name,
             'in': 'query',
             'description': self.description,
             'required': self.required,
-            'schema': TYPE_MAPPING.get(self.type)
+            'schema': resolve_basic_type(self.type)
         }
 
 

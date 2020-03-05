@@ -1,0 +1,74 @@
+import enum
+import sys
+from datetime import datetime, date
+from decimal import Decimal
+from uuid import UUID
+
+
+class OpenApiTypes(enum.Enum):
+    FLOAT = enum.auto()
+    BOOL = enum.auto()
+    STR = enum.auto()
+    BYTE = enum.auto()  # base64 encoded
+    BINARY = enum.auto()
+    INT = enum.auto()
+    UUID = enum.auto()
+    URI = enum.auto()
+    IP4 = enum.auto()
+    IP6 = enum.auto()
+    HOSTNAME = enum.auto()
+    DECIMAL = enum.auto()
+    DATETIME = enum.auto()
+    DATE = enum.auto()
+    EMAIL = enum.auto()
+    OBJECT = enum.auto()
+    NONE = enum.auto()
+
+
+# make a copy with dict() before modifying returned dict
+OPENAPI_TYPE_MAPPING = {
+    OpenApiTypes.FLOAT: {'type': 'number', 'format': 'float'},
+    OpenApiTypes.BOOL: {'type': 'boolean'},
+    OpenApiTypes.STR: {'type': 'string'},
+    OpenApiTypes.BYTE: {'type': 'string', 'format': 'byte'},
+    OpenApiTypes.BINARY: {'type': 'string', 'format': 'binary'},
+    OpenApiTypes.INT: {'type': 'integer'},
+    OpenApiTypes.UUID: {'type': 'string', 'format': 'uuid'},
+    OpenApiTypes.URI: {'type': 'string', 'format': 'uri'},
+    OpenApiTypes.IP4: {'type': 'string', 'format': 'ipv4'},
+    OpenApiTypes.IP6: {'type': 'string', 'format': 'ipv6'},
+    OpenApiTypes.HOSTNAME: {'type': 'string', 'format': 'hostname'},
+    OpenApiTypes.DECIMAL: {'type': 'number', 'format': 'double'},
+    OpenApiTypes.DATETIME: {'type': 'string', 'format': 'date-time'},
+    OpenApiTypes.DATE: {'type': 'string', 'format': 'date'},
+    OpenApiTypes.EMAIL: {'type': 'string', 'format': 'email'},
+    OpenApiTypes.OBJECT: {'type': 'object', 'additionalProperties': {}},
+    OpenApiTypes.NONE: {},
+}
+
+PYTHON_TYPE_MAPPING = {
+    str: OpenApiTypes.STR,
+    float: OpenApiTypes.FLOAT,
+    bool: OpenApiTypes.BOOL,
+    bytes: OpenApiTypes.BINARY,
+    int: OpenApiTypes.INT,
+    UUID: OpenApiTypes.UUID,
+    Decimal: OpenApiTypes.DECIMAL,
+    datetime: OpenApiTypes.DATETIME,
+    date: OpenApiTypes.DATE,
+}
+
+
+def resolve_basic_type(type_):
+    """
+        resolve either enum or actual type and yield schema template for modification
+    """
+    if type_ in OPENAPI_TYPE_MAPPING:
+        return dict(OPENAPI_TYPE_MAPPING[type_])
+    elif type_ in PYTHON_TYPE_MAPPING:
+        return dict(OPENAPI_TYPE_MAPPING[PYTHON_TYPE_MAPPING[type_]])
+    elif type_ is None or type(type_) is None:
+        return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.NONE])
+    else:
+        print(f'WARNING: type "{type_}" unknown. defaulting to STRING', file=sys.stderr)
+        return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])

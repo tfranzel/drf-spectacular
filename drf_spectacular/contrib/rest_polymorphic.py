@@ -1,12 +1,9 @@
-import warnings
-
 from drf_spectacular.openapi import AutoSchema
 
 try:
     from rest_polymorphic.serializers import PolymorphicSerializer
 except ImportError:
-    warnings.warn('rest_polymorphic package required for PolymorphicAutoSchema')
-    raise
+    raise RuntimeError('rest_polymorphic package required for PolymorphicAutoSchema')
 
 
 class PolymorphicAutoSchema(AutoSchema):
