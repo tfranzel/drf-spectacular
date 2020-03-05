@@ -34,6 +34,13 @@ def anyisinstance(obj, type_list):
     return any([isinstance(obj, t) for t in type_list])
 
 
+def force_serializer_instance(serializer):
+    if inspect.isclass(serializer) and issubclass(serializer, serializers.Serializer):
+        return serializer()
+    else:
+        return serializer
+
+
 class ComponentRegistry:
     def __init__(self):
         self.schemas = {}
@@ -123,7 +130,6 @@ class SchemaGenerator(BaseSchemaGenerator):
 
 
 class AutoSchema(ViewInspector):
-
     method_mapping = {
         'get': 'retrieve',
         'post': 'create',
@@ -469,7 +475,6 @@ class AutoSchema(ViewInspector):
         warn(f'could not resolve serializer field {field}. defaulting to "string"')
         return resolve_basic_type(OpenApiTypes.STR)
 
-
     def _map_min_max(self, field, content):
         if field.max_value:
             content['maximum'] = field.max_value
@@ -550,19 +555,20 @@ class AutoSchema(ViewInspector):
         if not hint:
             hint = typing.get_type_hints(method).get('return')
 
-        if hint in TYPE_MAPPING:
-            return TYPE_MAPPING[hint]
-        elif hint.__origin__ is typing.Union:
-            sub_hints = [
-                self._map_type_hint(method, sub_hint)
-                for sub_hint in hint.__args__ if sub_hint is not type(None)  # noqa
-            ]
-            if type(None) in hint.__args__ and len(sub_hints) == 1:
-                return {**sub_hints[0], 'nullable': True}
-            elif type(None) in hint.__args__:
-                return {'oneOf': [{**sub_hint, 'nullable': True} for sub_hint in sub_hints]}
-            else:
-                return {'oneOf': sub_hints}
+        if hint in PYTHON_TYPE_MAPPING:
+            return resolve_basic_type(hint)
+        # TODO look at this again if it makes sense
+        # elif False and hint.__origin__ is typing.:
+        #     sub_hints = [
+        #         self._map_type_hint(method, sub_hint)
+        #         for sub_hint in hint.__args__ if sub_hint is not type(None)  # noqa
+        #     ]
+        #     if type(None) in hint.__args__ and len(sub_hints) == 1:
+        #         return {**sub_hints[0], 'nullable': True}
+        #     elif type(None) in hint.__args__:
+        #         return {'oneOf': [{**sub_hint, 'nullable': True} for sub_hint in sub_hints]}
+        #     else:
+        #         return {'oneOf': sub_hints}
         else:
             warn(f'type hint for SerializerMethodField function "{method.__name__}" is unknown. defaulting to string.')
             return resolve_basic_type(OpenApiTypes.STR)
@@ -605,7 +611,7 @@ class AutoSchema(ViewInspector):
         if method not in ('PUT', 'PATCH', 'POST'):
             return {}
 
-        serializer = self._get_serializer(path, method)
+        serializer = force_serializer_instance(self.get_request_serializer(path, method))
 
         if isinstance(serializer, serializers.Serializer):
             schema = self.resolve_serializer(method, serializer)
@@ -651,22 +657,21 @@ class AutoSchema(ViewInspector):
             }
             return {'200': self._get_response_for_code(path, method, schema)}
 
-    def _get_response_for_code(self, path, method, serializer_instance):
+    def _get_response_for_code(self, path, method, serializer):
         # convenience feature: auto instantiate serializer classes
-        if inspect.isclass(serializer_instance) and issubclass(serializer_instance, serializers.Serializer):
-            serializer_instance = serializer_instance()
+        serializer = force_serializer_instance(serializer)
 
-        if not serializer_instance:
+        if not serializer:
             return {'description': 'No response body'}
-        elif isinstance(serializer_instance, serializers.Serializer):
-            schema = self.resolve_serializer(method, serializer_instance)
+        elif isinstance(serializer, serializers.Serializer):
+            schema = self.resolve_serializer(method, serializer)
             if not schema:
                 return {'description': 'No response body'}
-        elif isinstance(serializer_instance, PolymorphicResponse):
+        elif isinstance(serializer, PolymorphicResponse):
             # custom handling for @extend_schema's injection of polymorphic responses
             schemas = []
 
-            for serializer in serializer_instance.serializers:
+            for serializer in serializer.serializers:
                 assert isinstance(serializer, serializers.Serializer)
                 schema_option = self.resolve_serializer(method, serializer)
                 if schema_option:
@@ -675,18 +680,18 @@ class AutoSchema(ViewInspector):
             schema = {
                 'oneOf': schemas,
                 'discriminator': {
-                    'propertyName': serializer_instance.resource_type_field_name
+                    'propertyName': serializer.resource_type_field_name
                 }
             }
-        elif isinstance(serializer_instance, serializers.ListSerializer):
-            schema = self.resolve_serializer(method, serializer_instance.child)
-        elif isinstance(serializer_instance, dict):
+        elif isinstance(serializer, serializers.ListSerializer):
+            schema = self.resolve_serializer(method, serializer.child)
+        elif isinstance(serializer, dict):
             # bypass processing and use given schema directly
-            schema = serializer_instance
+            schema = serializer
         else:
             raise ValueError('Serializer type unsupported')
 
-        if isinstance(serializer_instance, serializers.ListSerializer) or is_list_view(path, method, self.view):
+        if isinstance(serializer, serializers.ListSerializer) or is_list_view(path, method, self.view):
             # TODO i fear is_list_view is not covering all the cases
             schema = {
                 'type': 'array',
@@ -734,13 +739,13 @@ class AutoSchema(ViewInspector):
             # add placeholder to prevent recursion loop
             self.registry.schemas[name] = None
 
-            mapped = self._map_serializer(method, serializer, nested)
+            schema = self._map_serializer(method, serializer, nested)
             # empty serializer - usually a transactional serializer.
             # no need to put it explicitly in the spec
-            if not mapped['properties']:
+            if not schema['properties']:
                 del self.registry.schemas[name]
                 return {}
             else:
-                self.registry.schemas[name] = mapped
+                self.registry.schemas[name] = schema
 
         return {'$ref': '#/components/schemas/{}'.format(name)}
