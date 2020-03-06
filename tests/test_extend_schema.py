@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from drf_spectacular.openapi import SchemaGenerator, AutoSchema
 from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, QueryParameter
+from drf_spectacular.utils import extend_schema, ExtraParameter
 
 
 class AlphaSerializer(serializers.Serializer):
@@ -35,8 +35,8 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
                 500: ErrorSerializer,
             },
             extra_parameters=[
-                QueryParameter(name='expiration_date', type=OpenApiTypes.DATETIME, description='time the object will expire at'),
-                QueryParameter(name='test_mode', type=bool, description='creation will be in the sandbox'),
+                ExtraParameter('expiration_date', OpenApiTypes.DATETIME, description='time the object will expire at'),
+                ExtraParameter('test_mode', bool, location=ExtraParameter.HEADER, description='creation will be in the sandbox'),
             ],
             description='this weird endpoint needs some explaining',
         )

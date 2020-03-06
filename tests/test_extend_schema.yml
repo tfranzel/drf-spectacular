@@ -11,19 +11,19 @@ paths:
       operationId: customname_create
       description: this weird endpoint needs some explaining
       parameters:
-      - name: expiration_date
-        in: query
-        description: time the object will expire at
-        required: false
+      - in: query
+        name: expiration_date
         schema:
           type: string
           format: date-time
-      - name: test_mode
-        in: query
-        description: creation will be in the sandbox
+        description: time the object will expire at
         required: false
+      - in: header
+        name: test_mode
         schema:
           type: boolean
+        description: creation will be in the sandbox
+        required: false
       tags:
       - doesitall
       requestBody:

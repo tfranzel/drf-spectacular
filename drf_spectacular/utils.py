@@ -18,21 +18,28 @@ class OpenApiSchemaBase:
         raise NotImplementedError('translation to schema required.')
 
 
-class QueryParameter(OpenApiSchemaBase):
-    def __init__(self, name, description='', required=False, type=str):
+class ExtraParameter(OpenApiSchemaBase):
+    QUERY = 'query'
+    PATH = 'path'
+    HEADER = 'header'
+
+    def __init__(self, name, type=str, location=QUERY, required=False, description=''):
         self.name = name
-        self.description = description
-        self.required = required
         self.type = type
+        self.location = location
+        self.required = required
+        self.description = description
 
     def to_schema(self):
-        return {
+        schema = {
+            'in': self.location,
             'name': self.name,
-            'in': 'query',
+            'schema': resolve_basic_type(self.type),
             'description': self.description,
-            'required': self.required,
-            'schema': resolve_basic_type(self.type)
         }
+        if self.location != self.PATH:
+            schema['required'] = self.required
+        return schema
 
 
 def extend_schema(
