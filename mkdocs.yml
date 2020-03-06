@@ -1,4 +1,0 @@
-site_name: drf-spectacular
-site_description: Sane and flexible OpenAPI 3 schema generation for Django REST framework
-repo_url: https://github.com/tfranzel/drf_spectacular
-site_dir: html

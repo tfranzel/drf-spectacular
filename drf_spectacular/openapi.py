@@ -333,12 +333,14 @@ class AutoSchema(ViewInspector):
         return mapping
 
     def _map_model_field(self, field):
+        # in django 3.0 checking both auto and int field is not required but in 2.2 it is
         if anyisinstance(field, [models.AutoField, models.IntegerField]):
             return resolve_basic_type(OpenApiTypes.INT)
-        elif anyisinstance(field, [models.SmallAutoField, models.SmallIntegerField]):
-            return resolve_basic_type(OpenApiTypes.INT)
-        elif anyisinstance(field, [models.BigAutoField, models.BigIntegerField]):
-            return resolve_basic_type(OpenApiTypes.INT)
+        # TODO make this save for django version not having those fields
+        # elif anyisinstance(field, [models.SmallAutoField, models.SmallIntegerField]):
+        #     return resolve_basic_type(OpenApiTypes.INT)
+        # elif anyisinstance(field, [models.BigAutoField, models.BigIntegerField]):
+        #     return resolve_basic_type(OpenApiTypes.INT)
         elif isinstance(field, models.UUIDField):
             return resolve_basic_type(OpenApiTypes.UUID)
         else:
