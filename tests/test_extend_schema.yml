@@ -1,0 +1,102 @@
+openapi: 3.0.3
+servers:
+- url: http://127.0.0.1:8000
+info:
+  title: ''
+  version: 0.0.0
+  description: ''
+paths:
+  /doesitall/:
+    post:
+      operationId: customname_create
+      description: this weird endpoint needs some explaining
+      parameters:
+      - name: expiration_date
+        in: query
+        description: time the object will expire at
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: test_mode
+        in: query
+        description: creation will be in the sandbox
+        required: false
+        schema:
+          type: boolean
+      tags:
+      - doesitall
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Alpha'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Alpha'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Alpha'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Beta'
+          description: ''
+        500:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    Alpha:
+      type: object
+      properties:
+        field_a:
+          type: string
+        field_b:
+          type: integer
+      required:
+      - field_a
+      - field_b
+    Beta:
+      type: object
+      properties:
+        field_a:
+          type: string
+        field_b:
+          type: integer
+        field_c:
+          type: object
+          additionalProperties: {}
+      required:
+      - field_a
+      - field_b
+      - field_c
+    Error:
+      type: object
+      properties:
+        msg:
+          type: string
+        code:
+          type: integer
+      required:
+      - msg
+      - code

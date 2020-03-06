@@ -55,8 +55,5 @@ def test_polymorphic():
     schema = generator.get_schema(request=None, public=True)
     schema_yml = NoAliasOpenAPIRenderer().render(schema, renderer_context={})
 
-    with open('tests/test_polymorphic_out.yml', 'wb') as fh:
-        fh.write(schema_yml)
-
     with open('tests/test_polymorphic.yml') as fh:
         assert schema_yml.decode() == fh.read()

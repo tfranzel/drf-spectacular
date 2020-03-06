@@ -520,7 +520,7 @@ class AutoSchema(ViewInspector):
     def _map_field_validators(self, field, schema):
         for v in field.validators:
             # "Formats such as "email", "uuid", and so on, MAY be used even though undefined by this specification."
-            # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#data-types
+            # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#data-types
             if isinstance(v, validators.EmailValidator):
                 schema['format'] = 'email'
             if isinstance(v, validators.URLValidator):
@@ -639,7 +639,7 @@ class AutoSchema(ViewInspector):
     def _get_response_bodies(self, path, method):
         response_serializers = self.get_response_serializers(path, method)
 
-        if isinstance(response_serializers, serializers.Serializer) or isinstance(response_serializers, PolymorphicResponse):
+        if anyisinstance(force_serializer_instance(response_serializers), [serializers.Serializer, PolymorphicResponse]):
             if method == 'DELETE':
                 return {'204': {'description': 'No response body'}}
             return {'200': self._get_response_for_code(path, method, response_serializers)}
@@ -707,7 +707,7 @@ class AutoSchema(ViewInspector):
             },
             # Description is required by spec, but descriptions for each response code don't really
             # fit into our model. Description is therefore put into the higher level slots.
-            # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responseObject
+            # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#responseObject
             'description': ''
         }
 
