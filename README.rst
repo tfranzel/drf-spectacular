@@ -9,7 +9,7 @@ Sane and flexible `OpenAPI 3 <https://github.com/OAI/OpenAPI-Specification>`_ sc
 This project has 3 goals:
     1. Extract as much schema information from DRF as possible.
     2. Provide flexibility to make the schema usable in the real world (not only toy examples).
-    3. Generate a schema that works well the most popular client generators.
+    3. Generate a schema that works well with the most popular client generators.
 
 The code is a heavily modified fork of the
 `DRF OpenAPI generator <https://github.com/encode/django-rest-framework/blob/master/rest_framework/schemas/openapi.py/>`_,
@@ -27,9 +27,9 @@ Features
         - and more customization options
     - easy to use hooks for extending the spectacular ``AutoSchema``
     - authentication methods in schema (default DRF methods included, easily extendable)
-    - ``MethodSerializerField()`` type via type hinting
+    - ``MethodSerializerField()`` type via type hinting or ``@extend_schema_field``
     - schema tags for operations plus override option (very useful in Swagger UI)
-    - support for `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `rest_polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_ (automatic polymorphic responses for PolymorphicSerializers)
+    - support for `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_ (automatic polymorphic responses for PolymorphicSerializers)
     - description extraction from doc strings
     - sane fallbacks where there are no serializers available (free-form objects)
     - operation_id naming based on endpoint path instead of model name (preventing operation_id duplication)
@@ -108,7 +108,8 @@ the sky is the limit.
 
 .. code:: python
 
-    from drf_spectacular.utils import extend_schema, QueryParameter
+    from drf_spectacular.utils import extend_schema, ExtraParameter
+    from drf_spectacular.types import OpenApiTypes
 
     class AlbumViewset(viewset.ModelViewset)
         serializer_class = AlbumSerializer
@@ -124,8 +125,13 @@ the sky is the limit.
         @extend_schema(
             # extra parameters added to the schema
             extra_parameters=[
-                QueryParameter(name='artist', description='Filter by artist', required=False, type=str),
-                QueryParameter(name='year', description='Filter by year', required=False, type=int),
+                ExtraParameter(name='artist', description='Filter by artist', required=False, type=str),
+                ExtraParameter(
+                    name='release',
+                    type=OpenApiTypes.DATE,
+                    location=ExtraParameter.QUERY,
+                    description='Filter by release date',
+                ),
             ],
             # override default docstring extraction
             description='More descriptive text',
