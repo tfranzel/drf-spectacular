@@ -18,7 +18,7 @@ from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
-from drf_spectacular.types import OpenApiTypes, resolve_basic_type, PYTHON_TYPE_MAPPING
+from drf_spectacular.types import OpenApiTypes, resolve_basic_type, PYTHON_TYPE_MAPPING, OPENAPI_TYPE_MAPPING
 from drf_spectacular.utils import PolymorphicResponse
 
 AUTHENTICATION_SCHEMES = {
@@ -353,10 +353,9 @@ class AutoSchema(ViewInspector):
                 'type': 'array',
                 'items': self.resolve_serializer(method, field.child)
             }
+
         if isinstance(field, serializers.Serializer):
-            data = self.resolve_serializer(method, field, nested=True)
-            data['type'] = 'object'
-            return data
+            return self.resolve_serializer(method, field, nested=True)
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
@@ -557,20 +556,16 @@ class AutoSchema(ViewInspector):
         if not hint:
             hint = typing.get_type_hints(method).get('return')
 
-        if hint in PYTHON_TYPE_MAPPING:
+        if hasattr(method, '_spectacular_annotation'):
+            if isinstance(force_serializer_instance(method._spectacular_annotation), serializers.BaseSerializer):
+                return self._map_serializer_field(method, force_serializer_instance(method._spectacular_annotation))
+            elif method._spectacular_annotation in OPENAPI_TYPE_MAPPING:
+                return resolve_basic_type(method._spectacular_annotation)
+            else:
+                warn(f'unknown decorated type "{repr(method._spectacular_annotation)}". defaulting to string')
+                return resolve_basic_type(OpenApiTypes.STR)
+        elif hint in PYTHON_TYPE_MAPPING:
             return resolve_basic_type(hint)
-        # TODO look at this again if it makes sense
-        # elif False and hint.__origin__ is typing.:
-        #     sub_hints = [
-        #         self._map_type_hint(method, sub_hint)
-        #         for sub_hint in hint.__args__ if sub_hint is not type(None)  # noqa
-        #     ]
-        #     if type(None) in hint.__args__ and len(sub_hints) == 1:
-        #         return {**sub_hints[0], 'nullable': True}
-        #     elif type(None) in hint.__args__:
-        #         return {'oneOf': [{**sub_hint, 'nullable': True} for sub_hint in sub_hints]}
-        #     else:
-        #         return {'oneOf': sub_hints}
         else:
             warn(f'type hint for SerializerMethodField function "{method.__name__}" is unknown. defaulting to string.')
             return resolve_basic_type(OpenApiTypes.STR)

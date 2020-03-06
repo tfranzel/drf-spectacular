@@ -123,3 +123,17 @@ def extend_schema(
             return f
 
     return decorator
+
+
+def extend_schema_field(response):
+    """
+    decorator for SerializerMethodField(). always takes precedence over a type hint (if one was given).
+
+    :param response: accepts a Serializer or OpenApiTypes
+    :return:
+    """
+    def decorator(f):
+        f._spectacular_annotation = response
+        return f
+
+    return decorator

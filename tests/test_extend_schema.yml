@@ -93,10 +93,25 @@ components:
     Error:
       type: object
       properties:
-        msg:
+        field_i:
           type: string
-        code:
+          format: date-time
+          readOnly: true
+        field_j:
+          $ref: '#/components/schemas/Inline'
+          readOnly: true
+        field_k:
+          type: array
+          items:
+            $ref: '#/components/schemas/Inline'
+          readOnly: true
+    Inline:
+      type: object
+      properties:
+        inline_b:
+          type: boolean
+        inline_i:
           type: integer
       required:
-      - msg
-      - code
+      - inline_b
+      - inline_i
