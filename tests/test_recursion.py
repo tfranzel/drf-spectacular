@@ -1,8 +1,10 @@
 import uuid
 from unittest import mock
 
+import pytest
 from django.db import models
 from rest_framework import serializers, viewsets, routers, mixins
+from rest_framework.renderers import JSONRenderer
 
 from drf_spectacular.openapi import SchemaGenerator, AutoSchema
 from tests import assert_schema
@@ -46,3 +48,18 @@ def test_recursion():
     schema = generator.get_schema(request=None, public=True)
 
     assert_schema(schema, 'tests/test_recursion.yml')
+
+
+@pytest.mark.django_db
+def test_model_setup_is_valid():
+    root = TreeNode(label='root')
+    root.save()
+    leaf1 = TreeNode(label='leaf1', parent=root)
+    leaf1.save()
+    leaf2 = TreeNode(label='leaf2', parent=root)
+    leaf2.save()
+
+    JSONRenderer().render(
+        TreeNodeSerializer(root).data,
+        accepted_media_type='application/json; indent=4'
+    ).decode()

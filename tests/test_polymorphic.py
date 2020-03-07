@@ -1,8 +1,10 @@
 from unittest import mock
 
+import pytest
 from django.db import models
 from polymorphic.models import PolymorphicModel
 from rest_framework import viewsets, serializers, routers
+from rest_framework.renderers import JSONRenderer
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from drf_spectacular.contrib.rest_polymorphic import PolymorphicAutoSchema
@@ -58,3 +60,18 @@ def test_polymorphic():
     schema = generator.get_schema(request=None, public=True)
 
     assert_schema(schema, 'tests/test_polymorphic.yml')
+
+
+@pytest.mark.django_db
+def test_model_setup_is_valid():
+    natural = NaturalPerson(first_name='asd', last_name='xx')
+    natural.save()
+    legal = LegalPerson(company_name='xxx', address='asd')
+    legal.save()
+    legal.board.add(natural)
+
+    output = JSONRenderer().render(
+        PersonSerializer(legal).data,
+        accepted_media_type='application/json; indent=4'
+    ).decode()
+    print(output)
