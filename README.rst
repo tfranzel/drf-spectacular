@@ -2,7 +2,7 @@
 drf-spectacular
 ===============
 
-|build-status-image| |codecov| |pypi-version|
+|build-status-image| |codecov| |pypi-version| |docs|
 
 Sane and flexible `OpenAPI 3 <https://github.com/OAI/OpenAPI-Specification>`_ schema generation for `Django REST framework <https://www.django-rest-framework.org/>`_.
 
@@ -99,8 +99,8 @@ Usage
 `drf-spectacular` works pretty well out of the box. The toy examples do not cover your cases?
 No problem, you can heavily customize how your schema will be rendered.
 
-Customization by using @extend_schema
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Customization by using ``@extend_schema``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Most customization cases should be covered by the ``extend_schema`` decorator. We usually get
 pretty far with specifying ``OpenApiParameter`` and splitting request/response serializers, but
@@ -223,3 +223,5 @@ globally, and then simply run:
    :target: https://pypi.python.org/pypi/drf-spectacular
 .. |codecov| image:: https://codecov.io/gh/tfranzel/drf-spectacular/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/tfranzel/drf-spectacular
+.. |docs| image:: https://readthedocs.org/projects/drf-spectacular/badge/
+   :target: https://drf-spectacular.readthedocs.io/

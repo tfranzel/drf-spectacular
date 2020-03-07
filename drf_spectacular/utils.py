@@ -5,13 +5,14 @@ from rest_framework.settings import api_settings
 
 class PolymorphicProxySerializer:
     """
-    This class is to be used with @extend_schema to signal a request/response
-    might be polymorphic (accepts/returns data possibly from different serializers)
+    This class is to be used with :func:`@extend_schema <.extend_schema>` to
+    signal a request/response might be polymorphic (accepts/returns data
+    possibly from different serializers)
 
-    Beware that this is not a real serializer and therefore is not derived
-    from serializers.Serializer. It *cannot* be used in views as serializer_class
-    or as field in a actual serializer. You likely want to handle this in the view
-    method.
+    Beware that this is not a real serializer and therefore is not derived from
+    serializers.Serializer. It *cannot* be used in views as `serializer_class`
+    or as field in a actual serializer. You likely want to handle this in the
+    view method.
     """
 
     def __init__(self, component_name, serializers, resource_type_field_name):
@@ -80,20 +81,20 @@ def extend_schema(
         are no naming collisions.
     :param parameters: list of additional or replacement parameters added to the
         auto-discovered fields.
-    :param responses: replaces the discovered Serializer. Takes a variety of inputs
-        that can be used individually or combined:
+    :param responses: replaces the discovered Serializer. Takes a variety of
+        inputs that can be used individually or combined
 
-        * Serializer class
-        * Serializer instance (e.g. Serializer(many=True) for listings)
-        * dictionary with status codes as keys and Serializers as values.
-        * ``drf_spectacular.utils.PolymorphicProxySerializer`` for signaling that
-            the operation may yield data from different Serializers depending
-            on the circumstances.
-    :param request: replaces the discovered Serializer.
+        - ``Serializer`` class
+        - ``Serializer`` instance (e.g. ``Serializer(many=True)`` for listings)
+        - ``dict`` with status codes as keys and `Serializers` as values.
+        - :class:`.PolymorphicProxySerializer` for signaling that
+          the operation may yield data from different serializers depending
+          on the circumstances.
+    :param request: replaces the discovered ``Serializer``.
     :param auth:
-    :param description:
+    :param description: replaces discovered doc strings
     :param deprecated: mark operation as deprecated
-    :param tags:
+    :param tags: override default list of tags
     :param exclude: set True to exclude operation from schema
     :param operation: manually override what auto-discovery would generate. you must
         provide a OpenAPI3-compliant dictionary that gets directly translated to YAML.
@@ -175,16 +176,15 @@ def extend_schema(
 
 def extend_schema_field(response):
     """
-    Decorator for the "field" kind. Can be used with ``SerializerMethodField()`` (annotate the actual method)
-    or with custom ``serializers.Field`` implementations.
+    Decorator for the "field" kind. Can be used with ``SerializerMethodField`` (annotate the actual
+    method) or with custom ``serializers.Field`` implementations.
 
-    If your custom serializer field base class is already the desired type, decoration is not necessary. To
-    override the discovered base class type, you can decorate your custom field class.
+    If your custom serializer field base class is already the desired type, decoration is not necessary.
+    To override the discovered base class type, you can decorate your custom field class.
 
     Always takes precedence over other mechanisms (e.g. type hints, auto-discovery).
 
-    :param response: accepts a Serializer or OpenApiTypes
-    :return:
+    :param response: accepts a ``Serializer`` or :class:`~.types.OpenApiTypes`
     """
 
     def decorator(f):

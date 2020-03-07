@@ -3,18 +3,19 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to drf-spectacular's documentation!
-===========================================
+Table of Contents
+===================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
 
    readme.rst
+   settings.rst
+   license.rst
+   changelog.rst
+   drf_spectacular.rst
 
-.. include:: readme.rst
-
-Indices and tables
+Indices and Tables
 ==================
 
 * :ref:`genindex`
