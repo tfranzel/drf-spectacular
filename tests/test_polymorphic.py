@@ -7,7 +7,7 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 
 from drf_spectacular.contrib.rest_polymorphic import PolymorphicAutoSchema
 from drf_spectacular.openapi import SchemaGenerator
-from tests import assert_schema
+from tests import assert_schema, lazy_serializer
 
 
 class Person(PolymorphicModel):
@@ -16,6 +16,7 @@ class Person(PolymorphicModel):
 
 class LegalPerson(Person):
     company_name = models.CharField(max_length=30)
+    board = models.ManyToManyField('Person', blank=True, null=True)
 
 
 class NaturalPerson(Person):
@@ -23,23 +24,25 @@ class NaturalPerson(Person):
     last_name = models.CharField(max_length=30)
 
 
+class PersonSerializer(PolymorphicSerializer):
+    model_serializer_mapping = {
+        LegalPerson: lazy_serializer('tests.test_polymorphic.LegalPersonSerializer'),
+        NaturalPerson: lazy_serializer('tests.test_polymorphic.NaturalPersonSerializer'),
+    }
+
+
 class LegalPersonSerializer(serializers.ModelSerializer):
+    board = PersonSerializer(many=True, read_only=True)
+
     class Meta:
         model = LegalPerson
-        fields = ('company_name', 'address')
+        fields = ('company_name', 'address', 'board')
 
 
 class NaturalPersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = NaturalPerson
         fields = ('first_name', 'last_name', 'address')
-
-
-class PersonSerializer(PolymorphicSerializer):
-    model_serializer_mapping = {
-        LegalPerson: LegalPersonSerializer,
-        NaturalPerson: NaturalPersonSerializer
-    }
 
 
 class PersonViewSet(viewsets.ModelViewSet):

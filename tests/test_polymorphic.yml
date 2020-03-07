@@ -23,11 +23,7 @@ paths:
               schema:
                 type: array
                 items:
-                  oneOf:
-                  - $ref: '#/components/schemas/LegalPerson'
-                  - $ref: '#/components/schemas/NaturalPerson'
-                  discriminator:
-                    propertyName: resourcetype
+                  $ref: '#/components/schemas/Person'
           description: ''
     post:
       operationId: persons_create
@@ -38,25 +34,13 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/LegalPerson'
-              - $ref: '#/components/schemas/NaturalPerson'
-              discriminator:
-                propertyName: resourcetype
+              $ref: '#/components/schemas/Person'
           application/x-www-form-urlencoded:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/LegalPerson'
-              - $ref: '#/components/schemas/NaturalPerson'
-              discriminator:
-                propertyName: resourcetype
+              $ref: '#/components/schemas/Person'
           multipart/form-data:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/LegalPerson'
-              - $ref: '#/components/schemas/NaturalPerson'
-              discriminator:
-                propertyName: resourcetype
+              $ref: '#/components/schemas/Person'
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -66,11 +50,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                - $ref: '#/components/schemas/LegalPerson'
-                - $ref: '#/components/schemas/NaturalPerson'
-                discriminator:
-                  propertyName: resourcetype
+                $ref: '#/components/schemas/Person'
           description: ''
   /persons/{id}/:
     get:
@@ -94,11 +74,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                - $ref: '#/components/schemas/LegalPerson'
-                - $ref: '#/components/schemas/NaturalPerson'
-                discriminator:
-                  propertyName: resourcetype
+                $ref: '#/components/schemas/Person'
           description: ''
     put:
       operationId: persons_update
@@ -116,25 +92,13 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/LegalPerson'
-              - $ref: '#/components/schemas/NaturalPerson'
-              discriminator:
-                propertyName: resourcetype
+              $ref: '#/components/schemas/Person'
           application/x-www-form-urlencoded:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/LegalPerson'
-              - $ref: '#/components/schemas/NaturalPerson'
-              discriminator:
-                propertyName: resourcetype
+              $ref: '#/components/schemas/Person'
           multipart/form-data:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/LegalPerson'
-              - $ref: '#/components/schemas/NaturalPerson'
-              discriminator:
-                propertyName: resourcetype
+              $ref: '#/components/schemas/Person'
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -144,11 +108,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                - $ref: '#/components/schemas/LegalPerson'
-                - $ref: '#/components/schemas/NaturalPerson'
-                discriminator:
-                  propertyName: resourcetype
+                $ref: '#/components/schemas/Person'
           description: ''
     patch:
       operationId: persons_partial_update
@@ -166,25 +126,13 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/PatchedLegalPerson'
-              - $ref: '#/components/schemas/PatchedNaturalPerson'
-              discriminator:
-                propertyName: resourcetype
+              $ref: '#/components/schemas/PatchedPerson'
           application/x-www-form-urlencoded:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/PatchedLegalPerson'
-              - $ref: '#/components/schemas/PatchedNaturalPerson'
-              discriminator:
-                propertyName: resourcetype
+              $ref: '#/components/schemas/PatchedPerson'
           multipart/form-data:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/PatchedLegalPerson'
-              - $ref: '#/components/schemas/PatchedNaturalPerson'
-              discriminator:
-                propertyName: resourcetype
+              $ref: '#/components/schemas/PatchedPerson'
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -194,11 +142,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                - $ref: '#/components/schemas/PatchedLegalPerson'
-                - $ref: '#/components/schemas/PatchedNaturalPerson'
-                discriminator:
-                  propertyName: resourcetype
+                $ref: '#/components/schemas/PatchedPerson'
           description: ''
     delete:
       operationId: persons_destroy
@@ -229,6 +173,15 @@ components:
       type: http
       scheme: basic
   schemas:
+    Person:
+      oneOf:
+      - $ref: '#/components/schemas/LegalPerson'
+      - $ref: '#/components/schemas/NaturalPerson'
+      discriminator:
+        propertyName: resourcetype
+        mapping:
+          LegalPerson: '#/components/schemas/LegalPerson'
+          NaturalPerson: '#/components/schemas/NaturalPerson'
     LegalPerson:
       type: object
       properties:
@@ -238,8 +191,11 @@ components:
         address:
           type: string
           maxLength: 30
-        resourcetype:
-          type: string
+        board:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+          readOnly: true
       required:
       - company_name
       - address
@@ -255,12 +211,19 @@ components:
         address:
           type: string
           maxLength: 30
-        resourcetype:
-          type: string
       required:
       - first_name
       - last_name
       - address
+    PatchedPerson:
+      oneOf:
+      - $ref: '#/components/schemas/PatchedLegalPerson'
+      - $ref: '#/components/schemas/PatchedNaturalPerson'
+      discriminator:
+        propertyName: resourcetype
+        mapping:
+          PatchedLegalPerson: '#/components/schemas/PatchedLegalPerson'
+          PatchedNaturalPerson: '#/components/schemas/PatchedNaturalPerson'
     PatchedLegalPerson:
       type: object
       properties:
@@ -270,8 +233,11 @@ components:
         address:
           type: string
           maxLength: 30
-        resourcetype:
-          type: string
+        board:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+          readOnly: true
     PatchedNaturalPerson:
       type: object
       properties:
@@ -284,5 +250,3 @@ components:
         address:
           type: string
           maxLength: 30
-        resourcetype:
-          type: string
