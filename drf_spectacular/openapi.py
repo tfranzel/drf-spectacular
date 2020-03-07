@@ -35,10 +35,14 @@ def anyisinstance(obj, type_list):
 
 
 def force_serializer_instance(serializer):
-    if inspect.isclass(serializer) and issubclass(serializer, serializers.Serializer):
+    if inspect.isclass(serializer) and issubclass(serializer, serializers.BaseSerializer):
         return serializer()
     else:
         return serializer
+
+
+def is_serializer(obj):
+    return isinstance(force_serializer_instance(obj), serializers.BaseSerializer)
 
 
 class ComponentRegistry:
@@ -581,22 +585,15 @@ class AutoSchema(ViewInspector):
                     schema['maximum'] = int(digits * '9') + 1
                     schema['minimum'] = -schema['maximum']
 
-    def _map_type_hint(self, method, hint=None):
-        if not hint:
-            hint = typing.get_type_hints(method).get('return')
+    def _map_type_hint(self, method):
+        hint = getattr(method, '_spectacular_annotation', None) or typing.get_type_hints(method).get('return')
 
-        if hasattr(method, '_spectacular_annotation'):
-            if isinstance(force_serializer_instance(method._spectacular_annotation), serializers.BaseSerializer):
-                return self._map_serializer_field(method, force_serializer_instance(method._spectacular_annotation))
-            elif method._spectacular_annotation in OPENAPI_TYPE_MAPPING:
-                return resolve_basic_type(method._spectacular_annotation)
-            else:
-                warn(f'unknown decorated type "{repr(method._spectacular_annotation)}". defaulting to string')
-                return resolve_basic_type(OpenApiTypes.STR)
-        elif hint in PYTHON_TYPE_MAPPING:
+        if is_serializer(hint):
+            return self._map_serializer_field(method, force_serializer_instance(hint))
+        elif hint in PYTHON_TYPE_MAPPING or hint in OPENAPI_TYPE_MAPPING:
             return resolve_basic_type(hint)
         else:
-            warn(f'type hint for SerializerMethodField function "{method.__name__}" is unknown. defaulting to string.')
+            warn(f'type hint for function "{method.__name__}" is unknown. defaulting to string.')
             return resolve_basic_type(OpenApiTypes.STR)
 
     def _get_paginator(self):
