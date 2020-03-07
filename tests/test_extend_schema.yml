@@ -50,6 +50,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/Beta'
           description: ''
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gamma'
+          description: ''
         500:
           content:
             application/json:
@@ -90,6 +96,17 @@ components:
       - field_a
       - field_b
       - field_c
+    Gamma:
+      type: object
+      properties:
+        encoding:
+          type: string
+        image_data:
+          type: string
+          format: byte
+      required:
+      - encoding
+      - image_data
     Error:
       type: object
       properties:

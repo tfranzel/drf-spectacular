@@ -348,6 +348,12 @@ class AutoSchema(ViewInspector):
             return resolve_basic_type(OpenApiTypes.STR)
 
     def _map_serializer_field(self, method, field):
+        if hasattr(field, '_spectacular_annotation'):
+            if field._spectacular_annotation in OPENAPI_TYPE_MAPPING or field._spectacular_annotation in PYTHON_TYPE_MAPPING:
+                return resolve_basic_type(field._spectacular_annotation)
+            else:
+                return self._map_serializer_field(method, field._spectacular_annotation)
+
         if isinstance(field, serializers.ListSerializer):
             return {
                 'type': 'array',

@@ -1,5 +1,6 @@
 from unittest import mock
 
+from django.utils.http import urlsafe_base64_encode
 from rest_framework import serializers, viewsets, routers
 from rest_framework.response import Response
 
@@ -16,6 +17,17 @@ class AlphaSerializer(serializers.Serializer):
 
 class BetaSerializer(AlphaSerializer):
     field_c = serializers.JSONField()
+
+
+@extend_schema_field(OpenApiTypes.BYTE)
+class CustomField(serializers.Field):
+    def to_representation(self, value):
+        return urlsafe_base64_encode(b'\xf0\xf1\xf2')
+
+
+class GammaSerializer(serializers.Serializer):
+    encoding = serializers.CharField()
+    image_data = CustomField()
 
 
 class InlineSerializer(serializers.Serializer):
@@ -50,6 +62,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             request=AlphaSerializer,
             responses={
                 201: BetaSerializer(many=True),
+                200: GammaSerializer,
                 500: ErrorSerializer,
             },
             extra_parameters=[

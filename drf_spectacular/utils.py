@@ -128,7 +128,13 @@ def extend_schema(
 
 def extend_schema_field(response):
     """
-    decorator for SerializerMethodField(). always takes precedence over a type hint (if one was given).
+    Decorator for the "field" kind. Can be used with ``SerializerMethodField()`` (annotate the actual method)
+    or with custom ``serializers.Field`` implementations.
+
+    If your custom serializer field base class is already the desired type, decoration is not necessary. To
+    override the discovered base class type, you can decorate your custom field class.
+
+    Always takes precedence over other mechanisms (e.g. type hints, auto-discovery).
 
     :param response: accepts a Serializer or OpenApiTypes
     :return:
