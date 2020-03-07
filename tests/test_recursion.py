@@ -5,7 +5,7 @@ from django.db import models
 from rest_framework import serializers, viewsets, routers, mixins
 
 from drf_spectacular.openapi import SchemaGenerator, AutoSchema
-from drf_spectacular.renderers import NoAliasOpenAPIRenderer
+from tests import assert_schema
 
 
 class TreeNode(models.Model):
@@ -44,7 +44,5 @@ def test_recursion():
     router.register('nodes', TreeNodeViewset, basename="nodes")
     generator = SchemaGenerator(patterns=router.urls)
     schema = generator.get_schema(request=None, public=True)
-    schema_yml = NoAliasOpenAPIRenderer().render(schema, renderer_context={})
 
-    with open('tests/test_recursion.yml') as fh:
-        assert schema_yml.decode() == fh.read()
+    assert_schema(schema, 'tests/test_recursion.yml')

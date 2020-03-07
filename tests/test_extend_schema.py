@@ -4,9 +4,9 @@ from rest_framework import serializers, viewsets, routers
 from rest_framework.response import Response
 
 from drf_spectacular.openapi import SchemaGenerator, AutoSchema
-from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, ExtraParameter, extend_schema_field
+from tests import assert_schema
 
 
 class AlphaSerializer(serializers.Serializer):
@@ -68,7 +68,5 @@ def test_extend_schema():
     router.register('doesitall', FirstViewset, basename="doesitall")
     generator = SchemaGenerator(patterns=router.urls)
     schema = generator.get_schema(request=None, public=True)
-    schema_yml = NoAliasOpenAPIRenderer().render(schema, renderer_context={})
 
-    with open('tests/test_extend_schema.yml') as fh:
-        assert schema_yml.decode() == fh.read()
+    assert_schema(schema, 'tests/test_extend_schema.yml')
