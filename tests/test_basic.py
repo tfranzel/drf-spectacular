@@ -40,6 +40,7 @@ class SongSerializer(serializers.ModelSerializer):
 
 class AlbumSerializer(serializers.ModelSerializer):
     songs = SongSerializer(many=True, read_only=True)
+    single = SongSerializer(read_only=True)
 
     class Meta:
         fields = '__all__'
