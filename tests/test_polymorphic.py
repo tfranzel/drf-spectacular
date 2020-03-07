@@ -34,17 +34,18 @@ class PersonSerializer(PolymorphicSerializer):
 
 
 class LegalPersonSerializer(serializers.ModelSerializer):
+    # notice that introduces a recursion loop
     board = PersonSerializer(many=True, read_only=True)
 
     class Meta:
         model = LegalPerson
-        fields = ('company_name', 'address', 'board')
+        fields = ('id', 'company_name', 'address', 'board')
 
 
 class NaturalPersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = NaturalPerson
-        fields = ('first_name', 'last_name', 'address')
+        fields = ('id', 'first_name', 'last_name', 'address')
 
 
 class PersonViewSet(viewsets.ModelViewSet):
@@ -64,14 +65,20 @@ def test_polymorphic():
 
 @pytest.mark.django_db
 def test_model_setup_is_valid():
-    natural = NaturalPerson(first_name='asd', last_name='xx')
-    natural.save()
-    legal = LegalPerson(company_name='xxx', address='asd')
-    legal.save()
-    legal.board.add(natural)
+    peter = NaturalPerson(first_name='Peter', last_name='Parker')
+    peter.save()
+    may = NaturalPerson(first_name='May', last_name='Parker')
+    may.save()
+    parker_inc = LegalPerson(company_name='Parker Inc', address='NYC')
+    parker_inc.save()
+    parker_inc.board.add(peter, may)
+
+    spidey_corp = LegalPerson(company_name='Spidey Corp.', address='NYC')
+    spidey_corp.save()
+    spidey_corp.board.add(peter, parker_inc)
 
     output = JSONRenderer().render(
-        PersonSerializer(legal).data,
+        PersonSerializer(spidey_corp).data,
         accepted_media_type='application/json; indent=4'
     ).decode()
     print(output)

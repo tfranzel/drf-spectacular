@@ -185,6 +185,9 @@ components:
     LegalPerson:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
         company_name:
           type: string
           maxLength: 30
@@ -202,6 +205,9 @@ components:
     NaturalPerson:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
         first_name:
           type: string
           maxLength: 30
@@ -227,6 +233,9 @@ components:
     PatchedLegalPerson:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
         company_name:
           type: string
           maxLength: 30
@@ -241,6 +250,9 @@ components:
     PatchedNaturalPerson:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
         first_name:
           type: string
           maxLength: 30
