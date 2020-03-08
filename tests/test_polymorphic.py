@@ -20,15 +20,25 @@ class NaturalPerson2(models.Model):
 
 
 class LegalPersonSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+
     class Meta:
         model = LegalPerson2
-        fields = ('id', 'company_name')
+        fields = ('id', 'company_name', 'type')
+
+    def get_type(self) -> str:
+        return 'LegalPerson'
 
 
 class NaturalPersonSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+
     class Meta:
         model = NaturalPerson2
-        fields = ('id', 'first_name', 'last_name')
+        fields = ('id', 'first_name', 'last_name', 'type')
+
+    def get_type(self) -> str:
+        return 'NaturalPerson'
 
 
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):

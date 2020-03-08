@@ -513,6 +513,13 @@ class AutoSchema(ViewInspector):
         for sub_serializer in serializer.serializers:
             assert is_serializer(sub_serializer), 'sub-serializer must be either a Serializer or a PolymorphicProxySerializer.'
             sub_serializer = force_serializer_instance(sub_serializer)
+
+            if serializer.resource_type_field_name not in sub_serializer.fields:
+                warn(
+                    f'sub-serializer of {serializer.component_name} must have the specified '
+                    f'discriminator field "{serializer.resource_type_field_name}".'
+                )
+
             sub_schema = self.resolve_serializer(method, sub_serializer, nested)
             sub_serializer_name = self._get_serializer_name(method, sub_serializer, nested)
             poly_list.append((sub_serializer_name, sub_schema))
@@ -521,6 +528,7 @@ class AutoSchema(ViewInspector):
             'oneOf': [ref for _, ref in poly_list],
             'discriminator': {
                 'propertyName': serializer.resource_type_field_name,
+                # TODO mapping name is not sourced from serializer. API breaks schema if it does not use component name
                 'mapping': {name: ref['$ref'] for name, ref in poly_list}
             }
         }
