@@ -19,7 +19,7 @@ from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes, resolve_basic_type, PYTHON_TYPE_MAPPING, OPENAPI_TYPE_MAPPING
-from drf_spectacular.utils import PolymorphicResponse
+from drf_spectacular.utils import PolymorphicProxySerializer
 
 AUTHENTICATION_SCHEMES = {
     cls.authentication_class: cls for cls in spectacular_settings.SCHEMA_AUTHENTICATION_CLASSES
@@ -42,7 +42,10 @@ def force_serializer_instance(serializer):
 
 
 def is_serializer(obj):
-    return isinstance(force_serializer_instance(obj), serializers.BaseSerializer)
+    return anyisinstance(
+        force_serializer_instance(obj),
+        [serializers.BaseSerializer, PolymorphicProxySerializer]
+    )
 
 
 class ComponentRegistry:
@@ -498,18 +501,17 @@ class AutoSchema(ViewInspector):
             content['minimum'] = field.min_value
 
     def _map_serializer(self, method, serializer, nested=False):
-        if isinstance(serializer, PolymorphicResponse):
-            return self._map_meta_serializer(method, serializer, nested=False)
+        if isinstance(serializer, PolymorphicProxySerializer):
+            return self._map_polymorphic_proxy_serializer(method, serializer, nested=False)
         else:
             return self._map_concrete_serializer(method, serializer, nested=False)
 
-    def _map_meta_serializer(self, method, serializer, nested):
-        """ custom handling for @extend_schema's injection of polymorphic responses """
-        assert isinstance(serializer, PolymorphicResponse)
-
+    def _map_polymorphic_proxy_serializer(self, method, serializer, nested):
+        """ custom handling for @extend_schema's injection of PolymorphicProxySerializer """
         poly_list = []
 
         for sub_serializer in serializer.serializers:
+            assert is_serializer(sub_serializer), 'sub-serializer must be either a Serializer or a PolymorphicProxySerializer.'
             sub_serializer = force_serializer_instance(sub_serializer)
             sub_schema = self.resolve_serializer(method, sub_serializer, nested)
             sub_serializer_name = self._get_serializer_name(method, sub_serializer, nested)
@@ -644,7 +646,7 @@ class AutoSchema(ViewInspector):
 
         serializer = force_serializer_instance(self.get_request_serializer(path, method))
 
-        if isinstance(serializer, serializers.Serializer):
+        if is_serializer(serializer):
             schema = self.resolve_serializer(method, serializer)
         else:
             warn(
@@ -670,7 +672,7 @@ class AutoSchema(ViewInspector):
     def _get_response_bodies(self, path, method):
         response_serializers = self.get_response_serializers(path, method)
 
-        if anyisinstance(force_serializer_instance(response_serializers), [serializers.Serializer, PolymorphicResponse]):
+        if is_serializer(response_serializers):
             if method == 'DELETE':
                 return {'204': {'description': 'No response body'}}
             return {'200': self._get_response_for_code(path, method, response_serializers)}
@@ -694,7 +696,7 @@ class AutoSchema(ViewInspector):
 
         if not serializer:
             return {'description': 'No response body'}
-        elif anyisinstance(serializer, [serializers.Serializer, PolymorphicResponse]):
+        elif anyisinstance(serializer, [serializers.Serializer, PolymorphicProxySerializer]):
             schema = self.resolve_serializer(method, serializer)
             if not schema:
                 return {'description': 'No response body'}
@@ -727,7 +729,7 @@ class AutoSchema(ViewInspector):
         }
 
     def _get_serializer_name(self, method, serializer, nested):
-        if isinstance(serializer, PolymorphicResponse):
+        if isinstance(serializer, PolymorphicProxySerializer):
             return serializer.component_name
 
         name = serializer.__class__.__name__

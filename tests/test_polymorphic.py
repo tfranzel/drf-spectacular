@@ -6,7 +6,7 @@ from rest_framework import viewsets, serializers, routers
 from rest_framework.response import Response
 
 from drf_spectacular.openapi import SchemaGenerator, AutoSchema
-from drf_spectacular.utils import extend_schema, PolymorphicResponse
+from drf_spectacular.utils import extend_schema, PolymorphicProxySerializer
 from tests import assert_schema
 
 
@@ -34,13 +34,18 @@ class NaturalPersonSerializer(serializers.ModelSerializer):
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):
     class PersonViewSet(viewsets.GenericViewSet):
         @extend_schema(
-            responses=PolymorphicResponse(
+            request=PolymorphicProxySerializer(
+                component_name='MetaPerson',
+                serializers=[LegalPersonSerializer, NaturalPersonSerializer],
+                resource_type_field_name='type',
+            ),
+            responses=PolymorphicProxySerializer(
                 component_name='MetaPerson',
                 serializers=[LegalPersonSerializer, NaturalPersonSerializer],
                 resource_type_field_name='type',
             )
         )
-        def retrieve(self, request, *args, **kwargs):
+        def create(self, request, *args, **kwargs):
             return Response({})
 
 

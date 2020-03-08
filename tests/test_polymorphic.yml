@@ -6,19 +6,23 @@ info:
   version: 0.0.0
   description: ''
 paths:
-  /persons/{id}/:
-    get:
-      operationId: persons_retrieve
+  /persons/:
+    post:
+      operationId: persons_create
       description: ''
-      parameters:
-      - name: id
-        in: path
-        required: true
-        description: ''
-        schema:
-          type: string
       tags:
       - persons
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetaPerson'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MetaPerson'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MetaPerson'
       security:
       - cookieAuth: []
       - basicAuth: []

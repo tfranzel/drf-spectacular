@@ -5,7 +5,16 @@ from rest_framework.settings import api_settings
 from drf_spectacular.types import resolve_basic_type
 
 
-class PolymorphicResponse:
+class PolymorphicProxySerializer:
+    """
+    This class is to be used with @extend_schema to signal a request/response
+    might be polymorphic (accepts/returns data possibly from different serializers)
+
+    Beware that this is not a real serializer and therefore is not derived
+    from serializers.Serializer. It *cannot* be used in views as serializer_class
+    or as field in a actual serializer. You likely want to handle this in the view
+    method.
+    """
     def __init__(self, component_name, serializers, resource_type_field_name):
         self.component_name = component_name
         self.serializers = serializers

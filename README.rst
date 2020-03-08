@@ -176,12 +176,13 @@ Don't forget to register your custom AutoSchema in the ``DEFAULT_SCHEMA_CLASS``.
 Extras
 ^^^^^^
 
-got endpoints that yield list of differing objects? Enter ``PolymorphicResponse``
+got endpoints that yield list of differing objects? Enter ``PolymorphicProxySerializer``
 
 .. code:: python
 
     @extend_schema(
-        responses=PolymorphicResponse(
+        responses=PolymorphicProxySerializer(
+            component_name='MetaPerson',
             serializers=[SerializerA, SerializerB],
             resource_type_field_name='type',
         )
