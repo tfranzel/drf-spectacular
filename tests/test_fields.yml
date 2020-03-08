@@ -106,6 +106,10 @@ components:
             0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z\xA1\
             -\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\.?|localhost))(?::\\d{2,5})?(?:[/?#][^\\\
             s]*)?\\Z"
+        field_ip:
+          type: string
+        field_ip_generic:
+          type: string
         field_decimal:
           type: number
           multipleOf: 0.001
@@ -146,6 +150,8 @@ components:
       - field_email
       - field_uuid
       - field_url
+      - field_ip
+      - field_ip_generic
       - field_decimal
       - field_file
       - field_img

@@ -431,9 +431,11 @@ class AutoSchema(ViewInspector):
             return resolve_basic_type(OpenApiTypes.UUID)
 
         if isinstance(field, serializers.IPAddressField):
-            if 'IPv4' == field.protocol:
+            # TODO this might be a DRF bug. protocol is not propagated to serializer although it
+            #  should have been. results in always 'both' (thus no format)
+            if 'ipv4' == field.protocol.lower():
                 return resolve_basic_type(OpenApiTypes.IP4)
-            elif 'IPv6' == field.protocol:
+            elif 'ipv6' == field.protocol.lower():
                 return resolve_basic_type(OpenApiTypes.IP6)
             else:
                 return resolve_basic_type(OpenApiTypes.STR)

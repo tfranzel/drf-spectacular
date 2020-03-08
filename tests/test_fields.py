@@ -28,6 +28,8 @@ class AllFields(models.Model):
     field_email = models.EmailField()
     field_uuid = models.UUIDField()
     field_url = models.URLField()
+    field_ip = models.IPAddressField()
+    field_ip_generic = models.GenericIPAddressField(protocol='ipv6')
     field_decimal = models.DecimalField(max_digits=6, decimal_places=3)
     field_file = models.FileField()
     field_img = models.ImageField()
@@ -91,6 +93,8 @@ def test_model_setup_is_valid():
         field_email='test@example.com',
         field_uuid='00000000-00000000-00000000-00000000',
         field_url='https://github.com/tfranzel/drf-spectacular',
+        field_ip='127.0.0.1',
+        field_ip_generic='2001:db8::8a2e:370:7334',
         field_decimal='666.333',
         field_file=None,
         field_img=None,  # TODO fill with data below
