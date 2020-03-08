@@ -28,8 +28,8 @@ class NaturalPerson(Person):
 
 class PersonSerializer(PolymorphicSerializer):
     model_serializer_mapping = {
-        LegalPerson: lazy_serializer('tests.test_polymorphic.LegalPersonSerializer'),
-        NaturalPerson: lazy_serializer('tests.test_polymorphic.NaturalPersonSerializer'),
+        LegalPerson: lazy_serializer('tests.test_rest_polymorphic.LegalPersonSerializer'),
+        NaturalPerson: lazy_serializer('tests.test_rest_polymorphic.NaturalPersonSerializer'),
     }
 
 
@@ -60,7 +60,7 @@ def test_polymorphic():
     generator = SchemaGenerator(patterns=router.urls)
     schema = generator.get_schema(request=None, public=True)
 
-    assert_schema(schema, 'tests/test_polymorphic.yml')
+    assert_schema(schema, 'tests/test_rest_polymorphic.yml')
 
 
 @pytest.mark.django_db
