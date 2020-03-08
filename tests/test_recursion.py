@@ -50,6 +50,7 @@ def test_recursion():
     assert_schema(schema, 'tests/test_recursion.yml')
 
 
+@pytest.mark.skip
 @pytest.mark.django_db
 def test_model_setup_is_valid():
     root = TreeNode(label='root')
