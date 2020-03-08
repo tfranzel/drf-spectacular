@@ -3,7 +3,7 @@ from drf_spectacular.openapi import AutoSchema
 try:
     from rest_polymorphic.serializers import PolymorphicSerializer
 except ImportError:
-    raise RuntimeError('rest_polymorphic package required for PolymorphicAutoSchema')
+    raise RuntimeError('django-rest-polymorphic package required for PolymorphicAutoSchema')
 
 
 class PolymorphicAutoSchema(AutoSchema):
@@ -25,7 +25,6 @@ class PolymorphicAutoSchema(AutoSchema):
             sub_serializer_name = self._get_serializer_name(method, sub_serializer, nested)
 
             poly_list.append((sub_serializer_name, sub_schema))
-            # TODO MAYBE append the resource_type_field_name field to the schema as the library
 
         return {
             'oneOf': [ref for _, ref in poly_list],

@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, date
+from decimal import Decimal
 from unittest import mock
 
 import pytest
@@ -10,6 +11,19 @@ from rest_framework.renderers import JSONRenderer
 
 from drf_spectacular.openapi import SchemaGenerator, AutoSchema
 from tests import assert_schema
+
+
+# TODO Fields known to DRF and mapping
+# models.BigIntegerField: IntegerField,
+# models.CommaSeparatedIntegerField: CharField,
+# models.Field: ModelField,
+# models.ImageField: ImageField,
+# models.NullBooleanField: NullBooleanField,
+# models.PositiveIntegerField: IntegerField,
+# models.PositiveSmallIntegerField: IntegerField,
+# models.SmallIntegerField: IntegerField,
+# models.TimeField: TimeField,
+# models.FilePathField: FilePathField,
 
 
 class Aux(models.Model):
@@ -95,7 +109,7 @@ def test_model_setup_is_valid():
         field_url='https://github.com/tfranzel/drf-spectacular',
         field_ip='127.0.0.1',
         field_ip_generic='2001:db8::8a2e:370:7334',
-        field_decimal='666.333',
+        field_decimal=Decimal('666.333'),
         field_file=None,
         field_img=None,  # TODO fill with data below
         field_date=date.today(),

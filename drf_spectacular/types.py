@@ -6,6 +6,15 @@ from uuid import UUID
 
 
 class OpenApiTypes(enum.Enum):
+    """
+    Basic types known to the OpenApi specification or at least
+    common format extension of it.
+
+    - Use BYTE for base64 encoded data wrapped in a string
+    - Use BINARY for raw binary data
+    - Use OBJECT for arbitrary free-form object (usually a dict)
+
+    """
     FLOAT = enum.auto()
     BOOL = enum.auto()
     STR = enum.auto()
