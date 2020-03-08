@@ -54,7 +54,7 @@ class ErrorSerializer(serializers.Serializer):
 
 
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):
-    class FirstViewset(viewsets.GenericViewSet):
+    class DoesItAllViewset(viewsets.GenericViewSet):
         serializer_class = AlphaSerializer
 
         @extend_schema(
@@ -78,7 +78,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_extend_schema():
     router = routers.SimpleRouter()
-    router.register('doesitall', FirstViewset, basename="doesitall")
+    router.register('doesitall', DoesItAllViewset, basename="doesitall")
     generator = SchemaGenerator(patterns=router.urls)
     schema = generator.get_schema(request=None, public=True)
 

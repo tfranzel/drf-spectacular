@@ -358,14 +358,16 @@ class AutoSchema(ViewInspector):
             else:
                 return self._map_serializer_field(method, field._spectacular_annotation)
 
+        # nested serializer
+        if isinstance(field, serializers.Serializer):
+            return self.resolve_serializer(method, field, nested=True)
+
+        # nested serializer with many=True gets automatically replaced with ListSerializer
         if isinstance(field, serializers.ListSerializer):
             return {
                 'type': 'array',
                 'items': self.resolve_serializer(method, field.child)
             }
-
-        if isinstance(field, serializers.Serializer):
-            return self.resolve_serializer(method, field, nested=True)
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
@@ -463,7 +465,8 @@ class AutoSchema(ViewInspector):
             return content
 
         if isinstance(field, serializers.FileField):
-            return resolve_basic_type(OpenApiTypes.BINARY)
+            # TODO returns filename. but does it accept binary data on upload?
+            return resolve_basic_type(OpenApiTypes.STR)
 
         if isinstance(field, serializers.SerializerMethodField):
             method = getattr(field.parent, field.method_name)

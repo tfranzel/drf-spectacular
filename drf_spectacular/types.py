@@ -56,6 +56,7 @@ PYTHON_TYPE_MAPPING = {
     Decimal: OpenApiTypes.DECIMAL,
     datetime: OpenApiTypes.DATETIME,
     date: OpenApiTypes.DATE,
+    dict: OpenApiTypes.OBJECT,
 }
 
 

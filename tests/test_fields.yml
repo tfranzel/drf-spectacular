@@ -1,0 +1,158 @@
+openapi: 3.0.3
+servers:
+- url: http://127.0.0.1:8000
+info:
+  title: ''
+  version: 0.0.0
+  description: ''
+paths:
+  /allfields/:
+    get:
+      operationId: allfields_list
+      description: ''
+      tags:
+      - allfields
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AllFields'
+          description: ''
+  /allfields/{id}/:
+    get:
+      operationId: allfields_retrieve
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this all fields.
+        schema:
+          type: integer
+      tags:
+      - allfields
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllFields'
+          description: ''
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    AllFields:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        field_method_float:
+          type: number
+          format: float
+          readOnly: true
+        field_method_object:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        field_int:
+          type: integer
+        field_float:
+          type: number
+          format: float
+        field_bool:
+          type: boolean
+        field_char:
+          type: string
+          maxLength: 100
+        field_text:
+          type: string
+        field_slug:
+          type: string
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        field_email:
+          type: string
+          format: email
+          maxLength: 254
+        field_uuid:
+          type: string
+          format: uuid
+        field_url:
+          type: string
+          format: uri
+          maxLength: 200
+          pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
+            d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\[[0-9a-f:\\\
+            .]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1-\uFFFF\
+            0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z\xA1\
+            -\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\.?|localhost))(?::\\d{2,5})?(?:[/?#][^\\\
+            s]*)?\\Z"
+        field_decimal:
+          type: number
+          multipleOf: 0.001
+          maximum: 1000
+          minimum: -1000
+        field_file:
+          type: string
+        field_img:
+          type: string
+        field_date:
+          type: string
+          format: date
+        field_datetime:
+          type: string
+          format: date-time
+        field_bigint:
+          type: integer
+        field_smallint:
+          type: integer
+        field_foreign:
+          type: string
+          format: uuid
+        field_o2o:
+          type: string
+          format: uuid
+        field_m2m:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+      - field_int
+      - field_float
+      - field_bool
+      - field_char
+      - field_text
+      - field_slug
+      - field_email
+      - field_uuid
+      - field_url
+      - field_decimal
+      - field_file
+      - field_img
+      - field_date
+      - field_datetime
+      - field_bigint
+      - field_smallint
+      - field_foreign
+      - field_o2o
+      - field_m2m
