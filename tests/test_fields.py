@@ -124,7 +124,8 @@ def test_model_setup_is_valid():
     m.save()
     m.field_m2m.add(a)
 
-    JSONRenderer().render(
+    output = JSONRenderer().render(
         AllFieldsSerializer(m).data,
         accepted_media_type='application/json; indent=4'
     ).decode()
+    print(output)

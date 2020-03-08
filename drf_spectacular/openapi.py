@@ -504,11 +504,13 @@ class AutoSchema(ViewInspector):
             return self._map_concrete_serializer(method, serializer, nested=False)
 
     def _map_meta_serializer(self, method, serializer, nested):
+        """ custom handling for @extend_schema's injection of polymorphic responses """
         assert isinstance(serializer, PolymorphicResponse)
 
         poly_list = []
 
-        for _, sub_serializer in serializer.model_serializer_mapping.items():
+        for sub_serializer in serializer.serializers:
+            sub_serializer = force_serializer_instance(sub_serializer)
             sub_schema = self.resolve_serializer(method, sub_serializer, nested)
             sub_serializer_name = self._get_serializer_name(method, sub_serializer, nested)
             poly_list.append((sub_serializer_name, sub_schema))
@@ -692,26 +694,10 @@ class AutoSchema(ViewInspector):
 
         if not serializer:
             return {'description': 'No response body'}
-        elif isinstance(serializer, serializers.Serializer):
+        elif anyisinstance(serializer, [serializers.Serializer, PolymorphicResponse]):
             schema = self.resolve_serializer(method, serializer)
             if not schema:
                 return {'description': 'No response body'}
-        elif isinstance(serializer, PolymorphicResponse):
-            # custom handling for @extend_schema's injection of polymorphic responses
-            schemas = []
-
-            for serializer in serializer.serializers:
-                assert isinstance(serializer, serializers.Serializer)
-                schema_option = self.resolve_serializer(method, serializer)
-                if schema_option:
-                    schemas.append(schema_option)
-
-            schema = {
-                'oneOf': schemas,
-                'discriminator': {
-                    'propertyName': serializer.resource_type_field_name
-                }
-            }
         elif isinstance(serializer, serializers.ListSerializer):
             schema = self.resolve_serializer(method, serializer.child)
         elif isinstance(serializer, dict):
