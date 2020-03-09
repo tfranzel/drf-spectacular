@@ -81,7 +81,7 @@ class AlbumModelViewset(viewsets.ReadOnlyModelViewSet):
 
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
-def test_fields():
+def test_fields(no_warnings):
     router = routers.SimpleRouter()
     router.register('allfields', AlbumModelViewset, basename="allfields")
     generator = SchemaGenerator(patterns=router.urls)

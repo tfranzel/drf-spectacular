@@ -61,7 +61,7 @@ class AlbumModelViewset(viewsets.ModelViewSet):
 
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
-def test_basics():
+def test_basics(no_warnings):
     router = routers.SimpleRouter()
     router.register('albums', AlbumModelViewset, basename="album")
     generator = SchemaGenerator(patterns=router.urls)

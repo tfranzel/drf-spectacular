@@ -41,7 +41,7 @@ class TreeNodeViewset(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
-def test_recursion():
+def test_recursion(no_warnings):
     router = routers.SimpleRouter()
     router.register('nodes', TreeNodeViewset, basename="nodes")
     generator = SchemaGenerator(patterns=router.urls)

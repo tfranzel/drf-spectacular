@@ -60,7 +60,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
 
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
-def test_polymorphic():
+def test_polymorphic(no_warnings):
     router = routers.SimpleRouter()
     router.register('persons', PersonViewSet, basename="person")
     generator = SchemaGenerator(patterns=router.urls)
