@@ -73,6 +73,25 @@ components:
           type: object
           additionalProperties: {}
           readOnly: true
+        field_regex:
+          type: string
+          pattern: ^[a-zA-z0-9]{10}\-[a-z]
+        field_read_only_nav_uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        field_read_only_nav_uuid_3steps:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        field_bool_override:
+          type: boolean
+          readOnly: true
+        field_model_property_float:
+          type: number
+          format: float
+          readOnly: true
         field_int:
           type: integer
         field_float:
@@ -141,6 +160,7 @@ components:
             type: string
             format: uuid
       required:
+      - field_regex
       - field_int
       - field_float
       - field_bool
