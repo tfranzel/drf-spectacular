@@ -32,7 +32,7 @@ def is_serializer(obj):
 
 def resolve_basic_type(type_):
     """
-        resolve either enum or actual type and yield schema template for modification
+    resolve either enum or actual type and yield schema template for modification
     """
     if type_ in OPENAPI_TYPE_MAPPING:
         return dict(OPENAPI_TYPE_MAPPING[type_])
@@ -41,18 +41,15 @@ def resolve_basic_type(type_):
     elif type_ is None or type(type_) is None:
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.NONE])
     else:
-        warn(f'type "{type_}" unknown. defaulting to STRING')
+        warn(f'could not resolve type "{type_}". defaulting to "string"')
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])
 
 
-def follow_field_source(model, path):
-    """
-    a model traversal chain "foreignkey.foreignkey.value" can either end with an actual model field
-    instance "value" or a model property function named "value". differentiate the cases ...
-    """
+def _follow_field_source(model, path):
     field_or_property = getattr(model, path[0])
 
     if len(path) == 1:
+        # end of traversal
         if isinstance(field_or_property, property):
             return field_or_property.fget
         else:
@@ -64,6 +61,27 @@ def follow_field_source(model, path):
             else:
                 return field_or_property.field
     else:
-        # end of traversal
         model = field_or_property.field.related_model
         return follow_field_source(model, path[1:])
+
+
+def follow_field_source(model, path):
+    """
+    a model traversal chain "foreignkey.foreignkey.value" can either end with an actual model field
+    instance "value" or a model property function named "value". differentiate the cases.
+
+    :return: models.Field or function object
+    """
+    try:
+        return _follow_field_source(model, path)
+    except:  # noqa: E722
+        warn(
+            f'could not resolve field on model {model} with path "{".".join(path)}". '
+            f'this is likely a custom field that does some unknown magic. maybe '
+            f'consider annotating the field? defaulting to "string".'
+        )
+
+        def dummy_property(obj) -> str:
+            pass
+
+        return dummy_property
