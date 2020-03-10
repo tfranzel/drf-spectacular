@@ -1,5 +1,4 @@
 import enum
-import sys
 from datetime import datetime, date
 from decimal import Decimal
 from uuid import UUID
@@ -67,18 +66,3 @@ PYTHON_TYPE_MAPPING = {
     date: OpenApiTypes.DATE,
     dict: OpenApiTypes.OBJECT,
 }
-
-
-def resolve_basic_type(type_):
-    """
-        resolve either enum or actual type and yield schema template for modification
-    """
-    if type_ in OPENAPI_TYPE_MAPPING:
-        return dict(OPENAPI_TYPE_MAPPING[type_])
-    elif type_ in PYTHON_TYPE_MAPPING:
-        return dict(OPENAPI_TYPE_MAPPING[PYTHON_TYPE_MAPPING[type_]])
-    elif type_ is None or type(type_) is None:
-        return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.NONE])
-    else:
-        print(f'WARNING: type "{type_}" unknown. defaulting to STRING', file=sys.stderr)
-        return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])

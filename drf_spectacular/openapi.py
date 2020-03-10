@@ -1,6 +1,5 @@
 import inspect
 import re
-import sys
 import typing
 from collections import OrderedDict
 from decimal import Decimal
@@ -8,7 +7,6 @@ from operator import attrgetter
 from urllib.parse import urljoin
 
 import uritemplate
-from django import __version__ as DJANGO_VERSION
 from django.core import validators
 from django.db import models
 from django.utils.encoding import force_str
@@ -19,58 +17,13 @@ from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
-from drf_spectacular.types import OpenApiTypes, resolve_basic_type, PYTHON_TYPE_MAPPING, OPENAPI_TYPE_MAPPING
+from drf_spectacular.plumbing import resolve_basic_type, warn, anyisinstance, force_serializer_instance, is_serializer, follow_field_source
+from drf_spectacular.types import OpenApiTypes, PYTHON_TYPE_MAPPING, OPENAPI_TYPE_MAPPING
 from drf_spectacular.utils import PolymorphicProxySerializer
 
 AUTHENTICATION_SCHEMES = {
     cls.authentication_class: cls for cls in spectacular_settings.SCHEMA_AUTHENTICATION_CLASSES
 }
-
-
-def warn(msg):
-    print(f'WARNING: {msg}', file=sys.stderr)
-
-
-def anyisinstance(obj, type_list):
-    return any([isinstance(obj, t) for t in type_list])
-
-
-def force_serializer_instance(serializer):
-    if inspect.isclass(serializer) and issubclass(serializer, serializers.BaseSerializer):
-        return serializer()
-    else:
-        return serializer
-
-
-def is_serializer(obj):
-    return anyisinstance(
-        force_serializer_instance(obj),
-        [serializers.BaseSerializer, PolymorphicProxySerializer]
-    )
-
-
-def follow_field_source(model, path):
-    """
-    a model traversal chain "foreignkey.foreignkey.value" can either end with an actual model field
-    instance "value" or a model property function named "value". differentiate the cases ...
-    """
-    field_or_property = getattr(model, path[0])
-
-    if len(path) == 1:
-        if isinstance(field_or_property, property):
-            return field_or_property.fget
-        else:
-            if DJANGO_VERSION.startswith('2'):
-                # trying to access the field through the DeferredAttribute will fail in an
-                # endless loop. bypass this issue by fishing it out of the meta field list.
-                field_name = field_or_property.field_name
-                return [f for f in model._meta.fields if f.name == field_name][0]
-            else:
-                return field_or_property.field
-    else:
-        # end of traversal
-        model = field_or_property.field.related_model
-        return follow_field_source(model, path[1:])
 
 
 class ComponentRegistry:

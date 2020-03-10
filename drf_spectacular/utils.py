@@ -2,8 +2,6 @@ import inspect
 
 from rest_framework.settings import api_settings
 
-from drf_spectacular.types import resolve_basic_type
-
 
 class PolymorphicProxySerializer:
     """
@@ -15,6 +13,7 @@ class PolymorphicProxySerializer:
     or as field in a actual serializer. You likely want to handle this in the view
     method.
     """
+
     def __init__(self, component_name, serializers, resource_type_field_name):
         self.component_name = component_name
         self.serializers = serializers
@@ -41,6 +40,7 @@ class ExtraParameter(OpenApiSchemaBase):
         self.description = description
 
     def to_schema(self):
+        from drf_spectacular.plumbing import resolve_basic_type
         schema = {
             'in': self.location,
             'name': self.name,
@@ -155,6 +155,7 @@ def extend_schema_field(response):
     :param response: accepts a Serializer or OpenApiTypes
     :return:
     """
+
     def decorator(f):
         f._spectacular_annotation = response
         return f
