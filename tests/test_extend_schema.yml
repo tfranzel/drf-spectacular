@@ -25,7 +25,7 @@ paths:
         description: creation will be in the sandbox
         required: false
       tags:
-      - doesitall
+      - custom_tag
       requestBody:
         content:
           application/json:
