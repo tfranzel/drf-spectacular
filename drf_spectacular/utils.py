@@ -65,21 +65,23 @@ def extend_schema(
     """
     TODO some heavy explaining
 
-    :param operation:
+    :param operation: manually override what auto-discovery would generate.
+        you must provide a OpenAPI3 compliant dictionary that gets gets directly
+        translated to YAML.
+        To hide the operation in the spec, pass an empty dict {}.
     :param operation_id:
     :param extra_parameters:
     :param responses:
     :param request:
     :param auth:
     :param description:
-    :param deprecated:
-    :return:
+    :param deprecated: mark endpoint as deprecated
     """
 
     def decorator(f):
         class ExtendedSchema(api_settings.DEFAULT_SCHEMA_CLASS):
             def get_operation(self, path, method, registry):
-                if operation:
+                if operation is not None:
                     return operation
                 return super().get_operation(path, method, registry)
 

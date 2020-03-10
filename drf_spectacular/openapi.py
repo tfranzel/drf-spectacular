@@ -82,6 +82,11 @@ class SchemaGenerator(BaseSchemaGenerator):
             # keep reference to schema as every access yields a fresh object (descriptor pattern)
             schema = view.schema
             operation = schema.get_operation(path, method, self.registry)
+
+            # operation was manually removed via @extend_schema
+            if not operation:
+                continue
+
             # Normalise path for any provided mount url.
             if path.startswith('/'):
                 path = path[1:]
