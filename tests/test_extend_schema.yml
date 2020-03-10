@@ -41,6 +41,7 @@ paths:
       - cookieAuth: []
       - basicAuth: []
       - {}
+      deprecated: true
       responses:
         201:
           content:
