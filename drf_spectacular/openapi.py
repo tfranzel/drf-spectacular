@@ -176,6 +176,10 @@ class AutoSchema(ViewInspector):
         if auth:
             operation['security'] = auth
 
+        deprecated = self.is_deprecated(path, method)
+        if deprecated:
+            operation['deprecated'] = deprecated
+
         operation['responses'] = self._get_response_bodies(path, method)
 
         return operation
@@ -230,6 +234,10 @@ class AutoSchema(ViewInspector):
             action = self.method_mapping[method.lower()]
 
         return '_'.join(tokenized_path + [action])
+
+    def is_deprecated(self, path, method):
+        """ override this for custom behaviour """
+        return False
 
     def _tokenize_path(self, path):
         # remove path prefix

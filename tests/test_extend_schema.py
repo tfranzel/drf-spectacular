@@ -70,6 +70,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
                 ExtraParameter('test_mode', bool, location=ExtraParameter.HEADER, description='creation will be in the sandbox'),
             ],
             description='this weird endpoint needs some explaining',
+            deprecated=True,
         )
         def create(self, request, *args, **kwargs):
             return Response({})

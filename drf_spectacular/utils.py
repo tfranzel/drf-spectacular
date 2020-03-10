@@ -60,6 +60,7 @@ def extend_schema(
         request=None,
         auth=None,
         description=None,
+        deprecated=None,
 ):
     """
     TODO some heavy explaining
@@ -71,6 +72,7 @@ def extend_schema(
     :param request:
     :param auth:
     :param description:
+    :param deprecated:
     :return:
     """
 
@@ -113,6 +115,11 @@ def extend_schema(
                 if description:
                     return description
                 return super().get_description(path, method)
+
+            def is_deprecated(self, path, method):
+                if deprecated:
+                    return deprecated
+                return super().is_deprecated(path, method)
 
         if inspect.isclass(f):
             class ExtendedView(f):
