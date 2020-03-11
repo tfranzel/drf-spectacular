@@ -123,6 +123,12 @@ components:
           items:
             $ref: '#/components/schemas/Inline'
           readOnly: true
+        field_l:
+          enum:
+          - a
+          - b
+          type: string
+          readOnly: true
     Inline:
       type: object
       properties:

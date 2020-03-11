@@ -2,7 +2,7 @@ import inspect
 import sys
 
 from django import __version__ as DJANGO_VERSION
-from rest_framework import serializers
+from rest_framework import fields, serializers
 
 from drf_spectacular.types import OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer
@@ -16,18 +16,26 @@ def anyisinstance(obj, type_list):
     return any([isinstance(obj, t) for t in type_list])
 
 
-def force_serializer_instance(serializer):
-    if inspect.isclass(serializer) and issubclass(serializer, serializers.BaseSerializer):
-        return serializer()
+def force_instance(serializer_or_field):
+    if not inspect.isclass(serializer_or_field):
+        return serializer_or_field
+    elif issubclass(serializer_or_field, (serializers.BaseSerializer, fields.Field)):
+        return serializer_or_field()
     else:
-        return serializer
+        return serializer_or_field
 
 
 def is_serializer(obj):
     return anyisinstance(
-        force_serializer_instance(obj),
+        force_instance(obj),
         [serializers.BaseSerializer, PolymorphicProxySerializer]
     )
+
+
+def is_field(obj):
+    # make sure obj is a serializer field and nothing else.
+    # guard against serializers because BaseSerializer(Field)
+    return isinstance(force_instance(obj), fields.Field) and not is_serializer(obj)
 
 
 def resolve_basic_type(type_):

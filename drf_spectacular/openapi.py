@@ -17,7 +17,7 @@ from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
-from drf_spectacular.plumbing import resolve_basic_type, warn, anyisinstance, force_serializer_instance, is_serializer, follow_field_source
+from drf_spectacular.plumbing import resolve_basic_type, warn, anyisinstance, force_instance, is_serializer, follow_field_source, is_field
 from drf_spectacular.types import OpenApiTypes, PYTHON_TYPE_MAPPING, OPENAPI_TYPE_MAPPING
 from drf_spectacular.utils import PolymorphicProxySerializer
 
@@ -545,7 +545,7 @@ class AutoSchema(ViewInspector):
 
         for sub_serializer in serializer.serializers:
             assert is_serializer(sub_serializer), 'sub-serializer must be either a Serializer or a PolymorphicProxySerializer.'
-            sub_serializer = force_serializer_instance(sub_serializer)
+            sub_serializer = force_instance(sub_serializer)
 
             if serializer.resource_type_field_name not in sub_serializer.fields:
                 warn(
@@ -638,8 +638,8 @@ class AutoSchema(ViewInspector):
     def _map_type_hint(self, method):
         hint = getattr(method, '_spectacular_annotation', None) or typing.get_type_hints(method).get('return')
 
-        if is_serializer(hint):
-            return self._map_serializer_field(method, force_serializer_instance(hint))
+        if is_serializer(hint) or is_field(hint):
+            return self._map_serializer_field(method, force_instance(hint))
         elif hint in PYTHON_TYPE_MAPPING or hint in OPENAPI_TYPE_MAPPING:
             return resolve_basic_type(hint)
         else:
@@ -685,7 +685,7 @@ class AutoSchema(ViewInspector):
         if method not in ('PUT', 'PATCH', 'POST'):
             return {}
 
-        serializer = force_serializer_instance(self.get_request_serializer(path, method))
+        serializer = force_instance(self.get_request_serializer(path, method))
 
         if is_serializer(serializer):
             schema = self.resolve_serializer(method, serializer)
@@ -733,7 +733,7 @@ class AutoSchema(ViewInspector):
 
     def _get_response_for_code(self, path, method, serializer):
         # convenience feature: auto instantiate serializer classes
-        serializer = force_serializer_instance(serializer)
+        serializer = force_instance(serializer)
 
         if not serializer:
             return {'description': 'No response body'}
