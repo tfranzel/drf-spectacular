@@ -17,8 +17,8 @@ from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
-from drf_spectacular.plumbing import resolve_basic_type, warn, anyisinstance, force_instance, is_serializer, follow_field_source, is_field
-from drf_spectacular.types import OpenApiTypes, PYTHON_TYPE_MAPPING, OPENAPI_TYPE_MAPPING
+from drf_spectacular.plumbing import resolve_basic_type, warn, anyisinstance, force_instance, is_serializer, follow_field_source, is_field, is_basic_type
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer
 
 AUTHENTICATION_SCHEMES = {
@@ -378,7 +378,7 @@ class AutoSchema(ViewInspector):
 
     def _map_serializer_field(self, method, field):
         if hasattr(field, '_spectacular_annotation'):
-            if field._spectacular_annotation in OPENAPI_TYPE_MAPPING or field._spectacular_annotation in PYTHON_TYPE_MAPPING:
+            if is_basic_type(field._spectacular_annotation):
                 return resolve_basic_type(field._spectacular_annotation)
             else:
                 return self._map_serializer_field(method, field._spectacular_annotation)
@@ -640,7 +640,7 @@ class AutoSchema(ViewInspector):
 
         if is_serializer(hint) or is_field(hint):
             return self._map_serializer_field(method, force_instance(hint))
-        elif hint in PYTHON_TYPE_MAPPING or hint in OPENAPI_TYPE_MAPPING:
+        elif is_basic_type(hint):
             return resolve_basic_type(hint)
         else:
             warn(f'type hint for function "{method.__name__}" is unknown. defaulting to string.')

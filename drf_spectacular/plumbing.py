@@ -1,3 +1,4 @@
+import collections
 import inspect
 import sys
 
@@ -38,18 +39,24 @@ def is_field(obj):
     return isinstance(force_instance(obj), fields.Field) and not is_serializer(obj)
 
 
-def resolve_basic_type(type_):
+def is_basic_type(obj):
+    if not isinstance(obj, collections.Hashable):
+        return False
+    return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
+
+
+def resolve_basic_type(obj):
     """
     resolve either enum or actual type and yield schema template for modification
     """
-    if type_ in OPENAPI_TYPE_MAPPING:
-        return dict(OPENAPI_TYPE_MAPPING[type_])
-    elif type_ in PYTHON_TYPE_MAPPING:
-        return dict(OPENAPI_TYPE_MAPPING[PYTHON_TYPE_MAPPING[type_]])
-    elif type_ is None or type(type_) is None:
+    if obj in OPENAPI_TYPE_MAPPING:
+        return dict(OPENAPI_TYPE_MAPPING[obj])
+    elif obj in PYTHON_TYPE_MAPPING:
+        return dict(OPENAPI_TYPE_MAPPING[PYTHON_TYPE_MAPPING[obj]])
+    elif obj is None or type(obj) is None:
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.NONE])
     else:
-        warn(f'could not resolve type "{type_}". defaulting to "string"')
+        warn(f'could not resolve type "{obj}". defaulting to "string"')
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])
 
 
