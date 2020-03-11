@@ -45,6 +45,7 @@ def pytest_configure():
             'django.contrib.auth.hashers.MD5PasswordHasher',
             'django.contrib.auth.hashers.CryptPasswordHasher',
         ),
+        SPECTACULAR_SETTINGS={'ENABLE_SCHEMA_KEY_SORTING': False}
     )
 
     try:

@@ -1,5 +1,8 @@
 import yaml
+from django.conf import settings
 from rest_framework.renderers import OpenAPIRenderer
+
+enable_schema_key_sorting = settings.SPECTACULAR_SETTINGS['ENABLE_SCHEMA_KEY_SORTING']
 
 
 class NoAliasOpenAPIRenderer(OpenAPIRenderer):
@@ -11,4 +14,4 @@ class NoAliasOpenAPIRenderer(OpenAPIRenderer):
             def ignore_aliases(self, data):
                 return True
 
-        return yaml.dump(data, default_flow_style=False, sort_keys=False, Dumper=Dumper).encode('utf-8')
+        return yaml.dump(data, default_flow_style=False, sort_keys=enable_schema_key_sorting, Dumper=Dumper).encode('utf-8')

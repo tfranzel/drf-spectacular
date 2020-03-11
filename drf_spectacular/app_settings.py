@@ -8,6 +8,7 @@ SPECTACULAR_DEFAULTS = {
         'drf_spectacular.auth.TokenAuthenticationScheme',
     ],
     'SCHEMA_PATH_PREFIX': r'',
+    'ENABLE_SCHEMA_KEY_SORTING': True
 }
 
 IMPORT_STRINGS = [
