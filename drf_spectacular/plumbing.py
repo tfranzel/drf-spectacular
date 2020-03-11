@@ -2,7 +2,7 @@ import inspect
 import sys
 
 from django import __version__ as DJANGO_VERSION
-from rest_framework import serializers
+from rest_framework import fields, serializers
 
 from drf_spectacular.types import OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer
@@ -26,7 +26,7 @@ def force_serializer_instance(serializer):
 def is_serializer(obj):
     return anyisinstance(
         force_serializer_instance(obj),
-        [serializers.BaseSerializer, PolymorphicProxySerializer]
+        [serializers.BaseSerializer, PolymorphicProxySerializer, fields.Field]
     )
 
 

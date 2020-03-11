@@ -39,6 +39,7 @@ class ErrorSerializer(serializers.Serializer):
     field_i = serializers.SerializerMethodField()
     field_j = serializers.SerializerMethodField()
     field_k = serializers.SerializerMethodField()
+    field_l = serializers.SerializerMethodField()
 
     @extend_schema_field(OpenApiTypes.DATETIME)
     def get_field_i(self, object):
@@ -51,6 +52,10 @@ class ErrorSerializer(serializers.Serializer):
     @extend_schema_field(InlineSerializer(many=True))
     def get_field_k(self, object):
         return InlineSerializer([], many=True).data
+
+    @extend_schema_field(serializers.ChoiceField(choices=['a', 'b']))
+    def get_field_l(self, object):
+        return object.readable_role
 
 
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):
@@ -71,7 +76,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             ],
             description='this weird endpoint needs some explaining',
             deprecated=True,
-            tags=['custom_tag']
+            tags=['custom_tag'],
         )
         def create(self, request, *args, **kwargs):
             return Response({})
