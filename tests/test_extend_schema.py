@@ -55,7 +55,7 @@ class ErrorSerializer(serializers.Serializer):
 
     @extend_schema_field(serializers.ChoiceField(choices=['a', 'b']))
     def get_field_l(self, object):
-        return object.readable_role
+        return object.some_choice
 
 
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):
