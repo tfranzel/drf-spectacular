@@ -28,6 +28,7 @@ from tests import assert_schema
 
 class Aux(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    field_foreign = models.ForeignKey('Aux', null=True, on_delete=models.CASCADE)
 
 
 class AllFields(models.Model):
@@ -55,14 +56,34 @@ class AllFields(models.Model):
     field_foreign = models.ForeignKey(Aux, on_delete=models.CASCADE)
     field_m2m = models.ManyToManyField(Aux)
     field_o2o = models.OneToOneField(Aux, on_delete=models.CASCADE)
+    # overrides
+    field_regex = models.CharField(max_length=50)
+    field_bool_override = models.BooleanField()
+
+    @property
+    def field_model_property_float(self) -> float:
+        return 1.337
 
 
 class AllFieldsSerializer(serializers.ModelSerializer):
     field_method_float = serializers.SerializerMethodField()
     field_method_object = serializers.SerializerMethodField()
 
+    field_regex = serializers.RegexField(r'^[a-zA-z0-9]{10}\-[a-z]')
+
+    # read only - model traversal
+    field_read_only_nav_uuid = serializers.ReadOnlyField(source='field_foreign.id')
+    field_read_only_nav_uuid_3steps = serializers.ReadOnlyField(
+        source='field_foreign.field_foreign.field_foreign.id',
+        allow_null=True,  # force field output even if traversal fails
+    )
+    # override default writable bool field with readonly
+    field_bool_override = serializers.ReadOnlyField()
+
+    field_model_property_float = serializers.ReadOnlyField()
+
     def get_field_method_float(self, obj) -> float:
-        return 0
+        return 1.3456
 
     def get_field_method_object(self, obj) -> dict:
         return {'key': 'value'}
@@ -81,7 +102,7 @@ class AlbumModelViewset(viewsets.ReadOnlyModelViewSet):
 
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
-def test_fields():
+def test_fields(no_warnings):
     router = routers.SimpleRouter()
     router.register('allfields', AlbumModelViewset, basename="allfields")
     generator = SchemaGenerator(patterns=router.urls)
@@ -93,8 +114,8 @@ def test_fields():
 @pytest.mark.skip
 @pytest.mark.django_db
 def test_model_setup_is_valid():
-    a = Aux()
-    a.save()
+    aux = Aux()
+    aux.save()
 
     m = AllFields(
         # basics
@@ -118,12 +139,15 @@ def test_model_setup_is_valid():
         field_bigint=11111111111111,
         field_smallint=111111,
         # relations
-        field_foreign=a,
-        field_o2o=a,
+        field_foreign=aux,
+        field_o2o=aux,
+        # overrides
+        field_regex='12345asdfg-a',
+        field_bool_override=True,
     )
     m.field_file.save('hello.txt', ContentFile("hello world"), save=True)
     m.save()
-    m.field_m2m.add(a)
+    m.field_m2m.add(aux)
 
     output = JSONRenderer().render(
         AllFieldsSerializer(m).data,

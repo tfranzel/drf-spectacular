@@ -1,3 +1,6 @@
+import pytest
+
+
 def pytest_configure():
     from django.conf import settings
 
@@ -84,3 +87,12 @@ def pytest_configure():
         django.setup()
     except AttributeError:
         pass
+
+
+@pytest.fixture()
+def no_warnings(capsys):
+    """ make sure test emits no warnings """
+    yield capsys
+    captured = capsys.readouterr()
+    assert not captured.out
+    assert not captured.err

@@ -76,9 +76,13 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         def create(self, request, *args, **kwargs):
             return Response({})
 
+        @extend_schema(operation={})
+        def list(self, request, *args, **kwargs):
+            return Response([])
+
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
-def test_extend_schema():
+def test_extend_schema(no_warnings):
     router = routers.SimpleRouter()
     router.register('doesitall', DoesItAllViewset, basename="doesitall")
     generator = SchemaGenerator(patterns=router.urls)

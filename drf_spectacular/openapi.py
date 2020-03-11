@@ -1,6 +1,5 @@
 import inspect
 import re
-import sys
 import typing
 from collections import OrderedDict
 from decimal import Decimal
@@ -18,34 +17,13 @@ from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
-from drf_spectacular.types import OpenApiTypes, resolve_basic_type, PYTHON_TYPE_MAPPING, OPENAPI_TYPE_MAPPING
+from drf_spectacular.plumbing import resolve_basic_type, warn, anyisinstance, force_serializer_instance, is_serializer, follow_field_source
+from drf_spectacular.types import OpenApiTypes, PYTHON_TYPE_MAPPING, OPENAPI_TYPE_MAPPING
 from drf_spectacular.utils import PolymorphicProxySerializer
 
 AUTHENTICATION_SCHEMES = {
     cls.authentication_class: cls for cls in spectacular_settings.SCHEMA_AUTHENTICATION_CLASSES
 }
-
-
-def warn(msg):
-    print(f'WARNING: {msg}', file=sys.stderr)
-
-
-def anyisinstance(obj, type_list):
-    return any([isinstance(obj, t) for t in type_list])
-
-
-def force_serializer_instance(serializer):
-    if inspect.isclass(serializer) and issubclass(serializer, serializers.BaseSerializer):
-        return serializer()
-    else:
-        return serializer
-
-
-def is_serializer(obj):
-    return anyisinstance(
-        force_serializer_instance(obj),
-        [serializers.BaseSerializer, PolymorphicProxySerializer]
-    )
 
 
 class ComponentRegistry:
@@ -104,6 +82,11 @@ class SchemaGenerator(BaseSchemaGenerator):
             # keep reference to schema as every access yields a fresh object (descriptor pattern)
             schema = view.schema
             operation = schema.get_operation(path, method, self.registry)
+
+            # operation was manually removed via @extend_schema
+            if not operation:
+                continue
+
             # Normalise path for any provided mount url.
             if path.startswith('/'):
                 path = path[1:]
@@ -348,18 +331,49 @@ class AutoSchema(ViewInspector):
         return mapping
 
     def _map_model_field(self, field):
-        # in django 3.0 checking both auto and int field is not required but in 2.2 it is
-        if anyisinstance(field, [models.AutoField, models.IntegerField]):
-            return resolve_basic_type(OpenApiTypes.INT)
-        # TODO make this save for django version not having those fields
-        # elif anyisinstance(field, [models.SmallAutoField, models.SmallIntegerField]):
-        #     return resolve_basic_type(OpenApiTypes.INT)
-        # elif anyisinstance(field, [models.BigAutoField, models.BigIntegerField]):
-        #     return resolve_basic_type(OpenApiTypes.INT)
-        elif isinstance(field, models.UUIDField):
+        if isinstance(field, models.UUIDField):
             return resolve_basic_type(OpenApiTypes.UUID)
+        elif anyisinstance(field, [models.AutoField, models.IntegerField, models.SmallIntegerField, models.BigIntegerField]):
+            # in django 3.0 checking both auto and int field is not required but in 2.2 it is
+            return resolve_basic_type(OpenApiTypes.INT)
+        elif anyisinstance(field, [models.BooleanField, models.NullBooleanField]):
+            return resolve_basic_type(OpenApiTypes.BOOL)
+        elif isinstance(field, models.EmailField):
+            return resolve_basic_type(OpenApiTypes.EMAIL)
+        elif isinstance(field, models.SlugField):
+            return resolve_basic_type(OpenApiTypes.STR)
+        elif isinstance(field, models.URLField):
+            return resolve_basic_type(OpenApiTypes.URI)
+        elif anyisinstance(field, [models.CharField, models.TextField, models.SlugField]):
+            return resolve_basic_type(OpenApiTypes.STR)
+        elif isinstance(field, models.FloatField):
+            return resolve_basic_type(OpenApiTypes.FLOAT)
+        elif isinstance(field, models.DateTimeField):
+            return resolve_basic_type(OpenApiTypes.DATETIME)
+        elif isinstance(field, models.DateField):
+            return resolve_basic_type(OpenApiTypes.DATE)
+        elif isinstance(field, models.IPAddressField):
+            return resolve_basic_type(OpenApiTypes.IP4)
+        elif isinstance(field, models.GenericIPAddressField):
+            # TODO diffentiante v4 / v6 in the generic case. not that straight-forward
+            return resolve_basic_type(OpenApiTypes.STR)
+        elif isinstance(field, models.DecimalField):
+            # TODO DRF outputs the decimals as strings, which by spec makes it of type string. better ideas?
+            return resolve_basic_type(OpenApiTypes.STR)
+        elif isinstance(field, models.FileField):
+            # TODO outputs a filename but what does it accept?
+            return resolve_basic_type(OpenApiTypes.STR)
+        elif isinstance(field, models.ImageField):
+            # TODO check what it does
+            return resolve_basic_type(OpenApiTypes.STR)
         else:
-            warn(f'could not resolve model field "{field}" due to missing mapping')
+            # TODO make this save for django version not having those fields
+            #  models.SmallAutoField, models.BigAutoField,
+            warn(
+                f'could not resolve model field "{field}" due to missing mapping.'
+                'either your field is custom and not based on a known subclasses '
+                'or we missed something. let us know.'
+            )
             return resolve_basic_type(OpenApiTypes.STR)
 
     def _map_serializer_field(self, method, field):
@@ -494,10 +508,21 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.CharField):
             return resolve_basic_type(OpenApiTypes.STR)
 
+        if isinstance(field, serializers.ReadOnlyField):
+            # direct source from the serializer
+            assert field.source_attrs, 'ReadOnlyField needs a proper source'
+            target = follow_field_source(field.parent.Meta.model, field.source_attrs)
+
+            if callable(target):
+                return self._map_type_hint(target)
+            elif isinstance(target, models.Field):
+                return self._map_model_field(target)
+            else:
+                warn('ERROR. this is not supposed to happen. please open an issue at and help improve spectacular')
+                return resolve_basic_type(OpenApiTypes.STR)
+
         # TODO serializer fields
-        # serializers.ReadOnlyField
         # serializers.CreateOnlyDefault
-        # serializers.RegexField
 
         warn(f'could not resolve serializer field {field}. defaulting to "string"')
         return resolve_basic_type(OpenApiTypes.STR)

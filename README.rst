@@ -169,8 +169,8 @@ Don't forget to register your custom AutoSchema in the ``DEFAULT_SCHEMA_CLASS``.
     from drf_spectacular.openapi import AutoSchema
 
     class CustomAutoSchema(AutoSchema):
-        def get_tags(self, path, method):
-            return ['AllUnderOneTag']
+        def get_operation_id(self, path, method):
+            return 'YOUR-ID'.replace('-', '_')
 
 
 Extras
@@ -199,7 +199,7 @@ Install testing requirements.
 
 .. code:: bash
 
-    $ pip install -r requirements.txt
+    $ pip install -r requirements.txt -r requirements_dev.txt
 
 Run with runtests.
 
