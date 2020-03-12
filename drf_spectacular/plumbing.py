@@ -1,6 +1,6 @@
-import collections
 import inspect
 import sys
+from collections.abc import Hashable
 
 from django import __version__ as DJANGO_VERSION
 from rest_framework import fields, serializers
@@ -40,7 +40,7 @@ def is_field(obj):
 
 
 def is_basic_type(obj):
-    if not isinstance(obj, collections.Hashable):
+    if not isinstance(obj, Hashable):
         return False
     return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
 
