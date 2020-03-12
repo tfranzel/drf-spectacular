@@ -22,6 +22,9 @@ paths:
         name: test_mode
         schema:
           type: boolean
+          enum:
+          - true
+          - false
         description: creation will be in the sandbox
         required: false
       tags:

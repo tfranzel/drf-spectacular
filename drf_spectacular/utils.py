@@ -1,5 +1,6 @@
 import inspect
 
+from rest_framework.fields import empty
 from rest_framework.settings import api_settings
 
 
@@ -32,12 +33,13 @@ class ExtraParameter(OpenApiSchemaBase):
     PATH = 'path'
     HEADER = 'header'
 
-    def __init__(self, name, type=str, location=QUERY, required=False, description=''):
+    def __init__(self, name, type=str, location=QUERY, required=False, description='', enum=empty):
         self.name = name
         self.type = type
         self.location = location
         self.required = required
         self.description = description
+        self.enum = enum
 
     def to_schema(self):
         from drf_spectacular.plumbing import resolve_basic_type
@@ -49,6 +51,8 @@ class ExtraParameter(OpenApiSchemaBase):
         }
         if self.location != self.PATH:
             schema['required'] = self.required
+        if self.enum is not empty:
+            schema['schema']['enum'] = self.enum
         return schema
 
 
