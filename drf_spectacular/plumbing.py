@@ -100,3 +100,16 @@ def follow_field_source(model, path):
             pass
 
         return dummy_property
+
+
+def alpha_operation_sorter(endpoint):
+    """ sort endpoints first alphanumerically by path, then by method order """
+    path, method, callback = endpoint
+    method_priority = {
+        'GET': 0,
+        'POST': 1,
+        'PUT': 2,
+        'PATCH': 3,
+        'DELETE': 4
+    }.get(method, 5)
+    return (path, method_priority)

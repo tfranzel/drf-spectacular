@@ -17,7 +17,10 @@ from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
-from drf_spectacular.plumbing import resolve_basic_type, warn, anyisinstance, force_instance, is_serializer, follow_field_source, is_field, is_basic_type
+from drf_spectacular.plumbing import (
+    resolve_basic_type, warn, anyisinstance, force_instance, is_serializer,
+    follow_field_source, is_field, is_basic_type, alpha_operation_sorter,
+)
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer
 
@@ -66,17 +69,22 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         return view
 
+    def get_endpoints(self, request):
+        """ sorted endpoints by operation """
+        self._initialise_endpoints()
+        _, endpoints = self._get_paths_and_endpoints(request)
+
+        if spectacular_settings.OPERATION_SORTER == 'alpha':
+            return sorted(endpoints, key=alpha_operation_sorter)
+        else:
+            # default to DRF method sorting
+            return endpoints
+
     def parse(self, request=None):
+        """ Iterate endpoints generating per method path operations. """
         result = {}
 
-        paths, view_endpoints = self._get_paths_and_endpoints(request)
-
-        # Only generate the path prefix for paths that will be included
-        if not paths:
-            return None
-
-        # Iterate endpoints generating per method path operations.
-        for path, method, view in view_endpoints:
+        for path, method, view in self.get_endpoints(request):
             if not self.has_view_permissions(path, method, view):
                 continue
             # keep reference to schema as every access yields a fresh object (descriptor pattern)
@@ -101,8 +109,6 @@ class SchemaGenerator(BaseSchemaGenerator):
         """
         Generate a OpenAPI schema.
         """
-        self._initialise_endpoints()
-
         schema = {
             'openapi': '3.0.3',
             'servers': [
