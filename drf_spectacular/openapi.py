@@ -20,6 +20,7 @@ from drf_spectacular.app_settings import spectacular_settings
 from drf_spectacular.plumbing import (
     resolve_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, alpha_operation_sorter,
+    get_field_from_model
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer
@@ -408,13 +409,15 @@ class AutoSchema(ViewInspector):
             }
 
         if isinstance(field, serializers.PrimaryKeyRelatedField):
-            model = getattr(field.queryset, 'model', None)
-
-            if not model:
-                warn(f'unable to map model field {field} due to missing model. defaulting to "string"')
-                return resolve_basic_type(OpenApiTypes.STR)
+            if field.queryset:
+                return self._map_model_field(field.queryset.model._meta.pk)
             else:
-                return self._map_model_field(model._meta.pk)
+                # read_only fields to not have a queryset by design.
+                # go around and get field from parent.
+                model = field.parent.Meta.model
+                return self._map_model_field(
+                    get_field_from_model(model, model.id)
+                )
 
         # ChoiceFields (single and multiple).
         # Q:

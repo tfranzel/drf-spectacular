@@ -60,6 +60,19 @@ def resolve_basic_type(obj):
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])
 
 
+def get_field_from_model(model, field):
+    """
+    this is a Django 2.2 compatibility function to access a field through a Deferred Attribute
+    """
+    if DJANGO_VERSION.startswith('2'):
+        # trying to access the field through the DeferredAttribute will fail in an
+        # endless loop. bypass this issue by fishing it out of the meta field list.
+        field_name = field.field_name
+        return [f for f in model._meta.fields if f.name == field_name][0]
+    else:
+        return field.field
+
+
 def _follow_field_source(model, path):
     field_or_property = getattr(model, path[0])
 
@@ -68,13 +81,7 @@ def _follow_field_source(model, path):
         if isinstance(field_or_property, property):
             return field_or_property.fget
         else:
-            if DJANGO_VERSION.startswith('2'):
-                # trying to access the field through the DeferredAttribute will fail in an
-                # endless loop. bypass this issue by fishing it out of the meta field list.
-                field_name = field_or_property.field_name
-                return [f for f in model._meta.fields if f.name == field_name][0]
-            else:
-                return field_or_property.field
+            return get_field_from_model(model, field_or_property)
     else:
         model = field_or_property.field.related_model
         return follow_field_source(model, path[1:])
@@ -112,4 +119,4 @@ def alpha_operation_sorter(endpoint):
         'PATCH': 3,
         'DELETE': 4
     }.get(method, 5)
-    return (path, method_priority)
+    return path, method_priority

@@ -47,6 +47,7 @@ def test_recursion(no_warnings):
         'tests/test_recursion.yml'
     )
 
+
 @pytest.mark.skip
 @pytest.mark.django_db
 def test_model_setup_is_valid():
