@@ -62,6 +62,7 @@ def extend_schema(
         description=None,
         deprecated=None,
         tags=None,
+        exclude=False,
 ):
     """
     decorator for the "view" kind. partially or completely overrides what would be
@@ -69,7 +70,6 @@ def extend_schema(
 
     :param operation: manually override what auto-discovery would generate. you must
         provide a OpenAPI3-compliant dictionary that gets directly translated to YAML.
-        To hide the operation in the spec, pass an empty dict {}.
     :param operation_id: replaces the auto-generated operation_id. make sure there
         are no naming collisions.
     :param extra_parameters: list of additional parameters that are added to the
@@ -86,15 +86,18 @@ def extend_schema(
     :param request: replaces the discovered Serializer.
     :param auth:
     :param description:
-    :param deprecated: mark endpoint as deprecated
+    :param deprecated: mark operation as deprecated
     :param tags:
+    :param exclude: set True to exclude operation from schema
     :return:
     """
 
     def decorator(f):
         class ExtendedSchema(api_settings.DEFAULT_SCHEMA_CLASS):
             def get_operation(self, path, method, registry):
-                if operation is not None:
+                if exclude:
+                    return None
+                if operation:
                     return operation
                 return super().get_operation(path, method, registry)
 
