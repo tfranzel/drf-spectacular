@@ -2,12 +2,12 @@ from unittest import mock
 
 import pytest
 from django.db import models
-from rest_framework import viewsets, serializers, routers
+from rest_framework import viewsets, serializers
 from rest_framework.response import Response
 
-from drf_spectacular.openapi import SchemaGenerator, AutoSchema
+from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.utils import extend_schema, PolymorphicProxySerializer
-from tests import assert_schema
+from tests import assert_schema, generate_schema
 
 
 class LegalPerson2(models.Model):
@@ -61,12 +61,10 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_polymorphic(no_warnings):
-    router = routers.SimpleRouter()
-    router.register('persons', PersonViewSet, basename="person")
-    generator = SchemaGenerator(patterns=router.urls)
-    schema = generator.get_schema(request=None, public=True)
-
-    assert_schema(schema, 'tests/test_polymorphic.yml')
+    assert_schema(
+        generate_schema('persons', PersonViewSet),
+        'tests/test_polymorphic.yml'
+    )
 
 
 @pytest.mark.skip

@@ -3,11 +3,11 @@ from unittest import mock
 
 import pytest
 from django.db import models
-from rest_framework import serializers, viewsets, routers, mixins
+from rest_framework import serializers, viewsets, mixins
 from rest_framework.renderers import JSONRenderer
 
-from drf_spectacular.openapi import SchemaGenerator, AutoSchema
-from tests import assert_schema
+from drf_spectacular.openapi import AutoSchema
+from tests import assert_schema, generate_schema
 
 
 class TreeNode(models.Model):
@@ -42,13 +42,10 @@ class TreeNodeViewset(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_recursion(no_warnings):
-    router = routers.SimpleRouter()
-    router.register('nodes', TreeNodeViewset, basename="nodes")
-    generator = SchemaGenerator(patterns=router.urls)
-    schema = generator.get_schema(request=None, public=True)
-
-    assert_schema(schema, 'tests/test_recursion.yml')
-
+    assert_schema(
+        generate_schema('nodes', TreeNodeViewset),
+        'tests/test_recursion.yml'
+    )
 
 @pytest.mark.skip
 @pytest.mark.django_db

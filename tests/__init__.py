@@ -1,5 +1,8 @@
 import importlib
 
+from django.utils.module_loading import import_string
+
+
 
 def assert_schema(schema, reference_file):
     from drf_spectacular.renderers import NoAliasOpenAPIRenderer
@@ -13,10 +16,14 @@ def assert_schema(schema, reference_file):
         assert schema_yml.decode() == fh.read()
 
 
-def import_class(import_str):
-    import_path = import_str.split('.')
-    module, klass = '.'.join(import_path[:-1]), import_path[-1]
-    return getattr(importlib.import_module(module), klass)
+def generate_schema(route, viewset):
+    from rest_framework import routers
+    from drf_spectacular.openapi import SchemaGenerator
+
+    router = routers.SimpleRouter()
+    router.register(route, viewset, basename=route)
+    generator = SchemaGenerator(patterns=router.urls)
+    return generator.get_schema(request=None, public=True)
 
 
 def lazy_serializer(path):
@@ -28,7 +35,7 @@ def lazy_serializer(path):
 
         def __getattr__(self, item):
             if not self.lazy_obj:
-                self.lazy_obj = import_class(path)(*self.lazy_args, **self.lazy_kwargs)
+                self.lazy_obj = import_string(path)(*self.lazy_args, **self.lazy_kwargs)
             return getattr(self.lazy_obj, item)
 
         @property

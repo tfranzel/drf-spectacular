@@ -6,11 +6,11 @@ from unittest import mock
 import pytest
 from django.core.files.base import ContentFile
 from django.db import models
-from rest_framework import serializers, viewsets, routers
+from rest_framework import serializers, viewsets
 from rest_framework.renderers import JSONRenderer
 
-from drf_spectacular.openapi import SchemaGenerator, AutoSchema
-from tests import assert_schema
+from drf_spectacular.openapi import AutoSchema
+from tests import assert_schema, generate_schema
 
 
 # TODO Fields known to DRF and mapping
@@ -93,7 +93,7 @@ class AllFieldsSerializer(serializers.ModelSerializer):
         model = AllFields
 
 
-class AlbumModelViewset(viewsets.ReadOnlyModelViewSet):
+class AllFieldsModelViewset(viewsets.ReadOnlyModelViewSet):
     serializer_class = AllFieldsSerializer
     queryset = AllFields.objects.none()
 
@@ -103,12 +103,10 @@ class AlbumModelViewset(viewsets.ReadOnlyModelViewSet):
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_fields(no_warnings):
-    router = routers.SimpleRouter()
-    router.register('allfields', AlbumModelViewset, basename="allfields")
-    generator = SchemaGenerator(patterns=router.urls)
-    schema = generator.get_schema(request=None, public=True)
-
-    assert_schema(schema, 'tests/test_fields.yml')
+    assert_schema(
+        generate_schema('allfields', AllFieldsModelViewset),
+        'tests/test_fields.yml'
+    )
 
 
 @pytest.mark.skip

@@ -1,13 +1,13 @@
 from unittest import mock
 
 from django.utils.http import urlsafe_base64_encode
-from rest_framework import serializers, viewsets, routers
+from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
-from drf_spectacular.openapi import SchemaGenerator, AutoSchema
+from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, ExtraParameter, extend_schema_field
-from tests import assert_schema
+from tests import assert_schema, generate_schema
 
 
 class AlphaSerializer(serializers.Serializer):
@@ -88,9 +88,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_extend_schema(no_warnings):
-    router = routers.SimpleRouter()
-    router.register('doesitall', DoesItAllViewset, basename="doesitall")
-    generator = SchemaGenerator(patterns=router.urls)
-    schema = generator.get_schema(request=None, public=True)
-
-    assert_schema(schema, 'tests/test_extend_schema.yml')
+    assert_schema(
+        generate_schema('doesitall', DoesItAllViewset),
+        'tests/test_extend_schema.yml'
+    )
