@@ -778,6 +778,8 @@ class AutoSchema(ViewInspector):
         return {component.name: []}
 
     def resolve_serializer(self, method, serializer) -> ResolvedComponent:
+        assert is_serializer(serializer)
+
         component = ResolvedComponent(
             name=self._get_serializer_name(method, serializer),
             type=ResolvedComponent.SCHEMA,

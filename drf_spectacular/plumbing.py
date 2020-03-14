@@ -157,11 +157,6 @@ class ComponentRegistry:
     def __init__(self):
         self._components = {}
 
-    def pre_register(self, component: ResolvedComponent):
-        """ mark names to be filled later to prevent recursion loops"""
-        if component.key not in self._components:
-            self._components[component.key] = None
-
     def register(self, component: ResolvedComponent):
         if self._components.get(component.key, None):
             warn(
@@ -175,7 +170,21 @@ class ComponentRegistry:
         del self._components[component.key]
 
     def __contains__(self, component):
-        return component.key in self._components
+        if component.key not in self._components:
+            return False
+
+        query_obj = component.object
+        registry_obj = self._components[component.key].object
+        query_class = query_obj if inspect.isclass(query_obj) else query_obj.__class__
+        registry_class = query_obj if inspect.isclass(registry_obj) else registry_obj.__class__
+
+        if query_class != registry_class:
+            warn(
+                f'Encountered 2 components with identical names "{component.name}" and '
+                f'different classes {query_class} and {registry_class}. This will very '
+                f'likely result in an incorrect schema. Try renaming one.'
+            )
+        return True
 
     def __getitem__(self, key):
         if isinstance(key, ResolvedComponent):

@@ -1,7 +1,7 @@
 from unittest import mock
 
 from django.db import models
-from rest_framework import serializers, viewsets
+from rest_framework import serializers, viewsets, mixins
 
 from drf_spectacular.openapi import AutoSchema
 from tests import generate_schema
@@ -33,3 +33,35 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
     props = schema['components']['schemas']['M2']['properties']
     assert props['m1_rw']['type'] == 'integer'
     assert props['m1_r']['type'] == 'integer'
+
+
+@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
+def test_serializer_name_reuse(warnings):
+    from rest_framework import routers
+    from drf_spectacular.openapi import SchemaGenerator
+    router = routers.SimpleRouter()
+
+    def x1():
+        class XSerializer(serializers.Serializer):
+            uuid = serializers.UUIDField()
+
+        return XSerializer
+
+    def x2():
+        class XSerializer(serializers.Serializer):
+            integer = serializers.IntegerField
+
+        return XSerializer
+
+    class X1Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = x1()
+
+    router.register('x1', X1Viewset, basename='x1')
+
+    class X2Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = x2()
+
+    router.register('x2', X2Viewset, basename='x2')
+
+    generator = SchemaGenerator(patterns=router.urls)
+    generator.get_schema(request=None, public=True)

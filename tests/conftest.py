@@ -96,3 +96,11 @@ def no_warnings(capsys):
     captured = capsys.readouterr()
     assert not captured.out
     assert not captured.err
+
+
+@pytest.fixture()
+def warnings(capsys):
+    """ make sure test emits no warnings """
+    yield capsys
+    captured = capsys.readouterr()
+    assert captured.err
