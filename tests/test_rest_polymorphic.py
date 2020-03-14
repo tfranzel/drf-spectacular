@@ -53,7 +53,7 @@ class PersonViewSet(viewsets.ModelViewSet):
 
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', PolymorphicAutoSchema)
-def test_polymorphic(no_warnings):
+def test_rest_polymorphic(no_warnings):
     assert_schema(
         generate_schema('persons', PersonViewSet),
         'tests/test_rest_polymorphic.yml'

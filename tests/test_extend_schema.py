@@ -81,7 +81,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         def create(self, request, *args, **kwargs):
             return Response({})
 
-        @extend_schema(operation={})
+        @extend_schema(exclude=True)
         def list(self, request, *args, **kwargs):
             return Response([])
 
