@@ -11,18 +11,18 @@ class PolymorphicAutoSchema(AutoSchema):
         Extended AutoSchema to deal with rest_polymorphic native PolymorphicSerializer
     """
 
-    def _map_serializer(self, method, serializer, nested=False):
+    def _map_serializer(self, method, serializer):
         if isinstance(serializer, PolymorphicSerializer):
-            return self._map_polymorphic_serializer(method, serializer, nested=False)
+            return self._map_polymorphic_serializer(method, serializer)
         else:
-            return super()._map_serializer(method, serializer, nested)
+            return super()._map_serializer(method, serializer)
 
-    def _map_polymorphic_serializer(self, method, serializer, nested):
+    def _map_polymorphic_serializer(self, method, serializer):
         poly_list = []
 
         for _, sub_serializer in serializer.model_serializer_mapping.items():
-            sub_schema = self.resolve_serializer(method, sub_serializer, nested)
-            sub_serializer_name = self._get_serializer_name(method, sub_serializer, nested)
+            sub_schema = self.resolve_serializer(method, sub_serializer)
+            sub_serializer_name = self._get_serializer_name(method, sub_serializer)
 
             poly_list.append((sub_serializer_name, sub_schema))
 

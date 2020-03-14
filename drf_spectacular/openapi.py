@@ -392,7 +392,7 @@ class AutoSchema(ViewInspector):
 
         # nested serializer
         if isinstance(field, serializers.Serializer):
-            return self.resolve_serializer(method, field, nested=True)
+            return self.resolve_serializer(method, field)
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if isinstance(field, serializers.ListSerializer):
@@ -542,13 +542,13 @@ class AutoSchema(ViewInspector):
         if field.min_value:
             content['minimum'] = field.min_value
 
-    def _map_serializer(self, method, serializer, nested=False):
+    def _map_serializer(self, method, serializer):
         if isinstance(serializer, PolymorphicProxySerializer):
-            return self._map_polymorphic_proxy_serializer(method, serializer, nested=False)
+            return self._map_polymorphic_proxy_serializer(method, serializer)
         else:
-            return self._map_concrete_serializer(method, serializer, nested=False)
+            return self._map_concrete_serializer(method, serializer)
 
-    def _map_polymorphic_proxy_serializer(self, method, serializer, nested):
+    def _map_polymorphic_proxy_serializer(self, method, serializer):
         """ custom handling for @extend_schema's injection of PolymorphicProxySerializer """
         poly_list = []
 
@@ -562,8 +562,8 @@ class AutoSchema(ViewInspector):
                     f'discriminator field "{serializer.resource_type_field_name}".'
                 )
 
-            sub_schema = self.resolve_serializer(method, sub_serializer, nested)
-            sub_serializer_name = self._get_serializer_name(method, sub_serializer, nested)
+            sub_schema = self.resolve_serializer(method, sub_serializer)
+            sub_serializer_name = self._get_serializer_name(method, sub_serializer)
             poly_list.append((sub_serializer_name, sub_schema))
 
         return {
@@ -575,7 +575,7 @@ class AutoSchema(ViewInspector):
             }
         }
 
-    def _map_concrete_serializer(self, method, serializer, nested):
+    def _map_concrete_serializer(self, method, serializer):
         required = []
         properties = {}
 
@@ -778,7 +778,7 @@ class AutoSchema(ViewInspector):
             'description': ''
         }
 
-    def _get_serializer_name(self, method, serializer, nested):
+    def _get_serializer_name(self, method, serializer):
         if isinstance(serializer, PolymorphicProxySerializer):
             return serializer.component_name
 
@@ -802,14 +802,14 @@ class AutoSchema(ViewInspector):
 
         return {auth_scheme.name: []}
 
-    def resolve_serializer(self, method, serializer, nested=False):
-        name = self._get_serializer_name(method, serializer, nested)
+    def resolve_serializer(self, method, serializer):
+        name = self._get_serializer_name(method, serializer)
 
         if name not in self.registry.schemas:
             # add placeholder to prevent recursion loop
             self.registry.schemas[name] = None
 
-            schema = self._map_serializer(method, serializer, nested)
+            schema = self._map_serializer(method, serializer)
             # 3 cases:
             #   1. polymorphic container component -> use
             #   2. concrete component with properties -> use
