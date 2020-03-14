@@ -20,7 +20,7 @@ from drf_spectacular.app_settings import spectacular_settings
 from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, alpha_operation_sorter,
-    get_field_from_model, build_array_type
+    get_field_from_model, build_array_type, ComponentRegistry, ResolvedComponent,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer
@@ -28,18 +28,6 @@ from drf_spectacular.utils import PolymorphicProxySerializer
 AUTHENTICATION_SCHEMES = {
     cls.authentication_class: cls for cls in spectacular_settings.SCHEMA_AUTHENTICATION_CLASSES
 }
-
-
-class ComponentRegistry:
-    def __init__(self):
-        self.schemas = {}
-        self.security_schemes = {}
-
-    def get_components(self):
-        return {
-            'securitySchemes': self.security_schemes,
-            'schemas': self.schemas,
-        }
 
 
 class SchemaGenerator(BaseSchemaGenerator):
@@ -121,7 +109,7 @@ class SchemaGenerator(BaseSchemaGenerator):
                 'description': self.description or '',
             },
             'paths': self.parse(None if public else request),
-            'components': self.registry.get_components(),
+            'components': self.registry.build(),
         }
         return schema
 
@@ -135,7 +123,7 @@ class AutoSchema(ViewInspector):
         'delete': 'destroy',
     }
 
-    def get_operation(self, path, method, registry):
+    def get_operation(self, path, method, registry: ComponentRegistry):
         self.registry = registry
         operation = {}
 
@@ -392,11 +380,11 @@ class AutoSchema(ViewInspector):
 
         # nested serializer
         if isinstance(field, serializers.Serializer):
-            return self.resolve_serializer(method, field)
+            return self.resolve_serializer(method, field).ref
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if isinstance(field, serializers.ListSerializer):
-            return build_array_type(self.resolve_serializer(method, field.child))
+            return build_array_type(self.resolve_serializer(method, field.child).ref)
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
@@ -538,11 +526,12 @@ class AutoSchema(ViewInspector):
 
     def _map_polymorphic_proxy_serializer(self, method, serializer):
         """ custom handling for @extend_schema's injection of PolymorphicProxySerializer """
-        poly_list = []
+        sub_components = []
 
         for sub_serializer in serializer.serializers:
             assert is_serializer(sub_serializer), 'sub-serializer must be either a Serializer or a PolymorphicProxySerializer.'
             sub_serializer = force_instance(sub_serializer)
+            sub_components.append(self.resolve_serializer(method, sub_serializer))
 
             if serializer.resource_type_field_name not in sub_serializer.fields:
                 warn(
@@ -550,16 +539,11 @@ class AutoSchema(ViewInspector):
                     f'discriminator field "{serializer.resource_type_field_name}".'
                 )
 
-            sub_schema = self.resolve_serializer(method, sub_serializer)
-            sub_serializer_name = self._get_serializer_name(method, sub_serializer)
-            poly_list.append((sub_serializer_name, sub_schema))
-
         return {
-            'oneOf': [ref for _, ref in poly_list],
+            'oneOf': [c.ref for c in sub_components],
             'discriminator': {
                 'propertyName': serializer.resource_type_field_name,
-                # TODO mapping name is not sourced from serializer. API breaks schema if it does not use component name
-                'mapping': {name: ref['$ref'] for name, ref in poly_list}
+                'mapping': {c.name: c.ref['$ref'] for c in sub_components}
             }
         }
 
@@ -685,7 +669,7 @@ class AutoSchema(ViewInspector):
         serializer = force_instance(self.get_request_serializer(path, method))
 
         if is_serializer(serializer):
-            schema = self.resolve_serializer(method, serializer)
+            schema = self.resolve_serializer(method, serializer).ref
         else:
             warn(
                 f'could not resolve request body for {method} {path}. defaulting to generic '
@@ -735,11 +719,11 @@ class AutoSchema(ViewInspector):
         if not serializer:
             return {'description': 'No response body'}
         elif anyisinstance(serializer, [serializers.Serializer, PolymorphicProxySerializer]):
-            schema = self.resolve_serializer(method, serializer)
+            schema = self.resolve_serializer(method, serializer).ref
             if not schema:
                 return {'description': 'No response body'}
         elif isinstance(serializer, serializers.ListSerializer):
-            schema = self.resolve_serializer(method, serializer.child)
+            schema = self.resolve_serializer(method, serializer.child).ref
         elif isinstance(serializer, dict):
             # bypass processing and use given schema directly
             schema = serializer
@@ -782,27 +766,32 @@ class AutoSchema(ViewInspector):
         if not auth_scheme:
             raise ValueError('no auth scheme registered for {}'.format(authentication.__name__))
 
-        if auth_scheme.name not in self.registry.security_schemes:
-            self.registry.security_schemes[auth_scheme.name] = auth_scheme.schema
+        component = ResolvedComponent(
+            name=auth_scheme.name,
+            type=ResolvedComponent.SECURITY_SCHEMA,
+            object=authentication.__class__,
+            schema=auth_scheme.schema
+        )
+        if component not in self.registry:
+            self.registry.register(component)
+        return {component.name: []}
 
-        return {auth_scheme.name: []}
+    def resolve_serializer(self, method, serializer) -> ResolvedComponent:
+        component = ResolvedComponent(
+            name=self._get_serializer_name(method, serializer),
+            type=ResolvedComponent.SCHEMA,
+            object=serializer,
+        )
+        if component in self.registry:
+            return self.registry[component]  # return component with schema
 
-    def resolve_serializer(self, method, serializer):
-        name = self._get_serializer_name(method, serializer)
-
-        if name not in self.registry.schemas:
-            # add placeholder to prevent recursion loop
-            self.registry.schemas[name] = None
-
-            schema = self._map_serializer(method, serializer)
-            # 3 cases:
-            #   1. polymorphic container component -> use
-            #   2. concrete component with properties -> use
-            #   3. concrete component without properties -> prob. transactional so discard
-            if 'oneOf' not in schema and not schema['properties']:
-                del self.registry.schemas[name]
-                return {}
-            else:
-                self.registry.schemas[name] = schema
-
-        return {'$ref': '#/components/schemas/{}'.format(name)}
+        self.registry.register(component)
+        component.schema = self._map_serializer(method, serializer)
+        # 3 cases:
+        #   1. polymorphic container component -> use
+        #   2. concrete component with properties -> use
+        #   3. concrete component without properties -> prob. transactional so discard
+        if 'oneOf' not in component.schema and not component.schema['properties']:
+            del self.registry[component]
+            return ResolvedComponent(None, None)  # sentinel
+        return component

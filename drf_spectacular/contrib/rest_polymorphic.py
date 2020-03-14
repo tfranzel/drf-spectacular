@@ -18,18 +18,15 @@ class PolymorphicAutoSchema(AutoSchema):
             return super()._map_serializer(method, serializer)
 
     def _map_polymorphic_serializer(self, method, serializer):
-        poly_list = []
+        sub_components = []
 
         for _, sub_serializer in serializer.model_serializer_mapping.items():
-            sub_schema = self.resolve_serializer(method, sub_serializer)
-            sub_serializer_name = self._get_serializer_name(method, sub_serializer)
-
-            poly_list.append((sub_serializer_name, sub_schema))
+            sub_components.append(self.resolve_serializer(method, sub_serializer))
 
         return {
-            'oneOf': [ref for _, ref in poly_list],
+            'oneOf': [c.ref for c in sub_components],
             'discriminator': {
                 'propertyName': serializer.resource_type_field_name,
-                'mapping': {name: ref['$ref'] for name, ref in poly_list}
+                'mapping': {c.name: c.ref['$ref'] for c in sub_components},
             }
         }

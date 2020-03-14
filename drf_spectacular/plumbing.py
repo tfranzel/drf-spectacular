@@ -1,5 +1,6 @@
 import inspect
 import sys
+from collections import defaultdict
 from collections.abc import Hashable
 
 from django import __version__ as DJANGO_VERSION
@@ -127,3 +128,71 @@ def alpha_operation_sorter(endpoint):
         'DELETE': 4
     }.get(method, 5)
     return path, method_priority
+
+
+class ResolvedComponent:
+    SCHEMA = 'schemas'
+    SECURITY_SCHEMA = 'securitySchemes'
+
+    def __init__(self, name, type, schema=None, object=None):
+        self.name = name
+        self.type = type
+        self.schema = schema
+        self.object = object
+
+    def __bool__(self):
+        return bool(self.schema)
+
+    @property
+    def key(self):
+        return self.name, self.type
+
+    @property
+    def ref(self) -> dict:
+        assert self.name and self.type and self.object
+        return {'$ref': f'#/components/{self.type}/{self.name}'}
+
+
+class ComponentRegistry:
+    def __init__(self):
+        self._components = {}
+
+    def pre_register(self, component: ResolvedComponent):
+        """ mark names to be filled later to prevent recursion loops"""
+        if component.key not in self._components:
+            self._components[component.key] = None
+
+    def register(self, component: ResolvedComponent):
+        if self._components.get(component.key, None):
+            warn(
+                f'trying to re-register a {component.type} component with name '
+                f'{self._components[component.key].name}. this might lead to '
+                f'a incorrect schema. Look out for reused names'
+            )
+        self._components[component.key] = component
+
+    def unregister(self, component: ResolvedComponent):
+        del self._components[component.key]
+
+    def __contains__(self, component):
+        return component.key in self._components
+
+    def __getitem__(self, key):
+        if isinstance(key, ResolvedComponent):
+            key = key.key
+        return self._components[key]
+
+    def __delitem__(self, key):
+        if isinstance(key, ResolvedComponent):
+            key = key.key
+        del self._components[key]
+
+    def build(self) -> dict:
+        output = defaultdict(dict)
+        for component in self._components.values():
+            output[component.type][component.name] = component.schema
+        # sort by component type then by name
+        return {
+            type: {name: output[type][name] for name in output[type].keys()}
+            for type in sorted(output.keys(), reverse=True)
+        }
