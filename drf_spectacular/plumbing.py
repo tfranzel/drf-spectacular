@@ -45,7 +45,7 @@ def is_basic_type(obj):
     return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
 
 
-def resolve_basic_type(obj):
+def build_basic_type(obj):
     """
     resolve either enum or actual type and yield schema template for modification
     """
@@ -58,6 +58,13 @@ def resolve_basic_type(obj):
     else:
         warn(f'could not resolve type "{obj}". defaulting to "string"')
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])
+
+
+def build_array_type(schema):
+    return {
+        'type': 'array',
+        'items': schema,
+    }
 
 
 def get_field_from_model(model, field):

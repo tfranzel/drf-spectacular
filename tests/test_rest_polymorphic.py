@@ -8,7 +8,8 @@ from rest_framework.renderers import JSONRenderer
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from drf_spectacular.contrib.rest_polymorphic import PolymorphicAutoSchema
-from tests import assert_schema, lazy_serializer, generate_schema
+from tests import assert_schema, generate_schema
+from drf_spectacular.helpers import lazy_serializer
 
 
 class Person(PolymorphicModel):

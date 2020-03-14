@@ -18,9 +18,9 @@ from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
 from drf_spectacular.plumbing import (
-    resolve_basic_type, warn, anyisinstance, force_instance, is_serializer,
+    build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, alpha_operation_sorter,
-    get_field_from_model
+    get_field_from_model, build_array_type
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer
@@ -88,9 +88,9 @@ class SchemaGenerator(BaseSchemaGenerator):
         for path, method, view in self.get_endpoints(request):
             if not self.has_view_permissions(path, method, view):
                 continue
-            # keep reference to schema as every access yields a fresh object (descriptor pattern)
-            schema = view.schema
-            operation = schema.get_operation(path, method, self.registry)
+
+            # beware that every access to schema yields a fresh object (descriptor pattern)
+            operation = view.schema.get_operation(path, method, self.registry)
 
             # operation was manually removed via @extend_schema
             if not operation:
@@ -248,7 +248,7 @@ class AutoSchema(ViewInspector):
         """
         model = getattr(getattr(self.view, 'queryset', None), 'model', None)
         parameters = []
-        schema = resolve_basic_type(OpenApiTypes.STR)
+        schema = build_basic_type(OpenApiTypes.STR)
         description = ''
 
         for variable in uritemplate.variables(path):
@@ -339,40 +339,40 @@ class AutoSchema(ViewInspector):
 
     def _map_model_field(self, field):
         if isinstance(field, models.UUIDField):
-            return resolve_basic_type(OpenApiTypes.UUID)
+            return build_basic_type(OpenApiTypes.UUID)
         elif anyisinstance(field, [models.AutoField, models.IntegerField, models.SmallIntegerField, models.BigIntegerField]):
             # in django 3.0 checking both auto and int field is not required but in 2.2 it is
-            return resolve_basic_type(OpenApiTypes.INT)
+            return build_basic_type(OpenApiTypes.INT)
         elif anyisinstance(field, [models.BooleanField, models.NullBooleanField]):
-            return resolve_basic_type(OpenApiTypes.BOOL)
+            return build_basic_type(OpenApiTypes.BOOL)
         elif isinstance(field, models.EmailField):
-            return resolve_basic_type(OpenApiTypes.EMAIL)
+            return build_basic_type(OpenApiTypes.EMAIL)
         elif isinstance(field, models.SlugField):
-            return resolve_basic_type(OpenApiTypes.STR)
+            return build_basic_type(OpenApiTypes.STR)
         elif isinstance(field, models.URLField):
-            return resolve_basic_type(OpenApiTypes.URI)
+            return build_basic_type(OpenApiTypes.URI)
         elif anyisinstance(field, [models.CharField, models.TextField, models.SlugField]):
-            return resolve_basic_type(OpenApiTypes.STR)
+            return build_basic_type(OpenApiTypes.STR)
         elif isinstance(field, models.FloatField):
-            return resolve_basic_type(OpenApiTypes.FLOAT)
+            return build_basic_type(OpenApiTypes.FLOAT)
         elif isinstance(field, models.DateTimeField):
-            return resolve_basic_type(OpenApiTypes.DATETIME)
+            return build_basic_type(OpenApiTypes.DATETIME)
         elif isinstance(field, models.DateField):
-            return resolve_basic_type(OpenApiTypes.DATE)
+            return build_basic_type(OpenApiTypes.DATE)
         elif isinstance(field, models.IPAddressField):
-            return resolve_basic_type(OpenApiTypes.IP4)
+            return build_basic_type(OpenApiTypes.IP4)
         elif isinstance(field, models.GenericIPAddressField):
             # TODO diffentiante v4 / v6 in the generic case. not that straight-forward
-            return resolve_basic_type(OpenApiTypes.STR)
+            return build_basic_type(OpenApiTypes.STR)
         elif isinstance(field, models.DecimalField):
             # TODO DRF outputs the decimals as strings, which by spec makes it of type string. better ideas?
-            return resolve_basic_type(OpenApiTypes.STR)
+            return build_basic_type(OpenApiTypes.STR)
         elif isinstance(field, models.FileField):
             # TODO outputs a filename but what does it accept?
-            return resolve_basic_type(OpenApiTypes.STR)
+            return build_basic_type(OpenApiTypes.STR)
         elif isinstance(field, models.ImageField):
             # TODO check what it does
-            return resolve_basic_type(OpenApiTypes.STR)
+            return build_basic_type(OpenApiTypes.STR)
         else:
             # TODO make this save for django version not having those fields
             #  models.SmallAutoField, models.BigAutoField,
@@ -381,12 +381,12 @@ class AutoSchema(ViewInspector):
                 'either your field is custom and not based on a known subclasses '
                 'or we missed something. let us know.'
             )
-            return resolve_basic_type(OpenApiTypes.STR)
+            return build_basic_type(OpenApiTypes.STR)
 
     def _map_serializer_field(self, method, field):
         if hasattr(field, '_spectacular_annotation'):
             if is_basic_type(field._spectacular_annotation):
-                return resolve_basic_type(field._spectacular_annotation)
+                return build_basic_type(field._spectacular_annotation)
             else:
                 return self._map_serializer_field(method, field._spectacular_annotation)
 
@@ -396,17 +396,11 @@ class AutoSchema(ViewInspector):
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if isinstance(field, serializers.ListSerializer):
-            return {
-                'type': 'array',
-                'items': self.resolve_serializer(method, field.child)
-            }
+            return build_array_type(self.resolve_serializer(method, field.child))
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
-            return {
-                'type': 'array',
-                'items': self._map_serializer_field(method, field.child_relation)
-            }
+            return build_array_type(self._map_serializer_field(method, field.child_relation))
 
         if isinstance(field, serializers.PrimaryKeyRelatedField):
             if field.queryset:
@@ -424,19 +418,13 @@ class AutoSchema(ViewInspector):
         # - Is 'type' required?
         # - can we determine the TYPE of a choicefield?
         if isinstance(field, serializers.MultipleChoiceField):
-            return {
-                'type': 'array',
-                'items': self._map_choicefield(field)
-            }
+            return build_array_type(self._map_choicefield(field))
 
         if isinstance(field, serializers.ChoiceField):
             return self._map_choicefield(field)
 
         if isinstance(field, serializers.ListField):
-            mapping = {
-                'type': 'array',
-                'items': {},
-            }
+            schema = build_array_type({})
             # TODO check this
             if not isinstance(field.child, _UnvalidatedField):
                 map_field = self._map_serializer_field(method, field.child)
@@ -445,34 +433,34 @@ class AutoSchema(ViewInspector):
                 }
                 if 'format' in map_field:
                     items['format'] = map_field.get('format')
-                mapping['items'] = items
-            return mapping
+                schema['items'] = items
+            return schema
 
         # DateField and DateTimeField type is string
         if isinstance(field, serializers.DateField):
-            return resolve_basic_type(OpenApiTypes.DATE)
+            return build_basic_type(OpenApiTypes.DATE)
 
         if isinstance(field, serializers.DateTimeField):
-            return resolve_basic_type(OpenApiTypes.DATETIME)
+            return build_basic_type(OpenApiTypes.DATETIME)
 
         if isinstance(field, serializers.EmailField):
-            return resolve_basic_type(OpenApiTypes.EMAIL)
+            return build_basic_type(OpenApiTypes.EMAIL)
 
         if isinstance(field, serializers.URLField):
-            return resolve_basic_type(OpenApiTypes.URI)
+            return build_basic_type(OpenApiTypes.URI)
 
         if isinstance(field, serializers.UUIDField):
-            return resolve_basic_type(OpenApiTypes.UUID)
+            return build_basic_type(OpenApiTypes.UUID)
 
         if isinstance(field, serializers.IPAddressField):
             # TODO this might be a DRF bug. protocol is not propagated to serializer although it
             #  should have been. results in always 'both' (thus no format)
             if 'ipv4' == field.protocol.lower():
-                return resolve_basic_type(OpenApiTypes.IP4)
+                return build_basic_type(OpenApiTypes.IP4)
             elif 'ipv6' == field.protocol.lower():
-                return resolve_basic_type(OpenApiTypes.IP6)
+                return build_basic_type(OpenApiTypes.IP6)
             else:
-                return resolve_basic_type(OpenApiTypes.STR)
+                return build_basic_type(OpenApiTypes.STR)
 
         # DecimalField has multipleOf based on decimal_places
         if isinstance(field, serializers.DecimalField):
@@ -488,12 +476,12 @@ class AutoSchema(ViewInspector):
             return content
 
         if isinstance(field, serializers.FloatField):
-            content = resolve_basic_type(OpenApiTypes.FLOAT)
+            content = build_basic_type(OpenApiTypes.FLOAT)
             self._map_min_max(field, content)
             return content
 
         if isinstance(field, serializers.IntegerField):
-            content = resolve_basic_type(OpenApiTypes.INT)
+            content = build_basic_type(OpenApiTypes.INT)
             self._map_min_max(field, content)
             # 2147483647 is max for int32_size, so we use int64 for format
             if int(content.get('maximum', 0)) > 2147483647 or int(content.get('minimum', 0)) > 2147483647:
@@ -502,20 +490,20 @@ class AutoSchema(ViewInspector):
 
         if isinstance(field, serializers.FileField):
             # TODO returns filename. but does it accept binary data on upload?
-            return resolve_basic_type(OpenApiTypes.STR)
+            return build_basic_type(OpenApiTypes.STR)
 
         if isinstance(field, serializers.SerializerMethodField):
             method = getattr(field.parent, field.method_name)
             return self._map_type_hint(method)
 
         if isinstance(field, serializers.BooleanField):
-            return resolve_basic_type(OpenApiTypes.BOOL)
+            return build_basic_type(OpenApiTypes.BOOL)
 
         if anyisinstance(field, [serializers.JSONField, serializers.DictField, serializers.HStoreField]):
-            return resolve_basic_type(OpenApiTypes.OBJECT)
+            return build_basic_type(OpenApiTypes.OBJECT)
 
         if isinstance(field, serializers.CharField):
-            return resolve_basic_type(OpenApiTypes.STR)
+            return build_basic_type(OpenApiTypes.STR)
 
         if isinstance(field, serializers.ReadOnlyField):
             # direct source from the serializer
@@ -528,13 +516,13 @@ class AutoSchema(ViewInspector):
                 return self._map_model_field(target)
             else:
                 warn('ERROR. this is not supposed to happen. please open an issue at and help improve spectacular')
-                return resolve_basic_type(OpenApiTypes.STR)
+                return build_basic_type(OpenApiTypes.STR)
 
         # TODO serializer fields
         # serializers.CreateOnlyDefault
 
         warn(f'could not resolve serializer field {field}. defaulting to "string"')
-        return resolve_basic_type(OpenApiTypes.STR)
+        return build_basic_type(OpenApiTypes.STR)
 
     def _map_min_max(self, field, content):
         if field.max_value:
@@ -650,10 +638,10 @@ class AutoSchema(ViewInspector):
         if is_serializer(hint) or is_field(hint):
             return self._map_serializer_field(method, force_instance(hint))
         elif is_basic_type(hint):
-            return resolve_basic_type(hint)
+            return build_basic_type(hint)
         else:
             warn(f'type hint for function "{method.__name__}" is unknown. defaulting to string.')
-            return resolve_basic_type(OpenApiTypes.STR)
+            return build_basic_type(OpenApiTypes.STR)
 
     def _get_paginator(self):
         pagination_class = getattr(self.view, 'pagination_class', None)
@@ -760,10 +748,7 @@ class AutoSchema(ViewInspector):
 
         if isinstance(serializer, serializers.ListSerializer) or is_list_view(path, method, self.view):
             # TODO i fear is_list_view is not covering all the cases
-            schema = {
-                'type': 'array',
-                'items': schema,
-            }
+            schema = build_array_type(schema)
             paginator = self._get_paginator()
             if paginator:
                 schema = paginator.get_paginated_response_schema(schema)

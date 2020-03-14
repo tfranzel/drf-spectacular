@@ -40,11 +40,11 @@ class ExtraParameter(OpenApiSchemaBase):
         self.description = description
 
     def to_schema(self):
-        from drf_spectacular.plumbing import resolve_basic_type
+        from drf_spectacular.plumbing import build_basic_type
         schema = {
             'in': self.location,
             'name': self.name,
-            'schema': resolve_basic_type(self.type),
+            'schema': build_basic_type(self.type),
             'description': self.description,
         }
         if self.location != self.PATH:
