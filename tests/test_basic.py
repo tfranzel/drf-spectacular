@@ -3,6 +3,8 @@ from unittest import mock
 
 from django.db import models
 from rest_framework import serializers, viewsets, routers
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from drf_spectacular.openapi import SchemaGenerator, AutoSchema
 from tests import assert_schema
@@ -47,9 +49,18 @@ class AlbumSerializer(serializers.ModelSerializer):
         model = Album
 
 
+class LikeSerializer(serializers.Serializer):
+    def save(self, *args, **kwargs):
+        pass  # do the liking
+
+
 class AlbumModelViewset(viewsets.ModelViewSet):
     serializer_class = AlbumSerializer
     queryset = Album.objects.none()
+
+    @action(detail=True, methods=['POST'], serializer_class=LikeSerializer)
+    def like(self, request):
+        return Response(self.get_serializer().data)
 
     def create(self, request, *args, **kwargs):
         """

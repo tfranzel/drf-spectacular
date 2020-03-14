@@ -664,12 +664,16 @@ class AutoSchema(ViewInspector):
     def _get_request_body(self, path, method):
         # only unsafe methods can have a body
         if method not in ('PUT', 'PATCH', 'POST'):
-            return {}
+            return None
 
         serializer = force_instance(self.get_request_serializer(path, method))
 
         if is_serializer(serializer):
-            schema = self.resolve_serializer(method, serializer).ref
+            component = self.resolve_serializer(method, serializer)
+            if not component:
+                # serializer is empty so skip content enumeration
+                return None
+            schema = component.ref
         else:
             warn(
                 f'could not resolve request body for {method} {path}. defaulting to generic '
@@ -680,10 +684,6 @@ class AutoSchema(ViewInspector):
                 'additionalProperties': {},  # https://github.com/swagger-api/swagger-codegen/issues/1318
                 'description': 'Unspecified request body',
             }
-
-        # serializer has no fields so skip content enumeration
-        if not schema:
-            return {}
 
         return {
             'content': {
@@ -719,9 +719,10 @@ class AutoSchema(ViewInspector):
         if not serializer:
             return {'description': 'No response body'}
         elif anyisinstance(serializer, [serializers.Serializer, PolymorphicProxySerializer]):
-            schema = self.resolve_serializer(method, serializer).ref
-            if not schema:
+            component = self.resolve_serializer(method, serializer)
+            if not component:
                 return {'description': 'No response body'}
+            schema = component.ref
         elif isinstance(serializer, serializers.ListSerializer):
             schema = self.resolve_serializer(method, serializer.child).ref
         elif isinstance(serializer, dict):

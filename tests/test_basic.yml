@@ -170,6 +170,27 @@ paths:
       responses:
         '204':
           description: No response body
+  /albums/{id}/like/:
+    post:
+      operationId: albums_like_create
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A UUID string identifying this album.
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - albums
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
 components:
   securitySchemes:
     cookieAuth:
