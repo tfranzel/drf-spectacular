@@ -1,3 +1,4 @@
+import os
 import uuid
 from unittest import mock
 
@@ -48,7 +49,7 @@ def test_recursion(no_warnings):
     )
 
 
-@pytest.mark.skip
+@pytest.mark.skipif(os.environ.get('TRAVIS', 0), reason="does not work on travis")
 @pytest.mark.django_db
 def test_model_setup_is_valid():
     root = TreeNode(label='root')

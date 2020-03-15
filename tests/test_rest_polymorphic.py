@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import pytest
@@ -61,7 +62,7 @@ def test_rest_polymorphic(no_warnings):
     )
 
 
-@pytest.mark.skip
+@pytest.mark.skipif(os.environ.get('TRAVIS', 0), reason="does not work on travis")
 @pytest.mark.django_db
 def test_model_setup_is_valid():
     peter = NaturalPerson(first_name='Peter', last_name='Parker')
