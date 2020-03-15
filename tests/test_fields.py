@@ -1,4 +1,3 @@
-import os
 import uuid
 from datetime import datetime, date
 from decimal import Decimal
@@ -11,7 +10,7 @@ from rest_framework import serializers, viewsets
 from rest_framework.renderers import JSONRenderer
 
 from drf_spectacular.openapi import AutoSchema
-from tests import assert_schema, generate_schema
+from tests import assert_schema, generate_schema, skip_on_travis
 
 
 # TODO Fields known to DRF and mapping
@@ -110,7 +109,7 @@ def test_fields(no_warnings):
     )
 
 
-@pytest.mark.skipif(os.environ.get('TRAVIS', 0), reason="does not work on travis")
+@skip_on_travis
 @pytest.mark.django_db
 def test_model_setup_is_valid():
     aux = Aux()

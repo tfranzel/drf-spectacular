@@ -1,3 +1,8 @@
+import os
+
+import pytest
+
+
 def assert_schema(schema, reference_file):
     from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 
@@ -18,3 +23,9 @@ def generate_schema(route, viewset):
     router.register(route, viewset, basename=route)
     generator = SchemaGenerator(patterns=router.urls)
     return generator.get_schema(request=None, public=True)
+
+
+skip_on_travis = pytest.mark.skipif(
+    os.environ.get('TRAVIS') == 'true',
+    reason="does not work on travis"
+)

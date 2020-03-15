@@ -1,4 +1,3 @@
-import os
 from unittest import mock
 
 import pytest
@@ -8,7 +7,7 @@ from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.utils import extend_schema, PolymorphicProxySerializer
-from tests import assert_schema, generate_schema
+from tests import assert_schema, generate_schema, skip_on_travis
 
 
 class LegalPerson2(models.Model):
@@ -68,7 +67,7 @@ def test_polymorphic(no_warnings):
     )
 
 
-@pytest.mark.skipif(os.environ.get('TRAVIS', 0), reason="does not work on travis")
+@skip_on_travis
 @pytest.mark.django_db
 def test_model_setup_is_valid():
     # TODO

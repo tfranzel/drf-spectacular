@@ -1,4 +1,3 @@
-import os
 from unittest import mock
 
 import pytest
@@ -9,8 +8,8 @@ from rest_framework.renderers import JSONRenderer
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from drf_spectacular.contrib.rest_polymorphic import PolymorphicAutoSchema
-from tests import assert_schema, generate_schema
 from drf_spectacular.helpers import lazy_serializer
+from tests import assert_schema, generate_schema, skip_on_travis
 
 
 class Person(PolymorphicModel):
@@ -62,7 +61,7 @@ def test_rest_polymorphic(no_warnings):
     )
 
 
-@pytest.mark.skipif(os.environ.get('TRAVIS', 0), reason="does not work on travis")
+@skip_on_travis
 @pytest.mark.django_db
 def test_model_setup_is_valid():
     peter = NaturalPerson(first_name='Peter', last_name='Parker')
