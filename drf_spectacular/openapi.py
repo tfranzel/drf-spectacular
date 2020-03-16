@@ -627,7 +627,7 @@ class AutoSchema(ViewInspector):
             return build_basic_type(hint)
         elif getattr(hint, '__origin__', None) is typing.Union:
             if type(None) == hint.__args__[1]:
-                schema =  build_basic_type(hint.__args__[0])
+                schema = build_basic_type(hint.__args__[0])
                 schema['nullable'] = True
                 return schema
             else:
