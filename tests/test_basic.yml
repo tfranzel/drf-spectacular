@@ -247,6 +247,7 @@ components:
           type: integer
         top10:
           type: boolean
+          nullable: true
           readOnly: true
       required:
       - title

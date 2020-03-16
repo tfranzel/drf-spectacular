@@ -625,6 +625,14 @@ class AutoSchema(ViewInspector):
             return self._map_serializer_field(method, force_instance(hint))
         elif is_basic_type(hint):
             return build_basic_type(hint)
+        elif getattr(hint, '__origin__', None) is typing.Union:
+            if type(None) == hint.__args__[1]:
+                schema =  build_basic_type(hint.__args__[0])
+                schema['nullable'] = True
+                return schema
+            else:
+                warn(f'type hint {hint} not supported yet. defaulting to "string"')
+                return build_basic_type(OpenApiTypes.STR)
         else:
             warn(f'type hint for function "{method.__name__}" is unknown. defaulting to string.')
             return build_basic_type(OpenApiTypes.STR)

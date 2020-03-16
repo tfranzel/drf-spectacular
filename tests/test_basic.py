@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 from unittest import mock
 
 from django.db import models
@@ -36,7 +37,7 @@ class SongSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'length', 'top10']
         model = Song
 
-    def get_top10(self) -> bool:
+    def get_top10(self) -> Optional[bool]:
         return True
 
 
