@@ -361,6 +361,8 @@ class AutoSchema(ViewInspector):
         elif isinstance(field, models.ImageField):
             # TODO check what it does
             return build_basic_type(OpenApiTypes.STR)
+        elif isinstance(field, models.OneToOneField):
+            return self._map_model_field(get_field_from_model(field.model, field.model.id))
         else:
             # TODO make this save for django version not having those fields
             #  models.SmallAutoField, models.BigAutoField,
