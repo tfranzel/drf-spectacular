@@ -684,6 +684,10 @@ class AutoSchema(ViewInspector):
                 # serializer is empty so skip content enumeration
                 return None
             schema = component.ref
+        elif is_basic_type(serializer):
+            schema = build_basic_type(serializer)
+            if not schema:
+                return None
         else:
             warn(
                 f'could not resolve request body for {method} {path}. defaulting to generic '

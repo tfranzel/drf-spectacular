@@ -2,6 +2,7 @@ from unittest import mock
 
 from django.utils.http import urlsafe_base64_encode
 from rest_framework import serializers, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
@@ -35,7 +36,7 @@ class InlineSerializer(serializers.Serializer):
     inline_i = serializers.IntegerField()
 
 
-class ErrorSerializer(serializers.Serializer):
+class ErrorDetailSerializer(serializers.Serializer):
     field_i = serializers.SerializerMethodField()
     field_j = serializers.SerializerMethodField()
     field_k = serializers.SerializerMethodField()
@@ -68,7 +69,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             responses={
                 201: BetaSerializer(many=True),
                 200: GammaSerializer,
-                500: ErrorSerializer,
+                500: ErrorDetailSerializer,
             },
             extra_parameters=[
                 ExtraParameter('expiration_date', OpenApiTypes.DATETIME, description='time the object will expire at'),
@@ -84,6 +85,16 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         @extend_schema(exclude=True)
         def list(self, request, *args, **kwargs):
             return Response([])
+
+        @extend_schema(request=OpenApiTypes.NONE, responses={201: None})
+        @action(detail=True, methods=['POST'])
+        def subscribe(self, request):
+            return Response(status=201)
+
+        @extend_schema(request=OpenApiTypes.OBJECT, responses={201: None})
+        @action(detail=False, methods=['POST'])
+        def callback(self, request):
+            return Response(status=201)
 
 
 @mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
