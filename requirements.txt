@@ -1,5 +1,5 @@
-# Minimum Django and REST framework version and deps
-Django>=2.2
-djangorestframework>=3.10
-uritemplate>=3.0.0
-PyYAML>=5.1
+-r requirements/base.txt
+-r requirements/testing.txt
+-r requirements/optionals.txt
+-r requirements/packaging.txt
+-r requirements/docs.txt

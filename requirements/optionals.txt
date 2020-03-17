@@ -1,0 +1,3 @@
+djangorestframework-simplejwt>=4.4.0
+django-polymorphic>=2.1.2
+django-rest-polymorphic>=0.1.8

@@ -34,7 +34,6 @@ def pytest_configure():
             'django.contrib.sites',
             'django.contrib.messages',
             'django.contrib.staticfiles',
-
             'rest_framework',
             'rest_framework.authtoken',
             'tests',
