@@ -103,7 +103,7 @@ Customization by using @extend_schema
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Most customization cases should be covered by the ``extend_schema`` decorator. We usually get
-pretty far with specifying ``QueryParameter`` and splitting request/response serializers, but
+pretty far with specifying ``ExtraParameter`` and splitting request/response serializers, but
 the sky is the limit.
 
 .. code:: python
@@ -199,7 +199,7 @@ Install testing requirements.
 
 .. code:: bash
 
-    $ pip install -r requirements.txt -r requirements_dev.txt
+    $ pip install -r requirements.txt
 
 Run with runtests.
 
