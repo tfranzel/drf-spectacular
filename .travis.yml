@@ -53,7 +53,12 @@ jobs:
     - env: TOXENV=py38-djmaster
 
 install:
+  - pip install -U pip
   - pip install tox
 
 script:
   - tox
+
+after_success:
+  - pip install codecov
+  - codecov -e TOXENV
