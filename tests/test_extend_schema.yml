@@ -90,26 +90,6 @@ paths:
       responses:
         201:
           description: No response body
-  /doesitall/{id}/subscribe/:
-    post:
-      operationId: doesitall_subscribe_create
-      description: ''
-      parameters:
-      - name: id
-        in: path
-        required: true
-        description: ''
-        schema:
-          type: string
-      tags:
-      - doesitall
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        201:
-          description: No response body
 components:
   securitySchemes:
     cookieAuth:
