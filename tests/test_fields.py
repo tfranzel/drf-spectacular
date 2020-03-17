@@ -10,7 +10,7 @@ from rest_framework import serializers, viewsets
 from rest_framework.renderers import JSONRenderer
 
 from drf_spectacular.openapi import AutoSchema
-from tests import assert_schema, generate_schema, skip_on_travis
+from tests import assert_schema, generate_schema
 
 
 # TODO Fields known to DRF and mapping
@@ -109,7 +109,6 @@ def test_fields(no_warnings):
     )
 
 
-@skip_on_travis
 @pytest.mark.django_db
 def test_model_setup_is_valid():
     aux = Aux()

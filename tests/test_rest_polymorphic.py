@@ -9,7 +9,7 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 
 from drf_spectacular.contrib.rest_polymorphic import PolymorphicAutoSchema
 from drf_spectacular.helpers import lazy_serializer
-from tests import assert_schema, generate_schema, skip_on_travis
+from tests import assert_schema, generate_schema
 
 
 class Person(PolymorphicModel):
@@ -61,7 +61,6 @@ def test_rest_polymorphic(no_warnings):
     )
 
 
-@skip_on_travis
 @pytest.mark.django_db
 def test_model_setup_is_valid():
     peter = NaturalPerson(first_name='Peter', last_name='Parker')

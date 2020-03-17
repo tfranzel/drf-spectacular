@@ -1,13 +1,12 @@
 from unittest import mock
 
-import pytest
 from django.db import models
 from rest_framework import viewsets, serializers
 from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.utils import extend_schema, PolymorphicProxySerializer
-from tests import assert_schema, generate_schema, skip_on_travis
+from tests import assert_schema, generate_schema
 
 
 class LegalPerson2(models.Model):
@@ -65,10 +64,3 @@ def test_polymorphic(no_warnings):
         generate_schema('persons', PersonViewSet),
         'tests/test_polymorphic.yml'
     )
-
-
-@skip_on_travis
-@pytest.mark.django_db
-def test_model_setup_is_valid():
-    # TODO
-    pass

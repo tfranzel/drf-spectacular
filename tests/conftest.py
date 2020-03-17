@@ -1,4 +1,6 @@
+import django
 import pytest
+from django.core import management
 
 
 def pytest_configure():
@@ -83,11 +85,11 @@ def pytest_configure():
             'guardian',
         )
 
-    try:
-        import django
-        django.setup()
-    except AttributeError:
-        pass
+    django.setup()
+    # For whatever reason this works locally without an issue.
+    # on TravisCI content_type table is missing in the sqlite db as
+    # if no migration ran, but then why does it work locally?!
+    management.call_command('migrate')
 
 
 @pytest.fixture()

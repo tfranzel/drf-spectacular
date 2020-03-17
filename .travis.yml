@@ -4,6 +4,7 @@ language: python
 branches:
   only:
     - master
+    - travis
 
 jobs:
   fast_finish: true
