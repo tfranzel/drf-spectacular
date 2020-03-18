@@ -73,7 +73,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             },
             extra_parameters=[
                 ExtraParameter('expiration_date', OpenApiTypes.DATETIME, description='time the object will expire at'),
-                ExtraParameter('test_mode', bool, location=ExtraParameter.HEADER, description='creation will be in the sandbox'),
+                ExtraParameter('test_mode', bool, location=ExtraParameter.HEADER, description='creation will be in the sandbox', enum=[True, False]),
             ],
             description='this weird endpoint needs some explaining',
             deprecated=True,

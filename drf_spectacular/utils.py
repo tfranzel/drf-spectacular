@@ -31,13 +31,15 @@ class ExtraParameter(OpenApiSchemaBase):
     QUERY = 'query'
     PATH = 'path'
     HEADER = 'header'
+    COOKIE = 'cookie'
 
-    def __init__(self, name, type=str, location=QUERY, required=False, description=''):
+    def __init__(self, name, type=str, location=QUERY, required=False, description='', enum=None):
         self.name = name
         self.type = type
         self.location = location
         self.required = required
         self.description = description
+        self.enum = enum
 
     def to_schema(self):
         from drf_spectacular.plumbing import build_basic_type
@@ -49,6 +51,11 @@ class ExtraParameter(OpenApiSchemaBase):
         }
         if self.location != self.PATH:
             schema['required'] = self.required
+        if self.enum is not None:
+            assert not isinstance(self.enum, str) and len(self.enum) > 0, (
+                'Parameter enumeration needs to be a non-empty list or set'
+            )
+            schema['schema']['enum'] = self.enum
         return schema
 
 
