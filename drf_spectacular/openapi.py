@@ -130,15 +130,7 @@ class AutoSchema(ViewInspector):
         operation['operationId'] = self.get_operation_id(path, method)
         operation['description'] = self.get_description(path, method)
 
-        parameters = sorted(
-            [
-                *self._get_path_parameters(path, method),
-                *self._get_filter_parameters(path, method),
-                *self._get_pagination_parameters(path, method),
-                *self.get_extra_parameters(path, method),
-            ],
-            key=lambda parameter: parameter.get('name')
-        )
+        parameters = self.get_parameters(path, method)
         if parameters:
             operation['parameters'] = parameters
 
@@ -162,9 +154,28 @@ class AutoSchema(ViewInspector):
 
         return operation
 
-    def get_extra_parameters(self, path, method):
+    def get_override_parameters(self, path, method):
         """ override this for custom behaviour """
         return []
+
+    def get_parameters(self, path, method):
+        def dict_helper(parameters):
+            return {(p['name'], p['in']): p for p in parameters}
+
+        override_parameters = dict_helper(self.get_override_parameters(path, method))
+        # remove overridden path parameters beforehand so that there are no irrelevant warnings.
+        path_variables = [
+            v for v in uritemplate.variables(path) if (v, 'path') not in override_parameters
+        ]
+        parameters = {
+            **dict_helper(self._resolve_path_parameters(path_variables)),
+            **dict_helper(self._get_filter_parameters(path, method)),
+            **dict_helper(self._get_pagination_parameters(path, method)),
+        }
+        # override/add @extend_schema parameters
+        for key, parameter in override_parameters.items():
+            parameters[key] = parameter
+        return sorted(parameters.values(), key=lambda p: p['name'])
 
     def get_description(self, path, method):
         """ override this for custom behaviour """
@@ -230,7 +241,7 @@ class AutoSchema(ViewInspector):
         # remove path variables and empty tokens
         return [t for t in path if t and not t.startswith('{')]
 
-    def _get_path_parameters(self, path, method):
+    def _resolve_path_parameters(self, variables):
         """
         Return a list of parameters from templated path variables.
         """
@@ -239,7 +250,7 @@ class AutoSchema(ViewInspector):
         schema = build_basic_type(OpenApiTypes.STR)
         description = ''
 
-        for variable in uritemplate.variables(path):
+        for variable in variables:
             if not model:
                 warn(f'{self.view.__class__} had no queryset attribute. could not estimate type of parameter "{variable}". defaulting to string.')
             else:

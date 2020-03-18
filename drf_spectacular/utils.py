@@ -27,7 +27,7 @@ class OpenApiSchemaBase:
         raise NotImplementedError('translation to schema required.')
 
 
-class ExtraParameter(OpenApiSchemaBase):
+class OpenApiParameter(OpenApiSchemaBase):
     QUERY = 'query'
     PATH = 'path'
     HEADER = 'header'
@@ -49,6 +49,7 @@ class ExtraParameter(OpenApiSchemaBase):
             'schema': build_basic_type(self.type),
             'description': self.description,
         }
+        assert self.location in [self.QUERY, self.PATH, self.HEADER, self.COOKIE]
         if self.location != self.PATH:
             schema['required'] = self.required
         if self.enum is not None:
@@ -61,7 +62,7 @@ class ExtraParameter(OpenApiSchemaBase):
 
 def extend_schema(
         operation_id=None,
-        extra_parameters=None,
+        parameters=None,
         request=None,
         responses=None,
         auth=None,
@@ -77,7 +78,7 @@ def extend_schema(
 
     :param operation_id: replaces the auto-generated operation_id. make sure there
         are no naming collisions.
-    :param extra_parameters: list of additional parameters that are added to the
+    :param parameters: list of additional or replacement parameters added to the
         auto-discovered fields.
     :param responses: replaces the discovered Serializer. Takes a variety of inputs
         that can be used individually or combined:
@@ -113,13 +114,13 @@ def extend_schema(
                     return operation_id
                 return super().get_operation_id(path, method)
 
-            def get_extra_parameters(self, path, method):
-                if extra_parameters:
-                    return [
-                        p.to_schema() if isinstance(p, OpenApiSchemaBase) else p
-                        for p in extra_parameters
-                    ]
-                return super().get_extra_parameters(path, method)
+            def get_override_parameters(self, path, method):
+                if parameters:
+                    assert all(
+                        isinstance(p, OpenApiParameter) for p in parameters
+                    ), '@extend_schema(parameters=[X,]) requires list of utils.OpenApiParameter'
+                    return [p.to_schema() for p in parameters]
+                return super().get_override_parameters(path, method)
 
             def get_auth(self, path, method):
                 if auth:

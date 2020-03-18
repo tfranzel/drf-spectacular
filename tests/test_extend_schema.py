@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, ExtraParameter, extend_schema_field
+from drf_spectacular.utils import extend_schema, OpenApiParameter, extend_schema_field
 from tests import assert_schema, generate_schema
 
 
@@ -71,9 +71,9 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
                 200: GammaSerializer,
                 500: ErrorDetailSerializer,
             },
-            extra_parameters=[
-                ExtraParameter('expiration_date', OpenApiTypes.DATETIME, description='time the object will expire at'),
-                ExtraParameter('test_mode', bool, location=ExtraParameter.HEADER, description='creation will be in the sandbox', enum=[True, False]),
+            parameters=[
+                OpenApiParameter('expiration_date', OpenApiTypes.DATETIME, description='time the object will expire at'),
+                OpenApiParameter('test_mode', bool, location=OpenApiParameter.HEADER, description='creation will be in the sandbox', enum=[True, False]),
             ],
             description='this weird endpoint needs some explaining',
             deprecated=True,
@@ -86,11 +86,14 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         def list(self, request, *args, **kwargs):
             return Response([])
 
-        # TODO comment in when parameter resolution is smarter
-        # @extend_schema(request=OpenApiTypes.NONE, responses={201: None})
-        # @action(detail=True, methods=['POST'])
-        # def subscribe(self, request):
-        #     return Response(status=201)
+        @extend_schema(
+            parameters=[OpenApiParameter('id', OpenApiTypes.UUID, OpenApiParameter.PATH)],
+            request=OpenApiTypes.NONE,
+            responses={201: None},
+        )
+        @action(detail=True, methods=['POST'])
+        def subscribe(self, request):
+            return Response(status=201)
 
         @extend_schema(request=OpenApiTypes.OBJECT, responses={201: None})
         @action(detail=False, methods=['POST'])
