@@ -393,12 +393,12 @@ class AutoSchema(ViewInspector):
             return build_array_type(self._map_serializer_field(method, field.child_relation))
 
         if isinstance(field, serializers.PrimaryKeyRelatedField):
-            field_queryset = getattr(field, 'queryset', None)
-            if field_queryset is not None:
+            # read_only fields do not have a Manager by design. go around and get field
+            # from parent. also avoid calling Manager. __bool__ as it might be customized
+            # to hit the database.
+            if getattr(field, 'queryset', None) is not None:
                 return self._map_model_field(field.queryset.model._meta.pk)
             else:
-                # read_only fields to not have a queryset by design.
-                # go around and get field from parent.
                 model = field.parent.Meta.model
                 return self._map_model_field(
                     get_field_from_model(model, model.id)
