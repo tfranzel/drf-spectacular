@@ -393,7 +393,8 @@ class AutoSchema(ViewInspector):
             return build_array_type(self._map_serializer_field(method, field.child_relation))
 
         if isinstance(field, serializers.PrimaryKeyRelatedField):
-            if field.queryset:
+            field_queryset = getattr(field, 'queryset', None)
+            if field_queryset is not None:
                 return self._map_model_field(field.queryset.model._meta.pk)
             else:
                 # read_only fields to not have a queryset by design.
