@@ -87,7 +87,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             return Response([])
 
         @extend_schema(
-            parameters=[OpenApiParameter('id', OpenApiTypes.UUID, OpenApiParameter.PATH)],
+            parameters=[OpenApiParameter('id', OpenApiTypes.INT, OpenApiParameter.PATH)],
             request=OpenApiTypes.NONE,
             responses={201: None},
         )
@@ -95,9 +95,13 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         def subscribe(self, request):
             return Response(status=201)
 
-        @extend_schema(request=OpenApiTypes.OBJECT, responses={201: None})
-        @action(detail=False, methods=['POST'])
-        def callback(self, request):
+        @extend_schema(
+            request=OpenApiTypes.OBJECT,
+            responses={201: None},
+            parameters=[OpenApiParameter('ephemeral', OpenApiTypes.UUID, OpenApiParameter.PATH)]
+        )
+        @action(detail=False, url_path='callback/(?P<ephemeral>[^/.]+)', methods=['POST'])
+        def callback(self, request, ephemeral, pk):
             return Response(status=201)
 
 

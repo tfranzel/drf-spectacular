@@ -242,28 +242,33 @@ class AutoSchema(ViewInspector):
         return [t for t in path if t and not t.startswith('{')]
 
     def _resolve_path_parameters(self, variables):
-        """
-        Return a list of parameters from templated path variables.
-        """
         model = getattr(getattr(self.view, 'queryset', None), 'model', None)
         parameters = []
-        schema = build_basic_type(OpenApiTypes.STR)
-        description = ''
 
         for variable in variables:
+            schema = build_basic_type(OpenApiTypes.STR)
+            description = ''
+
             if not model:
-                warn(f'{self.view.__class__} had no queryset attribute. could not estimate type of parameter "{variable}". defaulting to string.')
+                warn(
+                    f'could not derive type of path parameter "{variable}" because '
+                    f'{self.view.__class__} has no queryset. consider annotating the '
+                    f'parameter type with @extend_schema. defaulting to "string".'
+                )
             else:
                 try:
                     model_field = model._meta.get_field(variable)
                     schema = self._map_model_field(model_field)
-
                     if model_field.help_text:
                         description = force_str(model_field.help_text)
                     elif model_field.primary_key:
                         description = get_pk_description(model, model_field)
-                except Exception:
-                    pass
+                except models.FieldDoesNotExist:
+                    warn(
+                        f'could not derive type of path parameter "{variable}" because '
+                        f'model "{model}" did contain no such field. consider annotating '
+                        f'parameter with @extend_schema. defaulting to "string".'
+                    )
 
             parameters.append({
                 "name": variable,

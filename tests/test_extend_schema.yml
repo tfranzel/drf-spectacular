@@ -66,10 +66,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorDetail'
           description: ''
-  /doesitall/callback/:
+  /doesitall/callback/{ephemeral}/:
     post:
       operationId: doesitall_callback_create
       description: ''
+      parameters:
+      - in: path
+        name: ephemeral
+        schema:
+          type: string
+          format: uuid
+        description: ''
       tags:
       - doesitall
       requestBody:
@@ -101,8 +108,7 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
-          format: uuid
+          type: integer
         description: ''
       tags:
       - doesitall
