@@ -2,6 +2,8 @@ import os
 
 import pytest
 
+from drf_spectacular.validation import validate_schema
+
 
 def assert_schema(schema, reference_file):
     from drf_spectacular.renderers import NoAliasOpenAPIRenderer
@@ -13,6 +15,9 @@ def assert_schema(schema, reference_file):
 
     with open(reference_file) as fh:
         assert schema_yml.decode() == fh.read()
+
+    # this is more a less a sanity check as checked-in schemas should be valid anyhow
+    validate_schema(schema)
 
 
 def generate_schema(route, viewset):

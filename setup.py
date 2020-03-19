@@ -90,6 +90,7 @@ setup(
     install_requires=[
         'uritemplate>=3.0.0',
         'PyYAML>=5.1',
+        'jsonschema>=3.2.0',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
