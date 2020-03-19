@@ -7,10 +7,12 @@ from operator import attrgetter
 from urllib.parse import urljoin
 
 import uritemplate
-from django.core import validators
+from django.core import validators, exceptions as django_exceptions
 from django.db import models
 from django.utils.encoding import force_str
-from rest_framework import exceptions, permissions, renderers, serializers, views, viewsets
+from rest_framework import (
+    permissions, renderers, serializers, views, viewsets, exceptions as rest_exceptions,
+)
 from rest_framework.fields import _UnvalidatedField, empty
 from rest_framework.schemas.generators import BaseSchemaGenerator
 from rest_framework.schemas.inspectors import ViewInspector
@@ -263,7 +265,7 @@ class AutoSchema(ViewInspector):
                         description = force_str(model_field.help_text)
                     elif model_field.primary_key:
                         description = get_pk_description(model, model_field)
-                except models.FieldDoesNotExist:
+                except django_exceptions.FieldDoesNotExist:
                     warn(
                         f'could not derive type of path parameter "{variable}" because '
                         f'model "{model}" did contain no such field. consider annotating '
@@ -680,7 +682,7 @@ class AutoSchema(ViewInspector):
 
         try:
             return view.get_serializer()
-        except exceptions.APIException:
+        except rest_exceptions.APIException:
             warn(
                 '{}.get_serializer() raised an exception during '
                 'schema generation. Serializer fields will not be '
