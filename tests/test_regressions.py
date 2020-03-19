@@ -1,6 +1,10 @@
+from django.conf.urls import url
 from django.db import models
 from rest_framework import serializers, viewsets
+from rest_framework.views import APIView
 
+from drf_spectacular.openapi import SchemaGenerator
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
@@ -28,6 +32,7 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
         queryset = M2.objects.none()
 
     schema = generate_schema('m2', M2Viewset)
+    validate_schema(schema)
     props = schema['components']['schemas']['M2']['properties']
     assert props['m1_rw']['type'] == 'integer'
     assert props['m1_r']['type'] == 'integer'
@@ -45,4 +50,23 @@ def test_path_implicit_required(no_warnings):
             pass
 
     schema = generate_schema('m2', M2Viewset)
+    validate_schema(schema)
+
+
+def test_free_form_responses(no_warnings):
+    class XAPIView(APIView):
+        @extend_schema(responses={200: OpenApiTypes.OBJECT})
+        def get(self, request):
+            pass
+
+    class YAPIView(APIView):
+        @extend_schema(responses=OpenApiTypes.OBJECT)
+        def get(self, request):
+            pass
+
+    generator = SchemaGenerator(patterns=[
+        url(r'^x$', XAPIView.as_view(), name='x'),
+        url(r'^y$', YAPIView.as_view(), name='y'),
+    ])
+    schema = generator.get_schema(request=None, public=True)
     validate_schema(schema)

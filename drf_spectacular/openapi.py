@@ -697,7 +697,7 @@ class AutoSchema(ViewInspector):
     def _get_response_bodies(self, path, method):
         response_serializers = self.get_response_serializers(path, method)
 
-        if is_serializer(response_serializers):
+        if is_serializer(response_serializers) or is_basic_type(response_serializers):
             if method == 'DELETE':
                 return {'204': {'description': 'No response body'}}
             return {'200': self._get_response_for_code(path, method, response_serializers)}
@@ -728,11 +728,17 @@ class AutoSchema(ViewInspector):
             schema = component.ref
         elif isinstance(serializer, serializers.ListSerializer):
             schema = self.resolve_serializer(method, serializer.child).ref
+        elif is_basic_type(serializer):
+            schema = build_basic_type(serializer)
         elif isinstance(serializer, dict):
             # bypass processing and use given schema directly
             schema = serializer
         else:
-            raise ValueError('Serializer type unsupported')
+            warn(
+                f'could not resolve "{serializer}". Expected either a serializer or some '
+                f'supported override mechanism. defaulting to generic free-form object.'
+            )
+            schema = build_basic_type(OpenApiTypes.OBJECT)
 
         if isinstance(serializer, serializers.ListSerializer) or is_list_view(path, method, self.view):
             # TODO i fear is_list_view is not covering all the cases
