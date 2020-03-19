@@ -105,7 +105,6 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             return Response(status=201)
 
 
-@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_extend_schema(no_warnings):
     assert_schema(
         generate_schema('doesitall', DoesItAllViewset),

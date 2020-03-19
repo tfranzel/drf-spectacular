@@ -1,14 +1,10 @@
-from unittest import mock
-
 from django.db import models
 from rest_framework import serializers, mixins, viewsets
 from rest_framework.decorators import action
 
-from drf_spectacular.openapi import AutoSchema
 from tests import generate_schema
 
 
-@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_serializer_name_reuse(warnings):
     from rest_framework import routers
     from drf_spectacular.openapi import SchemaGenerator
@@ -40,7 +36,6 @@ def test_serializer_name_reuse(warnings):
     generator.get_schema(request=None, public=True)
 
 
-@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_no_queryset_warn(capsys):
     class X1Serializer(serializers.Serializer):
         uuid = serializers.UUIDField()
@@ -52,7 +47,6 @@ def test_no_queryset_warn(capsys):
     assert 'no queryset' in capsys.readouterr().err
 
 
-@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_path_param_not_in_model(capsys):
     class M3(models.Model):
         pass

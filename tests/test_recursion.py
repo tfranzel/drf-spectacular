@@ -1,12 +1,10 @@
 import uuid
-from unittest import mock
 
 import pytest
 from django.db import models
 from rest_framework import serializers, viewsets, mixins
 from rest_framework.renderers import JSONRenderer
 
-from drf_spectacular.openapi import AutoSchema
 from tests import assert_schema, generate_schema
 
 
@@ -40,7 +38,6 @@ class TreeNodeViewset(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = TreeNode.objects.none()
 
 
-@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_recursion(no_warnings):
     assert_schema(
         generate_schema('nodes', TreeNodeViewset),

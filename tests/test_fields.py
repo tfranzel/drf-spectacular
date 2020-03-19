@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime, date
 from decimal import Decimal
-from unittest import mock
 
 import pytest
 from django.core.files.base import ContentFile
@@ -9,7 +8,6 @@ from django.db import models
 from rest_framework import serializers, viewsets
 from rest_framework.renderers import JSONRenderer
 
-from drf_spectacular.openapi import AutoSchema
 from tests import assert_schema, generate_schema
 
 
@@ -101,7 +99,6 @@ class AllFieldsModelViewset(viewsets.ReadOnlyModelViewSet):
         return super().retrieve(request, *args, **kwargs)
 
 
-@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_fields(no_warnings):
     assert_schema(
         generate_schema('allfields', AllFieldsModelViewset),

@@ -7,7 +7,7 @@ class NoAliasOpenAPIRenderer(OpenAPIRenderer):
 
     def render(self, data, media_type=None, renderer_context=None):
         # disable yaml advanced feature 'alias' for clean, portable, and readable output
-        class Dumper(yaml.Dumper):
+        class Dumper(yaml.SafeDumper):
             def ignore_aliases(self, data):
                 return True
 

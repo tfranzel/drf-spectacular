@@ -1,15 +1,11 @@
-from unittest import mock
-
 from django.db import models
 from rest_framework import serializers, viewsets
 
-from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
 
 
-@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_primary_key_read_only_queryset_not_found(no_warnings):
     # the culprit - looks like a feature not a bug.
     # https://github.com/encode/django-rest-framework/blame/4d9f9eb192c5c1ffe4fa9210b90b9adbb00c3fdd/rest_framework/utils/field_mapping.py#L271
@@ -37,7 +33,6 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
     assert props['m1_r']['type'] == 'integer'
 
 
-@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_path_implicit_required(no_warnings):
     class M2Serializer(serializers.Serializer):
         pass

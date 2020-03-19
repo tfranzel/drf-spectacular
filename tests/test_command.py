@@ -7,7 +7,7 @@ def test_command_plain(capsys):
 
     schema_stdout = capsys.readouterr().out
 
-    schema = yaml.load(schema_stdout, Loader=yaml.Loader)
+    schema = yaml.load(schema_stdout, Loader=yaml.SafeLoader)
     assert 'openapi' in schema
     assert 'servers' in schema
     assert 'paths' in schema

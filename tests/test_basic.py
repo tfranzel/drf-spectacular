@@ -1,13 +1,12 @@
 import uuid
 from typing import Optional
-from unittest import mock
 
 from django.db import models
 from rest_framework import serializers, viewsets, routers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from drf_spectacular.openapi import SchemaGenerator, AutoSchema
+from drf_spectacular.openapi import SchemaGenerator
 from tests import assert_schema
 
 
@@ -72,7 +71,6 @@ class AlbumModelViewset(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
 
-@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
 def test_basics(no_warnings):
     router = routers.SimpleRouter()
     router.register('albums', AlbumModelViewset, basename="album")

@@ -18,6 +18,9 @@ license = 'BSD'
 with open('README.rst') as readme:
     long_description = readme.read()
 
+with open('requirements/base.txt') as fh:
+    requirements = fh.read().split()
+
 
 def get_version(package):
     """
@@ -87,11 +90,7 @@ setup(
     packages=get_packages(package),
     package_data=get_package_data(package),
     python_requires=">=3.6",
-    install_requires=[
-        'uritemplate>=3.0.0',
-        'PyYAML>=5.1',
-        'jsonschema>=3.2.0',
-    ],
+    install_requires=requirements,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
