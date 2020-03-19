@@ -50,8 +50,8 @@ class OpenApiParameter(OpenApiSchemaBase):
             'description': self.description,
         }
         assert self.location in [self.QUERY, self.PATH, self.HEADER, self.COOKIE]
-        if self.location != self.PATH:
-            schema['required'] = self.required
+        if self.location == self.PATH or self.required:
+            schema['required'] = True
         if self.enum is not None:
             assert not isinstance(self.enum, str) and len(self.enum) > 0, (
                 'Parameter enumeration needs to be a non-empty list or set'

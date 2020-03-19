@@ -4,6 +4,8 @@ from django.db import models
 from rest_framework import serializers, viewsets
 
 from drf_spectacular.openapi import AutoSchema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.validation import validate_schema
 from tests import generate_schema
 
 
@@ -33,3 +35,19 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
     props = schema['components']['schemas']['M2']['properties']
     assert props['m1_rw']['type'] == 'integer'
     assert props['m1_r']['type'] == 'integer'
+
+
+@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema)
+def test_path_implicit_required(no_warnings):
+    class M2Serializer(serializers.Serializer):
+        pass
+
+    class M2Viewset(viewsets.GenericViewSet):
+        serializer_class = M2Serializer
+
+        @extend_schema(parameters=[OpenApiParameter('id', str, 'path')])
+        def retrieve(self, request, *args, **kwargs):
+            pass
+
+    schema = generate_schema('m2', M2Viewset)
+    validate_schema(schema)
