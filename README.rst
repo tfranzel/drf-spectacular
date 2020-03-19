@@ -103,12 +103,12 @@ Customization by using @extend_schema
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Most customization cases should be covered by the ``extend_schema`` decorator. We usually get
-pretty far with specifying ``ExtraParameter`` and splitting request/response serializers, but
+pretty far with specifying ``OpenApiParameter`` and splitting request/response serializers, but
 the sky is the limit.
 
 .. code:: python
 
-    from drf_spectacular.utils import extend_schema, ExtraParameter
+    from drf_spectacular.utils import extend_schema, OpenApiParameter
     from drf_spectacular.types import OpenApiTypes
 
     class AlbumViewset(viewset.ModelViewset)
@@ -124,12 +124,12 @@ the sky is the limit.
 
         @extend_schema(
             # extra parameters added to the schema
-            extra_parameters=[
-                ExtraParameter(name='artist', description='Filter by artist', required=False, type=str),
-                ExtraParameter(
+            parameters=[
+                OpenApiParameter(name='artist', description='Filter by artist', required=False, type=str),
+                OpenApiParameter(
                     name='release',
                     type=OpenApiTypes.DATE,
-                    location=ExtraParameter.QUERY,
+                    location=OpenApiParameter.QUERY,
                     description='Filter by release date',
                 ),
             ],
