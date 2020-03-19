@@ -344,46 +344,16 @@ class AutoSchema(ViewInspector):
         return mapping
 
     def _map_model_field(self, field):
-        if isinstance(field, models.UUIDField):
-            return build_basic_type(OpenApiTypes.UUID)
-        elif anyisinstance(field, [models.AutoField, models.IntegerField, models.SmallIntegerField, models.BigIntegerField]):
-            # in django 3.0 checking both auto and int field is not required but in 2.2 it is
-            return build_basic_type(OpenApiTypes.INT)
-        elif anyisinstance(field, [models.BooleanField, models.NullBooleanField]):
-            return build_basic_type(OpenApiTypes.BOOL)
-        elif isinstance(field, models.EmailField):
-            return build_basic_type(OpenApiTypes.EMAIL)
-        elif isinstance(field, models.SlugField):
-            return build_basic_type(OpenApiTypes.STR)
-        elif isinstance(field, models.URLField):
-            return build_basic_type(OpenApiTypes.URI)
-        elif anyisinstance(field, [models.CharField, models.TextField, models.SlugField]):
-            return build_basic_type(OpenApiTypes.STR)
-        elif isinstance(field, models.FloatField):
-            return build_basic_type(OpenApiTypes.FLOAT)
-        elif isinstance(field, models.DateTimeField):
-            return build_basic_type(OpenApiTypes.DATETIME)
-        elif isinstance(field, models.DateField):
-            return build_basic_type(OpenApiTypes.DATE)
-        elif isinstance(field, models.IPAddressField):
-            return build_basic_type(OpenApiTypes.IP4)
-        elif isinstance(field, models.GenericIPAddressField):
-            # TODO diffentiante v4 / v6 in the generic case. not that straight-forward
-            return build_basic_type(OpenApiTypes.STR)
-        elif isinstance(field, models.DecimalField):
-            # TODO DRF outputs the decimals as strings, which by spec makes it of type string. better ideas?
-            return build_basic_type(OpenApiTypes.STR)
-        elif isinstance(field, models.FileField):
-            # TODO outputs a filename but what does it accept?
-            return build_basic_type(OpenApiTypes.STR)
-        elif isinstance(field, models.ImageField):
-            # TODO check what it does
-            return build_basic_type(OpenApiTypes.STR)
+        assert isinstance(field, models.Field)
+        drf_mapping = serializers.ModelSerializer.serializer_field_mapping
+
+        if field.__class__ in drf_mapping:
+            # use DRF native field resolution - taken from ModelSerializer.get_fields()
+            # TODO maybe init the field with args
+            return self._map_serializer_field(None, drf_mapping[field.__class__]())
         elif isinstance(field, models.OneToOneField):
             return self._map_model_field(get_field_from_model(field.model, field.model.id))
         else:
-            # TODO make this save for django version not having those fields
-            #  models.SmallAutoField, models.BigAutoField,
             warn(
                 f'could not resolve model field "{field}" due to missing mapping.'
                 'either your field is custom and not based on a known subclasses '
