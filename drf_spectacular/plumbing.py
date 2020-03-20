@@ -77,8 +77,8 @@ def build_root_object(paths, components):
             'title': settings.TITLE,
             'version': settings.VERSION,
         },
-        'paths': paths,
-        'components': components,
+        'paths': {**paths, **settings.APPEND_PATHS},
+        'components': {**components, **settings.APPEND_COMPONENTS},
     }
     if settings.DESCRIPTION:
         root['info']['description'] = settings.DESCRIPTION

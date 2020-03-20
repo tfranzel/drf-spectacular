@@ -12,6 +12,9 @@ SPECTACULAR_DEFAULTS = {
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.openapi.SchemaGenerator',
     'SERVE_URLCONF': None,
     'SERVE_PUBLIC': True,
+    'SERVE_INCLUDE_SCHEMA': True,
+    'APPEND_PATHS': {},
+    'APPEND_COMPONENTS': {},
     # default schema metadata. refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
     'TITLE': '',
