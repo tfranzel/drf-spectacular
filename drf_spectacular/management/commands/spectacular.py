@@ -7,6 +7,7 @@ from rest_framework import renderers
 from drf_spectacular.app_settings import spectacular_settings
 from drf_spectacular.plumbing import GENERATOR_STATS
 from drf_spectacular.renderers import NoAliasOpenAPIRenderer
+from drf_spectacular.validation import validate_schema
 
 
 class Command(BaseCommand):
@@ -28,6 +29,7 @@ class Command(BaseCommand):
         parser.add_argument('--generator-class', dest="generator_class", default=None, type=str)
         parser.add_argument('--file', dest="file", default=None, type=str)
         parser.add_argument('--fail-on-warn', dest="fail_on_warn", default=False, type=bool)
+        parser.add_argument('--validate', dest="validate", default=False, type=bool)
 
     def handle(self, *args, **options):
         if options['generator_class']:
@@ -42,6 +44,8 @@ class Command(BaseCommand):
             raise RuntimeError(
                 f'Failing as requested due to {GENERATOR_STATS.warn_counter} warnings'
             )
+        if options['validate']:
+            validate_schema(schema)
 
         renderer = self.get_renderer(options['format'])
         output = renderer.render(schema, renderer_context={})
