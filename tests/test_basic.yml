@@ -1,10 +1,7 @@
 openapi: 3.0.3
-servers:
-- url: http://127.0.0.1:8000
 info:
   title: ''
   version: 0.0.0
-  description: ''
 paths:
   /albums/:
     get:

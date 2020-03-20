@@ -6,6 +6,7 @@ from collections.abc import Hashable
 from django import __version__ as DJANGO_VERSION
 from rest_framework import fields, serializers
 
+from drf_spectacular.app_settings import spectacular_settings
 from drf_spectacular.types import OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer
 
@@ -66,6 +67,36 @@ def build_array_type(schema):
         'type': 'array',
         'items': schema,
     }
+
+
+def build_root_object(paths, components):
+    settings = spectacular_settings
+    root = {
+        'openapi': '3.0.3',
+        'info': {
+            'title': settings.TITLE,
+            'version': settings.VERSION,
+        },
+        'paths': paths,
+        'components': components,
+    }
+    if settings.DESCRIPTION:
+        root['info']['description'] = settings.DESCRIPTION
+    if settings.TOS:
+        root['info']['termsOfService'] = settings.TOS
+    if settings.CONTACT:
+        root['info']['contact'] = settings.CONTACT
+    if settings.LICENSE:
+        root['info']['license'] = settings.LICENSE
+    if settings.SERVERS:
+        root['servers'] = settings.SERVERS
+    if settings.SECURITY:
+        root['security'] = settings.SECURITY
+    if settings.TAGS:
+        root['tags'] = settings.TAGS
+    if settings.EXTERNAL_DOCS:
+        root['externalDocs'] = settings.EXTERNAL_DOCS
+    return root
 
 
 def get_field_from_model(model, field):

@@ -75,8 +75,7 @@ def test_model_setup_is_valid():
     spidey_corp.save()
     spidey_corp.board.add(peter, parker_inc)
 
-    output = JSONRenderer().render(
+    JSONRenderer().render(
         PersonSerializer(spidey_corp).data,
         accepted_media_type='application/json; indent=4'
     ).decode()
-    print(output)
