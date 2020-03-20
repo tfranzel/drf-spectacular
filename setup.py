@@ -19,7 +19,7 @@ with open('README.rst') as readme:
     long_description = readme.read()
 
 with open('requirements/base.txt') as fh:
-    requirements = fh.read().split()
+    requirements = [r for r in fh.read().split() if not r.startswith('#')]
 
 
 def get_version(package):
