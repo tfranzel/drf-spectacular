@@ -7,11 +7,22 @@ from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 
+if spectacular_settings.SERVE_INCLUDE_SCHEMA:
+    SCHEMA_KWARGS = {'responses': {200: OpenApiTypes.OBJECT}}
+else:
+    SCHEMA_KWARGS = {'exclude': True}
+
 
 class SpectacularAPIView(APIView):
+    """
+    OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+    - YAML: application/vnd.oai.openapi
+    - JSON: application/vnd.oai.openapi+json
+    """
     renderer_classes = [NoAliasOpenAPIRenderer, JSONOpenAPIRenderer]
 
-    @extend_schema(responses={200: OpenApiTypes.OBJECT})
+    @extend_schema(**SCHEMA_KWARGS)
     def get(self, request):
         generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
         generator = generator_class(
@@ -21,3 +32,11 @@ class SpectacularAPIView(APIView):
             request=request,
             public=spectacular_settings.SERVE_PUBLIC
         ))
+
+
+class SpectacularYAMLAPIView(SpectacularAPIView):
+    renderer_classes = [NoAliasOpenAPIRenderer]
+
+
+class SpectacularJSONAPIView(SpectacularAPIView):
+    renderer_classes = [JSONOpenAPIRenderer]
