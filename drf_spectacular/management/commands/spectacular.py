@@ -5,6 +5,7 @@ from django.utils.module_loading import import_string
 from rest_framework import renderers
 
 from drf_spectacular.app_settings import spectacular_settings
+from drf_spectacular.plumbing import GENERATOR_STATS
 from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 
 
@@ -26,6 +27,7 @@ class Command(BaseCommand):
         parser.add_argument('--urlconf', dest="urlconf", default=None, type=str)
         parser.add_argument('--generator-class', dest="generator_class", default=None, type=str)
         parser.add_argument('--file', dest="file", default=None, type=str)
+        parser.add_argument('--fail-on-warn', dest="fail_on_warn", default=False, type=bool)
 
     def handle(self, *args, **options):
         if options['generator_class']:
@@ -35,6 +37,12 @@ class Command(BaseCommand):
 
         generator = generator_class(urlconf=options['urlconf'])
         schema = generator.get_schema(request=None, public=True)
+
+        if options['fail_on_warn'] and GENERATOR_STATS.warn_counter:
+            raise RuntimeError(
+                f'Failing as requested due to {GENERATOR_STATS.warn_counter} warnings'
+            )
+
         renderer = self.get_renderer(options['format'])
         output = renderer.render(schema, renderer_context={})
 

@@ -11,8 +11,20 @@ from drf_spectacular.types import OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, Ope
 from drf_spectacular.utils import PolymorphicProxySerializer
 
 
+class GeneratorStats:
+    warn_counter = 0
+
+
+GENERATOR_STATS = GeneratorStats()
+
+
 def warn(msg):
-    print(f'WARNING: {msg}', file=sys.stderr)
+    GENERATOR_STATS.warn_counter += 1
+    print(f'WARNING #{GENERATOR_STATS.warn_counter}: {msg}', file=sys.stderr)
+
+
+def reset_generator_stats():
+    GENERATOR_STATS.warn_counter = 0
 
 
 def anyisinstance(obj, type_list):

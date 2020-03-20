@@ -23,8 +23,8 @@ from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, alpha_operation_sorter,
     get_field_from_model, build_array_type, ComponentRegistry, ResolvedComponent,
-    build_root_object
-)
+    build_root_object,
+    reset_generator_stats)
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer
 
@@ -99,6 +99,7 @@ class SchemaGenerator(BaseSchemaGenerator):
 
     def get_schema(self, request=None, public=False):
         """ Generate a OpenAPI schema. """
+        reset_generator_stats()
         return build_root_object(
             paths=self.parse(None if public else request),
             components=self.registry.build(),
