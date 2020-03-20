@@ -28,8 +28,8 @@ class Command(BaseCommand):
         parser.add_argument('--urlconf', dest="urlconf", default=None, type=str)
         parser.add_argument('--generator-class', dest="generator_class", default=None, type=str)
         parser.add_argument('--file', dest="file", default=None, type=str)
-        parser.add_argument('--fail-on-warn', dest="fail_on_warn", default=False, type=bool)
-        parser.add_argument('--validate', dest="validate", default=False, type=bool)
+        parser.add_argument('--fail-on-warn', dest="fail_on_warn", default=False, action='store_true')
+        parser.add_argument('--validate', dest="validate", default=False, action='store_true')
 
     def handle(self, *args, **options):
         if options['generator_class']:

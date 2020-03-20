@@ -13,6 +13,7 @@ SPECTACULAR_DEFAULTS = {
     'SERVE_URLCONF': None,
     'SERVE_PUBLIC': True,
     'SERVE_INCLUDE_SCHEMA': True,
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
     'APPEND_PATHS': {},
     'APPEND_COMPONENTS': {},
     # default schema metadata. refer to spec for valid inputs
@@ -36,6 +37,7 @@ SPECTACULAR_DEFAULTS = {
 IMPORT_STRINGS = [
     'SCHEMA_AUTHENTICATION_CLASSES',
     'DEFAULT_GENERATOR_CLASS',
+    'SERVE_PERMISSIONS',
 ]
 
 spectacular_settings = APISettings(

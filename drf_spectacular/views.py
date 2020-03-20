@@ -21,6 +21,7 @@ class SpectacularAPIView(APIView):
     - JSON: application/vnd.oai.openapi+json
     """
     renderer_classes = [NoAliasOpenAPIRenderer, JSONOpenAPIRenderer]
+    permission_classes = spectacular_settings.SERVE_PERMISSIONS
 
     @extend_schema(**SCHEMA_KWARGS)
     def get(self, request):
