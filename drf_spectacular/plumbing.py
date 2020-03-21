@@ -90,7 +90,7 @@ def build_root_object(paths, components):
             'version': settings.VERSION,
         },
         'paths': {**paths, **settings.APPEND_PATHS},
-        'components': {**components, **settings.APPEND_COMPONENTS},
+        'components': components
     }
     if settings.DESCRIPTION:
         root['info']['description'] = settings.DESCRIPTION
@@ -209,9 +209,6 @@ class ComponentRegistry:
             )
         self._components[component.key] = component
 
-    def unregister(self, component: ResolvedComponent):
-        del self._components[component.key]
-
     def __contains__(self, component):
         if component.key not in self._components:
             return False
@@ -239,10 +236,15 @@ class ComponentRegistry:
             key = key.key
         del self._components[key]
 
-    def build(self) -> dict:
+    def build(self, extra_components) -> dict:
         output = defaultdict(dict)
+        # build tree from flat registry
         for component in self._components.values():
             output[component.type][component.name] = component.schema
+        # add/override extra components
+        for extra_type, extra_component_dict in extra_components.items():
+            for component_name, component_schema in extra_component_dict.items():
+                output[extra_type][component_name] = component_schema
         # sort by component type then by name
         return {
             type: {name: output[type][name] for name in output[type].keys()}

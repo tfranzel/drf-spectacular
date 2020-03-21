@@ -102,7 +102,7 @@ class SchemaGenerator(BaseSchemaGenerator):
         reset_generator_stats()
         return build_root_object(
             paths=self.parse(None if public else request),
-            components=self.registry.build(),
+            components=self.registry.build(spectacular_settings.APPEND_COMPONENTS),
         )
 
 
