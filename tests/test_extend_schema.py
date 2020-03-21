@@ -104,6 +104,39 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         def callback(self, request, ephemeral, pk):
             return Response(status=201)
 
+        @extend_schema(responses={204: None})
+        @action(detail=False, url_path='only-response-override', methods=['POST'])
+        def only_response_override(self, request):
+            return Response(status=201)
+
+        # this is intended as a measure of last resort when nothing else works
+        @extend_schema(operation={
+            "operationId": "manual_endpoint",
+            "description": "fallback mechanism where can go all out",
+            "tags": ["manual_tag"],
+            "requestBody": {
+                "content": {
+                    "application/json": {
+                        "schema": {"$ref": "#/components/schemas/Alpha"}
+                    },
+                }
+            },
+            "deprecated": True,
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/Gamma"}
+                        }
+                    },
+                    "description": ""
+                },
+            }
+        })
+        @action(detail=False, methods=['POST'])
+        def manual(self, request):
+            return Response()
+
 
 def test_extend_schema(no_warnings):
     assert_schema(

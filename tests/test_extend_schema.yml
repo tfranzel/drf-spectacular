@@ -96,6 +96,49 @@ paths:
       responses:
         201:
           description: No response body
+  /doesitall/manual/:
+    post:
+      operationId: manual_endpoint
+      description: fallback mechanism where can go all out
+      tags:
+      - manual_tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Alpha'
+      deprecated: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gamma'
+          description: ''
+  /doesitall/only-response-override/:
+    post:
+      operationId: doesitall_only_response_override_create
+      description: ''
+      tags:
+      - doesitall
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Alpha'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Alpha'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Alpha'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        204:
+          description: No response body
   /doesitall/{id}/subscribe/:
     post:
       operationId: doesitall_subscribe_create
