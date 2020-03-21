@@ -1,0 +1,72 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /a/:
+    get:
+      operationId: a_list
+      description: ''
+      tags:
+      - a
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/A'
+          description: ''
+  /a/selection/:
+    get:
+      operationId: a_selection_retrieve
+      description: ''
+      tags:
+      - a
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B'
+          description: ''
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    A:
+      type: object
+      properties:
+        language:
+          $ref: '#/components/schemas/LanguageEnum'
+      required:
+      - language
+    B:
+      type: object
+      properties:
+        language:
+          $ref: '#/components/schemas/LanguageEnum'
+      required:
+      - language
+    LanguageEnum:
+      enum:
+      - en
+      - es
+      - ru
+      - cn
+      type: string

@@ -210,10 +210,7 @@ components:
           type: string
           maxLength: 100
         genre:
-          enum:
-          - POP
-          - ROCK
-          type: string
+          $ref: '#/components/schemas/GenreEnum'
         year:
           type: integer
         released:
@@ -262,11 +259,13 @@ components:
           type: string
           maxLength: 100
         genre:
-          enum:
-          - POP
-          - ROCK
-          type: string
+          $ref: '#/components/schemas/GenreEnum'
         year:
           type: integer
         released:
           type: boolean
+    GenreEnum:
+      enum:
+      - POP
+      - ROCK
+      type: string

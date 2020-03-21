@@ -286,11 +286,7 @@ components:
             $ref: '#/components/schemas/Inline'
           readOnly: true
         field_l:
-          enum:
-          - a
-          - b
-          type: string
-          readOnly: true
+          $ref: '#/components/schemas/FieldLEnum'
     Inline:
       type: object
       properties:
@@ -323,3 +319,9 @@ components:
           minLength: 3
       required:
       - stars
+    FieldLEnum:
+      enum:
+      - a
+      - b
+      type: string
+      readOnly: true

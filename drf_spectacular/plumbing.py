@@ -1,10 +1,12 @@
 import inspect
+import json
 import sys
 from abc import ABCMeta
 from collections import defaultdict
 from collections.abc import Hashable
 from typing import List, Type, Optional, TypeVar, Union, Generic
 
+import inflection
 from django import __version__ as DJANGO_VERSION
 from django.utils.module_loading import import_string
 from rest_framework import fields, serializers
@@ -285,6 +287,10 @@ class ComponentRegistry:
         for extra_type, extra_component_dict in extra_components.items():
             for component_name, component_schema in extra_component_dict.items():
                 output[extra_type][component_name] = component_schema
+
+        if 'schemas' in output:
+            postprocess_schema_enums(output['schemas'])
+
         # sort by component type then by name
         return {
             type: {name: output[type][name] for name in output[type].keys()}
@@ -329,3 +335,37 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
             if extension._matches(target):
                 return extension(target)
         return None
+
+
+def postprocess_schema_enums(schemas):
+    """
+    simple replacement of Enum/Choices that globally share the same name and have
+    the same choices. Aids client generation to not generate a separate enum for
+    every occurrence. only takes effect when replacement is guaranteed to be correct.
+    """
+    hash_mapping = defaultdict(set)
+    # collect all enums, their names and contents
+    for schema in schemas.values():
+        for prop_name, prop_schema in schema.get('properties', {}).items():
+            if 'enum' not in prop_schema:
+                continue
+            hash_mapping[prop_name].add(
+                hash(json.dumps(prop_schema, sort_keys=True))
+            )
+    # safe replacement requires name to have only one set of enum values
+    candidate_enums = {
+        prop_name for prop_name, prop_hash_set in hash_mapping.items()
+        if len(prop_hash_set) == 1
+    }
+    # replace all valid occurrences with enum schema component
+    for schema_name in list(schemas):
+        for prop_name, prop_schema in schemas[schema_name].get('properties', {}).items():
+            if 'enum' not in prop_schema:
+                continue
+            if prop_name not in candidate_enums:
+                continue
+            enum_name = f'{inflection.camelize(prop_name)}Enum'
+            schemas[enum_name] = prop_schema
+            schemas[schema_name]['properties'][prop_name] = {
+                '$ref': f'#/components/schemas/{enum_name}'
+            }
