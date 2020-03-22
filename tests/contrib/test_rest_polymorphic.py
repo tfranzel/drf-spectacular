@@ -1,5 +1,3 @@
-from unittest import mock
-
 import pytest
 from django.db import models
 from polymorphic.models import PolymorphicModel
@@ -7,7 +5,6 @@ from rest_framework import viewsets, serializers
 from rest_framework.renderers import JSONRenderer
 from rest_polymorphic.serializers import PolymorphicSerializer
 
-from drf_spectacular.contrib.rest_polymorphic import PolymorphicAutoSchema
 from drf_spectacular.helpers import lazy_serializer
 from tests import assert_schema, generate_schema
 
@@ -53,7 +50,6 @@ class PersonViewSet(viewsets.ModelViewSet):
     serializer_class = PersonSerializer
 
 
-@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', PolymorphicAutoSchema)
 def test_rest_polymorphic(no_warnings):
     assert_schema(
         generate_schema('persons', PersonViewSet),

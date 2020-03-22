@@ -21,12 +21,14 @@ from rest_framework.schemas.utils import get_pk_description, is_list_view
 from drf_spectacular.app_settings import spectacular_settings
 from drf_spectacular.auth import OpenApiAuthenticationScheme
 from drf_spectacular.contrib.auth import *  # noqa: F403, F401
+from drf_spectacular.contrib.serializers import *  # noqa: F403, F401
 from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, alpha_operation_sorter,
     get_field_from_model, build_array_type, ComponentRegistry, ResolvedComponent,
     build_root_object, reset_generator_stats
 )
+from drf_spectacular.serializers import OpenApiSerializerExtension
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer
 
@@ -521,35 +523,14 @@ class AutoSchema(ViewInspector):
             content['minimum'] = field.min_value
 
     def _map_serializer(self, method, serializer):
-        if isinstance(serializer, PolymorphicProxySerializer):
-            return self._map_polymorphic_proxy_serializer(method, serializer)
+        serializer_extension = OpenApiSerializerExtension.get_match(serializer)
+
+        if serializer_extension:
+            return serializer_extension.map_serializer(self, method, serializer)
         else:
-            return self._map_concrete_serializer(method, serializer)
+            return self._map_basic_serializer(method, serializer)
 
-    def _map_polymorphic_proxy_serializer(self, method, serializer):
-        """ custom handling for @extend_schema's injection of PolymorphicProxySerializer """
-        sub_components = []
-
-        for sub_serializer in serializer.serializers:
-            assert is_serializer(sub_serializer), 'sub-serializer must be either a Serializer or a PolymorphicProxySerializer.'
-            sub_serializer = force_instance(sub_serializer)
-            sub_components.append(self.resolve_serializer(method, sub_serializer))
-
-            if serializer.resource_type_field_name not in sub_serializer.fields:
-                warn(
-                    f'sub-serializer of {serializer.component_name} must have the specified '
-                    f'discriminator field "{serializer.resource_type_field_name}".'
-                )
-
-        return {
-            'oneOf': [c.ref for c in sub_components],
-            'discriminator': {
-                'propertyName': serializer.resource_type_field_name,
-                'mapping': {c.name: c.ref['$ref'] for c in sub_components}
-            }
-        }
-
-    def _map_concrete_serializer(self, method, serializer):
+    def _map_basic_serializer(self, method, serializer):
         required = []
         properties = {}
 

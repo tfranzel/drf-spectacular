@@ -77,8 +77,6 @@ and finally register our spectacular AutoSchema with DRF
     REST_FRAMEWORK = {
         # YOUR SETTINGS
         'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-        # OR this for usage with rest_polymorphic/django-polymorphic
-        # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.contrib.rest_polymorphic.PolymorphicAutoSchema',
     }
 
 Take it for a spin
