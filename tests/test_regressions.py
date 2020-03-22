@@ -1,3 +1,5 @@
+from unittest import mock
+
 from django.conf.urls import url
 from django.db import models
 from rest_framework import serializers, viewsets
@@ -69,4 +71,25 @@ def test_free_form_responses(no_warnings):
         url(r'^y$', YAPIView.as_view(), name='y'),
     ])
     schema = generator.get_schema(request=None, public=True)
+    validate_schema(schema)
+
+
+@mock.patch(
+    target='drf_spectacular.app_settings.spectacular_settings.APPEND_COMPONENTS',
+    new={'schemas': {'SomeExtraComponent': {'type': 'integer'}}}
+)
+def test_append_extra_components(no_warnings):
+    class XSerializer(serializers.Serializer):
+        id = serializers.UUIDField()
+
+    class XAPIView(APIView):
+        @extend_schema(responses={200: XSerializer})
+        def get(self, request):
+            pass
+
+    generator = SchemaGenerator(patterns=[
+        url(r'^x$', XAPIView.as_view(), name='x'),
+    ])
+    schema = generator.get_schema(request=None, public=True)
+    assert len(schema['components']['schemas']) == 2
     validate_schema(schema)

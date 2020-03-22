@@ -10,8 +10,7 @@ paths:
       tags:
       - albums
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - tokenAuth: []
       - {}
       responses:
         '200':
@@ -42,8 +41,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Album'
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - tokenAuth: []
       - {}
       responses:
         '200':
@@ -67,8 +65,7 @@ paths:
       tags:
       - albums
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - tokenAuth: []
       - {}
       responses:
         '200':
@@ -102,8 +99,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Album'
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - tokenAuth: []
       - {}
       responses:
         '200':
@@ -137,8 +133,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedAlbum'
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - tokenAuth: []
       - {}
       responses:
         '200':
@@ -161,8 +156,7 @@ paths:
       tags:
       - albums
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - tokenAuth: []
       - {}
       responses:
         '204':
@@ -182,21 +176,17 @@ paths:
       tags:
       - albums
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - tokenAuth: []
       - {}
       responses:
         '200':
           description: No response body
 components:
   securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: Session
-    basicAuth:
+    tokenAuth:
       type: http
-      scheme: basic
+      scheme: bearer
+      bearerFormat: Token
   schemas:
     Album:
       type: object

@@ -3,6 +3,7 @@ from typing import Optional
 
 from django.db import models
 from rest_framework import serializers, viewsets, routers
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -55,6 +56,7 @@ class LikeSerializer(serializers.Serializer):
 
 
 class AlbumModelViewset(viewsets.ModelViewSet):
+    authentication_classes = [TokenAuthentication]
     serializer_class = AlbumSerializer
     queryset = Album.objects.none()
 
