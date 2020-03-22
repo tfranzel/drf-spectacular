@@ -1,0 +1,45 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /x/:
+    get:
+      operationId: x_list
+      description: ''
+      tags:
+      - x
+      security:
+      - oauth2:
+        - x:read
+        - x:write
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/X'
+          description: ''
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: http://127.0.0.1:8000/o/authorize
+          refreshUrl: http://127.0.0.1:8000/o/refresh
+          scopes:
+            read: Reading scope
+            write: Writing scope
+  schemas:
+    X:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+      required:
+      - uuid

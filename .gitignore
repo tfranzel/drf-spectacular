@@ -19,7 +19,7 @@ lib/
 local/
 
 generated_clients/
-tests/*_out.yml
+*_out.yml
 
 !.gitignore
 !.travis.yml

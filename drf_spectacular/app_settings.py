@@ -1,15 +1,9 @@
+from typing import Any, Dict
+
 from django.conf import settings
 from rest_framework.settings import APISettings
 
-SPECTACULAR_DEFAULTS = {
-    # Used for resolving encountered authenications schemes. Append to this list
-    # if custom are plugin authentication classes are used. Additional Scheme classes
-    # suiting your needs easy to create.
-    'SCHEMA_AUTHENTICATION_CLASSES': [
-        'drf_spectacular.auth.SessionAuthenticationScheme',
-        'drf_spectacular.auth.BasicAuthenticationScheme',
-        'drf_spectacular.auth.TokenAuthenticationScheme',
-    ],
+SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # path prefix is used for tagging the discovered operations.
     # use '/api/v[0-9]' for tagging apis like '/api/v1/albums' with ['albums']
     'SCHEMA_PATH_PREFIX': r'',
@@ -49,6 +43,14 @@ SPECTACULAR_DEFAULTS = {
     'TAGS': [],
     # Optional: MUST contain 'url', may contain "description"
     'EXTERNAL_DOCS': {},
+
+    # Oauth2 related settings. used for example by django-oauth2-toolkit.
+    # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#oauth-flows-object
+    'OAUTH2_FLOWS': [],
+    'OAUTH2_AUTHORIZATION_URL': None,
+    'OAUTH2_TOKEN_URL': None,
+    'OAUTH2_REFRESH_URL': None,
+    'OAUTH2_SCOPES': None,
 }
 
 IMPORT_STRINGS = [

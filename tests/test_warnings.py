@@ -1,5 +1,6 @@
 from django.db import models
 from rest_framework import serializers, mixins, viewsets
+from rest_framework.authentication import BaseAuthentication
 from rest_framework.decorators import action
 
 from tests import generate_schema
@@ -64,3 +65,18 @@ def test_path_param_not_in_model(capsys):
 
     generate_schema('x1', XViewset)
     assert 'no such field' in capsys.readouterr().err
+
+
+def test_no_authentication_scheme_registered(capsys):
+    class XAuth(BaseAuthentication):
+        pass
+
+    class XSerializer(serializers.Serializer):
+        uuid = serializers.UUIDField()
+
+    class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = XSerializer
+        authentication_classes = [XAuth]
+
+    generate_schema('x', XViewset)
+    assert 'no OpenApiAuthenticationScheme registered' in capsys.readouterr().err

@@ -28,8 +28,8 @@ class NaturalPerson(Person):
 
 class PersonSerializer(PolymorphicSerializer):
     model_serializer_mapping = {
-        LegalPerson: lazy_serializer('tests.test_rest_polymorphic.LegalPersonSerializer'),
-        NaturalPerson: lazy_serializer('tests.test_rest_polymorphic.NaturalPersonSerializer'),
+        LegalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.LegalPersonSerializer'),
+        NaturalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.NaturalPersonSerializer'),
     }
 
 
@@ -57,7 +57,7 @@ class PersonViewSet(viewsets.ModelViewSet):
 def test_rest_polymorphic(no_warnings):
     assert_schema(
         generate_schema('persons', PersonViewSet),
-        'tests/test_rest_polymorphic.yml'
+        'tests/contrib/test_rest_polymorphic.yml'
     )
 
 
