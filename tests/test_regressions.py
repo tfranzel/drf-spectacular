@@ -2,7 +2,7 @@ from unittest import mock
 
 from django.conf.urls import url
 from django.db import models
-from rest_framework import serializers, viewsets
+from rest_framework import serializers, viewsets, mixins, routers
 from rest_framework.views import APIView
 
 from drf_spectacular.openapi import SchemaGenerator
@@ -93,3 +93,33 @@ def test_append_extra_components(no_warnings):
     schema = generator.get_schema(request=None, public=True)
     assert len(schema['components']['schemas']) == 2
     validate_schema(schema)
+
+
+def test_serializer_retrieval_from_view(no_warnings):
+    class UnusedSerializer(serializers.Serializer):
+        pass
+
+    class XSerializer(serializers.Serializer):
+        id = serializers.UUIDField()
+
+    class YSerializer(serializers.Serializer):
+        id = serializers.UUIDField()
+
+    class X1Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = UnusedSerializer
+
+        def get_serializer(self):
+            return XSerializer()
+
+    class X2Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        def get_serializer_class(self):
+            return YSerializer
+
+    router = routers.SimpleRouter()
+    router.register('x1', X1Viewset, basename='x1')
+    router.register('x2', X2Viewset, basename='x2')
+    generator = SchemaGenerator(patterns=router.urls)
+    schema = generator.get_schema(request=None, public=True)
+    validate_schema(schema)
+    assert len(schema['components']['schemas']) == 2
+    assert 'Unused' not in schema['components']['schemas']

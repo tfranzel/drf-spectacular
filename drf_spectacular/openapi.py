@@ -10,10 +10,9 @@ import uritemplate
 from django.core import validators, exceptions as django_exceptions
 from django.db import models
 from django.utils.encoding import force_str
-from rest_framework import (
-    permissions, renderers, serializers, views, viewsets, exceptions as rest_exceptions,
-)
+from rest_framework import permissions, renderers, serializers, views, viewsets
 from rest_framework.fields import _UnvalidatedField, empty
+from rest_framework.generics import GenericAPIView
 from rest_framework.schemas.generators import BaseSchemaGenerator
 from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description, is_list_view
@@ -671,17 +670,17 @@ class AutoSchema(ViewInspector):
 
     def _get_serializer(self, path, method):
         view = self.view
-
-        if not hasattr(view, 'get_serializer'):
-            return None
-
         try:
+            # try to circumvent queryset issues with calling get_serializer. if view has NOT
+            # overridden get_serializer, its safe to use get_serializer_class.
+            if view.__class__.get_serializer == GenericAPIView.get_serializer:
+                return view.get_serializer_class()()
             return view.get_serializer()
-        except rest_exceptions.APIException:
+        except Exception as exc:
             warn(
-                '{}.get_serializer() raised an exception during '
-                'schema generation. Serializer fields will not be '
-                'generated for {} {}.'.format(view.__class__.__name__, method, path)
+                f'Exception raised while getting serializer from {view.__class__.__name__}. Hint: '
+                f'Is get_serializer_class() returning None or is get_queryset() not working without '
+                f'a request? Ignoring the view for now. (Exception: {exc})'
             )
             return None
 

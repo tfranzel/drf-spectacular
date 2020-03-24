@@ -80,3 +80,11 @@ def test_no_authentication_scheme_registered(capsys):
 
     generate_schema('x', XViewset)
     assert 'no OpenApiAuthenticationScheme registered' in capsys.readouterr().err
+
+
+def test_serializer_not_found(capsys):
+    class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        pass
+
+    generate_schema('x', XViewset)
+    assert 'Exception raised while getting serializer' in capsys.readouterr().err
