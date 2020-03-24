@@ -38,7 +38,7 @@ class InlineSerializer(serializers.Serializer):
 
 class QuerySerializer(serializers.Serializer):
     stars = serializers.IntegerField(min_value=1, max_value=5, help_text='filter by rating stars')
-    contains = serializers.CharField(min_length=3, max_length=10, help_text='filter by containing string')
+    contains = serializers.CharField(min_length=3, max_length=10, help_text='filter by containing string', required=False)
 
 
 class ErrorDetailSerializer(serializers.Serializer):

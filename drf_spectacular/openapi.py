@@ -176,6 +176,7 @@ class AutoSchema(ViewInspector):
                         name=property_name,
                         schema=property_schema,
                         location=OpenApiParameter.QUERY,
+                        required=property_name in mapped.get('required', [])
                     ))
             else:
                 warn(f'could not resolve parameter annotation {parameter}. skipping.')
