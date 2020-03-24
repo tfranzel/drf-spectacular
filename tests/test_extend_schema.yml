@@ -71,7 +71,6 @@ paths:
         schema:
           type: string
           format: uuid
-        description: ''
         required: true
       tags:
       - doesitall
@@ -139,6 +138,42 @@ paths:
       responses:
         204:
           description: No response body
+  /doesitall/serializer-query/:
+    get:
+      operationId: doesitall_serializer_query_retrieve
+      description: ''
+      parameters:
+      - in: query
+        name: contains
+        schema:
+          type: string
+          description: filter by containing string
+          maxLength: 10
+          minLength: 3
+      - in: query
+        name: nested
+        schema:
+          $ref: '#/components/schemas/Query'
+      - in: query
+        name: stars
+        schema:
+          type: integer
+          maximum: 5
+          minimum: 1
+          description: filter by rating stars
+      tags:
+      - doesitall
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alpha'
+          description: ''
   /doesitall/{id}/subscribe/:
     post:
       operationId: doesitall_subscribe_create
@@ -148,7 +183,6 @@ paths:
         name: id
         schema:
           type: integer
-        description: ''
         required: true
       tags:
       - doesitall
@@ -235,3 +269,19 @@ components:
       required:
       - inline_b
       - inline_i
+    Query:
+      type: object
+      properties:
+        stars:
+          type: integer
+          maximum: 5
+          minimum: 1
+          description: filter by rating stars
+        contains:
+          type: string
+          description: filter by containing string
+          maxLength: 10
+          minLength: 3
+      required:
+      - stars
+      - contains

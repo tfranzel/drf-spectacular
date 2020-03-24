@@ -70,7 +70,7 @@ def build_basic_type(obj):
     elif obj is None or type(obj) is None:
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.NONE])
     else:
-        warn(f'could not resolve type "{obj}". defaulting to "string"')
+        warn(f'could not resolve type for "{obj}". defaulting to "string"')
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])
 
 
@@ -79,6 +79,37 @@ def build_array_type(schema):
         'type': 'array',
         'items': schema,
     }
+
+
+def build_parameter_type(
+        name,
+        schema,
+        location,
+        required=False,
+        description=None,
+        enum=None,
+        deprecated=False,
+        explode=None,
+        style=None
+):
+    schema = {
+        'in': location,
+        'name': name,
+        'schema': schema,
+    }
+    if description:
+        schema['description'] = description
+    if required or location == 'path':
+        schema['required'] = True
+    if deprecated:
+        schema['deprecated'] = True
+    if explode is not None:
+        schema['explode'] = explode
+    if style is not None:
+        schema['style'] = style
+    if enum is not None:
+        schema['schema']['enum'] = enum
+    return schema
 
 
 def build_root_object(paths, components):

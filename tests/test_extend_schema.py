@@ -36,6 +36,11 @@ class InlineSerializer(serializers.Serializer):
     inline_i = serializers.IntegerField()
 
 
+class QuerySerializer(serializers.Serializer):
+    stars = serializers.IntegerField(min_value=1, max_value=5, help_text='filter by rating stars')
+    contains = serializers.CharField(min_length=3, max_length=10, help_text='filter by containing string')
+
+
 class ErrorDetailSerializer(serializers.Serializer):
     field_i = serializers.SerializerMethodField()
     field_j = serializers.SerializerMethodField()
@@ -108,6 +113,14 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         @action(detail=False, url_path='only-response-override', methods=['POST'])
         def only_response_override(self, request):
             return Response(status=201)
+
+        @extend_schema(parameters=[
+            QuerySerializer,  # exploded
+            OpenApiParameter('nested', QuerySerializer)  # nested
+        ])
+        @action(detail=False, url_path='serializer-query', methods=['GET'])
+        def serializer_query(self, request):
+            return Response([])
 
         # this is intended as a measure of last resort when nothing else works
         @extend_schema(operation={

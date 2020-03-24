@@ -22,10 +22,7 @@ class PolymorphicProxySerializer:
 
 
 class OpenApiSchemaBase:
-    """ reusable base class for objects that can be translated to a schema """
-
-    def to_schema(self):
-        raise NotImplementedError('translation to schema required.')
+    pass
 
 
 class OpenApiParameter(OpenApiSchemaBase):
@@ -34,31 +31,14 @@ class OpenApiParameter(OpenApiSchemaBase):
     HEADER = 'header'
     COOKIE = 'cookie'
 
-    def __init__(self, name, type=str, location=QUERY, required=False, description='', enum=None):
+    def __init__(self, name, type=str, location=QUERY, required=False, description='', enum=None, deprecated=False):
         self.name = name
         self.type = type
         self.location = location
         self.required = required
         self.description = description
         self.enum = enum
-
-    def to_schema(self):
-        from drf_spectacular.plumbing import build_basic_type
-        schema = {
-            'in': self.location,
-            'name': self.name,
-            'schema': build_basic_type(self.type),
-            'description': self.description,
-        }
-        assert self.location in [self.QUERY, self.PATH, self.HEADER, self.COOKIE]
-        if self.location == self.PATH or self.required:
-            schema['required'] = True
-        if self.enum is not None:
-            assert not isinstance(self.enum, str) and len(self.enum) > 0, (
-                'Parameter enumeration needs to be a non-empty list or set'
-            )
-            schema['schema']['enum'] = self.enum
-        return schema
+        self.deprecated = deprecated
 
 
 def extend_schema(
@@ -117,10 +97,7 @@ def extend_schema(
 
             def get_override_parameters(self, path, method):
                 if parameters:
-                    assert all(
-                        isinstance(p, OpenApiParameter) for p in parameters
-                    ), '@extend_schema(parameters=[X,]) requires list of utils.OpenApiParameter'
-                    return [p.to_schema() for p in parameters]
+                    return parameters
                 return super().get_override_parameters(path, method)
 
             def get_auth(self, path, method):

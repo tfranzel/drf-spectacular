@@ -19,18 +19,18 @@ from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
-from drf_spectacular.auth import OpenApiAuthenticationScheme
 from drf_spectacular.contrib.auth import *  # noqa: F403, F401
 from drf_spectacular.contrib.serializers import *  # noqa: F403, F401
 from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, alpha_operation_sorter,
     get_field_from_model, build_array_type, ComponentRegistry, ResolvedComponent,
-    build_root_object, reset_generator_stats
+    build_root_object, reset_generator_stats, build_parameter_type
 )
-from drf_spectacular.serializers import OpenApiSerializerExtension
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import PolymorphicProxySerializer
+from drf_spectacular.utils import PolymorphicProxySerializer, OpenApiParameter
+from drf_spectacular.auth import OpenApiAuthenticationScheme
+from drf_spectacular.serializers import OpenApiSerializerExtension
 
 
 class SchemaGenerator(BaseSchemaGenerator):
@@ -150,11 +150,43 @@ class AutoSchema(ViewInspector):
         """ override this for custom behaviour """
         return []
 
+    def _process_override_parameters(self, path, method):
+        result = []
+        for parameter in self.get_override_parameters(path, method):
+            if isinstance(parameter, OpenApiParameter):
+                if is_basic_type(parameter.type):
+                    schema = build_basic_type(parameter.type)
+                elif is_serializer(parameter.type):
+                    schema = self.resolve_serializer(method, parameter.type).ref
+                else:
+                    schema = parameter.type
+                result.append(build_parameter_type(
+                    name=parameter.name,
+                    schema=schema,
+                    location=parameter.location,
+                    required=parameter.required,
+                    description=parameter.description,
+                    enum=parameter.enum,
+                    deprecated=parameter.deprecated,
+                ))
+            elif is_serializer(parameter):
+                # explode serializer into separate parameters. defaults to QUERY location
+                mapped = self._map_serializer(method, parameter)
+                for property_name, property_schema in mapped['properties'].items():
+                    result.append(build_parameter_type(
+                        name=property_name,
+                        schema=property_schema,
+                        location=OpenApiParameter.QUERY,
+                    ))
+            else:
+                warn(f'could not resolve parameter annotation {parameter}. skipping.')
+        return result
+
     def get_parameters(self, path, method):
         def dict_helper(parameters):
             return {(p['name'], p['in']): p for p in parameters}
 
-        override_parameters = dict_helper(self.get_override_parameters(path, method))
+        override_parameters = dict_helper(self._process_override_parameters(path, method))
         # remove overridden path parameters beforehand so that there are no irrelevant warnings.
         path_variables = [
             v for v in uritemplate.variables(path) if (v, 'path') not in override_parameters
@@ -523,6 +555,7 @@ class AutoSchema(ViewInspector):
             content['minimum'] = field.min_value
 
     def _map_serializer(self, method, serializer):
+        serializer = force_instance(serializer)
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
 
         if serializer_extension:
@@ -607,7 +640,7 @@ class AutoSchema(ViewInspector):
         elif is_basic_type(hint):
             return build_basic_type(hint)
         elif getattr(hint, '__origin__', None) is typing.Union:
-            if type(None) == hint.__args__[1]:
+            if type(None) == hint.__args__[1] and len(hint.__args__) == 2:
                 schema = build_basic_type(hint.__args__[0])
                 schema['nullable'] = True
                 return schema
@@ -708,7 +741,6 @@ class AutoSchema(ViewInspector):
             return {'200': self._get_response_for_code(path, method, schema)}
 
     def _get_response_for_code(self, path, method, serializer):
-        # convenience feature: auto instantiate serializer classes
         serializer = force_instance(serializer)
 
         if not serializer:
@@ -764,6 +796,7 @@ class AutoSchema(ViewInspector):
 
     def resolve_serializer(self, method, serializer) -> ResolvedComponent:
         assert is_serializer(serializer)
+        serializer = force_instance(serializer)
 
         component = ResolvedComponent(
             name=self._get_serializer_name(method, serializer),
