@@ -52,7 +52,11 @@ class SchemaGenerator(BaseSchemaGenerator):
         elif isinstance(view, views.APIView):
             action = getattr(view, method.lower())
         else:
-            raise RuntimeError('not supported subclass. Must inherit from APIView or subclass of APIView')
+            warn(
+                'Using not supported View class. Class must be derived from APIView '
+                'or any of its subclasses like GenericApiView, GenericViewSet.'
+            )
+            return view
 
         if hasattr(action, 'kwargs') and 'schema' in action.kwargs:
             # might already be properly set in case of @action but overwrite for all cases
@@ -538,12 +542,6 @@ class AutoSchema(ViewInspector):
                 return self._map_type_hint(target)
             elif isinstance(target, models.Field):
                 return self._map_model_field(target)
-            else:
-                warn('ERROR. this is not supposed to happen. please open an issue at and help improve spectacular')
-                return build_basic_type(OpenApiTypes.STR)
-
-        # TODO serializer fields
-        # serializers.CreateOnlyDefault
 
         warn(f'could not resolve serializer field {field}. defaulting to "string"')
         return build_basic_type(OpenApiTypes.STR)
@@ -733,11 +731,13 @@ class AutoSchema(ViewInspector):
                 for code, serializer in response_serializers.items()
             }
         else:
-            warn(f'could not resolve response for {method} {path}. defaulting to generic free-form object.')
-            schema = {
-                'type': 'object',
-                'description': 'Unspecified response body',
-            }
+            warn(
+                f'could not resolve "{response_serializers}" for {method} {path}. '
+                f'Expected either a serializer or some supported override mechanism. '
+                f'defaulting to generic free-form object.'
+            )
+            schema = build_basic_type(OpenApiTypes.OBJECT)
+            schema['description'] = 'Unspecified response body'
             return {'200': self._get_response_for_code(path, method, schema)}
 
     def _get_response_for_code(self, path, method, serializer):
@@ -759,10 +759,12 @@ class AutoSchema(ViewInspector):
             schema = serializer
         else:
             warn(
-                f'could not resolve "{serializer}". Expected either a serializer or some '
-                f'supported override mechanism. defaulting to generic free-form object.'
+                f'could not resolve "{serializer}" for {method} {path}. Expected either '
+                f'a serializer or some supported override mechanism. defaulting to '
+                f'generic free-form object.'
             )
             schema = build_basic_type(OpenApiTypes.OBJECT)
+            schema['description'] = 'Unspecified response body'
 
         if isinstance(serializer, serializers.ListSerializer) or is_list_view(path, method, self.view):
             # TODO i fear is_list_view is not covering all the cases

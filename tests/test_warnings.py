@@ -3,6 +3,7 @@ from rest_framework import serializers, mixins, viewsets
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.decorators import action
 
+from drf_spectacular.utils import extend_schema
 from tests import generate_schema
 
 
@@ -88,3 +89,29 @@ def test_serializer_not_found(capsys):
 
     generate_schema('x', XViewset)
     assert 'Exception raised while getting serializer' in capsys.readouterr().err
+
+
+def test_extend_schema_unknown_class(capsys):
+    class DoesNotCompute:
+        pass
+
+    class X1Viewset(viewsets.GenericViewSet):
+        @extend_schema(responses={200: DoesNotCompute})
+        def list(self, request):
+            pass
+
+    generate_schema('x1', X1Viewset)
+    assert 'Expected either a serializer' in capsys.readouterr().err
+
+
+def test_extend_schema_unknown_class2(capsys):
+    class DoesNotCompute:
+        pass
+
+    class X1Viewset(viewsets.GenericViewSet):
+        @extend_schema(responses=DoesNotCompute)
+        def list(self, request):
+            pass
+
+    generate_schema('x1', X1Viewset)
+    assert 'Expected either a serializer' in capsys.readouterr().err
