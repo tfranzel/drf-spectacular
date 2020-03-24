@@ -161,6 +161,7 @@ paths:
           maximum: 5
           minimum: 1
           description: filter by rating stars
+        required: true
       tags:
       - doesitall
       security:
@@ -284,4 +285,3 @@ components:
           minLength: 3
       required:
       - stars
-      - contains

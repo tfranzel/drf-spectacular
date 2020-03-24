@@ -173,10 +173,12 @@ class AutoSchema(ViewInspector):
                 # explode serializer into separate parameters. defaults to QUERY location
                 mapped = self._map_serializer(method, parameter)
                 for property_name, property_schema in mapped['properties'].items():
+                    required = property_name in mapped.get('required', [])
                     result.append(build_parameter_type(
                         name=property_name,
                         schema=property_schema,
                         location=OpenApiParameter.QUERY,
+                        required=required
                     ))
             else:
                 warn(f'could not resolve parameter annotation {parameter}. skipping.')
