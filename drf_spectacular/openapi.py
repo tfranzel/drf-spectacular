@@ -690,12 +690,15 @@ class AutoSchema(ViewInspector):
 
         serializer = force_instance(self.get_request_serializer(path, method))
 
+        request_body_required = False
         if is_serializer(serializer):
             component = self.resolve_serializer(method, serializer)
             if not component:
                 # serializer is empty so skip content enumeration
                 return None
             schema = component.ref
+            if component.schema.get('required', []):
+                request_body_required = True
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
             if not schema:
@@ -711,11 +714,15 @@ class AutoSchema(ViewInspector):
                 'description': 'Unspecified request body',
             }
 
-        return {
+        request_body = {
             'content': {
                 request_media_types: {'schema': schema} for request_media_types in self.map_parsers(path, method)
             }
         }
+        if request_body_required:
+            request_body['required'] = request_body_required
+
+        return request_body
 
     def _get_response_bodies(self, path, method):
         response_serializers = self.get_response_serializers(path, method)

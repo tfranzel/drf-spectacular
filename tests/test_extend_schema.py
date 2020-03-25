@@ -20,6 +20,11 @@ class BetaSerializer(AlphaSerializer):
     field_c = serializers.JSONField()
 
 
+class DeltaSerializer(serializers.Serializer):
+    field_a = serializers.CharField(required=False)
+    field_b = serializers.IntegerField(required=False)
+
+
 @extend_schema_field(OpenApiTypes.BYTE)
 class CustomField(serializers.Field):
     def to_representation(self, value):
@@ -149,6 +154,16 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         @action(detail=False, methods=['POST'])
         def manual(self, request):
             return Response()
+
+        @extend_schema(request=DeltaSerializer)
+        @action(detail=False, methods=['POST'])
+        def non_required_body(self, request):
+            return Response([])
+
+        @extend_schema(request=AlphaSerializer)
+        @action(detail=False, methods=['POST'])
+        def required_body(self, request):
+            return Response([])
 
 
 def test_extend_schema(no_warnings):

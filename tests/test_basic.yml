@@ -40,6 +40,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/Album'
+        required: true
       security:
       - tokenAuth: []
       - {}
@@ -98,6 +99,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/Album'
+        required: true
       security:
       - tokenAuth: []
       - {}

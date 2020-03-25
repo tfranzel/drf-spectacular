@@ -23,6 +23,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/TokenObtainPair'
+        required: true
       responses:
         '200':
           content:
@@ -50,6 +51,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/TokenRefresh'
+        required: true
       responses:
         '200':
           content:
