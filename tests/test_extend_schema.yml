@@ -168,35 +168,6 @@ paths:
       responses:
         204:
           description: No response body
-  /doesitall/required_body/:
-    post:
-      operationId: doesitall_required_body_create
-      description: ''
-      tags:
-      - doesitall
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Alpha'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Alpha'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Alpha'
-        required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Alpha'
-          description: ''
   /doesitall/serializer-query/:
     get:
       operationId: doesitall_serializer_query_retrieve

@@ -160,11 +160,6 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         def non_required_body(self, request):
             return Response([])
 
-        @extend_schema(request=AlphaSerializer)
-        @action(detail=False, methods=['POST'])
-        def required_body(self, request):
-            return Response([])
-
 
 def test_extend_schema(no_warnings):
     assert_schema(
