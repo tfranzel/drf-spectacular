@@ -1,6 +1,6 @@
 from django.views import View
 
-from drf_spectacular.auth import OpenApiAuthenticationExtension
+from drf_spectacular.authentication import OpenApiAuthenticationExtension
 
 
 class SimpleJWTScheme(OpenApiAuthenticationExtension):

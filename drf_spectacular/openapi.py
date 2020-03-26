@@ -27,8 +27,8 @@ from drf_spectacular.plumbing import (
     build_root_object, reset_generator_stats, build_parameter_type
 )
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import PolymorphicProxySerializer, OpenApiParameter
-from drf_spectacular.auth import OpenApiAuthenticationExtension
+from drf_spectacular.utils import OpenApiParameter
+from drf_spectacular.authentication import OpenApiAuthenticationExtension
 from drf_spectacular.serializers import OpenApiSerializerExtension
 
 
@@ -125,7 +125,7 @@ class AutoSchema(ViewInspector):
         operation['operationId'] = self.get_operation_id(path, method)
         operation['description'] = self.get_description(path, method)
 
-        parameters = self.get_parameters(path, method)
+        parameters = self._get_parameters(path, method)
         if parameters:
             operation['parameters'] = parameters
 
@@ -186,7 +186,7 @@ class AutoSchema(ViewInspector):
                 warn(f'could not resolve parameter annotation {parameter}. skipping.')
         return result
 
-    def get_parameters(self, path, method):
+    def _get_parameters(self, path, method):
         def dict_helper(parameters):
             return {(p['name'], p['in']): p for p in parameters}
 
@@ -752,13 +752,13 @@ class AutoSchema(ViewInspector):
 
         if not serializer:
             return {'description': 'No response body'}
-        elif anyisinstance(serializer, [serializers.Serializer, PolymorphicProxySerializer]):
+        elif isinstance(serializer, serializers.ListSerializer):
+            schema = self.resolve_serializer(method, serializer.child).ref
+        elif is_serializer(serializer):
             component = self.resolve_serializer(method, serializer)
             if not component:
                 return {'description': 'No response body'}
             schema = component.ref
-        elif isinstance(serializer, serializers.ListSerializer):
-            schema = self.resolve_serializer(method, serializer.child).ref
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
         elif isinstance(serializer, dict):
