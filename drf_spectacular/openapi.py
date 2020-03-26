@@ -28,7 +28,7 @@ from drf_spectacular.plumbing import (
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer, OpenApiParameter
-from drf_spectacular.auth import OpenApiAuthenticationScheme
+from drf_spectacular.auth import OpenApiAuthenticationExtension
 from drf_spectacular.serializers import OpenApiSerializerExtension
 
 
@@ -217,26 +217,26 @@ class AutoSchema(ViewInspector):
         Obtains authentication classes and permissions from view. If authentication
         is known, resolve security requirement for endpoint and security definition for
         the component section.
-        For custom authentication subclass ``OpenApiAuthenticationScheme``.
+        For custom authentication subclass ``OpenApiAuthenticationExtension``.
         """
         auths = []
 
         for authenticator in self.view.get_authenticators():
-            scheme = OpenApiAuthenticationScheme.get_match(authenticator)
+            scheme = OpenApiAuthenticationExtension.get_match(authenticator)
             if not scheme:
                 warn(
                     f'could not resolve authenticator {authenticator.__class__}. There '
-                    f'was no OpenApiAuthenticationScheme registered for that class. '
+                    f'was no OpenApiAuthenticationExtension registered for that class. '
                     f'Try creating one by subclassing it. Ignoring for now.'
                 )
                 continue
 
-            auths.append(scheme.get_security_requirement(self.view, authenticator))
+            auths.append(scheme.get_security_requirement(self.view))
             component = ResolvedComponent(
                 name=scheme.name,
                 type=ResolvedComponent.SECURITY_SCHEMA,
                 object=authenticator.__class__,
-                schema=scheme.get_security_definition(self.view, authenticator)
+                schema=scheme.get_security_definition(self.view)
             )
             if component not in self.registry:
                 self.registry.register(component)
@@ -557,7 +557,7 @@ class AutoSchema(ViewInspector):
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
 
         if serializer_extension:
-            return serializer_extension.map_serializer(self, method, serializer)
+            return serializer_extension.map_serializer(self, method)
         else:
             return self._map_basic_serializer(method, serializer)
 
@@ -791,8 +791,9 @@ class AutoSchema(ViewInspector):
         }
 
     def _get_serializer_name(self, method, serializer):
-        if isinstance(serializer, PolymorphicProxySerializer):
-            return serializer.component_name
+        serializer_extension = OpenApiSerializerExtension.get_match(serializer)
+        if serializer_extension and serializer_extension.get_name():
+            return serializer_extension.get_name()
 
         name = serializer.__class__.__name__
 

@@ -80,7 +80,7 @@ def test_no_authentication_scheme_registered(capsys):
         authentication_classes = [XAuth]
 
     generate_schema('x', XViewset)
-    assert 'no OpenApiAuthenticationScheme registered' in capsys.readouterr().err
+    assert 'no OpenApiAuthenticationExtension registered' in capsys.readouterr().err
 
 
 def test_serializer_not_found(capsys):

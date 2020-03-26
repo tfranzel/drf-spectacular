@@ -2,11 +2,12 @@ from drf_spectacular.serializers import OpenApiSerializerExtension
 
 
 class PolymorphicSerializerExtension(OpenApiSerializerExtension):
-    serializer_class = 'rest_polymorphic.serializers.PolymorphicSerializer'
+    target_class = 'rest_polymorphic.serializers.PolymorphicSerializer'
+    match_subclasses = True
 
-    @classmethod
-    def map_serializer(cls, auto_schema, method: str, serializer):
+    def map_serializer(self, auto_schema, method: str):
         sub_components = []
+        serializer = self.target
 
         for _, sub_serializer in serializer.model_serializer_mapping.items():
             sub_components.append(auto_schema.resolve_serializer(method, sub_serializer))

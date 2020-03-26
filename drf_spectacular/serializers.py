@@ -1,53 +1,30 @@
-from abc import ABC, abstractmethod
-from typing import List, Type, Optional
+from abc import abstractmethod
+from typing import Optional, List
 
-from django.utils.module_loading import import_string
-
-from drf_spectacular.plumbing import warn, force_instance
+from drf_spectacular.plumbing import warn, force_instance, OpenApiGeneratorExtension
 
 
-class OpenApiSerializerExtension(ABC):
-    _registry: List[Type['OpenApiSerializerExtension']] = []
+class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExtension']):
+    _registry: List['OpenApiSerializerExtension'] = []
 
-    serializer_class = None
-    name: str
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        cls._registry.append(cls)
-
-    @classmethod
-    def _matches(cls, serializer) -> bool:
-        if isinstance(cls.serializer_class, str):
-            try:
-                cls.serializer_class = import_string(cls.serializer_class)
-            except ImportError:
-                cls.serializer_class = None
-
-        if cls.serializer_class is None:
-            return False  # app not installed
-        else:
-            return issubclass(serializer.__class__, cls.serializer_class)
-
-    @classmethod
-    def get_match(cls, serializer) -> Optional[Type['OpenApiSerializerExtension']]:
-        for scheme in cls._registry:
-            if scheme._matches(serializer):
-                return scheme
+    def get_name(self) -> Optional[str]:
+        """ return str for overriding default name extraction """
         return None
 
-    @classmethod
     @abstractmethod
-    def map_serializer(cls, auto_schema, method: str, serializer):
+    def map_serializer(self, auto_schema, method: str):
         pass
 
 
 class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
-    serializer_class = 'drf_spectacular.utils.PolymorphicProxySerializer'
+    target_class = 'drf_spectacular.utils.PolymorphicProxySerializer'
 
-    @classmethod
-    def map_serializer(cls, auto_schema, method: str, serializer):
+    def get_name(self):
+        return self.target.component_name
+
+    def map_serializer(self, auto_schema, method: str):
         """ custom handling for @extend_schema's injection of PolymorphicProxySerializer """
+        serializer = self.target
         sub_components = []
 
         for sub_serializer in serializer.serializers:

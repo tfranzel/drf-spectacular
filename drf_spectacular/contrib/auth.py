@@ -1,14 +1,13 @@
 from django.views import View
 
-from drf_spectacular.auth import OpenApiAuthenticationScheme
+from drf_spectacular.auth import OpenApiAuthenticationExtension
 
 
-class SimpleJWTScheme(OpenApiAuthenticationScheme):
-    authentication_class = 'rest_framework_simplejwt.authentication.JWTAuthentication'
+class SimpleJWTScheme(OpenApiAuthenticationExtension):
+    target_class = 'rest_framework_simplejwt.authentication.JWTAuthentication'
     name = 'jwtAuth'
 
-    @classmethod
-    def get_security_definition(cls, view: View, authenticator):
+    def get_security_definition(self, view: View):
         from rest_framework_simplejwt.settings import api_settings
         from drf_spectacular.plumbing import warn
 
@@ -24,17 +23,15 @@ class SimpleJWTScheme(OpenApiAuthenticationScheme):
         }
 
 
-class DjangoOAuthToolkitScheme(OpenApiAuthenticationScheme):
-    authentication_class = 'oauth2_provider.contrib.rest_framework.OAuth2Authentication'
+class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
+    target_class = 'oauth2_provider.contrib.rest_framework.OAuth2Authentication'
     name = 'oauth2'
 
-    @classmethod
-    def get_security_requirement(cls, view: View, authenticator):
+    def get_security_requirement(self, view: View):
         # todo build proper scopes
-        return {cls.name: view.required_scopes}
+        return {self.name: view.required_scopes}
 
-    @classmethod
-    def get_security_definition(cls, view: View, authenticator):
+    def get_security_definition(self, view: View):
         from drf_spectacular.app_settings import spectacular_settings
         from oauth2_provider.settings import oauth2_settings
 

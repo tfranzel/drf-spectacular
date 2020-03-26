@@ -1,14 +1,18 @@
 import inspect
 import sys
+from abc import ABCMeta
 from collections import defaultdict
 from collections.abc import Hashable
+from typing import List, Type, Optional, TypeVar, Union, Generic
 
 from django import __version__ as DJANGO_VERSION
+from django.utils.module_loading import import_string
 from rest_framework import fields, serializers
 
 from drf_spectacular.app_settings import spectacular_settings
 from drf_spectacular.types import OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes
-from drf_spectacular.utils import PolymorphicProxySerializer
+
+T = TypeVar('T')
 
 
 class GeneratorStats:
@@ -31,6 +35,10 @@ def anyisinstance(obj, type_list):
     return any([isinstance(obj, t) for t in type_list])
 
 
+def get_class(obj):
+    return obj if inspect.isclass(obj) else obj.__class__
+
+
 def force_instance(serializer_or_field):
     if not inspect.isclass(serializer_or_field):
         return serializer_or_field
@@ -40,10 +48,11 @@ def force_instance(serializer_or_field):
         return serializer_or_field
 
 
-def is_serializer(obj):
-    return anyisinstance(
-        force_instance(obj),
-        [serializers.BaseSerializer, PolymorphicProxySerializer]
+def is_serializer(obj) -> bool:
+    from drf_spectacular.serializers import OpenApiSerializerExtension
+    return (
+        isinstance(force_instance(obj), serializers.BaseSerializer)
+        or bool(OpenApiSerializerExtension.get_match(obj))
     )
 
 
@@ -281,3 +290,42 @@ class ComponentRegistry:
             type: {name: output[type][name] for name in output[type].keys()}
             for type in sorted(output.keys(), reverse=True)
         }
+
+
+class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
+    _registry: List[T] = []
+    target_class: Union[None, str, Type[object]] = None
+    match_subclasses = False
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls._registry.append(cls)
+
+    def __init__(self, target):
+        self.target = target
+
+    @classmethod
+    def _load_class(cls):
+        try:
+            cls.target_class = import_string(cls.target_class)
+        except ImportError:
+            cls.target_class = None
+
+    @classmethod
+    def _matches(cls, target) -> bool:
+        if isinstance(cls.target_class, str):
+            cls._load_class()
+
+        if cls.target_class is None:
+            return False  # app not installed
+        elif cls.match_subclasses:
+            return issubclass(get_class(target), cls.target_class)
+        else:
+            return get_class(target) == cls.target_class
+
+    @classmethod
+    def get_match(cls, target) -> Optional[T]:
+        for extension in cls._registry:
+            if extension._matches(target):
+                return extension(target)
+        return None
