@@ -43,7 +43,9 @@ class InlineSerializer(serializers.Serializer):
 
 class QuerySerializer(serializers.Serializer):
     stars = serializers.IntegerField(min_value=1, max_value=5, help_text='filter by rating stars')
-    contains = serializers.CharField(min_length=3, max_length=10, help_text='filter by containing string', required=False)
+    contains = serializers.CharField(
+        min_length=3, max_length=10, help_text='filter by containing string', required=False
+    )
 
 
 class ErrorDetailSerializer(serializers.Serializer):
@@ -82,8 +84,13 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
                 500: ErrorDetailSerializer,
             },
             parameters=[
-                OpenApiParameter('expiration_date', OpenApiTypes.DATETIME, description='time the object will expire at'),
-                OpenApiParameter('test_mode', bool, location=OpenApiParameter.HEADER, description='creation will be in the sandbox', enum=[True, False]),
+                OpenApiParameter(
+                    'expiration_date', OpenApiTypes.DATETIME, description='time the object will expire at'
+                ),
+                OpenApiParameter(
+                    'test_mode', bool, location=OpenApiParameter.HEADER, enum=[True, False],
+                    description='creation will be in the sandbox',
+                ),
             ],
             description='this weird endpoint needs some explaining',
             deprecated=True,
