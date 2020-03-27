@@ -48,8 +48,8 @@ components:
       discriminator:
         propertyName: type
         mapping:
-          LegalPerson: '#/components/schemas/LegalPerson'
-          NaturalPerson: '#/components/schemas/NaturalPerson'
+          legal: '#/components/schemas/LegalPerson'
+          natural: '#/components/schemas/NaturalPerson'
     LegalPerson:
       type: object
       properties:

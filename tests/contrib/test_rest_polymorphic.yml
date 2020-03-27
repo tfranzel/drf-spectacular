@@ -177,8 +177,8 @@ components:
       discriminator:
         propertyName: resourcetype
         mapping:
-          LegalPerson: '#/components/schemas/LegalPerson'
-          NaturalPerson: '#/components/schemas/NaturalPerson'
+          legal: '#/components/schemas/LegalPerson'
+          natural: '#/components/schemas/NaturalPerson'
     LegalPerson:
       type: object
       properties:
@@ -225,8 +225,8 @@ components:
       discriminator:
         propertyName: resourcetype
         mapping:
-          PatchedLegalPerson: '#/components/schemas/PatchedLegalPerson'
-          PatchedNaturalPerson: '#/components/schemas/PatchedNaturalPerson'
+          legal: '#/components/schemas/PatchedLegalPerson'
+          natural: '#/components/schemas/PatchedNaturalPerson'
     PatchedLegalPerson:
       type: object
       properties:

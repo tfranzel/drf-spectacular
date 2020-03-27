@@ -13,6 +13,10 @@ class PolymorphicProxySerializer:
     serializers.Serializer. It *cannot* be used in views as `serializer_class`
     or as field in a actual serializer. You likely want to handle this in the
     view method.
+
+    Also make sure that each sub-serializer has a field named after the value of
+    `resource_type_field` (discriminator field) for the the mapping and parity
+    with with the generated schema.
     """
 
     def __init__(self, component_name, serializers, resource_type_field_name):

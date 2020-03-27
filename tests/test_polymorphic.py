@@ -25,8 +25,8 @@ class LegalPersonSerializer(serializers.ModelSerializer):
         model = LegalPerson2
         fields = ('id', 'company_name', 'type')
 
-    def get_type(self) -> str:
-        return 'LegalPerson'
+    def get_type(self, obj) -> str:
+        return 'legal'
 
 
 class NaturalPersonSerializer(serializers.ModelSerializer):
@@ -36,8 +36,8 @@ class NaturalPersonSerializer(serializers.ModelSerializer):
         model = NaturalPerson2
         fields = ('id', 'first_name', 'last_name', 'type')
 
-    def get_type(self) -> str:
-        return 'NaturalPerson'
+    def get_type(self, obj) -> str:
+        return 'natural'
 
 
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):

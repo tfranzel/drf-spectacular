@@ -29,6 +29,10 @@ class PersonSerializer(PolymorphicSerializer):
         NaturalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.NaturalPersonSerializer'),
     }
 
+    def to_resource_type(self, model_or_instance):
+        # custom name for mapping the polymorphic models
+        return model_or_instance._meta.object_name.lower().replace('person', '')
+
 
 class LegalPersonSerializer(serializers.ModelSerializer):
     # notice that introduces a recursion loop

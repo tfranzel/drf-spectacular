@@ -29,18 +29,25 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
 
         for sub_serializer in serializer.serializers:
             sub_serializer = force_instance(sub_serializer)
-            sub_components.append(auto_schema.resolve_serializer(method, sub_serializer))
+            resolved_sub_serializer = auto_schema.resolve_serializer(method, sub_serializer)
 
-            if serializer.resource_type_field_name not in sub_serializer.fields:
+            try:
+                discriminator_field = sub_serializer.fields[serializer.resource_type_field_name]
+                resource_type = discriminator_field.to_representation(None)
+            except:  # noqa: E722
                 warn(
-                    f'sub-serializer of {serializer.component_name} must have the specified '
-                    f'discriminator field "{serializer.resource_type_field_name}".'
+                    f'sub-serializer {resolved_sub_serializer.name} of {serializer.component_name} '
+                    f'must contain the discriminator field "{serializer.resource_type_field_name}". '
+                    f'defaulting to sub-serializer name, but schema will likely not match the API.'
                 )
+                resource_type = resolved_sub_serializer.name
+
+            sub_components.append((resource_type, resolved_sub_serializer.ref))
 
         return {
-            'oneOf': [c.ref for c in sub_components],
+            'oneOf': [ref for _, ref in sub_components],
             'discriminator': {
                 'propertyName': serializer.resource_type_field_name,
-                'mapping': {c.name: c.ref['$ref'] for c in sub_components}
+                'mapping': {resource_type: ref['$ref'] for resource_type, ref in sub_components}
             }
         }
