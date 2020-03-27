@@ -18,7 +18,7 @@ from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description, is_list_view
 
 from drf_spectacular.app_settings import spectacular_settings
-from drf_spectacular.contrib.auth import *  # noqa: F403, F401
+from drf_spectacular.contrib.authentication import *  # noqa: F403, F401
 from drf_spectacular.contrib.serializers import *  # noqa: F403, F401
 from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
