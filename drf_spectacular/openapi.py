@@ -573,6 +573,7 @@ class AutoSchema(ViewInspector):
                 required.append(field.field_name)
 
             schema = self._map_serializer_field(method, field)
+
             if field.read_only:
                 schema['readOnly'] = True
             if field.write_only:
@@ -583,8 +584,12 @@ class AutoSchema(ViewInspector):
                 schema['default'] = field.default
             if field.help_text:
                 schema['description'] = str(field.help_text)
-
             self._map_field_validators(field, schema)
+
+            # sibling entries to $ref will be ignored as it replaces itself and its context with
+            # the referenced object. Wrap it in a separate context.
+            if '$ref' in schema and len(schema) > 1:
+                schema = {'allOf': [{'$ref': schema.pop('$ref')}], **schema}
 
             properties[field.field_name] = schema
 

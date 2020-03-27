@@ -203,7 +203,8 @@ components:
             $ref: '#/components/schemas/Song'
           readOnly: true
         single:
-          $ref: '#/components/schemas/Song'
+          allOf:
+          - $ref: '#/components/schemas/Song'
           readOnly: true
         title:
           type: string
@@ -254,7 +255,8 @@ components:
             $ref: '#/components/schemas/Song'
           readOnly: true
         single:
-          $ref: '#/components/schemas/Song'
+          allOf:
+          - $ref: '#/components/schemas/Song'
           readOnly: true
         title:
           type: string

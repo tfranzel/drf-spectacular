@@ -277,7 +277,8 @@ components:
           format: date-time
           readOnly: true
         field_j:
-          $ref: '#/components/schemas/Inline'
+          allOf:
+          - $ref: '#/components/schemas/Inline'
           readOnly: true
         field_k:
           type: array
