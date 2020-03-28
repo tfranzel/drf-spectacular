@@ -73,6 +73,27 @@ components:
         field_regex:
           type: string
           pattern: ^[a-zA-z0-9]{10}\-[a-z]
+        field_list:
+          type: array
+          items:
+            type: number
+            format: float
+          maxItems: 100
+          minItems: 3
+        field_related_slug:
+          type: string
+          readOnly: true
+        field_related_string:
+          type: string
+          readOnly: true
+        field_related_hyperlink:
+          type: string
+          format: uri
+          readOnly: true
+        field_identity_hyperlink:
+          type: string
+          format: uri
+          readOnly: true
         field_read_only_nav_uuid:
           type: string
           format: uuid
@@ -158,6 +179,7 @@ components:
             format: uuid
       required:
       - field_regex
+      - field_list
       - field_int
       - field_float
       - field_bool

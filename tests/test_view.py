@@ -1,5 +1,4 @@
-from unittest import mock
-
+import pytest
 import yaml
 from django.conf.urls import url
 from rest_framework.test import APIClient
@@ -10,7 +9,7 @@ from drf_spectacular.views import SpectacularAPIView
 urlpatterns = [url(r'^api/schema$', SpectacularAPIView.as_view(), name='schema')]
 
 
-@mock.patch('tests.urls.urlpatterns', urlpatterns)
+@pytest.mark.urls(__name__)
 def test_spectacular_view(no_warnings):
     response = APIClient().get('/api/schema')
     assert response.status_code == 200

@@ -441,6 +441,18 @@ class AutoSchema(ViewInspector):
                     get_field_from_model(model, model.id)
                 )
 
+        if isinstance(field, serializers.StringRelatedField):
+            return build_basic_type(OpenApiTypes.STR)
+
+        if isinstance(field, serializers.SlugRelatedField):
+            return build_basic_type(OpenApiTypes.STR)
+
+        if isinstance(field, serializers.HyperlinkedIdentityField):
+            return build_basic_type(OpenApiTypes.URI)
+
+        if isinstance(field, serializers.HyperlinkedRelatedField):
+            return build_basic_type(OpenApiTypes.URI)
+
         # ChoiceFields (single and multiple).
         # Q:
         # - Is 'type' required?
