@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
 from rest_framework import renderers
 
-from drf_spectacular.app_settings import spectacular_settings
+from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.plumbing import GENERATOR_STATS
 from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 from drf_spectacular.validation import validate_schema

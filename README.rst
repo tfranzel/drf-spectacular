@@ -16,24 +16,25 @@ The code is a heavily modified fork of the
 which is/was lacking all of the below listed features.
 
 Features
-    - abstraction of serializers into components (better support for openapi-generator)
-        - recursive components (e.g. nested PersonSerializer->PersonSerializer->...)
-        - components are named after Serializers (i.e. the main interface of your API)
-    - ``@extend_schema`` decorator for customization of APIView, Viewsets, function-based views, and ``@action``
-        - additional manual query parameters
-        - request/response serializer override
-        - response status code override
-        - polymorphic responses (manual by providing serializer list or rest_polymorphic)
-        - and more customization options
-    - easy to use hooks for extending the spectacular ``AutoSchema``
-    - authentication methods in schema (default DRF methods included, easily extendable)
+    - Serializers modelled as components. (arbitrary nesting and recursion supported)
+    - `@extend_schema <https://drf-spectacular.readthedocs.io/en/latest/drf_spectacular.html#drf_spectacular.utils.extend_schema>`_ decorator for customization of APIView, Viewsets, function-based views, and ``@action``
+        - additional parameters
+        - request/response serializer override (with status codes)
+        - polymorphic responses either manually with ``PolymorphicProxySerializer`` helper or via ``rest_polymorphic``'s PolymorphicSerializer)
+        - ... and more customization options
+    - Authentication support (DRF natives included, easily extendable)
+    - Custom serializer class support (easily extendable)
     - ``MethodSerializerField()`` type via type hinting or ``@extend_schema_field``
-    - schema tags for operations plus override option (very useful in Swagger UI)
-    - support for `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_ (automatic polymorphic responses for PolymorphicSerializers)
-    - description extraction from doc strings
-    - sane fallbacks where there are no serializers available (free-form objects)
-    - operation_id naming based on endpoint path instead of model name (preventing operation_id duplication)
-
+    - Tags extraction
+    - Description extraction from ``docstrings``
+    - Sane fallbacks where no Serializer is available (free-form objects)
+    - Sane ``operation_id`` naming (based on path)
+    - Easy to use hooks for extending the spectacular ``AutoSchema``
+    - Optional schema serving with ``SpectacularAPIView``
+    - Included support for:
+        - `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_
+        - `SimpleJWT <https://github.com/SimpleJWT/django-rest-framework-simplejwt>`_
+        - `DjangoOAuthToolkit <https://github.com/jazzband/django-oauth-toolkit>`_
 
 Incomplete features (in progress):
     - optional separate component versions for PATCH serializers (no required fields)

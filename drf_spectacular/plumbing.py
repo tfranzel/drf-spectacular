@@ -9,7 +9,7 @@ from django import __version__ as DJANGO_VERSION
 from django.utils.module_loading import import_string
 from rest_framework import fields, serializers
 
-from drf_spectacular.app_settings import spectacular_settings
+from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes
 
 T = TypeVar('T')

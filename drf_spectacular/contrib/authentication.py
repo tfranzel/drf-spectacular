@@ -32,7 +32,7 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
         return {self.name: view.required_scopes}
 
     def get_security_definition(self, view: View):
-        from drf_spectacular.app_settings import spectacular_settings
+        from drf_spectacular.settings import spectacular_settings
         from oauth2_provider.settings import oauth2_settings
 
         flows = {}

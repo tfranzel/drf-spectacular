@@ -2,7 +2,7 @@ from rest_framework.renderers import JSONOpenAPIRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from drf_spectacular.app_settings import spectacular_settings
+from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.renderers import NoAliasOpenAPIRenderer
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema

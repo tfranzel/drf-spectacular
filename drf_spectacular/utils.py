@@ -155,7 +155,7 @@ def extend_schema(
     return decorator
 
 
-def extend_schema_field(response):
+def extend_schema_field(field):
     """
     Decorator for the "field" kind. Can be used with ``SerializerMethodField`` (annotate the actual
     method) or with custom ``serializers.Field`` implementations.
@@ -165,11 +165,11 @@ def extend_schema_field(response):
 
     Always takes precedence over other mechanisms (e.g. type hints, auto-discovery).
 
-    :param response: accepts a ``Serializer`` or :class:`~.types.OpenApiTypes`
+    :param field: accepts a ``Serializer`` or :class:`~.types.OpenApiTypes`
     """
 
     def decorator(f):
-        f._spectacular_annotation = response
+        f._spectacular_annotation = field
         return f
 
     return decorator

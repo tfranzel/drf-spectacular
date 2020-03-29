@@ -75,7 +75,7 @@ def test_free_form_responses(no_warnings):
 
 
 @mock.patch(
-    target='drf_spectacular.app_settings.spectacular_settings.APPEND_COMPONENTS',
+    target='drf_spectacular.settings.spectacular_settings.APPEND_COMPONENTS',
     new={'schemas': {'SomeExtraComponent': {'type': 'integer'}}}
 )
 def test_append_extra_components(no_warnings):

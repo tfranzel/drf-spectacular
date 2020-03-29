@@ -20,15 +20,15 @@ class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 @mock.patch(
-    'drf_spectacular.app_settings.spectacular_settings.OAUTH2_FLOWS',
+    'drf_spectacular.settings.spectacular_settings.OAUTH2_FLOWS',
     ['implicit']
 )
 @mock.patch(
-    'drf_spectacular.app_settings.spectacular_settings.OAUTH2_REFRESH_URL',
+    'drf_spectacular.settings.spectacular_settings.OAUTH2_REFRESH_URL',
     'http://127.0.0.1:8000/o/refresh'
 )
 @mock.patch(
-    'drf_spectacular.app_settings.spectacular_settings.OAUTH2_AUTHORIZATION_URL',
+    'drf_spectacular.settings.spectacular_settings.OAUTH2_AUTHORIZATION_URL',
     'http://127.0.0.1:8000/o/authorize'
 )
 def test_oauth2_toolkit(no_warnings):
