@@ -1,6 +1,22 @@
 Changelog
 =========
 
+0.9.0 (2020-03-29)
+------------------
+
+- Add missing related serializer fields #15.
+- Bugfix properties with $ref component. closes #16.
+- Bugfix polymorphic resource_type lookup. closes #14.
+- Generalize plugin system.
+- Support ``required`` parameter for body. [p.alekseev]
+- Improve serializer retrieval.
+- Add query serializer support #10.
+- Custom serializer parsing with plugins.
+- Refactor auth plugin system. support for DjangoOAuthToolkit & SimpleJWT.
+- Bugfix extra components.
+
+Breaking changes:
+- removed `to_schema()` from `OpenApiParameter`. Handled in ``AutoSchema`` now.
 
 0.8.8 (2020-03-21)
 ------------------
