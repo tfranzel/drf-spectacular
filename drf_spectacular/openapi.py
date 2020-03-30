@@ -751,7 +751,7 @@ class AutoSchema(ViewInspector):
         elif isinstance(response_serializers, dict):
             # custom handling for overriding default return codes with @extend_schema
             return {
-                code: self._get_response_for_code(path, method, serializer)
+                str(code): self._get_response_for_code(path, method, serializer)
                 for code, serializer in response_serializers.items()
             }
         else:

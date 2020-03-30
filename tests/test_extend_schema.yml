@@ -42,7 +42,7 @@ paths:
       - {}
       deprecated: true
       responses:
-        201:
+        '201':
           content:
             application/json:
               schema:
@@ -50,13 +50,13 @@ paths:
                 items:
                   $ref: '#/components/schemas/Beta'
           description: ''
-        200:
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Gamma'
           description: ''
-        500:
+        '500':
           content:
             application/json:
               schema:
@@ -94,7 +94,7 @@ paths:
       - basicAuth: []
       - {}
       responses:
-        201:
+        '201':
           description: No response body
   /doesitall/manual/:
     post:
@@ -166,7 +166,7 @@ paths:
       - basicAuth: []
       - {}
       responses:
-        204:
+        '204':
           description: No response body
   /doesitall/serializer-query/:
     get:
@@ -222,7 +222,7 @@ paths:
       - basicAuth: []
       - {}
       responses:
-        201:
+        '201':
           description: No response body
 components:
   securitySchemes:
