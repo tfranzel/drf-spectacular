@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from django.urls import path
 
 from drf_spectacular.validation import validate_schema
 
@@ -20,13 +21,19 @@ def assert_schema(schema, reference_file):
     validate_schema(schema)
 
 
-def generate_schema(route, viewset):
+def generate_schema(route, viewset=None, view=None):
     from rest_framework import routers
     from drf_spectacular.openapi import SchemaGenerator
 
-    router = routers.SimpleRouter()
-    router.register(route, viewset, basename=route)
-    generator = SchemaGenerator(patterns=router.urls)
+    patterns = []
+    if viewset:
+        router = routers.SimpleRouter()
+        router.register(route, viewset, basename=route)
+        patterns = router.urls
+    if view:
+        patterns = [path(route, view.as_view())]
+
+    generator = SchemaGenerator(patterns=patterns)
     return generator.get_schema(request=None, public=True)
 
 

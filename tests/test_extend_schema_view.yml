@@ -1,0 +1,37 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /{id}/test/:
+    get:
+      operationId: test_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - test
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alpha'
+          description: ''
+  schemas:
+    Alpha:
+      type: object
+      properties:
+        field_a:
+          type: string
+        field_b:
+          type: integer
+      required:
+      - field_a
+      - field_b
