@@ -42,7 +42,7 @@ paths:
       - {}
       deprecated: true
       responses:
-        '201':
+        '200':
           content:
             application/json:
               schema:
@@ -50,7 +50,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Beta'
           description: ''
-        '200':
+        '201':
           content:
             application/json:
               schema:

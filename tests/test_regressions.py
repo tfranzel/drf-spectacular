@@ -123,3 +123,44 @@ def test_serializer_retrieval_from_view(no_warnings):
     validate_schema(schema)
     assert len(schema['components']['schemas']) == 2
     assert 'Unused' not in schema['components']['schemas']
+
+
+def test_retrieve_on_apiview_get(no_warnings):
+    class XSerializer(serializers.Serializer):
+        id = serializers.UUIDField()
+
+    class XApiView(APIView):
+        authentication_classes = []
+
+        @extend_schema(
+            parameters=[OpenApiParameter('id', OpenApiTypes.INT, OpenApiParameter.PATH)],
+            responses={200: XSerializer},
+        )
+        def get(self, request):
+            pass
+
+    schema = generate_schema('x', view=XApiView)
+    operation = schema['paths']['/x']['get']
+    assert operation['operationId'] == 'x_retrieve'
+    operation_schema = operation['responses']['200']['content']['application/json']['schema']
+    assert '$ref' in operation_schema and 'type' not in operation_schema
+
+def test_list_on_apiview_get(no_warnings):
+    class XSerializer(serializers.Serializer):
+        id = serializers.UUIDField()
+
+    class XApiView(APIView):
+        authentication_classes = []
+
+        @extend_schema(
+            parameters=[OpenApiParameter('id', OpenApiTypes.INT, OpenApiParameter.PATH)],
+            responses={200: XSerializer(many=True)},
+        )
+        def get(self, request):
+            pass
+
+    schema = generate_schema('x', view=XApiView)
+    operation = schema['paths']['/x']['get']
+    assert operation['operationId'] == 'x_list'
+    operation_schema = operation['responses']['200']['content']['application/json']['schema']
+    assert operation_schema['type'] == 'array'

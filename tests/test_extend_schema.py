@@ -4,7 +4,6 @@ from django.utils.http import urlsafe_base64_encode
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
@@ -80,8 +79,8 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             operation_id='customname_create',
             request=AlphaSerializer,
             responses={
-                201: BetaSerializer(many=True),
-                200: GammaSerializer,
+                200: BetaSerializer(many=True),
+                201: GammaSerializer,
                 500: ErrorDetailSerializer,
             },
             parameters=[
@@ -169,27 +168,8 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             return Response([])
 
 
-with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):
-    class TestApiView(APIView):
-        authentication_classes = []
-
-        @extend_schema(
-            parameters=[OpenApiParameter('id', OpenApiTypes.INT, OpenApiParameter.PATH)],
-            responses={200: AlphaSerializer},
-        )
-        def get(self, request):
-            return Response([])
-
-
-def test_extend_schema_viewset(no_warnings):
+def test_extend_schema(no_warnings):
     assert_schema(
-        generate_schema('doesitall', viewset=DoesItAllViewset),
+        generate_schema('doesitall', DoesItAllViewset),
         'tests/test_extend_schema.yml'
-    )
-
-
-def test_extend_schema_view(no_warnings):
-    assert_schema(
-        generate_schema('{id}/test/', view=TestApiView),
-        'tests/test_extend_schema_view.yml'
     )
