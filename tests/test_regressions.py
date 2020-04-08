@@ -145,6 +145,7 @@ def test_retrieve_on_apiview_get(no_warnings):
     operation_schema = operation['responses']['200']['content']['application/json']['schema']
     assert '$ref' in operation_schema and 'type' not in operation_schema
 
+
 def test_list_on_apiview_get(no_warnings):
     class XSerializer(serializers.Serializer):
         id = serializers.UUIDField()
