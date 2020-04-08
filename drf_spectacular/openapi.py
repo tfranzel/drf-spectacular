@@ -15,7 +15,7 @@ from rest_framework.fields import _UnvalidatedField, empty
 from rest_framework.generics import GenericAPIView
 from rest_framework.schemas.generators import BaseSchemaGenerator
 from rest_framework.schemas.inspectors import ViewInspector
-from rest_framework.schemas.utils import get_pk_description, is_list_view
+from rest_framework.schemas.utils import get_pk_description
 
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.contrib.authentication import *  # noqa: F403, F401
@@ -149,6 +149,37 @@ class AutoSchema(ViewInspector):
 
         return operation
 
+    def _is_list_view(self, path, method, serializer=None):
+        """
+        partially heuristic approach to determine if a view yields an object or a
+        list of objects. used for operationId naming, array building and pagination.
+        defaults to False if all introspection fail.
+        """
+        if serializer is None:
+            serializer = self.get_response_serializers(path, method)
+
+        if isinstance(serializer, dict) and serializer:
+            # extract likely main serializer from @extend_schema override
+            serializer = {str(code): s for code, s in serializer.items()}
+            serializer = serializer[min(serializer)]
+
+        if isinstance(serializer, serializers.ListSerializer):
+            return True
+        if is_basic_type(serializer):
+            return False
+        if hasattr(self.view, 'action'):
+            return self.view.action == 'list'
+        # list responses are "usually" only returned by GET
+        if method.lower() != 'get':
+            return False
+        # primary key/lookup variable in path is a strong indicator for retrieve
+        if isinstance(self.view, GenericAPIView):
+            lookup_url_kwarg = self.view.lookup_url_kwarg or self.view.lookup_field
+            if lookup_url_kwarg in uritemplate.variables(path):
+                return False
+
+        return False
+
     def get_override_parameters(self, path, method):
         """ override this for custom behaviour """
         return []
@@ -268,7 +299,7 @@ class AutoSchema(ViewInspector):
         # replace dashes as they can be problematic later in code generation
         tokenized_path = [t.replace('-', '_') for t in tokenized_path]
 
-        if is_list_view(path, method, self.view):
+        if self._is_list_view(path, method):
             action = 'list'
         else:
             action = self.method_mapping[method.lower()]
@@ -355,7 +386,7 @@ class AutoSchema(ViewInspector):
     def _get_pagination_parameters(self, path, method):
         view = self.view
 
-        if not is_list_view(path, method, view):
+        if not self._is_list_view(path, method):
             return []
 
         paginator = self._get_paginator()
@@ -790,8 +821,7 @@ class AutoSchema(ViewInspector):
             schema = build_basic_type(OpenApiTypes.OBJECT)
             schema['description'] = 'Unspecified response body'
 
-        if isinstance(serializer, serializers.ListSerializer) or is_list_view(path, method, self.view):
-            # TODO i fear is_list_view is not covering all the cases
+        if self._is_list_view(path, method, serializer):
             schema = build_array_type(schema)
             paginator = self._get_paginator()
             if paginator:
