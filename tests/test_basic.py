@@ -52,7 +52,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 
 class LikeSerializer(serializers.Serializer):
     def save(self, *args, **kwargs):
-        pass  # do the liking
+        pass  # pragma: no cover
 
 
 class AlbumModelViewset(viewsets.ModelViewSet):

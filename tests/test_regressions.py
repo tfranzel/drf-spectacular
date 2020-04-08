@@ -17,7 +17,7 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
     # https://github.com/encode/django-rest-framework/blame/4d9f9eb192c5c1ffe4fa9210b90b9adbb00c3fdd/rest_framework/utils/field_mapping.py#L271
 
     class M1(models.Model):
-        pass
+        pass  # pragma: no cover
 
     class M2(models.Model):
         m1_r = models.ForeignKey(M1, on_delete=models.CASCADE)
@@ -42,14 +42,14 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
 
 def test_path_implicit_required(no_warnings):
     class M2Serializer(serializers.Serializer):
-        pass
+        pass  # pragma: no cover
 
     class M2Viewset(viewsets.GenericViewSet):
         serializer_class = M2Serializer
 
         @extend_schema(parameters=[OpenApiParameter('id', str, 'path')])
         def retrieve(self, request, *args, **kwargs):
-            pass
+            pass  # pragma: no cover
 
     schema = generate_schema('m2', M2Viewset)
     validate_schema(schema)
@@ -59,12 +59,12 @@ def test_free_form_responses(no_warnings):
     class XAPIView(APIView):
         @extend_schema(responses={200: OpenApiTypes.OBJECT})
         def get(self, request):
-            pass
+            pass  # pragma: no cover
 
     class YAPIView(APIView):
         @extend_schema(responses=OpenApiTypes.OBJECT)
         def get(self, request):
-            pass
+            pass  # pragma: no cover
 
     generator = SchemaGenerator(patterns=[
         url(r'^x$', XAPIView.as_view(), name='x'),
@@ -85,7 +85,7 @@ def test_append_extra_components(no_warnings):
     class XAPIView(APIView):
         @extend_schema(responses={200: XSerializer})
         def get(self, request):
-            pass
+            pass  # pragma: no cover
 
     generator = SchemaGenerator(patterns=[
         url(r'^x$', XAPIView.as_view(), name='x'),
@@ -97,7 +97,7 @@ def test_append_extra_components(no_warnings):
 
 def test_serializer_retrieval_from_view(no_warnings):
     class UnusedSerializer(serializers.Serializer):
-        pass
+        pass  # pragma: no cover
 
     class XSerializer(serializers.Serializer):
         id = serializers.UUIDField()
@@ -137,7 +137,7 @@ def test_retrieve_on_apiview_get(no_warnings):
             responses={200: XSerializer},
         )
         def get(self, request):
-            pass
+            pass  # pragma: no cover
 
     schema = generate_schema('x', view=XApiView)
     operation = schema['paths']['/x']['get']
@@ -157,7 +157,7 @@ def test_list_on_apiview_get(no_warnings):
             responses={200: XSerializer(many=True)},
         )
         def get(self, request):
-            pass
+            pass  # pragma: no cover
 
     schema = generate_schema('x', view=XApiView)
     operation = schema['paths']['/x']['get']

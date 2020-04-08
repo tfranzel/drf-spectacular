@@ -51,7 +51,7 @@ def test_no_queryset_warn(capsys):
 
 def test_path_param_not_in_model(capsys):
     class M3(models.Model):
-        pass
+        pass  # pragma: no cover
 
     class XSerializer(serializers.Serializer):
         uuid = serializers.UUIDField()
@@ -62,7 +62,7 @@ def test_path_param_not_in_model(capsys):
 
         @action(detail=True, url_path='meta/(?P<ephemeral>[^/.]+)', methods=['POST'])
         def meta_param(self, request, ephemeral, pk):
-            pass
+            pass  # pragma: no cover
 
     generate_schema('x1', XViewset)
     assert 'no such field' in capsys.readouterr().err
@@ -70,7 +70,7 @@ def test_path_param_not_in_model(capsys):
 
 def test_no_authentication_scheme_registered(capsys):
     class XAuth(BaseAuthentication):
-        pass
+        pass  # pragma: no cover
 
     class XSerializer(serializers.Serializer):
         uuid = serializers.UUIDField()
@@ -85,7 +85,7 @@ def test_no_authentication_scheme_registered(capsys):
 
 def test_serializer_not_found(capsys):
     class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
-        pass
+        pass  # pragma: no cover
 
     generate_schema('x', XViewset)
     assert 'Exception raised while getting serializer' in capsys.readouterr().err
@@ -93,12 +93,12 @@ def test_serializer_not_found(capsys):
 
 def test_extend_schema_unknown_class(capsys):
     class DoesNotCompute:
-        pass
+        pass  # pragma: no cover
 
     class X1Viewset(viewsets.GenericViewSet):
         @extend_schema(responses={200: DoesNotCompute})
         def list(self, request):
-            pass
+            pass  # pragma: no cover
 
     generate_schema('x1', X1Viewset)
     assert 'Expected either a serializer' in capsys.readouterr().err
@@ -106,12 +106,12 @@ def test_extend_schema_unknown_class(capsys):
 
 def test_extend_schema_unknown_class2(capsys):
     class DoesNotCompute:
-        pass
+        pass  # pragma: no cover
 
     class X1Viewset(viewsets.GenericViewSet):
         @extend_schema(responses=DoesNotCompute)
         def list(self, request):
-            pass
+            pass  # pragma: no cover
 
     generate_schema('x1', X1Viewset)
     assert 'Expected either a serializer' in capsys.readouterr().err
