@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.9.1 (2020-04-09)
+------------------
+
+- Bugfix missing openapi schema spec json in package
+- Add multi-method action decoration support.
+- rest-polymorphic str loading prep.
+- Improve list view detection.
+- Bugfix: response codes must be string. closes #17.
+
 0.9.0 (2020-03-29)
 ------------------
 
@@ -16,6 +25,7 @@ Changelog
 - Bugfix extra components.
 
 Breaking changes:
+
 - removed `to_schema()` from `OpenApiParameter`. Handled in ``AutoSchema`` now.
 
 0.8.8 (2020-03-21)
@@ -88,5 +98,4 @@ Breaking changes:
 0.8.1 (2020-03-01)
 ------------------
 - Initial published version. 
-
 

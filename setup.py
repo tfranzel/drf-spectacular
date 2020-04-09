@@ -40,22 +40,6 @@ def get_packages(package):
             if os.path.exists(os.path.join(dirpath, '__init__.py'))]
 
 
-def get_package_data(package):
-    """
-    Return all files under the root package, that are not in a
-    package themselves.
-    """
-    walk = [(dirpath.replace(package + os.sep, '', 1), filenames)
-            for dirpath, dirnames, filenames in os.walk(package)
-            if not os.path.exists(os.path.join(dirpath, '__init__.py'))]
-
-    filepaths = []
-    for base, filenames in walk:
-        filepaths.extend([os.path.join(base, filename)
-                          for filename in filenames])
-    return {package: filepaths}
-
-
 version = get_version(package)
 
 
@@ -85,10 +69,11 @@ setup(
     license=license,
     description=description,
     long_description=long_description,
+    long_description_content_type='text/x-rst',
     author=author,
     author_email=author_email,
     packages=get_packages(package),
-    package_data=get_package_data(package),
+    include_package_data=True,
     python_requires=">=3.6",
     install_requires=requirements,
     classifiers=[
@@ -111,5 +96,6 @@ setup(
     ],
     project_urls={
         'Source': 'https://github.com/tfranzel/drf-spectacular',
+        'Documentation': 'https://drf-spectacular.readthedocs.io',
     },
 )

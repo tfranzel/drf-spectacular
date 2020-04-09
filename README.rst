@@ -91,12 +91,24 @@ You can easily view your schema with the excellent Swagger UI or any other compl
     $ ./manage.py spectacular --file schema.yml
     $ docker run -p 80:8080 -e SWAGGER_JSON=/schema.yml -v ${PWD}/schema.yml:/schema.yml swaggerapi/swagger-ui
 
+or serve the schema directly from your API with
+
+.. code:: python
+
+    from drf_spectacular.views import SpectacularAPIView
+    urlpatterns = [
+        # YOUR PATTERNS
+        url(r'^api/schema$', SpectacularAPIView.as_view(), name='schema')
+    ]
 
 Usage
 -----
 
-`drf-spectacular` works pretty well out of the box. The toy examples do not cover your cases?
-No problem, you can heavily customize how your schema will be rendered.
+`drf-spectacular` works pretty well out of the box. You might also want to set some metadata for your API.
+Just create a ``SPECTACULAR_SETTINGS`` dictionary in your ``settings.py`` and override the defaults.
+Have a look at the `available settings <https://drf-spectacular.readthedocs.io/en/latest/settings.html>`_.
+
+The toy examples do not cover your cases? No problem, you can heavily customize how your schema will be rendered.
 
 Customization by using ``@extend_schema``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
