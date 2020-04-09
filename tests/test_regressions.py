@@ -3,6 +3,7 @@ from unittest import mock
 from django.conf.urls import url
 from django.db import models
 from rest_framework import serializers, viewsets, mixins, routers
+from rest_framework.decorators import action
 from rest_framework.views import APIView
 
 from drf_spectacular.openapi import SchemaGenerator
@@ -165,3 +166,61 @@ def test_list_on_apiview_get(no_warnings):
     assert operation['operationId'] == 'x_list'
     operation_schema = operation['responses']['200']['content']['application/json']['schema']
     assert operation_schema['type'] == 'array'
+
+
+def test_multi_method_action(no_warnings):
+    class DummySerializer(serializers.Serializer):
+        id = serializers.UUIDField()
+
+    class UpdateSerializer(serializers.Serializer):
+        id = serializers.UUIDField()
+
+    class CreateSerializer(serializers.Serializer):
+        id = serializers.UUIDField()
+
+    class XViewset(viewsets.GenericViewSet):
+        serializer_class = DummySerializer
+
+        # basic usage
+        @extend_schema(request=UpdateSerializer, methods=['PUT'])
+        @extend_schema(request=CreateSerializer, methods=['POST'])
+        @action(detail=False, methods=['PUT', 'POST'])
+        def multi(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+        # bolt-on decorator variation
+        @extend_schema(request=CreateSerializer)
+        @action(detail=False, methods=['POST'])
+        def multi2(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+        @extend_schema(request=UpdateSerializer)
+        @multi2.mapping.put
+        def multi2put(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+        # root action double annotation variation (comes for free)
+        @extend_schema(request=UpdateSerializer, methods=['PUT'])
+        @extend_schema(request=CreateSerializer, methods=['POST'])
+        @action(detail=False, methods=['POST'])
+        def multi3(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+        @multi3.mapping.put
+        def multi3put(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', XViewset)
+    validate_schema(schema)
+
+    def get_req_body(s):
+        return s['requestBody']['content']['application/json']['schema']['$ref']
+
+    assert get_req_body(schema['paths']['/x/multi/']['put']) == '#/components/schemas/Update'
+    assert get_req_body(schema['paths']['/x/multi/']['post']) == '#/components/schemas/Create'
+
+    assert get_req_body(schema['paths']['/x/multi2/']['put']) == '#/components/schemas/Update'
+    assert get_req_body(schema['paths']['/x/multi2/']['post']) == '#/components/schemas/Create'
+
+    assert get_req_body(schema['paths']['/x/multi3/']['put']) == '#/components/schemas/Update'
+    assert get_req_body(schema['paths']['/x/multi3/']['post']) == '#/components/schemas/Create'

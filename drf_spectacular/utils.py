@@ -56,6 +56,7 @@ def extend_schema(
         tags=None,
         exclude=False,
         operation=None,
+        methods=None,
 ):
     """
     decorator for the "view" kind. partially or completely overrides what would be
@@ -82,55 +83,66 @@ def extend_schema(
     :param exclude: set True to exclude operation from schema
     :param operation: manually override what auto-discovery would generate. you must
         provide a OpenAPI3-compliant dictionary that gets directly translated to YAML.
+    :param methods: scope extend_schema to specific methods. matches all by default.
     :return:
     """
-
     def decorator(f):
-        class ExtendedSchema(api_settings.DEFAULT_SCHEMA_CLASS):
+        BaseSchema = (
+            getattr(f, 'schema', None)
+            or getattr(f, 'kwargs', {}).get('schema', None)
+            or api_settings.DEFAULT_SCHEMA_CLASS
+        )
+        if not inspect.isclass(BaseSchema):
+            BaseSchema = BaseSchema.__class__
+
+        def method_matches(method):
+            return methods is None or method in methods
+
+        class ExtendedSchema(BaseSchema):
             def get_operation(self, path, method, registry):
-                if exclude:
+                if method_matches(method) and exclude:
                     return None
-                if operation is not None:
+                if method_matches(method) and operation is not None:
                     return operation
                 return super().get_operation(path, method, registry)
 
             def get_operation_id(self, path, method):
-                if operation_id:
+                if method_matches(method) and operation_id:
                     return operation_id
                 return super().get_operation_id(path, method)
 
             def get_override_parameters(self, path, method):
-                if parameters:
+                if method_matches(method) and parameters:
                     return parameters
                 return super().get_override_parameters(path, method)
 
             def get_auth(self, path, method):
-                if auth:
+                if method_matches(method) and auth:
                     return auth
                 return super().get_auth(path, method)
 
             def get_request_serializer(self, path, method):
-                if request:
+                if method_matches(method) and request:
                     return request
                 return super().get_request_serializer(path, method)
 
             def get_response_serializers(self, path, method):
-                if responses:
+                if method_matches(method) and responses:
                     return responses
                 return super().get_response_serializers(path, method)
 
             def get_description(self, path, method):
-                if description:
+                if method_matches(method) and description:
                     return description
                 return super().get_description(path, method)
 
             def is_deprecated(self, path, method):
-                if deprecated:
+                if method_matches(method) and deprecated:
                     return deprecated
                 return super().is_deprecated(path, method)
 
             def get_tags(self, path, method):
-                if tags is not None:
+                if method_matches(method) and tags is not None:
                     return tags
                 return super().get_tags(path, method)
 
@@ -144,7 +156,6 @@ def extend_schema(
             # implementation can overwrite the default schema
             if not hasattr(f, 'kwargs'):
                 f.kwargs = {}
-
             # this simulates what @action is actually doing. somewhere along the line in this process
             # the schema is picked up from kwargs and used. it's involved my dear friends.
             f.kwargs['schema'] = ExtendedSchema()
