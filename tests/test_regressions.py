@@ -6,7 +6,7 @@ from rest_framework import serializers, viewsets, mixins, routers
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 
-from drf_spectacular.openapi import SchemaGenerator
+from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from drf_spectacular.validation import validate_schema

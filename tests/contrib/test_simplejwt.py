@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from drf_spectacular.openapi import SchemaGenerator
+from drf_spectacular.generators import SchemaGenerator
 from tests import assert_schema
 
 

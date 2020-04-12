@@ -9,7 +9,7 @@ from tests import generate_schema
 
 def test_serializer_name_reuse(warnings):
     from rest_framework import routers
-    from drf_spectacular.openapi import SchemaGenerator
+    from drf_spectacular.generators import SchemaGenerator
     router = routers.SimpleRouter()
 
     def x1():

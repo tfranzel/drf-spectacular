@@ -7,7 +7,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from drf_spectacular.openapi import SchemaGenerator
+from drf_spectacular.generators import SchemaGenerator
 from tests import assert_schema
 
 

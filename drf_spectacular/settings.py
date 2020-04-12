@@ -11,7 +11,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     #   alpha: alphanumerically and then METHOD,
     #   method: DRF default sorting just by METHOD
     'OPERATION_SORTER': 'alpha',
-    'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.openapi.SchemaGenerator',
+    'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
     # Configuration for serving the schema with SpectacularAPIView
     'SERVE_URLCONF': None,

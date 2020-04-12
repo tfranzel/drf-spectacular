@@ -4,7 +4,7 @@ from django.urls import include, path
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication, TokenHasReadWriteScope
 from rest_framework import serializers, viewsets, mixins, routers, permissions
 
-from drf_spectacular.openapi import SchemaGenerator
+from drf_spectacular.generators import SchemaGenerator
 from tests import assert_schema
 
 

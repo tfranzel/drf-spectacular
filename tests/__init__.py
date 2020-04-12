@@ -23,7 +23,7 @@ def assert_schema(schema, reference_file):
 def generate_schema(route, viewset=None, view=None):
     from django.urls import path
     from rest_framework import routers
-    from drf_spectacular.openapi import SchemaGenerator
+    from drf_spectacular.generators import SchemaGenerator
 
     patterns = []
     if viewset:
