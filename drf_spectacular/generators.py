@@ -1,3 +1,4 @@
+import inspect
 from urllib.parse import urljoin
 
 from rest_framework import viewsets, views
@@ -17,7 +18,7 @@ class SchemaGenerator(BaseSchemaGenerator):
     def create_view(self, callback, method, request=None):
         """
         customized create_view which is called when all routes are traversed. part of this
-        is instatiating views with default params. in case of custom routes (@action) the
+        is instantiating views with default params. in case of custom routes (@action) the
         custom AutoSchema is injected properly through 'initkwargs' on view. However, when
         decorating plain views like retrieve, this initialization logic is not running.
         Therefore forcefully set the schema if @extend_schema decorator was used.
@@ -35,9 +36,11 @@ class SchemaGenerator(BaseSchemaGenerator):
             )
             return view
 
-        if hasattr(action, 'kwargs') and 'schema' in action.kwargs:
-            # might already be properly set in case of @action but overwrite for all cases
-            view.schema = action.kwargs['schema']
+        # in case of @extend_schema, manually init custom schema class here due to
+        # weakref reverse schema.view bug for multi annotations.
+        schema = getattr(action, 'kwargs', {}).get('schema', None)
+        if schema and inspect.isclass(schema):
+            view.schema = schema()
 
         return view
 

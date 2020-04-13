@@ -199,17 +199,6 @@ def test_multi_method_action(no_warnings):
         def multi2put(self, request, *args, **kwargs):
             pass  # pragma: no cover
 
-        # root action double annotation variation (comes for free)
-        @extend_schema(request=UpdateSerializer, methods=['PUT'])
-        @extend_schema(request=CreateSerializer, methods=['POST'])
-        @action(detail=False, methods=['POST'])
-        def multi3(self, request, *args, **kwargs):
-            pass  # pragma: no cover
-
-        @multi3.mapping.put
-        def multi3put(self, request, *args, **kwargs):
-            pass  # pragma: no cover
-
     schema = generate_schema('x', XViewset)
     validate_schema(schema)
 
@@ -221,6 +210,3 @@ def test_multi_method_action(no_warnings):
 
     assert get_req_body(schema['paths']['/x/multi2/']['put']) == '#/components/schemas/Update'
     assert get_req_body(schema['paths']['/x/multi2/']['post']) == '#/components/schemas/Create'
-
-    assert get_req_body(schema['paths']['/x/multi3/']['put']) == '#/components/schemas/Update'
-    assert get_req_body(schema['paths']['/x/multi3/']['post']) == '#/components/schemas/Create'

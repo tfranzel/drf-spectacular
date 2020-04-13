@@ -158,7 +158,8 @@ def extend_schema(
                 f.kwargs = {}
             # this simulates what @action is actually doing. somewhere along the line in this process
             # the schema is picked up from kwargs and used. it's involved my dear friends.
-            f.kwargs['schema'] = ExtendedSchema()
+            # use class instead of instance due to descriptor weakref reverse collisions
+            f.kwargs['schema'] = ExtendedSchema
             return f
         else:
             return f
