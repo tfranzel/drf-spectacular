@@ -3,6 +3,7 @@ from unittest import mock
 from django.utils.http import urlsafe_base64_encode
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
@@ -69,6 +70,19 @@ class ErrorDetailSerializer(serializers.Serializer):
     @extend_schema_field(serializers.ChoiceField(choices=['a', 'b']))
     def get_field_l(self, object):
         return object.some_choice
+
+
+class ApiSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=['ok', 'error'])
+    data = NotImplemented
+
+
+def list_of(serializer_cls):
+    return type(
+        f'ApiList{serializer_cls.__name__}',
+        (ApiSerializer,),
+        {'data': serializer_cls(many=True)},
+    )
 
 
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):
@@ -168,8 +182,23 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             return Response([])
 
 
+    class DoesItAllViewsetWithPaginator(viewsets.GenericViewSet):
+        serializer_class = AlphaSerializer
+        pagination_class = LimitOffsetPagination
+
+        @extend_schema(
+            responses={200: list_of(BetaSerializer)}
+        )
+        def list(self, request, *args, **kwargs):
+            return Response({})
+
+
 def test_extend_schema(no_warnings):
     assert_schema(
         generate_schema('doesitall', DoesItAllViewset),
         'tests/test_extend_schema.yml'
+    )
+    assert_schema(
+        generate_schema('doesitallwithpaginator', DoesItAllViewsetWithPaginator),
+        'tests/test_extend_schema_paginator.yml'
     )

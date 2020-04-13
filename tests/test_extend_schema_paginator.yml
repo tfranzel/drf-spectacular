@@ -1,0 +1,74 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /doesitallwithpaginator/:
+    get:
+      operationId: doesitallwithpaginator_list
+      description: ''
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - doesitallwithpaginator
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListBeta'
+          description: ''
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    ApiListBeta:
+      type: object
+      properties:
+        status:
+          enum:
+          - ok
+          - error
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Beta'
+      required:
+      - status
+      - data
+    Beta:
+      type: object
+      properties:
+        field_a:
+          type: string
+        field_b:
+          type: integer
+        field_c:
+          type: object
+          additionalProperties: {}
+      required:
+      - field_a
+      - field_b
+      - field_c
