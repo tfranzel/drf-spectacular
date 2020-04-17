@@ -14,6 +14,7 @@ from rest_framework.fields import _UnvalidatedField, empty
 from rest_framework.generics import GenericAPIView
 from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description
+from rest_framework.settings import api_settings
 
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.contrib.authentication import *  # noqa: F403, F401
@@ -461,9 +462,11 @@ class AutoSchema(ViewInspector):
 
         # DecimalField has multipleOf based on decimal_places
         if isinstance(field, serializers.DecimalField):
-            content = {
-                'type': 'number'
-            }
+            if getattr(field, 'coerce_to_string', api_settings.COERCE_DECIMAL_TO_STRING):
+                content = {**build_basic_type(OpenApiTypes.STR), 'format': 'decimal'}
+            else:
+                content = build_basic_type(OpenApiTypes.DECIMAL)
+
             if field.decimal_places:
                 content['multipleOf'] = float('.' + (field.decimal_places - 1) * '0' + '1')
             if field.max_whole_digits:

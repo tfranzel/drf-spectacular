@@ -70,6 +70,12 @@ class AllFields(models.Model):
 
 
 class AllFieldsSerializer(serializers.ModelSerializer):
+    field_decimal_uncoerced = serializers.DecimalField(
+        source='field_decimal',
+        max_digits=6,
+        decimal_places=3,
+        coerce_to_string=False
+    )
     field_method_float = serializers.SerializerMethodField()
 
     def get_field_method_float(self, obj) -> float:

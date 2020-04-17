@@ -62,6 +62,12 @@ components:
         id:
           type: integer
           readOnly: true
+        field_decimal_uncoerced:
+          type: number
+          format: double
+          multipleOf: 0.001
+          maximum: 1000
+          minimum: -1000
         field_method_float:
           type: number
           format: float
@@ -148,7 +154,8 @@ components:
         field_ip_generic:
           type: string
         field_decimal:
-          type: number
+          type: string
+          format: decimal
           multipleOf: 0.001
           maximum: 1000
           minimum: -1000
@@ -178,6 +185,7 @@ components:
             type: string
             format: uuid
       required:
+      - field_decimal_uncoerced
       - field_regex
       - field_list
       - field_int
