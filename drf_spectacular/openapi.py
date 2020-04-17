@@ -114,7 +114,7 @@ class AutoSchema(ViewInspector):
                 if is_basic_type(parameter.type):
                     schema = build_basic_type(parameter.type)
                 elif is_serializer(parameter.type):
-                    schema = self.resolve_serializer(parameter.type).ref
+                    schema = self.resolve_serializer(parameter.type, direction=None).ref
                 else:
                     schema = parameter.type
                 result.append(build_parameter_type(
@@ -128,7 +128,7 @@ class AutoSchema(ViewInspector):
                 ))
             elif is_serializer(parameter):
                 # explode serializer into separate parameters. defaults to QUERY location
-                mapped = self._map_serializer(parameter)
+                mapped = self._map_serializer(parameter, direction=None)
                 for property_name, property_schema in mapped['properties'].items():
                     result.append(build_parameter_type(
                         name=property_name,
@@ -371,13 +371,16 @@ class AutoSchema(ViewInspector):
             else:
                 return self._map_serializer_field(field._spectacular_annotation)
 
+        # TODO for now ignore direction while nesting. this would only be relevant
+        #  for nested PATCH, which is likely a very uncommon edge case
+
         # nested serializer
         if isinstance(field, serializers.Serializer):
-            return self.resolve_serializer(field).ref
+            return self.resolve_serializer(field, direction=None).ref
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if isinstance(field, serializers.ListSerializer):
-            return build_array_type(self.resolve_serializer(field.child).ref)
+            return build_array_type(self.resolve_serializer(field.child, direction=None).ref)
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
@@ -518,16 +521,16 @@ class AutoSchema(ViewInspector):
         if field.min_value:
             content['minimum'] = field.min_value
 
-    def _map_serializer(self, serializer):
+    def _map_serializer(self, serializer, direction):
         serializer = force_instance(serializer)
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
 
         if serializer_extension:
-            return serializer_extension.map_serializer(self)
+            return serializer_extension.map_serializer(self, direction)
         else:
-            return self._map_basic_serializer(serializer)
+            return self._map_basic_serializer(serializer, direction)
 
-    def _map_basic_serializer(self, serializer):
+    def _map_basic_serializer(self, serializer, direction):
         required = []
         properties = {}
 
@@ -663,7 +666,7 @@ class AutoSchema(ViewInspector):
 
         request_body_required = False
         if is_serializer(serializer):
-            component = self.resolve_serializer(serializer)
+            component = self.resolve_serializer(serializer, 'request')
             if not component:
                 # serializer is empty so skip content enumeration
                 return None
@@ -724,9 +727,9 @@ class AutoSchema(ViewInspector):
         if not serializer:
             return {'description': 'No response body'}
         elif isinstance(serializer, serializers.ListSerializer):
-            schema = self.resolve_serializer(serializer.child).ref
+            schema = self.resolve_serializer(serializer.child, 'response').ref
         elif is_serializer(serializer):
-            component = self.resolve_serializer(serializer)
+            component = self.resolve_serializer(serializer, 'response')
             if not component:
                 return {'description': 'No response body'}
             schema = component.ref
@@ -760,7 +763,7 @@ class AutoSchema(ViewInspector):
             'description': ''
         }
 
-    def _get_serializer_name(self, serializer):
+    def _get_serializer_name(self, serializer, direction):
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
         if serializer_extension and serializer_extension.get_name():
             return serializer_extension.get_name()
@@ -774,12 +777,12 @@ class AutoSchema(ViewInspector):
 
         return name
 
-    def resolve_serializer(self, serializer) -> ResolvedComponent:
+    def resolve_serializer(self, serializer, direction) -> ResolvedComponent:
         assert is_serializer(serializer)
         serializer = force_instance(serializer)
 
         component = ResolvedComponent(
-            name=self._get_serializer_name(serializer),
+            name=self._get_serializer_name(serializer, direction),
             type=ResolvedComponent.SCHEMA,
             object=serializer,
         )
@@ -787,7 +790,7 @@ class AutoSchema(ViewInspector):
             return self.registry[component]  # return component with schema
 
         self.registry.register(component)
-        component.schema = self._map_serializer(serializer)
+        component.schema = self._map_serializer(serializer, direction)
         # 3 cases:
         #   1. polymorphic container component -> use
         #   2. concrete component with properties -> use
