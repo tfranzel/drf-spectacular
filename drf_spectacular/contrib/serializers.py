@@ -1,3 +1,4 @@
+from drf_spectacular.plumbing import warn
 from drf_spectacular.serializers import OpenApiSerializerExtension
 
 
@@ -14,6 +15,12 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
             resource_type = serializer.to_resource_type(sub_model)
             ref = auto_schema.resolve_serializer(method, sub_serializer).ref
             sub_components.append((resource_type, ref))
+
+            if not resource_type:
+                warn(
+                    f'discriminator mapping key is empty for {sub_serializer.__class__}. '
+                    f'this might lead to code generation issues.'
+                )
 
         return {
             'oneOf': [ref for _, ref in sub_components],
