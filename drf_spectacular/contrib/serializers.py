@@ -6,14 +6,14 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
     target_class = 'rest_polymorphic.serializers.PolymorphicSerializer'
     match_subclasses = True
 
-    def map_serializer(self, auto_schema, method: str):
+    def map_serializer(self, auto_schema):
         sub_components = []
         serializer = self.target
 
         for sub_model in serializer.model_serializer_mapping:
             sub_serializer = serializer._get_serializer_from_model_or_instance(sub_model)
             resource_type = serializer.to_resource_type(sub_model)
-            ref = auto_schema.resolve_serializer(method, sub_serializer).ref
+            ref = auto_schema.resolve_serializer(sub_serializer).ref
             sub_components.append((resource_type, ref))
 
             if not resource_type:

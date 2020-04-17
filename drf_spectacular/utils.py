@@ -106,45 +106,45 @@ def extend_schema(
                     return operation
                 return super().get_operation(path, method, registry)
 
-            def get_operation_id(self, path, method):
-                if method_matches(method) and operation_id:
+            def get_operation_id(self):
+                if method_matches(self.method) and operation_id:
                     return operation_id
-                return super().get_operation_id(path, method)
+                return super().get_operation_id()
 
-            def get_override_parameters(self, path, method):
-                if method_matches(method) and parameters:
+            def get_override_parameters(self):
+                if method_matches(self.method) and parameters:
                     return parameters
-                return super().get_override_parameters(path, method)
+                return super().get_override_parameters()
 
-            def get_auth(self, path, method):
-                if method_matches(method) and auth:
+            def get_auth(self):
+                if method_matches(self.method) and auth:
                     return auth
-                return super().get_auth(path, method)
+                return super().get_auth()
 
-            def get_request_serializer(self, path, method):
-                if method_matches(method) and request:
+            def get_request_serializer(self):
+                if method_matches(self.method) and request:
                     return request
-                return super().get_request_serializer(path, method)
+                return super().get_request_serializer()
 
-            def get_response_serializers(self, path, method):
-                if method_matches(method) and responses:
+            def get_response_serializers(self):
+                if method_matches(self.method) and responses:
                     return responses
-                return super().get_response_serializers(path, method)
+                return super().get_response_serializers()
 
-            def get_description(self, path, method):
-                if method_matches(method) and description:
+            def get_description(self):
+                if method_matches(self.method) and description:
                     return description
-                return super().get_description(path, method)
+                return super().get_description()
 
-            def is_deprecated(self, path, method):
-                if method_matches(method) and deprecated:
+            def is_deprecated(self):
+                if method_matches(self.method) and deprecated:
                     return deprecated
-                return super().is_deprecated(path, method)
+                return super().is_deprecated()
 
-            def get_tags(self, path, method):
-                if method_matches(method) and tags is not None:
+            def get_tags(self):
+                if method_matches(self.method) and tags is not None:
                     return tags
-                return super().get_tags(path, method)
+                return super().get_tags()
 
         if inspect.isclass(f):
             class ExtendedView(f):

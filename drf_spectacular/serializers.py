@@ -12,7 +12,7 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
         return None
 
     @abstractmethod
-    def map_serializer(self, auto_schema, method: str):
+    def map_serializer(self, auto_schema):
         pass
 
 
@@ -22,14 +22,14 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
     def get_name(self):
         return self.target.component_name
 
-    def map_serializer(self, auto_schema, method: str):
+    def map_serializer(self, auto_schema):
         """ custom handling for @extend_schema's injection of PolymorphicProxySerializer """
         serializer = self.target
         sub_components = []
 
         for sub_serializer in serializer.serializers:
             sub_serializer = force_instance(sub_serializer)
-            resolved_sub_serializer = auto_schema.resolve_serializer(method, sub_serializer)
+            resolved_sub_serializer = auto_schema.resolve_serializer(sub_serializer)
 
             try:
                 discriminator_field = sub_serializer.fields[serializer.resource_type_field_name]
