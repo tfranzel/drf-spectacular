@@ -142,7 +142,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PatchedAlbum'
+                $ref: '#/components/schemas/Album'
           description: ''
     delete:
       operationId: albums_destroy

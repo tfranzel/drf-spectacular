@@ -566,7 +566,7 @@ class AutoSchema(ViewInspector):
             'type': 'object',
             'properties': properties
         }
-        if required and self.method != 'PATCH':
+        if required and (self.method != 'PATCH' or direction == 'response'):
             result['required'] = required
 
         return result
@@ -772,7 +772,7 @@ class AutoSchema(ViewInspector):
 
         if name.endswith('Serializer'):
             name = name[:-10]
-        if self.method == 'PATCH' and not serializer.read_only:  # TODO maybe even use serializer.partial
+        if self.method == 'PATCH' and not serializer.read_only and direction == 'request':
             name = 'Patched' + name
 
         return name

@@ -139,7 +139,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PatchedPerson'
+                $ref: '#/components/schemas/Person'
           description: ''
     delete:
       operationId: persons_destroy
