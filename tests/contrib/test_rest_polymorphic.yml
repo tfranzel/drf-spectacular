@@ -214,10 +214,14 @@ components:
         address:
           type: string
           maxLength: 30
+        supervisor_id:
+          type: integer
+          nullable: true
       required:
       - first_name
       - last_name
       - address
+      - supervisor_id
     PatchedPerson:
       oneOf:
       - $ref: '#/components/schemas/PatchedLegalPerson'
@@ -259,3 +263,6 @@ components:
         address:
           type: string
           maxLength: 30
+        supervisor_id:
+          type: integer
+          nullable: true

@@ -353,7 +353,6 @@ class AutoSchema(ViewInspector):
 
         if field.__class__ in drf_mapping:
             # use DRF native field resolution - taken from ModelSerializer.get_fields()
-            # TODO maybe init the field with args
             return self._map_serializer_field(drf_mapping[field.__class__]())
         elif isinstance(field, models.OneToOneField):
             return self._map_model_field(get_field_from_model(field.model, field.model.id))

@@ -21,6 +21,7 @@ class LegalPerson(Person):
 class NaturalPerson(Person):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
+    supervisor = models.ForeignKey('NaturalPerson', blank=True, null=True, on_delete=models.CASCADE)
 
 
 class PersonSerializer(PolymorphicSerializer):
@@ -44,9 +45,14 @@ class LegalPersonSerializer(serializers.ModelSerializer):
 
 
 class NaturalPersonSerializer(serializers.ModelSerializer):
+    # special case: PK related field pointing to a field that has 2 properties
+    #  - primary_key=True
+    #  - OneToOneField to base model (person_ptr_id)
+    supervisor_id = serializers.PrimaryKeyRelatedField(queryset=NaturalPerson.objects.all(), allow_null=True)
+
     class Meta:
         model = NaturalPerson
-        fields = ('id', 'first_name', 'last_name', 'address')
+        fields = ('id', 'first_name', 'last_name', 'address', 'supervisor_id')
 
 
 class PersonViewSet(viewsets.ModelViewSet):
