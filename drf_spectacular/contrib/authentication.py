@@ -1,13 +1,16 @@
-from django.views import View
+from oauth2_provider.contrib.rest_framework import (
+    TokenHasScope, TokenMatchesOASRequirements, IsAuthenticatedOrTokenHasScope
+)
 
 from drf_spectacular.authentication import OpenApiAuthenticationExtension
+from drf_spectacular.plumbing import warn
 
 
 class SimpleJWTScheme(OpenApiAuthenticationExtension):
     target_class = 'rest_framework_simplejwt.authentication.JWTAuthentication'
     name = 'jwtAuth'
 
-    def get_security_definition(self, view: View):
+    def get_security_definition(self, auto_schema):
         from rest_framework_simplejwt.settings import api_settings
         from drf_spectacular.plumbing import warn
 
@@ -27,11 +30,26 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
     target_class = 'oauth2_provider.contrib.rest_framework.OAuth2Authentication'
     name = 'oauth2'
 
-    def get_security_requirement(self, view: View):
-        # todo build proper scopes
-        return {self.name: view.required_scopes}
+    def get_security_requirement(self, auto_schema):
+        # TODO generalize (will also be used in versioning)
+        from collections import namedtuple
+        Request = namedtuple('Request', ['method'])
 
-    def get_security_definition(self, view: View):
+        view = auto_schema.view
+        request = Request(auto_schema.method)
+
+        for permission in auto_schema.view.get_permissions():
+            if isinstance(permission, TokenMatchesOASRequirements):
+                return {self.name: permission.get_required_alternate_scopes(request, view)}
+            if isinstance(permission, IsAuthenticatedOrTokenHasScope):
+                return {self.name: TokenHasScope().get_scopes(request, view)}
+            if isinstance(permission, TokenHasScope):
+                # catch-all for subclasses of TokenHasScope like TokenHasReadWriteScope
+                return {self.name: permission.get_scopes(request, view)}
+
+        warn(f'could not process OAuth2 permissions for {view.__class__}. ignoring for now')
+
+    def get_security_definition(self, auto_schema):
         from drf_spectacular.settings import spectacular_settings
         from oauth2_provider.settings import oauth2_settings
 

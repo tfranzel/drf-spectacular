@@ -3,17 +3,52 @@ info:
   title: ''
   version: 0.0.0
 paths:
-  /x/:
+  /IsAuthenticatedOrTokenHasScope/:
     get:
-      operationId: x_list
+      operationId: IsAuthenticatedOrTokenHasScope_list
       description: ''
       tags:
-      - x
+      - IsAuthenticatedOrTokenHasScope
       security:
       - oauth2:
-        - x:read
-        - x:write
-      - {}
+        - extra_scope
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/X'
+          description: ''
+  /TokenHasReadWriteScope/:
+    get:
+      operationId: TokenHasReadWriteScope_list
+      description: ''
+      tags:
+      - TokenHasReadWriteScope
+      security:
+      - oauth2:
+        - read
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/X'
+          description: ''
+  /TokenHasResourceScope/:
+    get:
+      operationId: TokenHasResourceScope_list
+      description: ''
+      tags:
+      - TokenHasResourceScope
+      security:
+      - oauth2:
+        - extra_scope:read
       responses:
         '200':
           content:
@@ -34,6 +69,10 @@ components:
           scopes:
             read: Reading scope
             write: Writing scope
+            extra_scope: Extra Scope
+    basicAuth:
+      type: http
+      scheme: basic
   schemas:
     X:
       type: object

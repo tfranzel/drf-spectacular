@@ -186,12 +186,15 @@ class AutoSchema(ViewInspector):
                 )
                 continue
 
-            auths.append(scheme.get_security_requirement(self.view))
+            security_requirements = scheme.get_security_requirement(self)
+            if security_requirements is not None:
+                auths.append(security_requirements)
+
             component = ResolvedComponent(
                 name=scheme.name,
                 type=ResolvedComponent.SECURITY_SCHEMA,
                 object=authenticator.__class__,
-                schema=scheme.get_security_definition(self.view)
+                schema=scheme.get_security_definition(self)
             )
             if component not in self.registry:
                 self.registry.register(component)
