@@ -2,7 +2,7 @@ from unittest import mock
 
 from django.conf.urls import url
 from django.db import models
-from rest_framework import serializers, viewsets, mixins, routers
+from rest_framework import serializers, viewsets, mixins, routers, views
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 
@@ -210,3 +210,24 @@ def test_multi_method_action(no_warnings):
 
     assert get_req_body(schema['paths']['/x/multi2/']['put']) == '#/components/schemas/Update'
     assert get_req_body(schema['paths']['/x/multi2/']['post']) == '#/components/schemas/Create'
+
+
+def test_serializer_class_on_apiview(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.UUIDField()
+
+    class XView(views.APIView):
+        serializer_class = XSerializer  # not supported by DRF but pick it up anyway
+
+        def get(self, request):
+            pass  # pragma: no cover
+
+        def post(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XView)
+    validate_schema(schema)
+    comp = '#/components/schemas/X'
+    assert schema['paths']['/x']['get']['responses']['200']['content']['application/json']['schema']['$ref'] == comp
+    assert schema['paths']['/x']['post']['responses']['200']['content']['application/json']['schema']['$ref'] == comp
+    assert schema['paths']['/x']['post']['requestBody']['content']['application/json']['schema']['$ref'] == comp

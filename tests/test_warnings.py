@@ -1,9 +1,10 @@
 from django.db import models
-from rest_framework import serializers, mixins, viewsets
+from rest_framework import serializers, mixins, viewsets, views
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.decorators import action
 
 from drf_spectacular.utils import extend_schema
+from drf_spectacular.validation import validate_schema
 from tests import generate_schema
 
 
@@ -115,3 +116,13 @@ def test_extend_schema_unknown_class2(capsys):
 
     generate_schema('x1', X1Viewset)
     assert 'Expected either a serializer' in capsys.readouterr().err
+
+
+def test_no_serializer_class_on_apiview(capsys):
+    class XView(views.APIView):
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XView)
+    validate_schema(schema)
+    assert 'Unable to guess serializer for' in capsys.readouterr().err

@@ -15,6 +15,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description
 from rest_framework.settings import api_settings
+from rest_framework.views import APIView
 
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.contrib.authentication import *  # noqa: F403, F401
@@ -649,18 +650,35 @@ class AutoSchema(ViewInspector):
     def _get_serializer(self):
         view = self.view
         try:
-            # try to circumvent queryset issues with calling get_serializer. if view has NOT
-            # overridden get_serializer, its safe to use get_serializer_class.
-            if view.__class__.get_serializer == GenericAPIView.get_serializer:
-                return view.get_serializer_class()()
-            return view.get_serializer()
+            if isinstance(view, GenericAPIView):
+                # try to circumvent queryset issues with calling get_serializer. if view has NOT
+                # overridden get_serializer, its safe to use get_serializer_class.
+                if view.__class__.get_serializer == GenericAPIView.get_serializer:
+                    return view.get_serializer_class()()
+                return view.get_serializer()
+            elif isinstance(view, APIView):
+                # APIView does not implement the required interface, but be lenient and make
+                # good guesses before giving up and emitting a warning.
+                if callable(getattr(view, 'get_serializer', None)):
+                    return view.get_serializer()
+                elif callable(getattr(view, 'get_serializer_class', None)):
+                    return view.get_serializer_class()()
+                elif hasattr(view, 'serializer_class'):
+                    return view.serializer_class
+                else:
+                    warn(
+                        f'Unable to guess serializer for {view.__class__.__name__}. This is graceful '
+                        f'fallback handling for APIViews. Consider using GenericAPIView as view base '
+                        f'class, if view is under your control. ignoring view for now. '
+                    )
+            else:
+                warn('Encountered unknown view base class. please report this issue. ignoring for now')
         except Exception as exc:
             warn(
                 f'Exception raised while getting serializer from {view.__class__.__name__}. Hint: '
                 f'Is get_serializer_class() returning None or is get_queryset() not working without '
                 f'a request? Ignoring the view for now. (Exception: {exc})'
             )
-            return None
 
     def _get_request_body(self):
         # only unsafe methods can have a body
