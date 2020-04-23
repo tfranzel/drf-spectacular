@@ -1,9 +1,4 @@
-from oauth2_provider.contrib.rest_framework import (
-    TokenHasScope, TokenMatchesOASRequirements, IsAuthenticatedOrTokenHasScope
-)
-
 from drf_spectacular.authentication import OpenApiAuthenticationExtension
-from drf_spectacular.plumbing import warn
 
 
 class SimpleJWTScheme(OpenApiAuthenticationExtension):
@@ -31,6 +26,9 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
     name = 'oauth2'
 
     def get_security_requirement(self, auto_schema):
+        from oauth2_provider.contrib.rest_framework import (
+            TokenHasScope, TokenMatchesOASRequirements, IsAuthenticatedOrTokenHasScope
+        )
         # TODO generalize (will also be used in versioning)
         from collections import namedtuple
         Request = namedtuple('Request', ['method'])
@@ -46,8 +44,6 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
             if isinstance(permission, TokenHasScope):
                 # catch-all for subclasses of TokenHasScope like TokenHasReadWriteScope
                 return {self.name: permission.get_scopes(request, view)}
-
-        warn(f'could not process OAuth2 permissions for {view.__class__}. ignoring for now')
 
     def get_security_definition(self, auto_schema):
         from drf_spectacular.settings import spectacular_settings
