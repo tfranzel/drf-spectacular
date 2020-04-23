@@ -28,7 +28,7 @@ class DeltaSerializer(serializers.Serializer):
 @extend_schema_field(OpenApiTypes.BYTE)
 class CustomField(serializers.Field):
     def to_representation(self, value):
-        return urlsafe_base64_encode(b'\xf0\xf1\xf2')
+        return urlsafe_base64_encode(b'\xf0\xf1\xf2')  # pragma: no cover
 
 
 class GammaSerializer(serializers.Serializer):
@@ -56,19 +56,19 @@ class ErrorDetailSerializer(serializers.Serializer):
 
     @extend_schema_field(OpenApiTypes.DATETIME)
     def get_field_i(self, object):
-        return '2020-03-06 20:54:00.104248'
+        return '2020-03-06 20:54:00.104248'  # pragma: no cover
 
     @extend_schema_field(InlineSerializer)
     def get_field_j(self, object):
-        return InlineSerializer({}).data
+        return InlineSerializer({}).data  # pragma: no cover
 
     @extend_schema_field(InlineSerializer(many=True))
     def get_field_k(self, object):
-        return InlineSerializer([], many=True).data
+        return InlineSerializer([], many=True).data  # pragma: no cover
 
     @extend_schema_field(serializers.ChoiceField(choices=['a', 'b']))
     def get_field_l(self, object):
-        return object.some_choice
+        return object.some_choice  # pragma: no cover
 
 
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):
@@ -97,11 +97,11 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             tags=['custom_tag'],
         )
         def create(self, request, *args, **kwargs):
-            return Response({})
+            return Response({})  # pragma: no cover
 
         @extend_schema(exclude=True)
         def list(self, request, *args, **kwargs):
-            return Response([])
+            return Response([])  # pragma: no cover
 
         @extend_schema(
             parameters=[OpenApiParameter('id', OpenApiTypes.INT, OpenApiParameter.PATH)],
@@ -110,7 +110,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         )
         @action(detail=True, methods=['POST'])
         def subscribe(self, request):
-            return Response(status=201)
+            return Response(status=201)  # pragma: no cover
 
         @extend_schema(
             request=OpenApiTypes.OBJECT,
@@ -119,12 +119,12 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         )
         @action(detail=False, url_path='callback/(?P<ephemeral>[^/.]+)', methods=['POST'])
         def callback(self, request, ephemeral, pk):
-            return Response(status=201)
+            return Response(status=201)  # pragma: no cover
 
         @extend_schema(responses={204: None})
         @action(detail=False, url_path='only-response-override', methods=['POST'])
         def only_response_override(self, request):
-            return Response(status=201)
+            return Response(status=201)  # pragma: no cover
 
         @extend_schema(parameters=[
             QuerySerializer,  # exploded
@@ -132,7 +132,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         ])
         @action(detail=False, url_path='serializer-query', methods=['GET'])
         def serializer_query(self, request):
-            return Response([])
+            return Response([])  # pragma: no cover
 
         # this is intended as a measure of last resort when nothing else works
         @extend_schema(operation={
@@ -160,12 +160,12 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         })
         @action(detail=False, methods=['POST'])
         def manual(self, request):
-            return Response()
+            return Response()  # pragma: no cover
 
         @extend_schema(request=DeltaSerializer)
         @action(detail=False, methods=['POST'])
         def non_required_body(self, request):
-            return Response([])
+            return Response([])  # pragma: no cover
 
 
 def test_extend_schema(no_warnings):
