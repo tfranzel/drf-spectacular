@@ -17,6 +17,7 @@ from rest_framework.schemas.utils import get_pk_description
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
+from drf_spectacular.fields import OpenApiSerializerFieldExtension
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.contrib.authentication import *  # noqa: F403, F401
 from drf_spectacular.contrib.serializers import *  # noqa: F403, F401
@@ -374,6 +375,10 @@ class AutoSchema(ViewInspector):
                 return build_basic_type(field._spectacular_annotation)
             else:
                 return self._map_serializer_field(field._spectacular_annotation)
+
+        serializer_field_extension = OpenApiSerializerFieldExtension.get_match(field)
+        if serializer_field_extension:
+            return serializer_field_extension.map_serializer_field(self)
 
         # TODO for now ignore direction while nesting. this would only be relevant
         #  for nested PATCH, which is likely a very uncommon edge case
