@@ -228,7 +228,7 @@ class AutoSchema(ViewInspector):
         # replace dashes as they can be problematic later in code generation
         tokenized_path = [t.replace('-', '_') for t in tokenized_path]
 
-        if self._is_list_view():
+        if self.method.lower() == 'get' and self._is_list_view():
             action = 'list'
         else:
             action = self.method_mapping[self.method.lower()]
@@ -693,7 +693,11 @@ class AutoSchema(ViewInspector):
         serializer = force_instance(self.get_request_serializer())
 
         request_body_required = False
-        if is_serializer(serializer):
+        if isinstance(serializer, serializers.ListSerializer):
+            component = self.resolve_serializer(serializer.child, 'request')
+            schema = build_array_type(component.ref)
+            request_body_required = True
+        elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'request')
             if not component:
                 # serializer is empty so skip content enumeration
@@ -819,11 +823,12 @@ class AutoSchema(ViewInspector):
 
         self.registry.register(component)
         component.schema = self._map_serializer(serializer, direction)
-        # 3 cases:
+        # 4 cases:
         #   1. polymorphic container component -> use
         #   2. concrete component with properties -> use
         #   3. concrete component without properties -> prob. transactional so discard
-        if 'oneOf' not in component.schema and not component.schema['properties']:
+        #   4. explicit list component -> demultiplexed at usage location so discard
+        if 'oneOf' not in component.schema and not component.schema.get('properties', {}):
             del self.registry[component]
             return ResolvedComponent(None, None)  # sentinel
         return component

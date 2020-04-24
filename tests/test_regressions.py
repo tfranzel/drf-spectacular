@@ -2,7 +2,7 @@ from unittest import mock
 
 from django.conf.urls import url
 from django.db import models
-from rest_framework import serializers, viewsets, mixins, routers, views
+from rest_framework import serializers, viewsets, mixins, routers, views, generics
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 
@@ -231,3 +231,36 @@ def test_serializer_class_on_apiview(no_warnings):
     assert schema['paths']['/x']['get']['responses']['200']['content']['application/json']['schema']['$ref'] == comp
     assert schema['paths']['/x']['post']['responses']['200']['content']['application/json']['schema']['$ref'] == comp
     assert schema['paths']['/x']['post']['requestBody']['content']['application/json']['schema']['$ref'] == comp
+
+
+def test_customized_list_serializer():
+    class X(models.Model):
+        position = models.IntegerField()
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = X
+            fields = ("id", "position")
+
+    class XListUpdateSerializer(serializers.ListSerializer):
+        child = XSerializer()
+
+    class XAPIView(generics.GenericAPIView):
+        model = X
+        serializer_class = XListUpdateSerializer
+
+        def put(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XAPIView)
+    validate_schema(schema)
+    operation = schema['paths']['/x']['put']
+    comp = '#/components/schemas/X'
+
+    assert operation['requestBody']['content']['application/json']['schema']['type'] == 'array'
+    assert operation['requestBody']['content']['application/json']['schema']['items']['$ref'] == comp
+    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'array'
+    assert operation['responses']['200']['content']['application/json']['schema']['items']['$ref'] == comp
+
+    assert operation['operationId'] == 'x_update'
+    assert len(schema['components']['schemas']) == 1 and 'X' in schema['components']['schemas']
