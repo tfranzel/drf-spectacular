@@ -3,7 +3,7 @@ from unittest import mock
 from django.conf.urls import url
 from django.db import models
 from rest_framework import serializers, viewsets, mixins, routers, views, generics
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
 from drf_spectacular.generators import SchemaGenerator
@@ -264,3 +264,33 @@ def test_customized_list_serializer():
 
     assert operation['operationId'] == 'x_update'
     assert len(schema['components']['schemas']) == 1 and 'X' in schema['components']['schemas']
+
+
+def test_api_view_decorator(no_warnings):
+
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request):
+        pass
+
+    schema = generate_schema('x', view_function=pi)
+    validate_schema(schema)
+    operation = schema['paths']['/x']['get']
+    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'number'
+
+
+def test_api_view_decorator_multi(no_warnings):
+
+    @extend_schema(request=OpenApiTypes.FLOAT, responses=OpenApiTypes.INT, methods=['POST'])
+    @extend_schema(responses=OpenApiTypes.FLOAT, methods=['GET'])
+    @api_view(['GET', 'POST'])
+    def pi(request):
+        pass
+
+    schema = generate_schema('x', view_function=pi)
+    validate_schema(schema)
+    operation = schema['paths']['/x']['get']
+    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'number'
+    operation = schema['paths']['/x']['post']
+    assert operation['requestBody']['content']['application/json']['schema']['type'] == 'number'
+    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'integer'

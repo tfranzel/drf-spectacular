@@ -88,10 +88,16 @@ def extend_schema(
     """
     def decorator(f):
         BaseSchema = (
+            # explicit manually set schema
             getattr(f, 'schema', None)
+            # previously set schema with @extend_schema on views methods
             or getattr(f, 'kwargs', {}).get('schema', None)
+            # previously set schema with @extend_schema on @api_view
+            or getattr(getattr(f, 'cls', None), 'kwargs', {}).get('schema', None)
+            # the default
             or api_settings.DEFAULT_SCHEMA_CLASS
         )
+
         if not inspect.isclass(BaseSchema):
             BaseSchema = BaseSchema.__class__
 
@@ -100,57 +106,64 @@ def extend_schema(
 
         class ExtendedSchema(BaseSchema):
             def get_operation(self, path, method, registry):
-                if method_matches(method) and exclude:
+                if exclude and method_matches(method):
                     return None
-                if method_matches(method) and operation is not None:
+                if operation is not None and method_matches(method):
                     return operation
                 return super().get_operation(path, method, registry)
 
             def get_operation_id(self):
-                if method_matches(self.method) and operation_id:
+                if operation_id and method_matches(self.method):
                     return operation_id
                 return super().get_operation_id()
 
             def get_override_parameters(self):
-                if method_matches(self.method) and parameters:
+                if parameters and method_matches(self.method):
                     return parameters
                 return super().get_override_parameters()
 
             def get_auth(self):
-                if method_matches(self.method) and auth:
+                if auth and method_matches(self.method):
                     return auth
                 return super().get_auth()
 
             def get_request_serializer(self):
-                if method_matches(self.method) and request:
+                if request and method_matches(self.method):
                     return request
                 return super().get_request_serializer()
 
             def get_response_serializers(self):
-                if method_matches(self.method) and responses:
+                if responses and method_matches(self.method):
                     return responses
                 return super().get_response_serializers()
 
             def get_description(self):
-                if method_matches(self.method) and description:
+                if description and method_matches(self.method):
                     return description
                 return super().get_description()
 
             def is_deprecated(self):
-                if method_matches(self.method) and deprecated:
+                if deprecated and method_matches(self.method):
                     return deprecated
                 return super().is_deprecated()
 
             def get_tags(self):
-                if method_matches(self.method) and tags is not None:
+                if tags is not None and method_matches(self.method):
                     return tags
                 return super().get_tags()
 
         if inspect.isclass(f):
             class ExtendedView(f):
                 schema = ExtendedSchema()
-
             return ExtendedView
+        elif callable(f) and hasattr(f, 'cls'):
+            # 'cls' attr signals that as_view() was called, which only applies to @api_view.
+            # keep a "unused" schema reference at root level for multi annotation convenience.
+            setattr(f.cls, 'kwargs', {'schema': ExtendedSchema})
+            # set schema on method kwargs context to emulate regular view behaviour.
+            for method in f.cls.http_method_names:
+                setattr(getattr(f.cls, method), 'kwargs', {'schema': ExtendedSchema})
+            return f
         elif callable(f):
             # custom actions have kwargs in their context, others don't. create it so our create_view
             # implementation can overwrite the default schema

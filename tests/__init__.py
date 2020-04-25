@@ -20,7 +20,7 @@ def assert_schema(schema, reference_file):
     validate_schema(schema)
 
 
-def generate_schema(route, viewset=None, view=None):
+def generate_schema(route, viewset=None, view=None, view_function=None):
     from django.urls import path
     from rest_framework import routers
     from drf_spectacular.generators import SchemaGenerator
@@ -30,8 +30,10 @@ def generate_schema(route, viewset=None, view=None):
         router = routers.SimpleRouter()
         router.register(route, viewset, basename=route)
         patterns = router.urls
-    if view:
+    elif view:
         patterns = [path(route, view.as_view())]
+    elif view_function:
+        patterns = [path(route, view_function)]
 
     generator = SchemaGenerator(patterns=patterns)
     return generator.get_schema(request=None, public=True)
