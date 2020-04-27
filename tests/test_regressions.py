@@ -1,3 +1,4 @@
+import uuid
 from unittest import mock
 
 from django.conf.urls import url
@@ -294,3 +295,24 @@ def test_api_view_decorator_multi(no_warnings):
     operation = schema['paths']['/x']['post']
     assert operation['requestBody']['content']['application/json']['schema']['type'] == 'number'
     assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'integer'
+
+
+def test_pk_and_no_id(no_warnings):
+    class XModel(models.Model):
+        id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    class YModel(models.Model):
+        x = models.OneToOneField(XModel, primary_key=True, on_delete=models.CASCADE)
+
+    class YSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = YModel
+            fields = '__all__'
+
+    class YViewSet(viewsets.ReadOnlyModelViewSet):
+        serializer_class = YSerializer
+        queryset = YModel.objects.all()
+
+    schema = generate_schema('y', YViewSet)
+    validate_schema(schema)
+    assert schema['components']['schemas']['Y']['properties']['x']['format'] == 'uuid'

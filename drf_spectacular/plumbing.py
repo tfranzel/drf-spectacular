@@ -158,10 +158,8 @@ def get_field_from_model(model, field):
     this is a Django 2.2 compatibility function to access a field through a Deferred Attribute
     """
     if DJANGO_VERSION.startswith('2'):
-        # trying to access the field through the DeferredAttribute will fail in an
-        # endless loop. bypass this issue by fishing it out of the meta field list.
-        field_name = field.field_name
-        return [f for f in model._meta.fields if f.name == field_name][0]
+        # field.field will in effect return self, i.e. a DeferredAttribute again (loop)
+        return model._meta.get_field(field.field_name)
     else:
         return field.field
 
@@ -198,7 +196,6 @@ def follow_field_source(model, path):
 
         def dummy_property(obj) -> str:
             pass
-
         return dummy_property
 
 

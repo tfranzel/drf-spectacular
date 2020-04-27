@@ -23,7 +23,7 @@ from drf_spectacular.contrib.authentication import *  # noqa: F403, F401
 from drf_spectacular.contrib.serializers import *  # noqa: F403, F401
 from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
-    follow_field_source, is_field, is_basic_type, get_field_from_model, build_array_type,
+    follow_field_source, is_field, is_basic_type, build_array_type,
     ComponentRegistry, ResolvedComponent, build_parameter_type
 )
 from drf_spectacular.types import OpenApiTypes
@@ -359,8 +359,8 @@ class AutoSchema(ViewInspector):
         if field.__class__ in drf_mapping:
             # use DRF native field resolution - taken from ModelSerializer.get_fields()
             return self._map_serializer_field(drf_mapping[field.__class__]())
-        elif isinstance(field, models.OneToOneField):
-            return self._map_model_field(get_field_from_model(field.model, field.model.id))
+        elif isinstance(field, models.ForeignKey):
+            return self._map_model_field(field.target_field)
         else:
             warn(
                 f'could not resolve model field "{field}" due to missing mapping.'
@@ -402,10 +402,7 @@ class AutoSchema(ViewInspector):
             if getattr(field, 'queryset', None) is not None:
                 return self._map_model_field(field.queryset.model._meta.pk)
             else:
-                model = field.parent.Meta.model
-                return self._map_model_field(
-                    get_field_from_model(model, model.id)
-                )
+                return self._map_model_field(field.parent.Meta.model._meta.pk)
 
         if isinstance(field, serializers.StringRelatedField):
             return build_basic_type(OpenApiTypes.STR)
