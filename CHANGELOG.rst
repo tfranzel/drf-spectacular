@@ -1,6 +1,32 @@
 Changelog
 =========
 
+0.9.2 (2020-04-27)
+------------------
+
+- Fix incorrect PK access through id. #25.
+- Enable attr settings on SpectacularAPIView #35.
+- Bugfix @api_view annotation and tests.
+- Fix exception/add support for explicit ListSerializer #29.
+- Introduce custom serializer field extension mechanic. enables tackling #31
+- Improve serializer estimation with educated guesses. #28.
+- Bugfix import error and incorrect warning #26.
+- Improve scope parsing for oauth2. #26.
+- Postprocessing enums to components
+- Handle decimal coersion. closes #24.
+- Improvement: patched serializer variation only on request.
+- Add serializer directionality.
+- End the bucket brigade / cleaner interface.
+- Add poly serializer warning.
+- Bugfix: add serialization for default values.
+- Bugfix reverse access collision from schema to view.
+
+Breaking changes:
+
+- internal interface changed (method & path removed)
+- fewer PatchedSerializers emitted
+- Enums are no longer inlined
+
 0.9.1 (2020-04-09)
 ------------------
 
