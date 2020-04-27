@@ -52,7 +52,7 @@ def extend_schema(
         request=None,
         responses=None,
         auth=None,
-        description=None,
+        description=False,
         deprecated=None,
         tags=None,
         exclude=False,
@@ -144,7 +144,7 @@ def extend_schema(
                 return super().get_response_serializers()
 
             def get_description(self):
-                if description and method_matches(self.method):
+                if description != False and method_matches(self.method):
                     return description
                 return super().get_description()
 
