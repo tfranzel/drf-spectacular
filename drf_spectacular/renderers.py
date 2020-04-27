@@ -1,6 +1,6 @@
 import yaml
 import logging
-from rest_framework.renderers import OpenAPIRenderer
+from rest_framework.renderers import JSONOpenAPIRenderer, OpenAPIRenderer
 #from drf_spectacular.plumbing import warn
 
 from rest_framework.exceptions import ErrorDetail
@@ -25,3 +25,13 @@ class NoAliasOpenAPIRenderer(OpenAPIRenderer):
                 return True
 
         return yaml.dump(data, default_flow_style=False, sort_keys=False, Dumper=Dumper).encode('utf-8')
+
+
+class ApplicationYamlOpenAPIRenderer(NoAliasOpenAPIRenderer):
+    media_type = 'application/yaml'
+    format = 'yaml'
+
+
+class ApplicationJsonOpenAPIRenderer(JSONOpenAPIRenderer):
+    media_type = 'application/json'
+    format = 'json'
