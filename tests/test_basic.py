@@ -30,11 +30,16 @@ class Song(models.Model):
     length = models.IntegerField()
 
 
+class SongRelatedField(serializers.RelatedField):
+    queryset = Song.objects.select_related('album')
+
+
 class SongSerializer(serializers.ModelSerializer):
     top10 = serializers.SerializerMethodField()
+    album = SongRelatedField()
 
     class Meta:
-        fields = ['id', 'title', 'length', 'top10']
+        fields = ['id', 'title', 'length', 'top10', 'album']
         model = Song
 
     def get_top10(self) -> Optional[bool]:

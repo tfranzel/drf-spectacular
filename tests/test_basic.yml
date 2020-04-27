@@ -236,9 +236,12 @@ components:
           type: boolean
           nullable: true
           readOnly: true
+        album:
+          type: string
       required:
       - title
       - length
+      - album
     PatchedAlbum:
       type: object
       properties:
