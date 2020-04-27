@@ -1,10 +1,12 @@
 from collections import namedtuple
 
-from rest_framework.renderers import JSONOpenAPIRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from drf_spectacular.renderers import NoAliasOpenAPIRenderer
+from drf_spectacular.renderers import (
+    OpenApiJsonRenderer, OpenApiJsonRenderer2,
+    OpenApiYamlRenderer, OpenApiYamlRenderer2
+)
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
@@ -22,7 +24,9 @@ class SpectacularAPIView(APIView):
     - YAML: application/vnd.oai.openapi
     - JSON: application/vnd.oai.openapi+json
     """
-    renderer_classes = [NoAliasOpenAPIRenderer, JSONOpenAPIRenderer]
+    renderer_classes = [
+        OpenApiYamlRenderer, OpenApiYamlRenderer2, OpenApiJsonRenderer, OpenApiJsonRenderer2
+    ]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
 
     generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
@@ -41,8 +45,8 @@ class SpectacularAPIView(APIView):
 
 
 class SpectacularYAMLAPIView(SpectacularAPIView):
-    renderer_classes = [NoAliasOpenAPIRenderer]
+    renderer_classes = [OpenApiYamlRenderer, OpenApiYamlRenderer2]
 
 
 class SpectacularJSONAPIView(SpectacularAPIView):
-    renderer_classes = [JSONOpenAPIRenderer]
+    renderer_classes = [OpenApiJsonRenderer, OpenApiJsonRenderer2]

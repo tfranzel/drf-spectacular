@@ -1,9 +1,9 @@
 import yaml
-from rest_framework.renderers import OpenAPIRenderer
+from rest_framework.renderers import OpenAPIRenderer, JSONRenderer
 
 
-class NoAliasOpenAPIRenderer(OpenAPIRenderer):
-    """ Remove this temp fix once DRF 3.11 is no longer supported """
+class OpenApiYamlRenderer(OpenAPIRenderer):
+    media_type = 'application/vnd.oai.openapi'
 
     def render(self, data, media_type=None, renderer_context=None):
         # disable yaml advanced feature 'alias' for clean, portable, and readable output
@@ -12,3 +12,18 @@ class NoAliasOpenAPIRenderer(OpenAPIRenderer):
                 return True
 
         return yaml.dump(data, default_flow_style=False, sort_keys=False, Dumper=Dumper).encode('utf-8')
+
+
+class OpenApiYamlRenderer2(OpenApiYamlRenderer):
+    media_type = 'application/yaml'
+
+
+class OpenApiJsonRenderer(JSONRenderer):
+    media_type = 'application/vnd.oai.openapi+json'
+
+    def get_indent(self, accepted_media_type, renderer_context):
+        return super().get_indent(accepted_media_type, renderer_context) or 4
+
+
+class OpenApiJsonRenderer2(OpenApiJsonRenderer):
+    media_type = 'application/json'
