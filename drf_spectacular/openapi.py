@@ -48,16 +48,20 @@ class AutoSchema(ViewInspector):
 
         operation = {}
 
+        tags = self.get_tags()
+        if tags:
+            operation['tags'] = tags
+
+        summary = self.get_summary(path, method)
+        if summary:
+            operation['summary'] = summary
+
         operation['operationId'] = self.get_operation_id()
         operation['description'] = self.get_description()
 
         parameters = self._get_parameters()
         if parameters:
             operation['parameters'] = parameters
-
-        tags = self.get_tags()
-        if tags:
-            operation['tags'] = tags
 
         request_body = self._get_request_body()
         if request_body:
