@@ -39,10 +39,10 @@ class Command(BaseCommand):
         generator = generator_class(urlconf=options['urlconf'])
         schema = generator.get_schema(request=None, public=True)
 
-        if options['fail_on_warn'] and GENERATOR_STATS.warn_counter:
-            raise RuntimeError(
-                f'Failing as requested due to {GENERATOR_STATS.warn_counter} warnings'
-            )
+        GENERATOR_STATS.emit_summary()
+
+        if options['fail_on_warn'] and GENERATOR_STATS:
+            raise RuntimeError(f'Failing as requested due to warnings')
         if options['validate']:
             validate_schema(schema)
 

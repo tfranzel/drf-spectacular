@@ -24,7 +24,7 @@ from drf_spectacular.contrib.serializers import *  # noqa: F403, F401
 from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, build_array_type,
-    ComponentRegistry, ResolvedComponent, build_parameter_type
+    ComponentRegistry, ResolvedComponent, build_parameter_type, error,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
@@ -365,7 +365,7 @@ class AutoSchema(ViewInspector):
         elif isinstance(field, models.ForeignKey):
             return self._map_model_field(field.target_field)
         else:
-            warn(
+            error(
                 f'could not resolve model field "{field}" due to missing mapping.'
                 'either your field is custom and not based on a known subclasses '
                 'or we missed something. let us know.'
@@ -671,15 +671,15 @@ class AutoSchema(ViewInspector):
                 elif hasattr(view, 'serializer_class'):
                     return view.serializer_class
                 else:
-                    warn(
+                    error(
                         f'Unable to guess serializer for {view.__class__.__name__}. This is graceful '
                         f'fallback handling for APIViews. Consider using GenericAPIView as view base '
                         f'class, if view is under your control. ignoring view for now. '
                     )
             else:
-                warn('Encountered unknown view base class. please report this issue. ignoring for now')
+                error('Encountered unknown view base class. please report this issue. ignoring for now')
         except Exception as exc:
-            warn(
+            error(
                 f'Exception raised while getting serializer from {view.__class__.__name__}. Hint: '
                 f'Is get_serializer_class() returning None or is get_queryset() not working without '
                 f'a request? Ignoring the view for now. (Exception: {exc})'
