@@ -1,7 +1,3 @@
-import os
-
-import pytest
-
 from drf_spectacular.validation import validate_schema
 
 
@@ -37,9 +33,3 @@ def generate_schema(route, viewset=None, view=None, view_function=None):
 
     generator = SchemaGenerator(patterns=patterns)
     return generator.get_schema(request=None, public=True)
-
-
-skip_on_travis = pytest.mark.skipif(
-    os.environ.get('TRAVIS') == 'true',
-    reason="does not work on travis"
-)

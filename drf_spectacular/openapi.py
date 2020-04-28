@@ -256,11 +256,14 @@ class AutoSchema(ViewInspector):
         model = getattr(getattr(self.view, 'queryset', None), 'model', None)
         parameters = []
 
-        for variable in variables:
+        for idx, variable in enumerate(variables):
             schema = build_basic_type(OpenApiTypes.STR)
             description = ''
+            required = True
 
-            if not model:
+            if variable == api_settings.FORMAT_SUFFIX_KWARG and idx == len(variables) - 1:
+                required = False
+            elif not model:
                 warn(
                     f'could not derive type of path parameter "{variable}" because '
                     f'{self.view.__class__} has no queryset. consider annotating the '
@@ -284,7 +287,7 @@ class AutoSchema(ViewInspector):
             parameters.append({
                 "name": variable,
                 "in": "path",
-                "required": True,
+                "required": required,
                 "description": description,
                 'schema': schema,
             })

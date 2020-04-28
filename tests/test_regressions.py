@@ -3,6 +3,7 @@ from unittest import mock
 
 from django.conf.urls import url
 from django.db import models
+from django.urls import path
 from rest_framework import serializers, viewsets, mixins, routers, views, generics
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
@@ -316,3 +317,24 @@ def test_pk_and_no_id(no_warnings):
     schema = generate_schema('y', YViewSet)
     validate_schema(schema)
     assert schema['components']['schemas']['Y']['properties']['x']['format'] == 'uuid'
+
+
+def test_drf_format_suffix(no_warnings):
+    from rest_framework.urlpatterns import format_suffix_patterns
+
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request, format=None):
+        pass  # pragma: no cover
+
+    urlpatterns = [path(r'/pi', pi)]
+    urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'html'])
+
+    generator = SchemaGenerator(patterns=urlpatterns)
+    schema = generator.get_schema(request=None, public=True)
+
+    assert len(schema['paths']) == 2
+    format_parameter = schema['paths']['/pi{format}']['get']['parameters'][0]
+    assert format_parameter['name'] == 'format'
+    assert format_parameter['required'] is False
+    assert format_parameter['in'] == 'path'
