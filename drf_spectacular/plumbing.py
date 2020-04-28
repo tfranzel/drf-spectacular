@@ -8,11 +8,15 @@ from typing import List, Type, Optional, TypeVar, Union, Generic
 
 import inflection
 from django import __version__ as DJANGO_VERSION
+from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE
 from django.utils.module_loading import import_string
 from rest_framework import fields, serializers
 
 from drf_spectacular.settings import spectacular_settings
-from drf_spectacular.types import OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes
+from drf_spectacular.types import (
+    OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, DJANGO_PATH_CONVERTER_MAPPING, OpenApiTypes
+)
+from drf_spectacular.utils import OpenApiParameter
 
 T = TypeVar('T')
 
@@ -394,3 +398,25 @@ def postprocess_schema_enums(schemas):
             schemas[schema_name]['properties'][prop_name] = {
                 '$ref': f'#/components/schemas/{enum_name}'
             }
+
+
+def resolve_regex_path_parameter(path_regex, variable):
+    """
+    convert django style path parameters to OpenAPI parameters.
+    TODO also try to handle regular grouped regex parameters
+    """
+    for match in _PATH_PARAMETER_COMPONENT_RE.finditer(path_regex):
+        converter, parameter = match.group('converter'), match.group('parameter')
+
+        if converter and converter.startswith('drf_format_suffix_'):
+            converter = 'drf_format_suffix'  # remove appended options
+
+        if parameter == variable and converter in DJANGO_PATH_CONVERTER_MAPPING:
+            return {
+                'name': parameter,
+                'schema': build_basic_type(DJANGO_PATH_CONVERTER_MAPPING[converter]),
+                'in': OpenApiParameter.PATH,
+                'required': False if converter == 'drf_format_suffix' else True,
+            }
+
+    return None

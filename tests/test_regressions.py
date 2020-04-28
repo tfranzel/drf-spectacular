@@ -319,7 +319,7 @@ def test_pk_and_no_id(no_warnings):
     assert schema['components']['schemas']['Y']['properties']['x']['format'] == 'uuid'
 
 
-def test_drf_format_suffix(no_warnings):
+def test_drf_format_suffix_parameter(no_warnings):
     from rest_framework.urlpatterns import format_suffix_patterns
 
     @extend_schema(responses=OpenApiTypes.FLOAT)
@@ -338,3 +338,18 @@ def test_drf_format_suffix(no_warnings):
     assert format_parameter['name'] == 'format'
     assert format_parameter['required'] is False
     assert format_parameter['in'] == 'path'
+
+
+def test_regex_path_parameter_discovery(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request, foo):
+        pass  # pragma: no cover
+
+    urlpatterns = [url(r'^/pi/<int:precision>', pi)]
+    generator = SchemaGenerator(patterns=urlpatterns)
+    schema = generator.get_schema(request=None, public=True)
+    parameter = schema['paths']['/pi/{precision}']['get']['parameters'][0]
+    assert parameter['name'] == 'precision'
+    assert parameter['in'] == 'path'
+    assert parameter['schema']['type'] == 'integer'

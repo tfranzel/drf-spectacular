@@ -24,7 +24,7 @@ from drf_spectacular.contrib.serializers import *  # noqa: F403, F401
 from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, build_array_type,
-    ComponentRegistry, ResolvedComponent, build_parameter_type, error,
+    ComponentRegistry, ResolvedComponent, build_parameter_type, error, resolve_regex_path_parameter,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
@@ -262,8 +262,10 @@ class AutoSchema(ViewInspector):
             description = ''
             required = True
 
-            if variable == api_settings.FORMAT_SUFFIX_KWARG and idx == len(variables) - 1:
-                required = False
+            resolved_parameter = resolve_regex_path_parameter(self.path_regex, variable)
+
+            if resolved_parameter:
+                schema, required = resolved_parameter['schema'], resolved_parameter['required']
             elif not model:
                 warn(
                     f'could not derive type of path parameter "{variable}" because '

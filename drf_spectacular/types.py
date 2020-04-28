@@ -66,3 +66,12 @@ PYTHON_TYPE_MAPPING = {
     date: OpenApiTypes.DATE,
     dict: OpenApiTypes.OBJECT,
 }
+
+DJANGO_PATH_CONVERTER_MAPPING = {
+    'int': OpenApiTypes.INT,
+    'path': OpenApiTypes.STR,
+    'slug': OpenApiTypes.STR,
+    'str': OpenApiTypes.STR,
+    'uuid': OpenApiTypes.UUID,
+    'drf_format_suffix': OpenApiTypes.STR,
+}
