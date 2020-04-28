@@ -229,7 +229,7 @@ def follow_field_source(model, path):
 
 def alpha_operation_sorter(endpoint):
     """ sort endpoints first alphanumerically by path, then by method order """
-    path, method, callback = endpoint
+    path, path_regex, method, callback = endpoint
     method_priority = {
         'GET': 0,
         'POST': 1,

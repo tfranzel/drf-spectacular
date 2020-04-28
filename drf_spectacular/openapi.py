@@ -41,9 +41,10 @@ class AutoSchema(ViewInspector):
         'delete': 'destroy',
     }
 
-    def get_operation(self, path, method, registry: ComponentRegistry):
+    def get_operation(self, path, path_regex, method, registry: ComponentRegistry):
         self.registry = registry
         self.path = path
+        self.path_regex = path_regex
         self.method = method
 
         operation = {}

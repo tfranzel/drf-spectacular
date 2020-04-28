@@ -105,12 +105,12 @@ def extend_schema(
             return methods is None or method in methods
 
         class ExtendedSchema(BaseSchema):
-            def get_operation(self, path, method, registry):
+            def get_operation(self, path, path_regex, method, registry):
                 if exclude and method_matches(method):
                     return None
                 if operation is not None and method_matches(method):
                     return operation
-                return super().get_operation(path, method, registry)
+                return super().get_operation(path, path_regex, method, registry)
 
             def get_operation_id(self):
                 if operation_id and method_matches(self.method):

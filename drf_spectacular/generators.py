@@ -1,16 +1,53 @@
 import inspect
 from urllib.parse import urljoin
 
+from django.urls import URLResolver, URLPattern
 from rest_framework import viewsets, views
-from rest_framework.schemas.generators import BaseSchemaGenerator
+from rest_framework.compat import get_original_route
+from rest_framework.schemas.generators import (
+    BaseSchemaGenerator,
+    EndpointEnumerator as BaseEndpointEnumerator,
+)
 
 from drf_spectacular.plumbing import (
-    ComponentRegistry, warn, alpha_operation_sorter, reset_generator_stats, build_root_object
+    ComponentRegistry, error, alpha_operation_sorter, reset_generator_stats, build_root_object
 )
 from drf_spectacular.settings import spectacular_settings
 
 
+class EndpointEnumerator(BaseEndpointEnumerator):
+    def get_api_endpoints(self, patterns=None, prefix=''):
+        """
+        Return a list of all available API endpoints by inspecting the URL conf.
+        """
+        if patterns is None:
+            patterns = self.patterns
+
+        api_endpoints = []
+
+        for pattern in patterns:
+            path_regex = prefix + get_original_route(pattern)
+            if isinstance(pattern, URLPattern):
+                path = self.get_path_from_regex(path_regex)
+                callback = pattern.callback
+                if self.should_include_endpoint(path, callback):
+                    for method in self.get_allowed_methods(callback):
+                        endpoint = (path, path_regex, method, callback)
+                        api_endpoints.append(endpoint)
+
+            elif isinstance(pattern, URLResolver):
+                nested_endpoints = self.get_api_endpoints(
+                    patterns=pattern.url_patterns,
+                    prefix=path_regex
+                )
+                api_endpoints.extend(nested_endpoints)
+
+        return sorted(api_endpoints, key=alpha_operation_sorter)
+
+
 class SchemaGenerator(BaseSchemaGenerator):
+    endpoint_inspector_cls = EndpointEnumerator
+
     def __init__(self, *args, **kwargs):
         self.registry = ComponentRegistry()
         super().__init__(*args, **kwargs)
@@ -30,7 +67,7 @@ class SchemaGenerator(BaseSchemaGenerator):
         elif isinstance(view, views.APIView):
             action = getattr(view, method.lower())
         else:
-            warn(
+            error(
                 'Using not supported View class. Class must be derived from APIView '
                 'or any of its subclasses like GenericApiView, GenericViewSet.'
             )
@@ -44,27 +81,29 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         return view
 
-    def get_endpoints(self, request):
-        """ sorted endpoints by operation """
-        self._initialise_endpoints()
-        _, endpoints = self._get_paths_and_endpoints(request)
+    def _get_paths_and_endpoints(self, request):
+        """
+        Generate (path, method, view) given (path, method, callback) for paths.
+        """
+        view_endpoints = []
+        for path, path_regex, method, callback in self.endpoints:
+            view = self.create_view(callback, method, request)
+            path = self.coerce_path(path, method, view)
+            view_endpoints.append((path, path_regex, method, view))
 
-        if spectacular_settings.OPERATION_SORTER == 'alpha':
-            return sorted(endpoints, key=alpha_operation_sorter)
-        else:
-            # default to DRF method sorting
-            return endpoints
+        return view_endpoints
 
     def parse(self, request=None):
         """ Iterate endpoints generating per method path operations. """
         result = {}
+        self._initialise_endpoints()
 
-        for path, method, view in self.get_endpoints(request):
+        for path, path_regex, method, view in self._get_paths_and_endpoints(request):
             if not self.has_view_permissions(path, method, view):
                 continue
 
             # beware that every access to schema yields a fresh object (descriptor pattern)
-            operation = view.schema.get_operation(path, method, self.registry)
+            operation = view.schema.get_operation(path, path_regex, method, self.registry)
 
             # operation was manually removed via @extend_schema
             if not operation:
