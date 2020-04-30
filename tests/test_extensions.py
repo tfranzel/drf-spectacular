@@ -1,4 +1,6 @@
 from rest_framework import fields, serializers, viewsets, mixins
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from drf_spectacular.extensions import OpenApiSerializerFieldExtension, OpenApiViewExtension
@@ -35,7 +37,7 @@ def test_serializer_field_extension(no_warnings):
 class XView(APIView):
     """ underspecified library view """
     def get(self):
-        return 1.234  # pragma: no cover
+        return Response(1.234)  # pragma: no cover
 
 
 def test_view_extension(no_warnings):
@@ -51,6 +53,26 @@ def test_view_extension(no_warnings):
             return Fixed
 
     schema = generate_schema('x', view=XView)
+    validate_schema(schema)
+    operation = schema['paths']['/x']['get']
+    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'number'
+
+
+@api_view()
+def x_view_function():
+    """ underspecified library view """
+    return Response(1.234)  # pragma: no cover
+
+
+def test_view_function_extension(no_warnings):
+    class FixXFunctionView(OpenApiViewExtension):
+        target_class = 'tests.test_extensions.x_view_function'
+
+        def view_replacement(self):
+            fixed = extend_schema(responses=OpenApiTypes.FLOAT)(self.target_class)
+            return fixed
+
+    schema = generate_schema('x', view_function=x_view_function)
     validate_schema(schema)
     operation = schema['paths']['/x']['get']
     assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'number'

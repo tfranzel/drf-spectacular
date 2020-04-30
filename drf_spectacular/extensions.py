@@ -18,7 +18,7 @@ class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthentic
 
     @abstractmethod
     def get_security_definition(self, auto_schema):
-        pass
+        pass  # pragma: no cover
 
 
 class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExtension']):
@@ -33,7 +33,7 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
 
     @abstractmethod
     def map_serializer(self, auto_schema, direction):
-        pass
+        pass  # pragma: no cover
 
 
 class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializerFieldExtension']):
@@ -44,7 +44,7 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
 
     @abstractmethod
     def map_serializer_field(self, auto_schema):
-        pass
+        pass  # pragma: no cover
 
 
 class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
@@ -62,4 +62,4 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
 
     @abstractmethod
     def view_replacement(self):
-        pass
+        pass  # pragma: no cover
