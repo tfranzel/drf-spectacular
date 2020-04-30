@@ -5,6 +5,9 @@ from drf_spectacular.plumbing import OpenApiGeneratorExtension
 
 
 class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthenticationExtension']):
+    """
+
+    """
     _registry: List['OpenApiAuthenticationExtension'] = []
 
     name: str
@@ -19,6 +22,9 @@ class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthentic
 
 
 class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExtension']):
+    """
+
+    """
     _registry: List['OpenApiSerializerExtension'] = []
 
     def get_name(self) -> Optional[str]:
@@ -31,8 +37,29 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
 
 
 class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializerFieldExtension']):
+    """
+
+    """
     _registry: List['OpenApiSerializerExtension'] = []
 
     @abstractmethod
     def map_serializer_field(self, auto_schema):
+        pass
+
+
+class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
+    """
+
+    """
+    _registry: List['OpenApiViewExtension'] = []
+
+    @classmethod
+    def _load_class(cls):
+        super()._load_class()
+        # special case @api_view: view class is nested in the cls attr of the function object
+        if hasattr(cls.target_class, 'cls'):
+            cls.target_class = cls.target_class.cls
+
+    @abstractmethod
+    def view_replacement(self):
         pass

@@ -528,6 +528,10 @@ class AutoSchema(ViewInspector):
             elif isinstance(target, models.Field):
                 return self._map_model_field(target)
 
+        # TODO investigate a reasonable use-case for this
+        # if isinstance(field, serializers.ModelField):
+        #     return self._map_model_field(field.model_field)
+
         warn(f'could not resolve serializer field {field}. defaulting to "string"')
         return build_basic_type(OpenApiTypes.STR)
 
