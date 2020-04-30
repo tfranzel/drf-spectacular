@@ -1,4 +1,4 @@
-from drf_spectacular.authentication import OpenApiAuthenticationExtension
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 
 class SimpleJWTScheme(OpenApiAuthenticationExtension):

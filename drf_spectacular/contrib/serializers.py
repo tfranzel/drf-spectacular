@@ -1,5 +1,5 @@
+from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.plumbing import warn
-from drf_spectacular.serializers import OpenApiSerializerExtension
 
 
 class PolymorphicSerializerExtension(OpenApiSerializerExtension):

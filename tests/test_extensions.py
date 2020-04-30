@@ -1,6 +1,6 @@
 from rest_framework import fields, serializers, viewsets, mixins
 
-from drf_spectacular.fields import OpenApiSerializerFieldExtension
+from drf_spectacular.extensions import OpenApiSerializerFieldExtension
 from drf_spectacular.plumbing import build_basic_type
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.validation import validate_schema

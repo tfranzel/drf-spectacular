@@ -1,19 +1,5 @@
-from abc import abstractmethod
-from typing import Optional, List
-
-from drf_spectacular.plumbing import warn, force_instance, OpenApiGeneratorExtension
-
-
-class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExtension']):
-    _registry: List['OpenApiSerializerExtension'] = []
-
-    def get_name(self) -> Optional[str]:
-        """ return str for overriding default name extraction """
-        return None
-
-    @abstractmethod
-    def map_serializer(self, auto_schema, direction):
-        pass
+from drf_spectacular.extensions import OpenApiSerializerExtension
+from drf_spectacular.plumbing import warn, force_instance
 
 
 class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):

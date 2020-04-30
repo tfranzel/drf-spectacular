@@ -17,7 +17,9 @@ from rest_framework.schemas.utils import get_pk_description
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
-from drf_spectacular.fields import OpenApiSerializerFieldExtension
+from drf_spectacular.extensions import (
+    OpenApiSerializerFieldExtension, OpenApiSerializerExtension
+)
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.contrib.authentication import *  # noqa: F403, F401
 from drf_spectacular.contrib.serializers import *  # noqa: F403, F401
@@ -25,11 +27,11 @@ from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, build_array_type,
     ComponentRegistry, ResolvedComponent, build_parameter_type, error, resolve_regex_path_parameter,
+
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
 from drf_spectacular.authentication import OpenApiAuthenticationExtension
-from drf_spectacular.serializers import OpenApiSerializerExtension
 
 
 class AutoSchema(ViewInspector):

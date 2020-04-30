@@ -1,21 +1,4 @@
-from abc import abstractmethod
-from typing import List
-
-from drf_spectacular.plumbing import OpenApiGeneratorExtension
-
-
-class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthenticationExtension']):
-    _registry: List['OpenApiAuthenticationExtension'] = []
-
-    name: str
-
-    def get_security_requirement(self, auto_schema):
-        assert self.name, 'name must be specified'
-        return {self.name: []}
-
-    @abstractmethod
-    def get_security_definition(self, auto_schema):
-        pass
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 
 class SessionScheme(OpenApiAuthenticationExtension):
