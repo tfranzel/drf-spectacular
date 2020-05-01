@@ -161,8 +161,10 @@ components:
           minimum: -1000
         field_file:
           type: string
+          format: binary
         field_img:
           type: string
+          format: binary
         field_date:
           type: string
           format: date

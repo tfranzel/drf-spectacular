@@ -12,7 +12,7 @@ from django.utils.encoding import force_str
 from rest_framework import permissions, renderers, serializers
 from rest_framework.fields import _UnvalidatedField, empty
 from rest_framework.generics import GenericAPIView
-from rest_framework.schemas.inspectors import ViewInspector
+from rest_framework.schemas.openapi import AutoSchema as DRFAutoSchema
 from rest_framework.schemas.utils import get_pk_description
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
@@ -34,7 +34,7 @@ from drf_spectacular.utils import OpenApiParameter
 from drf_spectacular.authentication import OpenApiAuthenticationExtension
 
 
-class AutoSchema(ViewInspector):
+class AutoSchema(DRFAutoSchema):
     method_mapping = {
         'get': 'retrieve',
         'post': 'create',
@@ -541,55 +541,28 @@ class AutoSchema(ViewInspector):
         if field.min_value:
             content['minimum'] = field.min_value
 
-    def _map_serializer(self, serializer, direction):
+    def _map_serializer(self, serializer, direction=None):
         serializer = force_instance(serializer)
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
 
-        if serializer_extension:
+        if serializer_extension and direction:
             return serializer_extension.map_serializer(self, direction)
         else:
-            return self._map_basic_serializer(serializer, direction)
+            if hasattr(DRFAutoSchema, 'map_serializer'):
+                result = super().map_serializer(serializer)
+            else:
+                result = super()._map_serializer(serializer)
 
-    def _map_basic_serializer(self, serializer, direction):
-        required = []
-        properties = {}
+            if result.get('properties'):
+                # Move 'type' to top
+                new = {'type': 'object'}
+                new.update(result)
+                result = new
 
-        for field in serializer.fields.values():
-            if isinstance(field, serializers.HiddenField):
-                continue
+                if result.get('required') and self.method == 'PATCH' and direction == 'request':
+                    del result['required']
 
-            if field.required:
-                required.append(field.field_name)
-
-            schema = self._map_serializer_field(field)
-
-            if field.read_only:
-                schema['readOnly'] = True
-            if field.write_only:
-                schema['writeOnly'] = True
-            if field.allow_null:
-                schema['nullable'] = True
-            if field.default is not None and field.default != empty and not callable(field.default):
-                schema['default'] = field.to_representation(field.default)
-            if field.help_text:
-                schema['description'] = str(field.help_text)
-            self._map_field_validators(field, schema)
-
-            # sibling entries to $ref will be ignored as it replaces itself and its context with
-            # the referenced object. Wrap it in a separate context.
-            if '$ref' in schema and len(schema) > 1:
-                schema = {'allOf': [{'$ref': schema.pop('$ref')}], **schema}
-
-            properties[field.field_name] = schema
-
-        result = {
-            'type': 'object',
-            'properties': properties
-        }
-        if required and (self.method != 'PATCH' or direction == 'response'):
-            result['required'] = required
-
-        return result
+            return result
 
     def _map_field_validators(self, field, schema):
         for v in field.validators:
@@ -623,6 +596,33 @@ class AutoSchema(ViewInspector):
                         digits -= v.decimal_places
                     schema['maximum'] = int(digits * '9') + 1
                     schema['minimum'] = -schema['maximum']
+
+    def _map_field(self, field):
+        result = super()._map_field(field)
+        schema = self._map_serializer_field(field)
+
+        result.update(schema)
+        if result.get('properties'):
+            result['type'] = 'object'
+
+        # sibling entries to $ref will be ignored as it replaces itself and its context with
+        # the referenced object. Wrap it in a separate context.
+        if '$ref' in result and len(result) > 1:
+            return {'allOf': [{'$ref': schema.pop('$ref')}], **schema}
+
+        new = {}
+        if result.get('enum'):
+            new['enum'] = result['enum']
+        if result.get('type'):
+            new['type'] = result['type']
+        if result.get('format'):
+            new['format'] = result['format']
+
+        new.update(result)
+
+        return new
+
+    map_field = _map_field
 
     def _map_type_hint(self, method):
         hint = getattr(method, '_spectacular_annotation', None) or typing.get_type_hints(method).get('return')
