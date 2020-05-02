@@ -597,9 +597,32 @@ class AutoSchema(DRFAutoSchema):
                     schema['maximum'] = int(digits * '9') + 1
                     schema['minimum'] = -schema['maximum']
 
+    def _field_has_extra_metadata(self, field):
+        """Determine whether other metadata will be added after _map_field."""
+        if field.read_only:
+            return True
+        if field.write_only:
+            return True
+        if field.allow_null:
+            return True
+        if field.default and field.default != empty:  # why don't they use None?!
+            return True
+        if field.help_text:
+            return True
+
     def _map_field(self, field):
-        result = super()._map_field(field)
         schema = self._map_serializer_field(field)
+
+        if '$ref' in schema:
+            schema.pop('type', None)
+            if len(schema) > 1 or self._field_has_extra_metadata(field):
+                return {'allOf': [{'$ref': schema.pop('$ref')}], **schema}
+            return schema
+
+        try:
+            result = super()._map_field(field)
+        except RecursionError:
+            return schema
 
         result.update(schema)
         if result.get('properties'):
@@ -607,8 +630,11 @@ class AutoSchema(DRFAutoSchema):
 
         # sibling entries to $ref will be ignored as it replaces itself and its context with
         # the referenced object. Wrap it in a separate context.
-        if '$ref' in result and len(result) > 1:
-            return {'allOf': [{'$ref': schema.pop('$ref')}], **schema}
+        if '$ref' in result:
+            result.pop('type', None)
+            if len(result) > 1 or self._field_has_extra_metadata(field):
+                return {'allOf': [{'$ref': result.pop('$ref')}], **result}
+            return result
 
         new = {}
         if result.get('enum'):
