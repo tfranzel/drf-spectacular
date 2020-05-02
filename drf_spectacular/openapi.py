@@ -502,8 +502,9 @@ class AutoSchema(DRFAutoSchema):
             return content
 
         if isinstance(field, serializers.FileField):
-            # TODO returns filename. but does it accept binary data on upload?
-            return build_basic_type(OpenApiTypes.STR)
+            rv = build_basic_type(OpenApiTypes.STR)
+            rv['format'] = 'binary'
+            return rv
 
         if isinstance(field, serializers.SerializerMethodField):
             method = getattr(field.parent, field.method_name)
@@ -559,13 +560,26 @@ class AutoSchema(DRFAutoSchema):
                 new.update(result)
                 result = new
 
-                if result.get('required') and self.method == 'PATCH' and direction == 'request':
+                required = result.get('required')
+                if required and self.method == 'PATCH' and direction == 'request':
+                    del result['required']
+                elif required:
+                    # Move required to the end for DRF 3.10
+                    del result['required']
+                    result['required'] = required
+                elif required is not None:
                     del result['required']
 
             return result
 
     def _map_field_validators(self, field, schema):
-        for v in field.validators:
+        # DRF 3.10 'field' is the list of validators
+        if hasattr(field, 'validators'):
+            field_validators = field.validators
+        else:
+            field_validators = field
+
+        for v in field_validators:
             # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#data-types
             if isinstance(v, validators.EmailValidator):
                 schema['format'] = 'email'
@@ -596,6 +610,16 @@ class AutoSchema(DRFAutoSchema):
                         digits -= v.decimal_places
                     schema['maximum'] = int(digits * '9') + 1
                     schema['minimum'] = -schema['maximum']
+
+        if schema.get('type') == 'array':
+            maxItems = schema.get('maxLength')
+            if maxItems:
+                del schema['maxLength']
+                schema['maxItems'] = maxItems
+            minItems = schema.get('minLength')
+            if minItems:
+                del schema['minLength']
+                schema['minItems'] = minItems
 
     def _field_has_extra_metadata(self, field):
         """Determine whether other metadata will be added after _map_field."""
