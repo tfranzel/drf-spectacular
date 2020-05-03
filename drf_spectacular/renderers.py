@@ -1,4 +1,5 @@
 import yaml
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.renderers import OpenAPIRenderer, JSONRenderer
 
 
@@ -11,7 +12,16 @@ class OpenApiYamlRenderer(OpenAPIRenderer):
             def ignore_aliases(self, data):
                 return True
 
-        return yaml.dump(data, default_flow_style=False, sort_keys=False, Dumper=Dumper).encode('utf-8')
+        def error_detail_representer(dumper, data):
+            return dumper.represent_dict({'string': str(data), 'code': data.code})
+        Dumper.add_representer(ErrorDetail, error_detail_representer)
+
+        return yaml.dump(
+            data,
+            default_flow_style=False,
+            sort_keys=False,
+            Dumper=Dumper
+        ).encode('utf-8')
 
 
 class OpenApiYamlRenderer2(OpenApiYamlRenderer):

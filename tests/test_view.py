@@ -75,3 +75,13 @@ def test_spectacular_view_accept(accept, format, indent):
         assert response.content.startswith(b'{\n' + indent * b' ' + b'"openapi": "3.0.3"')
     if format == 'yaml':
         assert response.content.startswith(b'openapi: 3.0.3\n')
+
+
+@pytest.mark.urls(__name__)
+def test_spectacular_view_accept_unknown(no_warnings):
+    response = APIClient().get('/api/v1/schema', HTTP_ACCEPT='application/unknown')
+    assert response.status_code == 406
+    assert response.content == (
+        b'detail:\n  string: Could not satisfy the request Accept header.\n'
+        b'  code: not_acceptable\n'
+    )
