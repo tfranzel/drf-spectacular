@@ -38,6 +38,7 @@ def pytest_configure():
             'django.contrib.staticfiles',
             'rest_framework',
             'rest_framework.authtoken',
+            'rest_framework_jwt',
             'oauth2_provider',
             'drf_spectacular',
             'tests',
