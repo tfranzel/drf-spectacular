@@ -1,0 +1,81 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /api-token-auth/:
+    post:
+      operationId: api_token_auth_create
+      description: 'API View that receives a POST with a user''s username and password.
+
+
+        Returns a JSON Web Token that can be used for authenticated requests.'
+      tags:
+      - api-token-auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JSONWebToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JSONWebToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JSONWebToken'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JSONWebToken'
+          description: ''
+  /x/:
+    get:
+      operationId: x_list
+      description: ''
+      tags:
+      - x
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/X'
+          description: ''
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Bearer
+  schemas:
+    JSONWebToken:
+      type: object
+      properties:
+        password:
+          type: string
+          writeOnly: true
+        token:
+          type: string
+          readOnly: true
+        username:
+          type: string
+          writeOnly: true
+      required:
+      - password
+      - username
+    X:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+      required:
+      - uuid
