@@ -274,7 +274,7 @@ def test_api_view_decorator(no_warnings):
     @extend_schema(responses=OpenApiTypes.FLOAT)
     @api_view(['GET'])
     def pi(request):
-        pass
+        pass  # pragma: no cover
 
     schema = generate_schema('x', view_function=pi)
     validate_schema(schema)
@@ -288,7 +288,7 @@ def test_api_view_decorator_multi(no_warnings):
     @extend_schema(responses=OpenApiTypes.FLOAT, methods=['GET'])
     @api_view(['GET', 'POST'])
     def pi(request):
-        pass
+        pass  # pragma: no cover
 
     schema = generate_schema('x', view_function=pi)
     validate_schema(schema)

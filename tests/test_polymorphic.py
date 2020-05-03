@@ -55,7 +55,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
             )
         )
         def create(self, request, *args, **kwargs):
-            return Response({})
+            return Response({})  # pragma: no cover
 
 
 def test_polymorphic(no_warnings):

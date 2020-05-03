@@ -26,7 +26,7 @@ class AViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     @extend_schema(responses=BSerializer)
     @action(detail=False, serializer_class=BSerializer)
     def selection(self, request):
-        pass
+        pass  # pragma: no cover
 
 
 def test_postprocessing(no_warnings):

@@ -2,13 +2,12 @@ import uuid
 from typing import Optional
 
 from django.db import models
-from rest_framework import serializers, viewsets, routers
+from rest_framework import serializers, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from drf_spectacular.generators import SchemaGenerator
-from tests import assert_schema
+from tests import assert_schema, generate_schema
 
 
 class Album(models.Model):
@@ -38,7 +37,7 @@ class SongSerializer(serializers.ModelSerializer):
         model = Song
 
     def get_top10(self) -> Optional[bool]:
-        return True
+        return True  # pragma: no cover
 
 
 class AlbumSerializer(serializers.ModelSerializer):
@@ -62,7 +61,7 @@ class AlbumModelViewset(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['POST'], serializer_class=LikeSerializer)
     def like(self, request):
-        return Response(self.get_serializer().data)
+        return Response(self.get_serializer().data)  # pragma: no cover
 
     def create(self, request, *args, **kwargs):
         """
@@ -70,13 +69,11 @@ class AlbumModelViewset(viewsets.ModelViewSet):
 
         There is even more info here
         """
-        return super().create(request, *args, **kwargs)
+        return super().create(request, *args, **kwargs)  # pragma: no cover
 
 
 def test_basics(no_warnings):
-    router = routers.SimpleRouter()
-    router.register('albums', AlbumModelViewset, basename="album")
-    generator = SchemaGenerator(patterns=router.urls)
-    schema = generator.get_schema(request=None, public=True)
-
-    assert_schema(schema, 'tests/test_basic.yml')
+    assert_schema(
+        generate_schema('/albums', AlbumModelViewset),
+        'tests/test_basic.yml'
+    )
