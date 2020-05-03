@@ -8,6 +8,7 @@ from rest_framework import serializers, viewsets, mixins, routers, views, generi
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
+from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -353,3 +354,39 @@ def test_regex_path_parameter_discovery(no_warnings):
     assert parameter['name'] == 'precision'
     assert parameter['in'] == 'path'
     assert parameter['schema']['type'] == 'integer'
+
+
+def test_serializer_naming_collision_resolution(no_warnings):
+    """ parity test in tests.test_warnings.test_serializer_name_reuse """
+    def x_lib1():
+        class XSerializer(serializers.Serializer):
+            x = serializers.UUIDField()
+
+        return XSerializer
+
+    def x_lib2():
+        class XSerializer(serializers.Serializer):
+            x = serializers.IntegerField()
+
+        return XSerializer
+
+    x_lib1, x_lib2 = x_lib1(), x_lib2()
+
+    class XAPIView(APIView):
+        @extend_schema(request=x_lib1, responses=x_lib2)
+        def post(self, request):
+            pass  # pragma: no cover
+
+    class Lib2XSerializerRename(OpenApiSerializerExtension):
+        target_class = x_lib2  # also accepts import strings
+
+        def get_name(self):
+            return 'RenamedLib2X'
+
+    schema = generate_schema('/x', view=XAPIView)
+
+    operation = schema['paths']['/x']['post']
+    request_component = operation['requestBody']['content']['application/json']['schema']['$ref']
+    assert request_component == '#/components/schemas/X'
+    response_component = operation['responses']['200']['content']['application/json']['schema']['$ref']
+    assert response_component == '#/components/schemas/RenamedLib2X'

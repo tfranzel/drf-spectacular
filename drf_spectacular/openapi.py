@@ -551,6 +551,7 @@ class AutoSchema(ViewInspector):
             return self._map_basic_serializer(serializer, direction)
 
     def _map_basic_serializer(self, serializer, direction):
+        serializer = force_instance(serializer)
         required = []
         properties = {}
 

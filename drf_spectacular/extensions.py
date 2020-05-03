@@ -31,9 +31,9 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
         """ return str for overriding default name extraction """
         return None
 
-    @abstractmethod
     def map_serializer(self, auto_schema, direction):
-        pass  # pragma: no cover
+        """ override for customized serializer mapping """
+        return auto_schema._map_basic_serializer(self.target_class, direction)
 
 
 class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializerFieldExtension']):
