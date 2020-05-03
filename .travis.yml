@@ -1,5 +1,10 @@
 os: linux
 language: python
+dist: bionic
+addons:
+  apt:
+    packages:
+      - gdal-bin
 
 branches:
   only:
