@@ -1,5 +1,6 @@
 from collections import namedtuple
 
+from django.views.generic import TemplateView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -50,3 +51,27 @@ class SpectacularYAMLAPIView(SpectacularAPIView):
 
 class SpectacularJSONAPIView(SpectacularAPIView):
     renderer_classes = [OpenApiJsonRenderer, OpenApiJsonRenderer2]
+
+
+class SpectacularSwaggerView(TemplateView):
+    url_name = 'schema'
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        initkwargs.setdefault('template_name', 'drf_spectacular/swagger_ui.html')
+        initkwargs.setdefault('extra_context', {
+            'url_name': initkwargs.get('url_name') or cls.url_name
+        })
+        return super().as_view(**initkwargs)
+
+
+class SpectacularRedocView(TemplateView):
+    url_name = 'schema'
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        initkwargs.setdefault('template_name', 'drf_spectacular/redoc.html')
+        initkwargs.setdefault('extra_context', {
+            'url_name': initkwargs.get('url_name') or cls.url_name
+        })
+        return super().as_view(**initkwargs)

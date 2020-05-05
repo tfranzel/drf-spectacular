@@ -18,10 +18,18 @@ def pytest_configure():
         USE_L10N=True,
         STATIC_URL='/static/',
         ROOT_URLCONF='tests.urls',
-        TEMPLATE_LOADERS=(
-            'django.template.loaders.filesystem.Loader',
-            'django.template.loaders.app_directories.Loader',
-        ),
+        TEMPLATES=[
+            {
+                'BACKEND': 'django.template.backends.django.DjangoTemplates',
+                'DIRS': [],
+                'APP_DIRS': True,
+                'OPTIONS': {
+                    'context_processors': [
+                        'django.template.context_processors.debug',
+                    ],
+                },
+            },
+        ],
         MIDDLEWARE_CLASSES=(
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',

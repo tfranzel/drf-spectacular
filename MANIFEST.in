@@ -1,6 +1,7 @@
 include *.rst
 include LICENSE
 include drf_spectacular/validation/*.json
+include drf_spectacular/templates/drf_spectacular/*.html
 recursive-include requirements *
 global-exclude __pycache__
 global-exclude *.py[co]

@@ -83,22 +83,25 @@ and finally register our spectacular AutoSchema with DRF
 Take it for a spin
 ------------------
 
-`drf-spectacular` is KISS. It only generates a valid OpenAPI 3 specification for you and nothing else.
-You can easily view your schema with the excellent Swagger UI or any other compliant UI or tool:
+Generate your schema with the CLI:
 
 .. code:: bash
 
     $ ./manage.py spectacular --file schema.yml
     $ docker run -p 80:8080 -e SWAGGER_JSON=/schema.yml -v ${PWD}/schema.yml:/schema.yml swaggerapi/swagger-ui
 
-or serve the schema directly from your API with
+If you also want to validate your schema add the `--validate` flag. Or serve your schema directly
+from your API. We also provide convenience wrappers for `swagger-ui` or `redoc`.
 
 .. code:: python
 
     from drf_spectacular.views import SpectacularAPIView
     urlpatterns = [
         # YOUR PATTERNS
-        url(r'^api/schema$', SpectacularAPIView.as_view(), name='schema')
+        path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+        # Optional UI:
+        path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+        path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     ]
 
 Usage
