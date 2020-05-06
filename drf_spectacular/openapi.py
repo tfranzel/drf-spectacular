@@ -808,12 +808,18 @@ class AutoSchema(ViewInspector):
     def _get_serializer_name(self, serializer, direction):
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
         if serializer_extension and serializer_extension.get_name():
-            return serializer_extension.get_name()
+            # library override mechanisms
+            name = serializer_extension.get_name()
+        elif getattr(getattr(serializer, 'Meta', None), 'ref_name', None) is not None:
+            # local override mechanisms. for compatibility with drf-yasg we support meta ref_name,
+            # though we do not support the serializer inlining feature.
+            # https://drf-yasg.readthedocs.io/en/stable/custom_spec.html#serializer-meta-nested-class
+            name = serializer.Meta.ref_name
+        else:
+            name = serializer.__class__.__name__
+            if name.endswith('Serializer'):
+                name = name[:-10]
 
-        name = serializer.__class__.__name__
-
-        if name.endswith('Serializer'):
-            name = name[:-10]
         if self.method == 'PATCH' and not serializer.read_only and direction == 'request':
             name = 'Patched' + name
 

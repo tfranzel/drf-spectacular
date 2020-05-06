@@ -2,6 +2,7 @@ from django.db import models
 from rest_framework import serializers, mixins, viewsets, views
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.decorators import action
+from rest_framework.views import APIView
 
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
@@ -37,6 +38,24 @@ def test_serializer_name_reuse(warnings):
 
     generator = SchemaGenerator(patterns=router.urls)
     generator.get_schema(request=None, public=True)
+
+
+def test_owned_serializer_naming_override_with_ref_name_collision(warnings):
+    class XSerializer(serializers.Serializer):
+        x = serializers.UUIDField()
+
+    class YSerializer(serializers.Serializer):
+        x = serializers.IntegerField()
+
+        class Meta:
+            ref_name = 'X'  # already used above
+
+    class XAPIView(APIView):
+        @extend_schema(request=XSerializer, responses=YSerializer)
+        def post(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('/x', view=XAPIView)
 
 
 def test_no_queryset_warn(capsys):

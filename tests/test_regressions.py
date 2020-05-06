@@ -356,7 +356,7 @@ def test_regex_path_parameter_discovery(no_warnings):
     assert parameter['schema']['type'] == 'integer'
 
 
-def test_serializer_naming_collision_resolution(no_warnings):
+def test_lib_serializer_naming_collision_resolution(no_warnings):
     """ parity test in tests.test_warnings.test_serializer_name_reuse """
     def x_lib1():
         class XSerializer(serializers.Serializer):
@@ -390,3 +390,35 @@ def test_serializer_naming_collision_resolution(no_warnings):
     assert request_component == '#/components/schemas/X'
     response_component = operation['responses']['200']['content']['application/json']['schema']['$ref']
     assert response_component == '#/components/schemas/RenamedLib2X'
+
+
+def test_owned_serializer_naming_override_with_ref_name(no_warnings):
+    def x_owned1():
+        class XSerializer(serializers.Serializer):
+            x = serializers.UUIDField()
+
+        return XSerializer
+
+    def x_owned2():
+        class XSerializer(serializers.Serializer):
+            x = serializers.IntegerField()
+
+            class Meta:
+                ref_name = 'Y'
+
+        return XSerializer
+
+    x_owned1, x_owned2 = x_owned1(), x_owned2()
+
+    class XAPIView(APIView):
+        @extend_schema(request=x_owned1, responses=x_owned2)
+        def post(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', view=XAPIView)
+
+    operation = schema['paths']['/x']['post']
+    request_component = operation['requestBody']['content']['application/json']['schema']['$ref']
+    assert request_component == '#/components/schemas/X'
+    response_component = operation['responses']['200']['content']['application/json']['schema']['$ref']
+    assert response_component == '#/components/schemas/Y'
