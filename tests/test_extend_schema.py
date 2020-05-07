@@ -46,6 +46,10 @@ class QuerySerializer(serializers.Serializer):
     contains = serializers.CharField(
         min_length=3, max_length=10, help_text='filter by containing string', required=False
     )
+    order_by = serializers.MultipleChoiceField(
+        choices=['a', 'b'],
+        default=['a'],
+    )
 
 
 class ErrorDetailSerializer(serializers.Serializer):
@@ -90,7 +94,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
                 OpenApiParameter(
                     'test_mode', bool, location=OpenApiParameter.HEADER, enum=[True, False],
                     description='creation will be in the sandbox',
-                ),
+                )
             ],
             description='this weird endpoint needs some explaining',
             deprecated=True,
