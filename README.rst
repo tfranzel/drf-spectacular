@@ -4,7 +4,7 @@ drf-spectacular
 
 |build-status-image| |codecov| |pypi-version| |docs|
 
-Sane and flexible `OpenAPI 3 <https://github.com/OAI/OpenAPI-Specification>`_ schema generation for `Django REST framework <https://www.django-rest-framework.org/>`_.
+Sane and flexible `OpenAPI 3.0 <https://github.com/OAI/OpenAPI-Specification>`_ schema generation for `Django REST framework <https://www.django-rest-framework.org/>`_.
 
 This project has 3 goals:
     1. Extract as much schema information from DRF as possible.
@@ -30,14 +30,14 @@ Features
     - Sane fallbacks where no Serializer is available (free-form objects)
     - Sane ``operation_id`` naming (based on path)
     - Easy to use hooks for extending the spectacular ``AutoSchema``
-    - Optional schema serving with ``SpectacularAPIView``
+    - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)
     - Included support for:
         - `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_
         - `SimpleJWT <https://github.com/SimpleJWT/django-rest-framework-simplejwt>`_
         - `DjangoOAuthToolkit <https://github.com/jazzband/django-oauth-toolkit>`_
+        - `djangorestframework-jwt <https://github.com/jpadilla/django-rest-framework-jwt>`_ (tested fork `drf-jwt <https://github.com/Styria-Digital/django-rest-framework-jwt>`_)
 
 Incomplete features (in progress):
-    - optional separate component versions for PATCH serializers (no required fields)
     - optional input/output serializer component split
 
 License

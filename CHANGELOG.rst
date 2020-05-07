@@ -1,6 +1,28 @@
 Changelog
 =========
 
+0.9.3 (2020-05-07)
+------------------
+
+- Add (partial) support for drf-yasg's serializer ref_name `#27 <https://github.com/tfranzel/drf-spectacular/issues/27>`_ 
+- Add thin wrappers for redoc and swagger-ui. `#19 <https://github.com/tfranzel/drf-spectacular/issues/19>`_ 
+- Simplify serializer naming override `#27 <https://github.com/tfranzel/drf-spectacular/issues/27>`_ 
+- Handle drf type error for yaml. `#41 <https://github.com/tfranzel/drf-spectacular/issues/41>`_ 
+- Tox.ini: Add {posargs} [John Vandenberg]
+- add djangorestframework-jwt auth handler [John Vandenberg]
+- Docs: example of a manual configuration to use a apiKey in securitySchemes [Jelmer Draaijer]
+- Introduce view override extension 
+- Consolidate extensions 
+- Parse path parameter type hints from url. closes `#34 <https://github.com/tfranzel/drf-spectacular/issues/34>`_ 
+- Consolidate duplicate warnings/add error `#28 <https://github.com/tfranzel/drf-spectacular/issues/28>`_ 
+- Prevent warning for DRF format suffix param 
+- Improve ACCEPT header handling `#42 <https://github.com/tfranzel/drf-spectacular/issues/42>`_ 
+
+Breaking changes:
+
+- all extension base classes moved to ``drf_spectacular.extensions``
+
+
 0.9.2 (2020-04-27)
 ------------------
 
