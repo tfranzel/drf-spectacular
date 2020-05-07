@@ -369,11 +369,15 @@ class AutoSchema(ViewInspector):
             return self._map_serializer_field(drf_mapping[field.__class__]())
         elif isinstance(field, models.ForeignKey):
             return self._map_model_field(field.target_field)
+        elif hasattr(models, field.get_internal_type()):
+            # try to be graceful when model field is not explicitly mapped to a serializer field.
+            # resolve schema type via internal type
+            return self._map_model_field(getattr(models, field.get_internal_type())())
         else:
             error(
-                f'could not resolve model field "{field}" due to missing mapping.'
-                'either your field is custom and not based on a known subclasses '
-                'or we missed something. let us know.'
+                f'could not resolve model field "{field}". failed to resolve through '
+                f'serializer_field_mapping, get_internal_type(), or any override mechanism. '
+                f'defaulting to "string"'
             )
             return build_basic_type(OpenApiTypes.STR)
 
@@ -528,9 +532,10 @@ class AutoSchema(ViewInspector):
             elif isinstance(target, models.Field):
                 return self._map_model_field(target)
 
-        # TODO investigate a reasonable use-case for this
-        # if isinstance(field, serializers.ModelField):
-        #     return self._map_model_field(field.model_field)
+        # DRF was not able to match the model field to an explicit SerializerField and therefore
+        # used its generic fallback serializer field that simply wraps the model field.
+        if isinstance(field, serializers.ModelField):
+            return self._map_model_field(field.model_field)
 
         warn(f'could not resolve serializer field {field}. defaulting to "string"')
         return build_basic_type(OpenApiTypes.STR)

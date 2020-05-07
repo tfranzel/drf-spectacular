@@ -2,6 +2,7 @@ import uuid
 from unittest import mock
 
 from django.conf.urls import url
+from django.db.models import fields
 from django.db import models
 from django.urls import path
 from rest_framework import serializers, viewsets, mixins, routers, views, generics
@@ -422,3 +423,48 @@ def test_owned_serializer_naming_override_with_ref_name(no_warnings):
     assert request_component == '#/components/schemas/X'
     response_component = operation['responses']['200']['content']['application/json']['schema']['$ref']
     assert response_component == '#/components/schemas/Y'
+
+
+def test_custom_model_field_from_typed_field(no_warnings):
+    class CustomIntegerField(fields.IntegerField):
+        pass  # pragma: no cover
+
+    class CustomTypedFieldModel(models.Model):
+        custom_int_field = CustomIntegerField()
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = CustomTypedFieldModel
+            fields = '__all__'
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', view=XAPIView)
+    component = schema['components']['schemas']['X']
+    assert component['properties']['custom_int_field']['type'] == 'integer'
+
+
+def test_custom_model_field_from_base_field(no_warnings):
+    class CustomIntegerField(fields.Field):
+        def get_internal_type(self):
+            return 'IntegerField'
+
+    class CustomBaseFieldModel(models.Model):
+        custom_int_field = CustomIntegerField()
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = CustomBaseFieldModel
+            fields = '__all__'
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', view=XAPIView)
+    component = schema['components']['schemas']['X']
+    assert component['properties']['custom_int_field']['type'] == 'integer'
