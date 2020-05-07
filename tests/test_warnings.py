@@ -145,3 +145,24 @@ def test_no_serializer_class_on_apiview(capsys):
     schema = generate_schema('x', view=XView)
     validate_schema(schema)
     assert 'Unable to guess serializer for' in capsys.readouterr().err
+
+
+def test_unable_to_follow_field_source_through_intermediate_property_warning(warnings):
+    class FailingFieldSourceTraversalModel1(models.Model):
+        @property
+        def x(self):  # missing type hint emits warning
+            return  # pragma: no cover
+
+    class XSerializer(serializers.ModelSerializer):
+        x = serializers.ReadOnlyField(source='x.y')
+
+        class Meta:
+            model = FailingFieldSourceTraversalModel1
+            fields = '__all__'
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('/x', view=XAPIView)

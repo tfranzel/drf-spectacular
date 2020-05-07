@@ -21,6 +21,10 @@ from drf_spectacular.utils import OpenApiParameter
 T = TypeVar('T')
 
 
+class UnableToProceedError(Exception):
+    pass
+
+
 class GeneratorStats:
     _warn_cache = defaultdict(int)
     _error_cache = defaultdict(int)
@@ -206,8 +210,18 @@ def _follow_field_source(model, path):
         else:
             return get_field_from_model(model, field_or_property)
     else:
-        model = field_or_property.field.related_model
-        return follow_field_source(model, path[1:])
+        if isinstance(field_or_property, property):
+            target_model = field_or_property.fget.__annotations__.get('return')
+            if not target_model:
+                raise UnableToProceedError(
+                    f'could not follow field source through intermediate property "{path[0]}" '
+                    f'on model {model}. please add a type hint on the model\'s property to '
+                    f'enable traversal of the source path "{".".join(path)}".'
+                )
+            return _follow_field_source(target_model, path[1:])
+        else:
+            target_model = field_or_property.field.related_model
+            return _follow_field_source(target_model, path[1:])
 
 
 def follow_field_source(model, path):
@@ -219,16 +233,18 @@ def follow_field_source(model, path):
     """
     try:
         return _follow_field_source(model, path)
+    except UnableToProceedError as e:
+        warn(e)
     except:  # noqa: E722
         warn(
             f'could not resolve field on model {model} with path "{".".join(path)}". '
             f'this is likely a custom field that does some unknown magic. maybe '
-            f'consider annotating the field? defaulting to "string".'
+            f'consider annotating the field/property? defaulting to "string".'
         )
 
-        def dummy_property(obj) -> str:
-            pass
-        return dummy_property
+    def dummy_property(obj) -> str:
+        pass
+    return dummy_property
 
 
 def alpha_operation_sorter(endpoint):

@@ -468,3 +468,29 @@ def test_custom_model_field_from_base_field(no_warnings):
     schema = generate_schema('/x', view=XAPIView)
     component = schema['components']['schemas']['X']
     assert component['properties']['custom_int_field']['type'] == 'integer'
+
+
+def test_follow_field_source_through_intermediate_property(no_warnings):
+    class FieldSourceTraversalModel2(models.Model):
+        y = models.UUIDField()
+
+    class FieldSourceTraversalModel1(models.Model):
+        @property
+        def x(self) -> FieldSourceTraversalModel2:  # property is required for traversal
+            return  # pragma: no cover
+
+    class XSerializer(serializers.ModelSerializer):
+        x = serializers.ReadOnlyField(source='x.y')
+
+        class Meta:
+            model = FieldSourceTraversalModel1
+            fields = '__all__'
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', view=XAPIView)
+    component = schema['components']['schemas']['X']
+    assert component['properties']['x']['format'] == 'uuid'
