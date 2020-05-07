@@ -185,6 +185,17 @@ paths:
         schema:
           $ref: '#/components/schemas/Query'
       - in: query
+        name: order_by
+        schema:
+          type: array
+          items:
+            enum:
+            - a
+            - b
+            type: string
+          default:
+          - a
+      - in: query
         name: stars
         schema:
           type: integer
@@ -317,6 +328,15 @@ components:
           description: filter by containing string
           maxLength: 10
           minLength: 3
+        order_by:
+          type: array
+          items:
+            enum:
+            - a
+            - b
+            type: string
+          default:
+          - a
       required:
       - stars
     FieldLEnum:

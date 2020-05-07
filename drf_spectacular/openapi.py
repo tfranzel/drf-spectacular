@@ -576,7 +576,10 @@ class AutoSchema(ViewInspector):
             if field.allow_null:
                 schema['nullable'] = True
             if field.default is not None and field.default != empty and not callable(field.default):
-                schema['default'] = field.to_representation(field.default)
+                default = field.to_representation(field.default)
+                if isinstance(default, set):
+                    default = list(default)
+                schema['default'] = default
             if field.help_text:
                 schema['description'] = str(field.help_text)
             self._map_field_validators(field, schema)
