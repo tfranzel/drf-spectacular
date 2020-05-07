@@ -297,7 +297,9 @@ components:
             $ref: '#/components/schemas/Inline'
           readOnly: true
         field_l:
-          $ref: '#/components/schemas/FieldLEnum'
+          allOf:
+          - $ref: '#/components/schemas/FieldLEnum'
+          readOnly: true
     Inline:
       type: object
       properties:
@@ -344,4 +346,3 @@ components:
       - a
       - b
       type: string
-      readOnly: true

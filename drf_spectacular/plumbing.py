@@ -189,6 +189,16 @@ def build_root_object(paths, components):
     return root
 
 
+def safe_ref(schema):
+    """
+    ensure that $ref has its own context and does not remove potential sibling
+    entries when $ref is substituted.
+    """
+    if '$ref' in schema and len(schema) > 1:
+        return {'allOf': [{'$ref': schema.pop('$ref')}], **schema}
+    return schema
+
+
 def get_field_from_model(model, field):
     """
     this is a Django 2.2 compatibility function to access a field through a Deferred Attribute
@@ -395,7 +405,7 @@ def postprocess_schema_enums(schemas):
             if 'enum' not in prop_schema:
                 continue
             hash_mapping[prop_name].add(
-                hash(json.dumps(prop_schema, sort_keys=True))
+                hash(json.dumps(prop_schema['enum'], sort_keys=True))
             )
     # safe replacement requires name to have only one set of enum values
     candidate_enums = {
@@ -409,11 +419,14 @@ def postprocess_schema_enums(schemas):
                 continue
             if prop_name not in candidate_enums:
                 continue
+
             enum_name = f'{inflection.camelize(prop_name)}Enum'
-            schemas[enum_name] = prop_schema
-            schemas[schema_name]['properties'][prop_name] = {
-                '$ref': f'#/components/schemas/{enum_name}'
-            }
+            enum_schema = {k: v for k, v in prop_schema.items() if k in ['type', 'enum']}
+            prop_schema = {k: v for k, v in prop_schema.items() if k not in ['type', 'enum']}
+            prop_schema['$ref'] = f'#/components/schemas/{enum_name}'
+
+            schemas[enum_name] = enum_schema
+            schemas[schema_name]['properties'][prop_name] = safe_ref(prop_schema)
 
 
 def resolve_regex_path_parameter(path_regex, variable):

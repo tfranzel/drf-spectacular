@@ -26,8 +26,8 @@ from drf_spectacular.contrib.serializers import *  # noqa: F403, F401
 from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, build_array_type,
-    ComponentRegistry, ResolvedComponent, build_parameter_type, error, resolve_regex_path_parameter,
-
+    ComponentRegistry, ResolvedComponent, build_parameter_type, error,
+    resolve_regex_path_parameter, safe_ref,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
@@ -584,12 +584,7 @@ class AutoSchema(ViewInspector):
                 schema['description'] = str(field.help_text)
             self._map_field_validators(field, schema)
 
-            # sibling entries to $ref will be ignored as it replaces itself and its context with
-            # the referenced object. Wrap it in a separate context.
-            if '$ref' in schema and len(schema) > 1:
-                schema = {'allOf': [{'$ref': schema.pop('$ref')}], **schema}
-
-            properties[field.field_name] = schema
+            properties[field.field_name] = safe_ref(schema)
 
         result = {
             'type': 'object',
