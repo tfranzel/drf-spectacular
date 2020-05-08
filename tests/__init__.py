@@ -33,3 +33,11 @@ def generate_schema(route, viewset=None, view=None, view_function=None):
 
     generator = SchemaGenerator(patterns=patterns)
     return generator.get_schema(request=None, public=True)
+
+
+def get_response_schema(operation, status='200'):
+    return operation['responses'][status]['content']['application/json']['schema']
+
+
+def get_request_schema(operation):
+    return operation['requestBody']['content']['application/json']['schema']

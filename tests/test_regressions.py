@@ -12,9 +12,9 @@ from rest_framework.views import APIView
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_serializer
 from drf_spectacular.validation import validate_schema
-from tests import generate_schema
+from tests import generate_schema, get_response_schema, get_request_schema
 
 
 def test_primary_key_read_only_queryset_not_found(no_warnings):
@@ -147,7 +147,7 @@ def test_retrieve_on_apiview_get(no_warnings):
     schema = generate_schema('x', view=XApiView)
     operation = schema['paths']['/x']['get']
     assert operation['operationId'] == 'x_retrieve'
-    operation_schema = operation['responses']['200']['content']['application/json']['schema']
+    operation_schema = get_response_schema(operation)
     assert '$ref' in operation_schema and 'type' not in operation_schema
 
 
@@ -168,7 +168,7 @@ def test_list_on_apiview_get(no_warnings):
     schema = generate_schema('x', view=XApiView)
     operation = schema['paths']['/x']['get']
     assert operation['operationId'] == 'x_list'
-    operation_schema = operation['responses']['200']['content']['application/json']['schema']
+    operation_schema = get_response_schema(operation)
     assert operation_schema['type'] == 'array'
 
 
@@ -232,8 +232,8 @@ def test_serializer_class_on_apiview(no_warnings):
     schema = generate_schema('x', view=XView)
     validate_schema(schema)
     comp = '#/components/schemas/X'
-    assert schema['paths']['/x']['get']['responses']['200']['content']['application/json']['schema']['$ref'] == comp
-    assert schema['paths']['/x']['post']['responses']['200']['content']['application/json']['schema']['$ref'] == comp
+    assert get_response_schema(schema['paths']['/x']['get'])['$ref'] == comp
+    assert get_response_schema(schema['paths']['/x']['post'])['$ref'] == comp
     assert schema['paths']['/x']['post']['requestBody']['content']['application/json']['schema']['$ref'] == comp
 
 
@@ -261,10 +261,10 @@ def test_customized_list_serializer():
     operation = schema['paths']['/x']['put']
     comp = '#/components/schemas/X'
 
-    assert operation['requestBody']['content']['application/json']['schema']['type'] == 'array'
-    assert operation['requestBody']['content']['application/json']['schema']['items']['$ref'] == comp
-    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'array'
-    assert operation['responses']['200']['content']['application/json']['schema']['items']['$ref'] == comp
+    assert get_request_schema(operation)['type'] == 'array'
+    assert get_request_schema(operation)['items']['$ref'] == comp
+    assert get_response_schema(operation)['type'] == 'array'
+    assert get_response_schema(operation)['items']['$ref'] == comp
 
     assert operation['operationId'] == 'x_update'
     assert len(schema['components']['schemas']) == 1 and 'X' in schema['components']['schemas']
@@ -280,7 +280,7 @@ def test_api_view_decorator(no_warnings):
     schema = generate_schema('x', view_function=pi)
     validate_schema(schema)
     operation = schema['paths']['/x']['get']
-    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'number'
+    assert get_response_schema(operation)['type'] == 'number'
 
 
 def test_api_view_decorator_multi(no_warnings):
@@ -294,10 +294,10 @@ def test_api_view_decorator_multi(no_warnings):
     schema = generate_schema('x', view_function=pi)
     validate_schema(schema)
     operation = schema['paths']['/x']['get']
-    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'number'
+    assert get_response_schema(operation)['type'] == 'number'
     operation = schema['paths']['/x']['post']
-    assert operation['requestBody']['content']['application/json']['schema']['type'] == 'number'
-    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'integer'
+    assert get_request_schema(operation)['type'] == 'number'
+    assert get_response_schema(operation)['type'] == 'integer'
 
 
 def test_pk_and_no_id(no_warnings):
@@ -387,10 +387,8 @@ def test_lib_serializer_naming_collision_resolution(no_warnings):
     schema = generate_schema('/x', view=XAPIView)
 
     operation = schema['paths']['/x']['post']
-    request_component = operation['requestBody']['content']['application/json']['schema']['$ref']
-    assert request_component == '#/components/schemas/X'
-    response_component = operation['responses']['200']['content']['application/json']['schema']['$ref']
-    assert response_component == '#/components/schemas/RenamedLib2X'
+    assert get_request_schema(operation)['$ref'] == '#/components/schemas/X'
+    assert get_response_schema(operation)['$ref'] == '#/components/schemas/RenamedLib2X'
 
 
 def test_owned_serializer_naming_override_with_ref_name(no_warnings):
@@ -419,10 +417,8 @@ def test_owned_serializer_naming_override_with_ref_name(no_warnings):
     schema = generate_schema('/x', view=XAPIView)
 
     operation = schema['paths']['/x']['post']
-    request_component = operation['requestBody']['content']['application/json']['schema']['$ref']
-    assert request_component == '#/components/schemas/X'
-    response_component = operation['responses']['200']['content']['application/json']['schema']['$ref']
-    assert response_component == '#/components/schemas/Y'
+    assert get_request_schema(operation)['$ref'] == '#/components/schemas/X'
+    assert get_response_schema(operation)['$ref'] == '#/components/schemas/Y'
 
 
 def test_custom_model_field_from_typed_field(no_warnings):

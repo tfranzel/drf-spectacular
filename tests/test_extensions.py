@@ -8,7 +8,7 @@ from drf_spectacular.plumbing import build_basic_type
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
-from tests import generate_schema
+from tests import generate_schema, get_response_schema
 
 
 class Base64Field(fields.Field):
@@ -55,7 +55,7 @@ def test_view_extension(no_warnings):
     schema = generate_schema('x', view=XView)
     validate_schema(schema)
     operation = schema['paths']['/x']['get']
-    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'number'
+    assert get_response_schema(operation)['type'] == 'number'
 
 
 @api_view()
@@ -75,4 +75,4 @@ def test_view_function_extension(no_warnings):
     schema = generate_schema('x', view_function=x_view_function)
     validate_schema(schema)
     operation = schema['paths']['/x']['get']
-    assert operation['responses']['200']['content']['application/json']['schema']['type'] == 'number'
+    assert get_response_schema(operation)['type'] == 'number'
