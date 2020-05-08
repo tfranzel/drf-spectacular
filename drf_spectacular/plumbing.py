@@ -106,6 +106,20 @@ def is_basic_type(obj):
     return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
 
 
+def has_override(obj, prop):
+    if not hasattr(obj, '_spectacular_annotation'):
+        return False
+    if prop not in obj._spectacular_annotation:
+        return False
+    return True
+
+
+def get_override(obj, prop):
+    if not has_override(obj, prop):
+        return None
+    return obj._spectacular_annotation[prop]
+
+
 def build_basic_type(obj):
     """
     resolve either enum or actual type and yield schema template for modification

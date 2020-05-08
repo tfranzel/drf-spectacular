@@ -27,7 +27,7 @@ from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, build_array_type,
     ComponentRegistry, ResolvedComponent, build_parameter_type, error,
-    resolve_regex_path_parameter, safe_ref,
+    resolve_regex_path_parameter, safe_ref, has_override, get_override,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
@@ -382,11 +382,12 @@ class AutoSchema(ViewInspector):
             return build_basic_type(OpenApiTypes.STR)
 
     def _map_serializer_field(self, field):
-        if hasattr(field, '_spectacular_annotation'):
-            if is_basic_type(field._spectacular_annotation):
-                return build_basic_type(field._spectacular_annotation)
+        if has_override(field, 'field'):
+            override = get_override(field, 'field')
+            if is_basic_type(override):
+                return build_basic_type(override)
             else:
-                return self._map_serializer_field(field._spectacular_annotation)
+                return self._map_serializer_field(override)
 
         serializer_field_extension = OpenApiSerializerFieldExtension.get_match(field)
         if serializer_field_extension:
@@ -629,7 +630,7 @@ class AutoSchema(ViewInspector):
                     schema['minimum'] = -schema['maximum']
 
     def _map_type_hint(self, method):
-        hint = getattr(method, '_spectacular_annotation', None) or typing.get_type_hints(method).get('return')
+        hint = get_override(method, 'field') or typing.get_type_hints(method).get('return')
 
         if is_serializer(hint) or is_field(hint):
             return self._map_serializer_field(force_instance(hint))

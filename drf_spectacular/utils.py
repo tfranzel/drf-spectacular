@@ -194,7 +194,9 @@ def extend_schema_field(field):
     """
 
     def decorator(f):
-        f._spectacular_annotation = field
+        if not hasattr(f, '_spectacular_annotation'):
+            f._spectacular_annotation = {}
+        f._spectacular_annotation['field'] = field
         return f
 
     return decorator
