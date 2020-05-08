@@ -806,7 +806,7 @@ class AutoSchema(ViewInspector):
             schema = build_basic_type(OpenApiTypes.OBJECT)
             schema['description'] = 'Unspecified response body'
 
-        if self._is_list_view(serializer):
+        if self._is_list_view(serializer) and not get_override(serializer, 'many') is False:
             schema = build_array_type(schema)
             paginator = self._get_paginator()
             if paginator:

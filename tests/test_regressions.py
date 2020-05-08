@@ -493,3 +493,43 @@ def test_follow_field_source_through_intermediate_property(no_warnings):
     assert schema['components']['schemas']['X']['properties']['x']['readOnly'] is True
     assert 'enum' in schema['components']['schemas']['XEnum']
     assert schema['components']['schemas']['XEnum']['type'] == 'integer'
+
+
+def test_viewset_list_with_envelope(no_warnings):
+    class XSerializer(serializers.Serializer):
+        x = serializers.IntegerField()
+
+    def enveloper(serializer_class, list):
+        @extend_schema_serializer(many=False)
+        class EnvelopeSerializer(serializers.Serializer):
+            status = serializers.BooleanField()
+            data = XSerializer(many=list)
+
+            class Meta:
+                ref_name = 'Enveloped{}{}'.format(
+                    serializer_class.__name__.replace("Serializer", ""),
+                    "List" if list else "",
+                )
+        return EnvelopeSerializer
+
+    class XViewset(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+        @extend_schema(responses=enveloper(XSerializer, True))
+        def list(self, request, *args, **kwargs):
+            return super().list(request, *args, **kwargs)  # pragma: no cover
+
+        @extend_schema(
+            responses=enveloper(XSerializer, False),
+            parameters=[OpenApiParameter('id', int, OpenApiParameter.PATH)],
+        )
+        def retrieve(self, request, *args, **kwargs):
+            return super().retrieve(request, *args, **kwargs)  # pragma: no cover
+
+    schema = generate_schema('x', viewset=XViewset)
+
+    operation_list = schema['paths']['/x/']['get']
+    assert operation_list['operationId'] == 'x_list'
+    assert get_response_schema(operation_list)['$ref'] == '#/components/schemas/EnvelopedXList'
+
+    operation_retrieve = schema['paths']['/x/{id}/']['get']
+    assert operation_retrieve['operationId'] == 'x_retrieve'
+    assert get_response_schema(operation_retrieve)['$ref'] == '#/components/schemas/EnvelopedX'
