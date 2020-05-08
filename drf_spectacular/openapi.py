@@ -15,6 +15,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description
 from rest_framework.settings import api_settings
+from rest_framework.utils.model_meta import get_field_info
 from rest_framework.views import APIView
 
 from drf_spectacular.extensions import (
@@ -360,22 +361,34 @@ class AutoSchema(ViewInspector):
             mapping['type'] = type
         return mapping
 
-    def _map_model_field(self, field):
-        assert isinstance(field, models.Field)
-        drf_mapping = serializers.ModelSerializer.serializer_field_mapping
+    def _map_model_field(self, model_field):
+        assert isinstance(model_field, models.Field)
+        # to get a fully initialized serializer field we use DRF's own init logic
+        try:
+            field_cls, field_kwargs = serializers.ModelSerializer().build_field(
+                field_name=model_field.name,
+                info=get_field_info(model_field.model),
+                model_class=model_field.model,
+                nested_depth=0,
+            )
+            field = field_cls(**field_kwargs)
+        except:  # noqa
+            field = None
 
-        if field.__class__ in drf_mapping:
-            # use DRF native field resolution - taken from ModelSerializer.get_fields()
-            return self._map_serializer_field(drf_mapping[field.__class__]())
-        elif isinstance(field, models.ForeignKey):
-            return self._map_model_field(field.target_field)
-        elif hasattr(models, field.get_internal_type()):
-            # try to be graceful when model field is not explicitly mapped to a serializer field.
-            # resolve schema type via internal type
-            return self._map_model_field(getattr(models, field.get_internal_type())())
+        # For some cases, the DRF init logic either breaks (custom field with internal type) or
+        # the resulting field is underspecified with regards to the schema (ReadOnlyField).
+        if field and not anyisinstance(field, [serializers.ReadOnlyField, serializers.ModelField]):
+            return self._map_serializer_field(field)
+        elif isinstance(model_field, models.ForeignKey):
+            return self._map_model_field(model_field.target_field)
+        elif hasattr(models, model_field.get_internal_type()):
+            # be graceful when the model field is not explicitly mapped to a serializer
+            internal_type = getattr(models, model_field.get_internal_type())
+            field_cls = serializers.ModelSerializer.serializer_field_mapping[internal_type]
+            return self._map_serializer_field(field_cls())
         else:
             error(
-                f'could not resolve model field "{field}". failed to resolve through '
+                f'could not resolve model field "{model_field}". failed to resolve through '
                 f'serializer_field_mapping, get_internal_type(), or any override mechanism. '
                 f'defaulting to "string"'
             )

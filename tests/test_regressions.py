@@ -472,7 +472,7 @@ def test_custom_model_field_from_base_field(no_warnings):
 
 def test_follow_field_source_through_intermediate_property(no_warnings):
     class FieldSourceTraversalModel2(models.Model):
-        y = models.UUIDField()
+        y = models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3')])
 
     class FieldSourceTraversalModel1(models.Model):
         @property
@@ -491,6 +491,9 @@ def test_follow_field_source_through_intermediate_property(no_warnings):
         def get(self, request):
             pass  # pragma: no cover
 
+    # this checks if field type is correctly estimated AND field was initialized
+    # with the model parameters (choices)
     schema = generate_schema('/x', view=XAPIView)
-    component = schema['components']['schemas']['X']
-    assert component['properties']['x']['format'] == 'uuid'
+    assert schema['components']['schemas']['X']['properties']['x']['readOnly'] is True
+    assert 'enum' in schema['components']['schemas']['XEnum']
+    assert schema['components']['schemas']['XEnum']['type'] == 'integer'
