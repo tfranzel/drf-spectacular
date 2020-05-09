@@ -36,9 +36,9 @@ class SpectacularAPIView(APIView):
 
     @extend_schema(**SCHEMA_KWARGS)
     def get(self, request):
-        if isinstance(self.urlconf, list):
+        if isinstance(self.urlconf, list) or isinstance(self.urlconf, tuple):
             ModuleWrapper = namedtuple('ModuleWrapper', ['urlpatterns'])
-            self.urlconf = ModuleWrapper(self.urlconf)
+            self.urlconf = ModuleWrapper(tuple(self.urlconf))
 
         generator = self.generator_class(urlconf=self.urlconf)
         schema = generator.get_schema(request=request, public=self.serve_public)
