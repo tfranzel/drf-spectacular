@@ -57,6 +57,7 @@ def extend_schema(
         exclude=False,
         operation=None,
         methods=None,
+        versions=None,
 ):
     """
     decorator for the "view" kind. partially or completely overrides what would be
@@ -84,6 +85,7 @@ def extend_schema(
     :param operation: manually override what auto-discovery would generate. you must
         provide a OpenAPI3-compliant dictionary that gets directly translated to YAML.
     :param methods: scope extend_schema to specific methods. matches all by default.
+    :param versions: scope extend_schema to specific API version. matches all by default.
     :return:
     """
     def decorator(f):
@@ -101,54 +103,62 @@ def extend_schema(
         if not inspect.isclass(BaseSchema):
             BaseSchema = BaseSchema.__class__
 
-        def method_matches(method):
-            return methods is None or method in methods
+        def is_in_scope(ext_schema):
+            version, _ = ext_schema.view.determine_version(
+                ext_schema.view.request,
+                **ext_schema.view.kwargs
+            )
+            version_scope = versions is None or version in versions
+            method_scope = methods is None or ext_schema.method in methods
+            return method_scope and version_scope
 
         class ExtendedSchema(BaseSchema):
             def get_operation(self, path, path_regex, method, registry):
-                if exclude and method_matches(method):
+                self.method = method
+
+                if exclude and is_in_scope(self):
                     return None
-                if operation is not None and method_matches(method):
+                if operation is not None and is_in_scope(self):
                     return operation
                 return super().get_operation(path, path_regex, method, registry)
 
             def get_operation_id(self):
-                if operation_id and method_matches(self.method):
+                if operation_id and is_in_scope(self):
                     return operation_id
                 return super().get_operation_id()
 
             def get_override_parameters(self):
-                if parameters and method_matches(self.method):
+                if parameters and is_in_scope(self):
                     return parameters
                 return super().get_override_parameters()
 
             def get_auth(self):
-                if auth and method_matches(self.method):
+                if auth and is_in_scope(self):
                     return auth
                 return super().get_auth()
 
             def get_request_serializer(self):
-                if request and method_matches(self.method):
+                if request and is_in_scope(self):
                     return request
                 return super().get_request_serializer()
 
             def get_response_serializers(self):
-                if responses and method_matches(self.method):
+                if responses and is_in_scope(self):
                     return responses
                 return super().get_response_serializers()
 
             def get_description(self):
-                if description and method_matches(self.method):
+                if description and is_in_scope(self):
                     return description
                 return super().get_description()
 
             def is_deprecated(self):
-                if deprecated and method_matches(self.method):
+                if deprecated and is_in_scope(self):
                     return deprecated
                 return super().is_deprecated()
 
             def get_tags(self):
-                if tags is not None and method_matches(self.method):
+                if tags is not None and is_in_scope(self):
                     return tags
                 return super().get_tags()
 

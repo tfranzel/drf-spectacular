@@ -33,14 +33,15 @@ class SpectacularAPIView(APIView):
     generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
     serve_public = spectacular_settings.SERVE_PUBLIC
     urlconf = spectacular_settings.SERVE_URLCONF
+    api_version = None
 
     @extend_schema(**SCHEMA_KWARGS)
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         if isinstance(self.urlconf, list) or isinstance(self.urlconf, tuple):
             ModuleWrapper = namedtuple('ModuleWrapper', ['urlpatterns'])
             self.urlconf = ModuleWrapper(tuple(self.urlconf))
 
-        generator = self.generator_class(urlconf=self.urlconf)
+        generator = self.generator_class(urlconf=self.urlconf, api_version=self.api_version)
         schema = generator.get_schema(request=request, public=self.serve_public)
         return Response(schema)
 

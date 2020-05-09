@@ -7,10 +7,11 @@ from collections.abc import Hashable
 from typing import List, Type, Optional, TypeVar, Union, Generic
 
 import inflection
+import uritemplate
 from django import __version__ as DJANGO_VERSION
-from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE
+from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver
 from django.utils.module_loading import import_string
-from rest_framework import fields, serializers
+from rest_framework import fields, serializers, versioning, exceptions
 
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
@@ -463,3 +464,37 @@ def resolve_regex_path_parameter(path_regex, variable):
             }
 
     return None
+
+
+def operation_matches_version(view, requested_version):
+    try:
+        version, _ = view.determine_version(view.request, **view.kwargs)
+    except exceptions.NotAcceptable:
+        return False
+    else:
+        return version == requested_version
+
+
+def modify_for_versioning(patterns, method, path, view, requested_version):
+    assert view.versioning_class
+
+    from rest_framework.test import APIRequestFactory
+    mocked_request = getattr(APIRequestFactory(), method.lower())(path=path)
+    view.request = mocked_request
+
+    mocked_request.version = requested_version
+
+    if issubclass(view.versioning_class, versioning.URLPathVersioning):
+        version_param = view.versioning_class.version_param
+        # substitute version variable to emulate request
+        path = uritemplate.expand(path, var_dict={version_param: requested_version})
+        # emulate router behaviour by injecting substituted variable into view
+        view.kwargs[version_param] = requested_version
+    elif issubclass(view.versioning_class, versioning.NamespaceVersioning):
+        mocked_request.resolver_match = get_resolver(tuple(patterns)).resolve(path)
+    else:
+        warn(
+            f'using unsupported versioning class {view.versioning_class}. '
+            f'generated schema might not be accurate.'
+        )
+    return path

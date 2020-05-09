@@ -11,7 +11,8 @@ from rest_framework.schemas.generators import (
 
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.plumbing import (
-    ComponentRegistry, error, alpha_operation_sorter, reset_generator_stats, build_root_object
+    ComponentRegistry, error, alpha_operation_sorter, reset_generator_stats, build_root_object,
+    modify_for_versioning, operation_matches_version
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -20,6 +21,7 @@ class EndpointEnumerator(BaseEndpointEnumerator):
     def get_api_endpoints(self, patterns=None, prefix=''):
         """
         Return a list of all available API endpoints by inspecting the URL conf.
+        Only modification the the DRF version is passing through the path_regex.
         """
         if patterns is None:
             patterns = self.patterns
@@ -51,6 +53,8 @@ class SchemaGenerator(BaseSchemaGenerator):
 
     def __init__(self, *args, **kwargs):
         self.registry = ComponentRegistry()
+        self.api_version = kwargs.pop('api_version', None)
+        self.inspector = None
         super().__init__(*args, **kwargs)
 
     def create_view(self, callback, method, request=None):
@@ -86,6 +90,11 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         return view
 
+    def _initialise_endpoints(self):
+        if self.endpoints is None:
+            self.inspector = self.endpoint_inspector_cls(self.patterns, self.urlconf)
+            self.endpoints = self.inspector.get_api_endpoints()
+
     def _get_paths_and_endpoints(self, request):
         """
         Generate (path, method, view) given (path, method, callback) for paths.
@@ -98,14 +107,24 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         return view_endpoints
 
-    def parse(self, request=None):
+    def parse(self, request, public):
         """ Iterate endpoints generating per method path operations. """
         result = {}
         self._initialise_endpoints()
 
-        for path, path_regex, method, view in self._get_paths_and_endpoints(request):
+        for path, path_regex, method, view in self._get_paths_and_endpoints(None if public else request):
             if not self.has_view_permissions(path, method, view):
                 continue
+
+            if view.versioning_class:
+                version = (
+                    self.api_version  # generator was explicitly versioned
+                    or getattr(request, 'version', None)  # incoming request was versioned
+                    or view.versioning_class.default_version  # fallback
+                )
+                path = modify_for_versioning(self.inspector.patterns, method, path, view, version)
+                if not version or not operation_matches_version(view, version):
+                    continue
 
             # beware that every access to schema yields a fresh object (descriptor pattern)
             operation = view.schema.get_operation(path, path_regex, method, self.registry)
@@ -128,6 +147,6 @@ class SchemaGenerator(BaseSchemaGenerator):
         """ Generate a OpenAPI schema. """
         reset_generator_stats()
         return build_root_object(
-            paths=self.parse(None if public else request),
+            paths=self.parse(request, public),
             components=self.registry.build(spectacular_settings.APPEND_COMPONENTS),
         )
