@@ -55,7 +55,7 @@ def test_owned_serializer_naming_override_with_ref_name_collision(warnings):
         def post(self, request):
             pass  # pragma: no cover
 
-    generate_schema('/x', view=XAPIView)
+    generate_schema('x', view=XAPIView)
 
 
 def test_no_queryset_warn(capsys):
@@ -165,4 +165,4 @@ def test_unable_to_follow_field_source_through_intermediate_property_warning(war
         def get(self, request):
             pass  # pragma: no cover
 
-    generate_schema('/x', view=XAPIView)
+    generate_schema('x', view=XAPIView)

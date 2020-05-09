@@ -74,6 +74,6 @@ class AlbumModelViewset(viewsets.ModelViewSet):
 
 def test_basics(no_warnings):
     assert_schema(
-        generate_schema('/albums', AlbumModelViewset),
+        generate_schema('albums', AlbumModelViewset),
         'tests/test_basic.yml'
     )

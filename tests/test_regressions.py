@@ -4,7 +4,7 @@ from unittest import mock
 from django.conf.urls import url
 from django.db.models import fields
 from django.db import models
-from django.urls import path
+from django.urls import path, re_path
 from rest_framework import serializers, viewsets, mixins, routers, views, generics
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
@@ -329,7 +329,7 @@ def test_drf_format_suffix_parameter(no_warnings):
     def pi(request, format=None):
         pass  # pragma: no cover
 
-    urlpatterns = [path(r'/pi', pi)]
+    urlpatterns = [path('pi', pi)]
     urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'html'])
 
     generator = SchemaGenerator(patterns=urlpatterns)
@@ -348,7 +348,7 @@ def test_regex_path_parameter_discovery(no_warnings):
     def pi(request, foo):
         pass  # pragma: no cover
 
-    urlpatterns = [url(r'^/pi/<int:precision>', pi)]
+    urlpatterns = [re_path(r'^/pi/<int:precision>', pi)]
     generator = SchemaGenerator(patterns=urlpatterns)
     schema = generator.get_schema(request=None, public=True)
     parameter = schema['paths']['/pi/{precision}']['get']['parameters'][0]
@@ -384,7 +384,7 @@ def test_lib_serializer_naming_collision_resolution(no_warnings):
         def get_name(self):
             return 'RenamedLib2X'
 
-    schema = generate_schema('/x', view=XAPIView)
+    schema = generate_schema('x', view=XAPIView)
 
     operation = schema['paths']['/x']['post']
     assert get_request_schema(operation)['$ref'] == '#/components/schemas/X'
@@ -414,7 +414,7 @@ def test_owned_serializer_naming_override_with_ref_name(no_warnings):
         def post(self, request):
             pass  # pragma: no cover
 
-    schema = generate_schema('/x', view=XAPIView)
+    schema = generate_schema('x', view=XAPIView)
 
     operation = schema['paths']['/x']['post']
     assert get_request_schema(operation)['$ref'] == '#/components/schemas/X'
@@ -438,7 +438,7 @@ def test_custom_model_field_from_typed_field(no_warnings):
         def get(self, request):
             pass  # pragma: no cover
 
-    schema = generate_schema('/x', view=XAPIView)
+    schema = generate_schema('x', view=XAPIView)
     component = schema['components']['schemas']['X']
     assert component['properties']['custom_int_field']['type'] == 'integer'
 
@@ -461,7 +461,7 @@ def test_custom_model_field_from_base_field(no_warnings):
         def get(self, request):
             pass  # pragma: no cover
 
-    schema = generate_schema('/x', view=XAPIView)
+    schema = generate_schema('x', view=XAPIView)
     component = schema['components']['schemas']['X']
     assert component['properties']['custom_int_field']['type'] == 'integer'
 
@@ -489,7 +489,7 @@ def test_follow_field_source_through_intermediate_property(no_warnings):
 
     # this checks if field type is correctly estimated AND field was initialized
     # with the model parameters (choices)
-    schema = generate_schema('/x', view=XAPIView)
+    schema = generate_schema('x', view=XAPIView)
     assert schema['components']['schemas']['X']['properties']['x']['readOnly'] is True
     assert 'enum' in schema['components']['schemas']['XEnum']
     assert schema['components']['schemas']['XEnum']['type'] == 'integer'
