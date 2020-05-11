@@ -12,7 +12,7 @@ from rest_framework.schemas.generators import (
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.plumbing import (
     ComponentRegistry, error, alpha_operation_sorter, reset_generator_stats, build_root_object,
-    modify_for_versioning, operation_matches_version
+    modify_for_versioning, operation_matches_version, warn, is_versioning_supported
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -116,7 +116,12 @@ class SchemaGenerator(BaseSchemaGenerator):
             if not self.has_view_permissions(path, method, view):
                 continue
 
-            if view.versioning_class:
+            if view.versioning_class and not is_versioning_supported(view.versioning_class):
+                warn(
+                    f'using unsupported versioning class "{view.versioning_class}". view will be '
+                    f'processed as unversioned view.'
+                )
+            elif view.versioning_class:
                 version = (
                     self.api_version  # generator was explicitly versioned
                     or getattr(request, 'version', None)  # incoming request was versioned

@@ -466,6 +466,13 @@ def resolve_regex_path_parameter(path_regex, variable):
     return None
 
 
+def is_versioning_supported(versioning_class):
+    return bool(
+        issubclass(versioning_class, versioning.URLPathVersioning)
+        or issubclass(versioning_class, versioning.NamespaceVersioning)
+    )
+
+
 def operation_matches_version(view, requested_version):
     try:
         version, _ = view.determine_version(view.request, **view.kwargs)
@@ -492,9 +499,5 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         view.kwargs[version_param] = requested_version
     elif issubclass(view.versioning_class, versioning.NamespaceVersioning):
         mocked_request.resolver_match = get_resolver(tuple(patterns)).resolve(path)
-    else:
-        warn(
-            f'using unsupported versioning class {view.versioning_class}. '
-            f'generated schema might not be accurate.'
-        )
+
     return path
