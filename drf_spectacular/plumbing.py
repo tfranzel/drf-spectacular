@@ -472,7 +472,7 @@ def operation_matches_version(view, requested_version):
     except exceptions.NotAcceptable:
         return False
     else:
-        return version == requested_version
+        return str(version) == str(requested_version)
 
 
 def modify_for_versioning(patterns, method, path, view, requested_version):

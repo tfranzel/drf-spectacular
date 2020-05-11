@@ -29,6 +29,7 @@ class Command(BaseCommand):
         parser.add_argument('--file', dest="file", default=None, type=str)
         parser.add_argument('--fail-on-warn', dest="fail_on_warn", default=False, action='store_true')
         parser.add_argument('--validate', dest="validate", default=False, action='store_true')
+        parser.add_argument('--api-version', dest="api_version", default=None, type=str)
 
     def handle(self, *args, **options):
         if options['generator_class']:
@@ -36,7 +37,10 @@ class Command(BaseCommand):
         else:
             generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
 
-        generator = generator_class(urlconf=options['urlconf'])
+        generator = generator_class(
+            urlconf=options['urlconf'],
+            api_version=options['api_version'],
+        )
         schema = generator.get_schema(request=None, public=True)
 
         GENERATOR_STATS.emit_summary()
