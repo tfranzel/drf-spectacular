@@ -413,10 +413,20 @@ def postprocess_schema_enums(schemas):
     the same choices. Aids client generation to not generate a separate enum for
     every occurrence. only takes effect when replacement is guaranteed to be correct.
     """
+    def iter_prop_containers(schema):
+        if isinstance(schema, list):
+            for item in schema:
+                yield from iter_prop_containers(item)
+        elif isinstance(schema, dict):
+            if schema.get('properties'):
+                yield schema['properties']
+            yield from iter_prop_containers(schema.get('oneOf', []))
+            yield from iter_prop_containers(schema.get('allOf', []))
+
     hash_mapping = defaultdict(set)
     # collect all enums, their names and contents
-    for schema in schemas.values():
-        for prop_name, prop_schema in schema.get('properties', {}).items():
+    for props in iter_prop_containers(list(schemas.values())):
+        for prop_name, prop_schema in props.items():
             if 'enum' not in prop_schema:
                 continue
             hash_mapping[prop_name].add(
@@ -428,8 +438,8 @@ def postprocess_schema_enums(schemas):
         if len(prop_hash_set) == 1
     }
     # replace all valid occurrences with enum schema component
-    for schema_name in list(schemas):
-        for prop_name, prop_schema in schemas[schema_name].get('properties', {}).items():
+    for props in iter_prop_containers(list(schemas.values())):
+        for prop_name, prop_schema in props.items():
             if 'enum' not in prop_schema:
                 continue
             if prop_name not in candidate_enums:
@@ -441,7 +451,7 @@ def postprocess_schema_enums(schemas):
             prop_schema['$ref'] = f'#/components/schemas/{enum_name}'
 
             schemas[enum_name] = enum_schema
-            schemas[schema_name]['properties'][prop_name] = safe_ref(prop_schema)
+            props[prop_name] = safe_ref(prop_schema)
 
 
 def resolve_regex_path_parameter(path_regex, variable):

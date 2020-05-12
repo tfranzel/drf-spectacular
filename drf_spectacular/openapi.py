@@ -861,7 +861,11 @@ class AutoSchema(ViewInspector):
         #   2. concrete component with properties -> use
         #   3. concrete component without properties -> prob. transactional so discard
         #   4. explicit list component -> demultiplexed at usage location so discard
-        if 'oneOf' not in component.schema and not component.schema.get('properties', {}):
+        keep_component = (
+            any(nest_tag in component.schema for nest_tag in ['oneOf', 'allOf', 'anyOf'])
+            or component.schema.get('properties', {})
+        )
+        if not keep_component:
             del self.registry[component]
             return ResolvedComponent(None, None)  # sentinel
         return component
