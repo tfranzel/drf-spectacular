@@ -46,7 +46,7 @@ class Command(BaseCommand):
         GENERATOR_STATS.emit_summary()
 
         if options['fail_on_warn'] and GENERATOR_STATS:
-            raise RuntimeError(f'Failing as requested due to warnings')
+            raise RuntimeError('Failing as requested due to warnings')
         if options['validate']:
             validate_schema(schema)
 

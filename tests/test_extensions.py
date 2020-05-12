@@ -30,8 +30,8 @@ def test_serializer_field_extension(no_warnings):
 
     schema = generate_schema('x', XViewset)
     validate_schema(schema)
-    schema['components']['schemas']['X']['properties']['hash']['type'] == 'string'
-    schema['components']['schemas']['X']['properties']['hash']['format'] == 'byte'
+    assert schema['components']['schemas']['X']['properties']['hash']['type'] == 'string'
+    assert schema['components']['schemas']['X']['properties']['hash']['format'] == 'byte'
 
 
 class XView(APIView):
