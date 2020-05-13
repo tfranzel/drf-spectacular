@@ -151,7 +151,10 @@ class SchemaGenerator(BaseSchemaGenerator):
     def get_schema(self, request=None, public=False):
         """ Generate a OpenAPI schema. """
         reset_generator_stats()
-        return build_root_object(
+        result = build_root_object(
             paths=self.parse(request, public),
             components=self.registry.build(spectacular_settings.APPEND_COMPONENTS),
         )
+        for hook in spectacular_settings.POSTPROCESSING_HOOKS:
+            result = hook(generator=self, request=request, public=public, result=result)
+        return result

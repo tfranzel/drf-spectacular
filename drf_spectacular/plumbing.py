@@ -357,10 +357,6 @@ class ComponentRegistry:
         for extra_type, extra_component_dict in extra_components.items():
             for component_name, component_schema in extra_component_dict.items():
                 output[extra_type][component_name] = component_schema
-
-        if 'schemas' in output:
-            postprocess_schema_enums(output['schemas'])
-
         # sort by component type then by name
         return {
             type: {name: output[type][name] for name in output[type].keys()}
@@ -408,7 +404,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
         return None
 
 
-def postprocess_schema_enums(schemas):
+def postprocess_schema_enums(generator, result, **kwargs):
     """
     simple replacement of Enum/Choices that globally share the same name and have
     the same choices. Aids client generation to not generate a separate enum for
@@ -423,6 +419,9 @@ def postprocess_schema_enums(schemas):
                 yield schema['properties']
             yield from iter_prop_containers(schema.get('oneOf', []))
             yield from iter_prop_containers(schema.get('allOf', []))
+
+    # schemas will be modified in-place and same result object is returned
+    schemas = result.get('components', {}).get('schemas', {})
 
     hash_mapping = defaultdict(set)
     # collect all enums, their names and contents
@@ -453,6 +452,8 @@ def postprocess_schema_enums(schemas):
 
             schemas[enum_name] = enum_schema
             props[prop_name] = safe_ref(prop_schema)
+
+    return result
 
 
 def resolve_regex_path_parameter(path_regex, variable):

@@ -25,6 +25,12 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'APPEND_PATHS': {},
     'APPEND_COMPONENTS': {},
 
+    # Postprocessing functions that run at the end of schema generation.
+    # must satisfy interface result = hook(generator, request, public, result)
+    'POSTPROCESSING_HOOKS': [
+        'drf_spectacular.plumbing.postprocess_schema_enums'
+    ],
+
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
     'TITLE': '',
@@ -57,6 +63,7 @@ IMPORT_STRINGS = [
     'SCHEMA_AUTHENTICATION_CLASSES',
     'DEFAULT_GENERATOR_CLASS',
     'SERVE_PERMISSIONS',
+    'POSTPROCESSING_HOOKS',
 ]
 
 spectacular_settings = APISettings(
