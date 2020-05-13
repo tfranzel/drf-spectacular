@@ -1,6 +1,26 @@
 Changelog
 =========
 
+0.9.4 (2020-05-13)
+------------------
+
+- robustify serializer resolution & enum postprocessing 
+- expose api_version to command. robustify version matching. `#22 <https://github.com/tfranzel/drf-spectacular/issues/22>`_ 
+- add versioning support `#22 <https://github.com/tfranzel/drf-spectacular/issues/22>`_ 
+- robustify urlconf wrapping. resolver does not like lists 
+- explicit override for non-list serializers on ViewSet list `#49 <https://github.com/tfranzel/drf-spectacular/issues/49>`_ 
+- improve model field mapping via DRF init logic 
+- bugfix enum substitution with additional field parameters. 
+- Fix getting default parameter for `MultipleChoiceField` [p.alekseev]
+- bugfix model path traversal via intermediate property 
+- try to be more graceful with unknown custom model fields. `#33 <https://github.com/tfranzel/drf-spectacular/issues/33>`_ 
+
+Breaking changes:
+
+- If URL or namespace versioning is set in views, it is automatically used for generation. 
+  Schemas might shrink because of that. Explicit usage of ``--api-version="XXX"`` should yield the old result.
+- Some warnings might change, as the field/view introspection tries to go deeper.
+
 0.9.3 (2020-05-07)
 ------------------
 
