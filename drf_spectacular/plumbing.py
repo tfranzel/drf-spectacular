@@ -372,6 +372,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
     _registry: List[T] = []
     target_class: Union[None, str, Type[object]] = None
     match_subclasses = False
+    priority = 0
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -401,7 +402,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
 
     @classmethod
     def get_match(cls, target) -> Optional[T]:
-        for extension in cls._registry:
+        for extension in sorted(cls._registry, key=lambda e: e.priority, reverse=True):
             if extension._matches(target):
                 return extension(target)
         return None
