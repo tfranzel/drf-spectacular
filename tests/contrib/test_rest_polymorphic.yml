@@ -161,24 +161,7 @@ paths:
         '204':
           description: No response body
 components:
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: Session
-    basicAuth:
-      type: http
-      scheme: basic
   schemas:
-    Person:
-      oneOf:
-      - $ref: '#/components/schemas/LegalPerson'
-      - $ref: '#/components/schemas/NaturalPerson'
-      discriminator:
-        propertyName: resourcetype
-        mapping:
-          legal: '#/components/schemas/LegalPerson'
-          natural: '#/components/schemas/NaturalPerson'
     LegalPerson:
       type: object
       properties:
@@ -222,15 +205,6 @@ components:
       - last_name
       - address
       - supervisor_id
-    PatchedPerson:
-      oneOf:
-      - $ref: '#/components/schemas/PatchedLegalPerson'
-      - $ref: '#/components/schemas/PatchedNaturalPerson'
-      discriminator:
-        propertyName: resourcetype
-        mapping:
-          legal: '#/components/schemas/PatchedLegalPerson'
-          natural: '#/components/schemas/PatchedNaturalPerson'
     PatchedLegalPerson:
       type: object
       properties:
@@ -266,3 +240,29 @@ components:
         supervisor_id:
           type: integer
           nullable: true
+    PatchedPerson:
+      oneOf:
+      - $ref: '#/components/schemas/PatchedLegalPerson'
+      - $ref: '#/components/schemas/PatchedNaturalPerson'
+      discriminator:
+        propertyName: resourcetype
+        mapping:
+          legal: '#/components/schemas/PatchedLegalPerson'
+          natural: '#/components/schemas/PatchedNaturalPerson'
+    Person:
+      oneOf:
+      - $ref: '#/components/schemas/LegalPerson'
+      - $ref: '#/components/schemas/NaturalPerson'
+      discriminator:
+        propertyName: resourcetype
+        mapping:
+          legal: '#/components/schemas/LegalPerson'
+          natural: '#/components/schemas/NaturalPerson'
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

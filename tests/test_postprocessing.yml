@@ -40,14 +40,6 @@ paths:
                 $ref: '#/components/schemas/B'
           description: ''
 components:
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: Session
-    basicAuth:
-      type: http
-      scheme: basic
   schemas:
     A:
       type: object
@@ -70,3 +62,11 @@ components:
       - ru
       - cn
       type: string
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

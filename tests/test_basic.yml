@@ -184,11 +184,6 @@ paths:
         '200':
           description: No response body
 components:
-  securitySchemes:
-    tokenAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: Token
   schemas:
     Album:
       type: object
@@ -220,25 +215,6 @@ components:
       - genre
       - year
       - released
-    Song:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        title:
-          type: string
-          maxLength: 100
-        length:
-          type: integer
-        top10:
-          type: boolean
-          nullable: true
-          readOnly: true
-      required:
-      - title
-      - length
     PatchedAlbum:
       type: object
       properties:
@@ -264,8 +240,32 @@ components:
           type: integer
         released:
           type: boolean
+    Song:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 100
+        length:
+          type: integer
+        top10:
+          type: boolean
+          nullable: true
+          readOnly: true
+      required:
+      - title
+      - length
     GenreEnum:
       enum:
       - POP
       - ROCK
       type: string
+  securitySchemes:
+    tokenAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token

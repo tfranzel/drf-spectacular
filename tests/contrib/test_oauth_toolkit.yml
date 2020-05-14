@@ -59,7 +59,19 @@ paths:
                   $ref: '#/components/schemas/X'
           description: ''
 components:
+  schemas:
+    X:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+      required:
+      - uuid
   securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
     oauth2:
       type: oauth2
       flows:
@@ -70,15 +82,3 @@ components:
             read: Reading scope
             write: Writing scope
             extra_scope: Extra Scope
-    basicAuth:
-      type: http
-      scheme: basic
-  schemas:
-    X:
-      type: object
-      properties:
-        uuid:
-          type: string
-          format: uuid
-      required:
-      - uuid

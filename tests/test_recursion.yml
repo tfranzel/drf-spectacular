@@ -29,14 +29,6 @@ paths:
                 $ref: '#/components/schemas/TreeNode'
           description: ''
 components:
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: Session
-    basicAuth:
-      type: http
-      scheme: basic
   schemas:
     TreeNode:
       type: object
@@ -58,3 +50,11 @@ components:
       required:
       - label
       - children
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

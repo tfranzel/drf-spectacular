@@ -23,14 +23,6 @@ paths:
                   $ref: '#/components/schemas/Xv2'
           description: ''
 components:
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: Session
-    basicAuth:
-      type: http
-      scheme: basic
   schemas:
     Xv2:
       type: object
@@ -40,3 +32,11 @@ components:
           format: uuid
       required:
       - id
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

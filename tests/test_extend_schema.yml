@@ -236,14 +236,6 @@ paths:
         '201':
           description: No response body
 components:
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: Session
-    basicAuth:
-      type: http
-      scheme: basic
   schemas:
     Alpha:
       type: object
@@ -269,17 +261,13 @@ components:
       - field_a
       - field_b
       - field_c
-    Gamma:
+    Delta:
       type: object
       properties:
-        encoding:
+        field_a:
           type: string
-        image_data:
-          type: string
-          format: byte
-      required:
-      - encoding
-      - image_data
+        field_b:
+          type: integer
     ErrorDetail:
       type: object
       properties:
@@ -300,6 +288,17 @@ components:
           allOf:
           - $ref: '#/components/schemas/FieldLEnum'
           readOnly: true
+    Gamma:
+      type: object
+      properties:
+        encoding:
+          type: string
+        image_data:
+          type: string
+          format: byte
+      required:
+      - encoding
+      - image_data
     Inline:
       type: object
       properties:
@@ -310,13 +309,6 @@ components:
       required:
       - inline_b
       - inline_i
-    Delta:
-      type: object
-      properties:
-        field_a:
-          type: string
-        field_b:
-          type: integer
     Query:
       type: object
       properties:
@@ -346,3 +338,11 @@ components:
       - a
       - b
       type: string
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

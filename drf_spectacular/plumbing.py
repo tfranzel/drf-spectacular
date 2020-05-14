@@ -359,8 +359,8 @@ class ComponentRegistry:
                 output[extra_type][component_name] = component_schema
         # sort by component type then by name
         return {
-            type: {name: output[type][name] for name in output[type].keys()}
-            for type in sorted(output.keys(), reverse=True)
+            type: {name: output[type][name] for name in sorted(output[type].keys())}
+            for type in sorted(output.keys())
         }
 
 

@@ -78,11 +78,6 @@ paths:
                   $ref: '#/components/schemas/X'
           description: ''
 components:
-  securitySchemes:
-    jwtAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: Bearer
   schemas:
     TokenObtainPair:
       type: object
@@ -110,3 +105,8 @@ components:
           format: uuid
       required:
       - uuid
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Bearer

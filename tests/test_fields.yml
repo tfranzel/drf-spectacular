@@ -47,14 +47,6 @@ paths:
                 $ref: '#/components/schemas/AllFields'
           description: ''
 components:
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: Session
-    basicAuth:
-      type: http
-      scheme: basic
   schemas:
     AllFields:
       type: object
@@ -209,3 +201,11 @@ components:
       - field_foreign
       - field_o2o
       - field_m2m
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

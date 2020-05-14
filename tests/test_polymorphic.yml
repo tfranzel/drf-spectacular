@@ -32,24 +32,7 @@ paths:
                 $ref: '#/components/schemas/MetaPerson'
           description: ''
 components:
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: Session
-    basicAuth:
-      type: http
-      scheme: basic
   schemas:
-    MetaPerson:
-      oneOf:
-      - $ref: '#/components/schemas/LegalPerson'
-      - $ref: '#/components/schemas/NaturalPerson'
-      discriminator:
-        propertyName: type
-        mapping:
-          legal: '#/components/schemas/LegalPerson'
-          natural: '#/components/schemas/NaturalPerson'
     LegalPerson:
       type: object
       properties:
@@ -64,6 +47,15 @@ components:
           readOnly: true
       required:
       - company_name
+    MetaPerson:
+      oneOf:
+      - $ref: '#/components/schemas/LegalPerson'
+      - $ref: '#/components/schemas/NaturalPerson'
+      discriminator:
+        propertyName: type
+        mapping:
+          legal: '#/components/schemas/LegalPerson'
+          natural: '#/components/schemas/NaturalPerson'
     NaturalPerson:
       type: object
       properties:
@@ -82,3 +74,11 @@ components:
       required:
       - first_name
       - last_name
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
