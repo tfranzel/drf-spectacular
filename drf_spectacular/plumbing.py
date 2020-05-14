@@ -352,6 +352,8 @@ class ComponentRegistry:
         output = defaultdict(dict)
         # build tree from flat registry
         for component in self._components.values():
+            if getattr(component.object, 'allow_null', None):
+                component.schema['nullable'] = True
             output[component.type][component.name] = component.schema
         # add/override extra components
         for extra_type, extra_component_dict in extra_components.items():

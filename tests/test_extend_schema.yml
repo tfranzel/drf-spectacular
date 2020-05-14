@@ -309,6 +309,7 @@ components:
       required:
       - inline_b
       - inline_i
+      nullable: true
     Query:
       type: object
       properties:
