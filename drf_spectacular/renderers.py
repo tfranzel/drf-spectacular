@@ -16,6 +16,12 @@ class OpenApiYamlRenderer(OpenAPIRenderer):
             return dumper.represent_dict({'string': str(data), 'code': data.code})
         Dumper.add_representer(ErrorDetail, error_detail_representer)
 
+        def multiline_str_representer(dumper, data):
+            scalar = dumper.represent_str(data)
+            scalar.style = '|' if '\n' in data else None
+            return scalar
+        Dumper.add_representer(str, multiline_str_representer)
+
         return yaml.dump(
             data,
             default_flow_style=False,

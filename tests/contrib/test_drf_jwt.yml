@@ -6,10 +6,10 @@ paths:
   /api-token-auth/:
     post:
       operationId: api_token_auth_create
-      description: 'API View that receives a POST with a user''s username and password.
+      description: |-
+        API View that receives a POST with a user's username and password.
 
-
-        Returns a JSON Web Token that can be used for authenticated requests.'
+        Returns a JSON Web Token that can be used for authenticated requests.
       tags:
       - api-token-auth
       requestBody:

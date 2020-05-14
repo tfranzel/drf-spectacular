@@ -23,10 +23,10 @@ paths:
           description: ''
     post:
       operationId: albums_create
-      description: 'Special documentation about creating albums
+      description: |-
+        Special documentation about creating albums
 
-
-        There is even more info here'
+        There is even more info here
       tags:
       - albums
       requestBody:
