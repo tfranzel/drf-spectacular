@@ -86,8 +86,8 @@ components:
           type: string
           writeOnly: true
       required:
-      - username
       - password
+      - username
     TokenRefresh:
       type: object
       properties:

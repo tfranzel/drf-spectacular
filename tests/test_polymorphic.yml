@@ -47,6 +47,8 @@ components:
           readOnly: true
       required:
       - company_name
+      - id
+      - type
     MetaPerson:
       oneOf:
       - $ref: '#/components/schemas/LegalPerson'
@@ -73,7 +75,9 @@ components:
           readOnly: true
       required:
       - first_name
+      - id
       - last_name
+      - type
   securitySchemes:
     basicAuth:
       type: http

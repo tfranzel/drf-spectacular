@@ -211,10 +211,13 @@ components:
         released:
           type: boolean
       required:
-      - title
       - genre
-      - year
+      - id
       - released
+      - single
+      - songs
+      - title
+      - year
     PatchedAlbum:
       type: object
       properties:
@@ -257,8 +260,10 @@ components:
           nullable: true
           readOnly: true
       required:
-      - title
+      - id
       - length
+      - title
+      - top10
     GenreEnum:
       enum:
       - POP

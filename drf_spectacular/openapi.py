@@ -571,7 +571,7 @@ class AutoSchema(ViewInspector):
 
     def _map_basic_serializer(self, serializer, direction):
         serializer = force_instance(serializer)
-        required = []
+        required = set()
         properties = {}
 
         for field in serializer.fields.values():
@@ -579,12 +579,13 @@ class AutoSchema(ViewInspector):
                 continue
 
             if field.required:
-                required.append(field.field_name)
+                required.add(field.field_name)
 
             schema = self._map_serializer_field(field)
 
             if field.read_only:
                 schema['readOnly'] = True
+                required.add(field.field_name)
             if field.write_only:
                 schema['writeOnly'] = True
             if field.allow_null:
@@ -605,7 +606,7 @@ class AutoSchema(ViewInspector):
             'properties': properties
         }
         if required and (self.method != 'PATCH' or direction == 'response'):
-            result['required'] = required
+            result['required'] = sorted(required)
 
         return result
 
@@ -730,8 +731,12 @@ class AutoSchema(ViewInspector):
                 # serializer is empty so skip content enumeration
                 return None
             schema = component.ref
-            if component.schema.get('required', []):
-                request_body_required = True
+            # request body is only required if any required property is not read-only
+            readonly_props = [
+                p for p, s in component.schema.get('properties', {}).items() if s.get('readOnly')
+            ]
+            required_props = component.schema.get('required', [])
+            request_body_required = any(req not in readonly_props for req in required_props)
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
             if not schema:
