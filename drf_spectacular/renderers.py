@@ -1,10 +1,12 @@
 import yaml
 from rest_framework.exceptions import ErrorDetail
-from rest_framework.renderers import OpenAPIRenderer, JSONRenderer
+from rest_framework.renderers import JSONRenderer, BaseRenderer
 
 
-class OpenApiYamlRenderer(OpenAPIRenderer):
+class OpenApiYamlRenderer(BaseRenderer):
     media_type = 'application/vnd.oai.openapi'
+    charset = None
+    format = 'openapi'
 
     def render(self, data, media_type=None, renderer_context=None):
         # disable yaml advanced feature 'alias' for clean, portable, and readable output

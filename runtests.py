@@ -14,6 +14,7 @@ PYTEST_ARGS = {
 
 FLAKE8_ARGS = ['drf_spectacular', 'tests']
 
+MYPY_ARGS = ['--config-file=tox.ini', 'drf_spectacular']
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -27,6 +28,12 @@ def flake8_main(args):
     print('Running flake8 code linting')
     ret = subprocess.call(['flake8'] + args)
     print('flake8 failed' if ret else 'flake8 passed')
+    return ret
+
+def mypy_main(args):
+    print('Running mypy code linting')
+    ret = subprocess.call(['mypy'] + args)
+    print('mypy failed' if ret else 'mypy passed')
     return ret
 
 
@@ -89,3 +96,5 @@ if __name__ == "__main__":
         exit_on_failure(pytest.main(pytest_args))
     if run_flake8:
         exit_on_failure(flake8_main(FLAKE8_ARGS))
+    if run_flake8:
+        exit_on_failure(mypy_main(MYPY_ARGS))

@@ -4,12 +4,12 @@ import sys
 from abc import ABCMeta
 from collections import defaultdict
 from collections.abc import Hashable
-from typing import List, Type, Optional, TypeVar, Union, Generic
+from typing import List, Type, Optional, TypeVar, Union, Generic, DefaultDict
 
 import inflection
 import uritemplate
 from django import __version__ as DJANGO_VERSION
-from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver
+from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver  # type: ignore
 from django.utils.module_loading import import_string
 from rest_framework import fields, serializers, versioning, exceptions
 
@@ -27,8 +27,8 @@ class UnableToProceedError(Exception):
 
 
 class GeneratorStats:
-    _warn_cache = defaultdict(int)
-    _error_cache = defaultdict(int)
+    _warn_cache: DefaultDict[str, int] = defaultdict(int)
+    _error_cache: DefaultDict[str, int] = defaultdict(int)
 
     def __bool__(self):
         return bool(self._warn_cache or self._error_cache)
@@ -74,7 +74,7 @@ def anyisinstance(obj, type_list):
     return any([isinstance(obj, t) for t in type_list])
 
 
-def get_class(obj):
+def get_class(obj) -> type:
     return obj if inspect.isclass(obj) else obj.__class__
 
 
@@ -349,7 +349,7 @@ class ComponentRegistry:
         del self._components[key]
 
     def build(self, extra_components) -> dict:
-        output = defaultdict(dict)
+        output: DefaultDict[str, dict] = defaultdict(dict)
         # build tree from flat registry
         for component in self._components.values():
             output[component.type][component.name] = component.schema
@@ -392,7 +392,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
         if cls.target_class is None:
             return False  # app not installed
         elif cls.match_subclasses:
-            return issubclass(get_class(target), cls.target_class)
+            return issubclass(get_class(target), cls.target_class)  # type: ignore
         else:
             return get_class(target) == cls.target_class
 

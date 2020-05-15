@@ -13,7 +13,7 @@ from rest_framework import permissions, renderers, serializers
 from rest_framework.fields import _UnvalidatedField, empty
 from rest_framework.generics import GenericAPIView
 from rest_framework.schemas.inspectors import ViewInspector
-from rest_framework.schemas.utils import get_pk_description
+from rest_framework.schemas.utils import get_pk_description  # type: ignore
 from rest_framework.settings import api_settings
 from rest_framework.utils.model_meta import get_field_info
 from rest_framework.views import APIView

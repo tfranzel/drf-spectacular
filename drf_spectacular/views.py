@@ -1,4 +1,5 @@
 from collections import namedtuple
+from typing import Dict, Any
 
 from django.views.generic import TemplateView
 from rest_framework.response import Response
@@ -13,7 +14,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 
 if spectacular_settings.SERVE_INCLUDE_SCHEMA:
-    SCHEMA_KWARGS = {'responses': {200: OpenApiTypes.OBJECT}}
+    SCHEMA_KWARGS: Dict[str, Any] = {'responses': {200: OpenApiTypes.OBJECT}}
 else:
     SCHEMA_KWARGS = {'exclude': True}
 

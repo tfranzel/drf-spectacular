@@ -2,3 +2,5 @@ pytest>=5.3.5
 pytest-django>=3.8.0
 pytest-cov>=2.8.1
 flake8>=3.7.9
+mypy>=0.770
+djangorestframework-stubs>=1.1.0

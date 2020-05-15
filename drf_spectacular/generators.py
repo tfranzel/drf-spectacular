@@ -4,10 +4,8 @@ from urllib.parse import urljoin
 from django.urls import URLResolver, URLPattern
 from rest_framework import viewsets, views
 from rest_framework.compat import get_original_route
-from rest_framework.schemas.generators import (
-    BaseSchemaGenerator,
-    EndpointEnumerator as BaseEndpointEnumerator,
-)
+from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignore
+from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.plumbing import (

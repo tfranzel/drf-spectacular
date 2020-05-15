@@ -40,7 +40,7 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
     """
 
     """
-    _registry: List['OpenApiSerializerExtension'] = []
+    _registry: List['OpenApiSerializerFieldExtension'] = []
 
     @abstractmethod
     def map_serializer_field(self, auto_schema):

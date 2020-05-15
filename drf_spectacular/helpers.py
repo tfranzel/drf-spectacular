@@ -13,7 +13,7 @@ def lazy_serializer(path):
                 self.lazy_obj = import_string(path)(*self.lazy_args, **self.lazy_kwargs)
             return getattr(self.lazy_obj, item)
 
-        @property
+        @property  # type: ignore
         def __class__(self):
             return self.__getattr__('__class__')
 
