@@ -404,7 +404,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
         return None
 
 
-def postprocess_schema_enums(generator, result, **kwargs):
+def postprocess_schema_enums(result, **kwargs):
     """
     simple replacement of Enum/Choices that globally share the same name and have
     the same choices. Aids client generation to not generate a separate enum for

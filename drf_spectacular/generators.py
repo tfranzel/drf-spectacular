@@ -154,5 +154,5 @@ class SchemaGenerator(BaseSchemaGenerator):
             components=self.registry.build(spectacular_settings.APPEND_COMPONENTS),
         )
         for hook in spectacular_settings.POSTPROCESSING_HOOKS:
-            result = hook(generator=self, request=request, public=public, result=result)
+            result = hook(result=result, generator=self, request=request, public=public)
         return result
