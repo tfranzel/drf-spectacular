@@ -48,8 +48,9 @@ components:
           items:
             $ref: '#/components/schemas/TreeNode'
       required:
-      - label
       - children
+      - id
+      - label
   securitySchemes:
     basicAuth:
       type: http

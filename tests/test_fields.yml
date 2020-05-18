@@ -177,30 +177,41 @@ components:
             type: string
             format: uuid
       required:
-      - field_decimal_uncoerced
-      - field_regex
-      - field_list
-      - field_int
-      - field_float
+      - field_bigint
       - field_bool
+      - field_bool_override
       - field_char
-      - field_text
-      - field_slug
-      - field_email
-      - field_uuid
-      - field_url
-      - field_ip
-      - field_ip_generic
-      - field_decimal
-      - field_file
-      - field_img
       - field_date
       - field_datetime
-      - field_bigint
-      - field_smallint
+      - field_decimal
+      - field_decimal_uncoerced
+      - field_email
+      - field_file
+      - field_float
       - field_foreign
-      - field_o2o
+      - field_identity_hyperlink
+      - field_img
+      - field_int
+      - field_ip
+      - field_ip_generic
+      - field_list
       - field_m2m
+      - field_method_float
+      - field_method_object
+      - field_model_property_float
+      - field_o2o
+      - field_read_only_nav_uuid
+      - field_read_only_nav_uuid_3steps
+      - field_regex
+      - field_related_hyperlink
+      - field_related_slug
+      - field_related_string
+      - field_slug
+      - field_smallint
+      - field_text
+      - field_url
+      - field_uuid
+      - id
   securitySchemes:
     basicAuth:
       type: http

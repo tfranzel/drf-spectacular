@@ -65,6 +65,7 @@ components:
           writeOnly: true
       required:
       - password
+      - token
       - username
     X:
       type: object

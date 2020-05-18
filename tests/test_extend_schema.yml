@@ -288,6 +288,11 @@ components:
           allOf:
           - $ref: '#/components/schemas/FieldLEnum'
           readOnly: true
+      required:
+      - field_i
+      - field_j
+      - field_k
+      - field_l
     Gamma:
       type: object
       properties:

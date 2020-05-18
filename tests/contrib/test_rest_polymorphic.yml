@@ -180,8 +180,10 @@ components:
             $ref: '#/components/schemas/Person'
           readOnly: true
       required:
-      - company_name
       - address
+      - board
+      - company_name
+      - id
     NaturalPerson:
       type: object
       properties:
@@ -201,9 +203,10 @@ components:
           type: integer
           nullable: true
       required:
-      - first_name
-      - last_name
       - address
+      - first_name
+      - id
+      - last_name
       - supervisor_id
     PatchedLegalPerson:
       type: object
