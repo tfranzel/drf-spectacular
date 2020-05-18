@@ -43,7 +43,7 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
     _registry: List['OpenApiSerializerFieldExtension'] = []
 
     @abstractmethod
-    def map_serializer_field(self, auto_schema):
+    def map_serializer_field(self, auto_schema, direction):
         pass  # pragma: no cover
 
 

@@ -19,7 +19,7 @@ def test_serializer_field_extension(no_warnings):
     class Base64FieldExtension(OpenApiSerializerFieldExtension):
         target_class = 'tests.test_extensions.Base64Field'
 
-        def map_serializer_field(self, auto_schema):
+        def map_serializer_field(self, auto_schema, direction):
             return build_basic_type(OpenApiTypes.BYTE)
 
     class XSerializer(serializers.Serializer):

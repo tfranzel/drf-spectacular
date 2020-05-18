@@ -121,7 +121,7 @@ class AutoSchema(ViewInspector):
                 if is_basic_type(parameter.type):
                     schema = build_basic_type(parameter.type)
                 elif is_serializer(parameter.type):
-                    schema = self.resolve_serializer(parameter.type, direction=None).ref
+                    schema = self.resolve_serializer(parameter.type, 'request').ref
                 else:
                     schema = parameter.type
                 result.append(build_parameter_type(
@@ -135,7 +135,7 @@ class AutoSchema(ViewInspector):
                 ))
             elif is_serializer(parameter):
                 # explode serializer into separate parameters. defaults to QUERY location
-                mapped = self._map_serializer(parameter, direction=None)
+                mapped = self._map_serializer(parameter, 'request')
                 for property_name, property_schema in mapped['properties'].items():
                     result.append(build_parameter_type(
                         name=property_name,
@@ -278,7 +278,7 @@ class AutoSchema(ViewInspector):
             else:
                 try:
                     model_field = model._meta.get_field(variable)
-                    schema = self._map_model_field(model_field)
+                    schema = self._map_model_field(model_field, direction=None)
                     if model_field.help_text:
                         description = force_str(model_field.help_text)
                     elif model_field.primary_key:
@@ -361,7 +361,7 @@ class AutoSchema(ViewInspector):
             mapping['type'] = type
         return mapping
 
-    def _map_model_field(self, model_field):
+    def _map_model_field(self, model_field, direction):
         assert isinstance(model_field, models.Field)
         # to get a fully initialized serializer field we use DRF's own init logic
         try:
@@ -378,14 +378,14 @@ class AutoSchema(ViewInspector):
         # For some cases, the DRF init logic either breaks (custom field with internal type) or
         # the resulting field is underspecified with regards to the schema (ReadOnlyField).
         if field and not anyisinstance(field, [serializers.ReadOnlyField, serializers.ModelField]):
-            return self._map_serializer_field(field)
+            return self._map_serializer_field(field, direction)
         elif isinstance(model_field, models.ForeignKey):
-            return self._map_model_field(model_field.target_field)
+            return self._map_model_field(model_field.target_field, direction)
         elif hasattr(models, model_field.get_internal_type()):
             # be graceful when the model field is not explicitly mapped to a serializer
             internal_type = getattr(models, model_field.get_internal_type())
             field_cls = serializers.ModelSerializer.serializer_field_mapping[internal_type]
-            return self._map_serializer_field(field_cls())
+            return self._map_serializer_field(field_cls(), direction)
         else:
             error(
                 f'could not resolve model field "{model_field}". failed to resolve through '
@@ -394,41 +394,38 @@ class AutoSchema(ViewInspector):
             )
             return build_basic_type(OpenApiTypes.STR)
 
-    def _map_serializer_field(self, field):
+    def _map_serializer_field(self, field, direction):
         if has_override(field, 'field'):
             override = get_override(field, 'field')
             if is_basic_type(override):
                 return build_basic_type(override)
             else:
-                return self._map_serializer_field(override)
+                return self._map_serializer_field(override, direction)
 
         serializer_field_extension = OpenApiSerializerFieldExtension.get_match(field)
         if serializer_field_extension:
-            return serializer_field_extension.map_serializer_field(self)
-
-        # TODO for now ignore direction while nesting. this would only be relevant
-        #  for nested PATCH, which is likely a very uncommon edge case
+            return serializer_field_extension.map_serializer_field(self, direction)
 
         # nested serializer
         if isinstance(field, serializers.Serializer):
-            return self.resolve_serializer(field, direction=None).ref
+            return self.resolve_serializer(field, direction).ref
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if isinstance(field, serializers.ListSerializer):
-            return build_array_type(self.resolve_serializer(field.child, direction=None).ref)
+            return build_array_type(self.resolve_serializer(field.child, direction).ref)
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
-            return build_array_type(self._map_serializer_field(field.child_relation))
+            return build_array_type(self._map_serializer_field(field.child_relation, direction))
 
         if isinstance(field, serializers.PrimaryKeyRelatedField):
             # read_only fields do not have a Manager by design. go around and get field
             # from parent. also avoid calling Manager. __bool__ as it might be customized
             # to hit the database.
             if getattr(field, 'queryset', None) is not None:
-                return self._map_model_field(field.queryset.model._meta.pk)
+                return self._map_model_field(field.queryset.model._meta.pk, direction)
             else:
-                return self._map_model_field(field.parent.Meta.model._meta.pk)
+                return self._map_model_field(field.parent.Meta.model._meta.pk, direction)
 
         if isinstance(field, serializers.StringRelatedField):
             return build_basic_type(OpenApiTypes.STR)
@@ -456,7 +453,7 @@ class AutoSchema(ViewInspector):
             schema = build_array_type({})
             # TODO check this
             if not isinstance(field.child, _UnvalidatedField):
-                map_field = self._map_serializer_field(field.child)
+                map_field = self._map_serializer_field(field.child, direction)
                 items = {
                     "type": map_field.get('type')
                 }
@@ -525,7 +522,7 @@ class AutoSchema(ViewInspector):
 
         if isinstance(field, serializers.SerializerMethodField):
             method = getattr(field.parent, field.method_name)
-            return self._map_type_hint(method)
+            return self._map_response_type_hint(method)
 
         if isinstance(field, serializers.BooleanField):
             return build_basic_type(OpenApiTypes.BOOL)
@@ -542,14 +539,14 @@ class AutoSchema(ViewInspector):
             target = follow_field_source(field.parent.Meta.model, field.source_attrs)
 
             if callable(target):
-                return self._map_type_hint(target)
+                return self._map_response_type_hint(target)
             elif isinstance(target, models.Field):
-                return self._map_model_field(target)
+                return self._map_model_field(target, direction)
 
         # DRF was not able to match the model field to an explicit SerializerField and therefore
         # used its generic fallback serializer field that simply wraps the model field.
         if isinstance(field, serializers.ModelField):
-            return self._map_model_field(field.model_field)
+            return self._map_model_field(field.model_field, direction)
 
         warn(f'could not resolve serializer field {field}. defaulting to "string"')
         return build_basic_type(OpenApiTypes.STR)
@@ -581,7 +578,7 @@ class AutoSchema(ViewInspector):
             if field.required:
                 required.add(field.field_name)
 
-            schema = self._map_serializer_field(field)
+            schema = self._map_serializer_field(field, direction)
 
             if field.read_only:
                 schema['readOnly'] = True
@@ -643,11 +640,11 @@ class AutoSchema(ViewInspector):
                     schema['maximum'] = int(digits * '9') + 1
                     schema['minimum'] = -schema['maximum']
 
-    def _map_type_hint(self, method):
+    def _map_response_type_hint(self, method):
         hint = get_override(method, 'field') or typing.get_type_hints(method).get('return')
 
         if is_serializer(hint) or is_field(hint):
-            return self._map_serializer_field(force_instance(hint))
+            return self._map_serializer_field(force_instance(hint), 'response')
         elif is_basic_type(hint):
             return build_basic_type(hint)
         elif getattr(hint, '__origin__', None) is typing.Union:
