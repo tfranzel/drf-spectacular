@@ -1,9 +1,12 @@
 Changelog
 =========
 
-0.9.5 (2020-05-18)
+0.9.5 (2020-05-20)
 ------------------
 
+- add optional serializer component split
+- improve SerializerField meta extraction
+- improve serializer directionality
 - add mypy static analysis
 - make all readonly fields required for output. `#54 <https://github.com/tfranzel/drf-spectacular/issues/54>`_
 - make yaml multi-line strings nicer
