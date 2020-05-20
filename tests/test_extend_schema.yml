@@ -278,6 +278,7 @@ components:
         field_j:
           allOf:
           - $ref: '#/components/schemas/Inline'
+          nullable: true
           readOnly: true
         field_k:
           type: array

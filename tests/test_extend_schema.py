@@ -62,7 +62,7 @@ class ErrorDetailSerializer(serializers.Serializer):
     def get_field_i(self, object):
         return '2020-03-06 20:54:00.104248'  # pragma: no cover
 
-    @extend_schema_field(InlineSerializer)
+    @extend_schema_field(InlineSerializer(allow_null=True))
     def get_field_j(self, object):
         return InlineSerializer({}).data  # pragma: no cover
 

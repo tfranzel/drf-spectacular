@@ -8,7 +8,6 @@ from operator import attrgetter
 import uritemplate
 from django.core import validators, exceptions as django_exceptions
 from django.db import models
-from django.utils.encoding import force_str
 from rest_framework import permissions, renderers, serializers
 from rest_framework.fields import _UnvalidatedField, empty
 from rest_framework.generics import GenericAPIView
@@ -28,7 +27,7 @@ from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, build_array_type,
     ComponentRegistry, ResolvedComponent, build_parameter_type, error,
-    resolve_regex_path_parameter, safe_ref, has_override, get_override,
+    resolve_regex_path_parameter, safe_ref, has_override, get_override, append_meta,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
@@ -279,9 +278,10 @@ class AutoSchema(ViewInspector):
                 try:
                     model_field = model._meta.get_field(variable)
                     schema = self._map_model_field(model_field, direction=None)
-                    if model_field.help_text:
-                        description = force_str(model_field.help_text)
-                    elif model_field.primary_key:
+                    # strip irrelevant meta data
+                    irrelevant_field_meta = ['readOnly', 'writeOnly', 'nullable', 'default']
+                    schema = {k: v for k, v in schema.items() if k not in irrelevant_field_meta}
+                    if 'description' not in schema and model_field.primary_key:
                         description = get_pk_description(model, model_field)
                 except django_exceptions.FieldDoesNotExist:
                     warn(
@@ -402,52 +402,62 @@ class AutoSchema(ViewInspector):
             else:
                 return self._map_serializer_field(override, direction)
 
+        meta = self._get_serializer_field_meta(field)
+
         serializer_field_extension = OpenApiSerializerFieldExtension.get_match(field)
         if serializer_field_extension:
-            return serializer_field_extension.map_serializer_field(self, direction)
+            schema = serializer_field_extension.map_serializer_field(self, direction)
+            return append_meta(schema, meta)
 
         # nested serializer
         if isinstance(field, serializers.Serializer):
-            return self.resolve_serializer(field, direction).ref
+            schema = self.resolve_serializer(field, direction).ref
+            return append_meta(schema, meta)
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if isinstance(field, serializers.ListSerializer):
-            return build_array_type(self.resolve_serializer(field.child, direction).ref)
+            schema = self.resolve_serializer(field.child, direction).ref
+            return append_meta(build_array_type(schema), meta)
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
-            return build_array_type(self._map_serializer_field(field.child_relation, direction))
+            schema = self._map_serializer_field(field.child_relation, direction)
+            return append_meta(build_array_type(schema), meta)
 
         if isinstance(field, serializers.PrimaryKeyRelatedField):
             # read_only fields do not have a Manager by design. go around and get field
             # from parent. also avoid calling Manager. __bool__ as it might be customized
             # to hit the database.
             if getattr(field, 'queryset', None) is not None:
-                return self._map_model_field(field.queryset.model._meta.pk, direction)
+                schema = self._map_model_field(field.queryset.model._meta.pk, direction)
             else:
-                return self._map_model_field(field.parent.Meta.model._meta.pk, direction)
+                schema = self._map_model_field(field.parent.Meta.model._meta.pk, direction)
+            # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
+            # signals that attribute. however this does not apply in the context of relations.
+            del schema['readOnly']
+            return append_meta(schema, meta)
 
         if isinstance(field, serializers.StringRelatedField):
-            return build_basic_type(OpenApiTypes.STR)
+            return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
         if isinstance(field, serializers.SlugRelatedField):
-            return build_basic_type(OpenApiTypes.STR)
+            return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
         if isinstance(field, serializers.HyperlinkedIdentityField):
-            return build_basic_type(OpenApiTypes.URI)
+            return append_meta(build_basic_type(OpenApiTypes.URI), meta)
 
         if isinstance(field, serializers.HyperlinkedRelatedField):
-            return build_basic_type(OpenApiTypes.URI)
+            return append_meta(build_basic_type(OpenApiTypes.URI), meta)
 
         # ChoiceFields (single and multiple).
         # Q:
         # - Is 'type' required?
         # - can we determine the TYPE of a choicefield?
         if isinstance(field, serializers.MultipleChoiceField):
-            return build_array_type(self._map_choicefield(field))
+            return append_meta(build_array_type(self._map_choicefield(field)), meta)
 
         if isinstance(field, serializers.ChoiceField):
-            return self._map_choicefield(field)
+            return append_meta(self._map_choicefield(field), meta)
 
         if isinstance(field, serializers.ListField):
             schema = build_array_type({})
@@ -460,33 +470,34 @@ class AutoSchema(ViewInspector):
                 if 'format' in map_field:
                     items['format'] = map_field.get('format')
                 schema['items'] = items
-            return schema
+            return append_meta(schema, meta)
 
         # DateField and DateTimeField type is string
         if isinstance(field, serializers.DateField):
-            return build_basic_type(OpenApiTypes.DATE)
+            return append_meta(build_basic_type(OpenApiTypes.DATE), meta)
 
         if isinstance(field, serializers.DateTimeField):
-            return build_basic_type(OpenApiTypes.DATETIME)
+            return append_meta(build_basic_type(OpenApiTypes.DATETIME), meta)
 
         if isinstance(field, serializers.EmailField):
-            return build_basic_type(OpenApiTypes.EMAIL)
+            return append_meta(build_basic_type(OpenApiTypes.EMAIL), meta)
 
         if isinstance(field, serializers.URLField):
-            return build_basic_type(OpenApiTypes.URI)
+            return append_meta(build_basic_type(OpenApiTypes.URI), meta)
 
         if isinstance(field, serializers.UUIDField):
-            return build_basic_type(OpenApiTypes.UUID)
+            return append_meta(build_basic_type(OpenApiTypes.UUID), meta)
 
         if isinstance(field, serializers.IPAddressField):
             # TODO this might be a DRF bug. protocol is not propagated to serializer although it
             #  should have been. results in always 'both' (thus no format)
             if 'ipv4' == field.protocol.lower():
-                return build_basic_type(OpenApiTypes.IP4)
+                schema = build_basic_type(OpenApiTypes.IP4)
             elif 'ipv6' == field.protocol.lower():
-                return build_basic_type(OpenApiTypes.IP6)
+                schema = build_basic_type(OpenApiTypes.IP6)
             else:
-                return build_basic_type(OpenApiTypes.STR)
+                schema = build_basic_type(OpenApiTypes.STR)
+            return append_meta(schema, meta)
 
         # DecimalField has multipleOf based on decimal_places
         if isinstance(field, serializers.DecimalField):
@@ -501,12 +512,12 @@ class AutoSchema(ViewInspector):
                 content['maximum'] = int(field.max_whole_digits * '9') + 1
                 content['minimum'] = -content['maximum']
             self._map_min_max(field, content)
-            return content
+            return append_meta(content, meta)
 
         if isinstance(field, serializers.FloatField):
             content = build_basic_type(OpenApiTypes.FLOAT)
             self._map_min_max(field, content)
-            return content
+            return append_meta(content, meta)
 
         if isinstance(field, serializers.IntegerField):
             content = build_basic_type(OpenApiTypes.INT)
@@ -514,24 +525,24 @@ class AutoSchema(ViewInspector):
             # 2147483647 is max for int32_size, so we use int64 for format
             if int(content.get('maximum', 0)) > 2147483647 or int(content.get('minimum', 0)) > 2147483647:
                 content['format'] = 'int64'
-            return content
+            return append_meta(content, meta)
 
         if isinstance(field, serializers.FileField):
             # TODO returns filename. but does it accept binary data on upload?
-            return build_basic_type(OpenApiTypes.STR)
+            return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
         if isinstance(field, serializers.SerializerMethodField):
             method = getattr(field.parent, field.method_name)
-            return self._map_response_type_hint(method)
+            return append_meta(self._map_response_type_hint(method), meta)
 
         if isinstance(field, serializers.BooleanField):
-            return build_basic_type(OpenApiTypes.BOOL)
+            return append_meta(build_basic_type(OpenApiTypes.BOOL), meta)
 
         if anyisinstance(field, [serializers.JSONField, serializers.DictField, serializers.HStoreField]):
-            return build_basic_type(OpenApiTypes.OBJECT)
+            return append_meta(build_basic_type(OpenApiTypes.OBJECT), meta)
 
         if isinstance(field, serializers.CharField):
-            return build_basic_type(OpenApiTypes.STR)
+            return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
         if isinstance(field, serializers.ReadOnlyField):
             # direct source from the serializer
@@ -539,17 +550,21 @@ class AutoSchema(ViewInspector):
             target = follow_field_source(field.parent.Meta.model, field.source_attrs)
 
             if callable(target):
-                return self._map_response_type_hint(target)
+                schema = self._map_response_type_hint(target)
             elif isinstance(target, models.Field):
-                return self._map_model_field(target, direction)
+                schema = self._map_model_field(target, direction)
+            else:
+                assert False, 'ReadOnlyField target must be property or model field'
+            return append_meta(schema, meta)
 
         # DRF was not able to match the model field to an explicit SerializerField and therefore
         # used its generic fallback serializer field that simply wraps the model field.
         if isinstance(field, serializers.ModelField):
-            return self._map_model_field(field.model_field, direction)
+            schema = self._map_model_field(field.model_field, direction)
+            return append_meta(schema, meta)
 
         warn(f'could not resolve serializer field {field}. defaulting to "string"')
-        return build_basic_type(OpenApiTypes.STR)
+        return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
     def _map_min_max(self, field, content):
         if field.max_value:
@@ -566,6 +581,23 @@ class AutoSchema(ViewInspector):
         else:
             return self._map_basic_serializer(serializer, direction)
 
+    def _get_serializer_field_meta(self, field):
+        meta = {}
+        if field.read_only:
+            meta['readOnly'] = True
+        if field.write_only:
+            meta['writeOnly'] = True
+        if field.allow_null:
+            meta['nullable'] = True
+        if field.default is not None and field.default != empty and not callable(field.default):
+            default = field.to_representation(field.default)
+            if isinstance(default, set):
+                default = list(default)
+            meta['default'] = default
+        if field.help_text:
+            meta['description'] = str(field.help_text)
+        return meta
+
     def _map_basic_serializer(self, serializer, direction):
         serializer = force_instance(serializer)
         required = set()
@@ -575,25 +607,11 @@ class AutoSchema(ViewInspector):
             if isinstance(field, serializers.HiddenField):
                 continue
 
-            if field.required:
-                required.add(field.field_name)
-
             schema = self._map_serializer_field(field, direction)
 
-            if field.read_only:
-                schema['readOnly'] = True
+            if field.required or schema.get('readOnly'):
                 required.add(field.field_name)
-            if field.write_only:
-                schema['writeOnly'] = True
-            if field.allow_null:
-                schema['nullable'] = True
-            if field.default is not None and field.default != empty and not callable(field.default):
-                default = field.to_representation(field.default)
-                if isinstance(default, set):
-                    default = list(default)
-                schema['default'] = default
-            if field.help_text:
-                schema['description'] = str(field.help_text)
+
             self._map_field_validators(field, schema)
 
             properties[field.field_name] = safe_ref(schema)

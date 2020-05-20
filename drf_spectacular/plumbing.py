@@ -214,6 +214,10 @@ def safe_ref(schema):
     return schema
 
 
+def append_meta(schema, meta):
+    return safe_ref({**schema, **meta})
+
+
 def get_field_from_model(model, field):
     """
     this is a Django 2.2 compatibility function to access a field through a Deferred Attribute
