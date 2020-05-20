@@ -13,6 +13,12 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'OPERATION_SORTER': 'alpha',
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
+    # Schema generation parameters to influence how components are constructed.
+    # Some schema features might not translate well to your target.
+    # Demultiplexing components might help alleviate those issues.
+    'COMPONENT_SPLIT_PATCH': True,
+    'COMPONENT_SPLIT_REQUEST': False,
+
     # Configuration for serving the schema with SpectacularAPIView
     'SERVE_URLCONF': None,
     # complete public schema or a subset based on the requesting user

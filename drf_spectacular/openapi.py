@@ -577,9 +577,35 @@ class AutoSchema(ViewInspector):
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
 
         if serializer_extension:
-            return serializer_extension.map_serializer(self, direction)
+            schema = serializer_extension.map_serializer(self, direction)
         else:
-            return self._map_basic_serializer(serializer, direction)
+            schema = self._map_basic_serializer(serializer, direction)
+
+        return self._postprocess_serializer_schema(schema, serializer, direction)
+
+    def _postprocess_serializer_schema(self, schema, serializer, direction):
+        """
+        postprocess generated schema for component splitting, if enabled.
+        does only apply to direct component schemas and not intermediate schemas
+        like components composed of sub-component via e.g. oneOf.
+        """
+        if not spectacular_settings.COMPONENT_SPLIT_REQUEST:
+            return schema
+
+        properties = schema.get('properties', [])
+        required = schema.get('required', [])
+
+        for prop_name in list(properties):
+            if direction == 'request' and properties[prop_name].get('readOnly'):
+                del schema['properties'][prop_name]
+                if prop_name in required:
+                    required.remove(prop_name)
+            if direction == 'response' and properties[prop_name].get('writeOnly'):
+                del schema['properties'][prop_name]
+                if prop_name in required:
+                    required.remove(prop_name)
+
+        return schema
 
     def _get_serializer_field_meta(self, field):
         meta = {}
@@ -620,7 +646,11 @@ class AutoSchema(ViewInspector):
             'type': 'object',
             'properties': properties
         }
-        if required and (self.method != 'PATCH' or direction == 'response'):
+
+        if spectacular_settings.COMPONENT_SPLIT_PATCH:
+            if self.method == 'PATCH' and direction == 'request':
+                required = []
+        if required:
             result['required'] = sorted(required)
 
         return result
@@ -854,11 +884,16 @@ class AutoSchema(ViewInspector):
             name = serializer.Meta.ref_name
         else:
             name = serializer.__class__.__name__
-            if name.endswith('Serializer'):
-                name = name[:-10]
 
-        if self.method == 'PATCH' and not serializer.read_only and direction == 'request':
-            name = 'Patched' + name
+        if name.endswith('Serializer'):
+            name = name[:-10]
+
+        if self.method == 'PATCH' and spectacular_settings.COMPONENT_SPLIT_PATCH:
+            if not serializer.read_only and direction == 'request':
+                name = 'Patched' + name
+
+        if direction == 'request' and spectacular_settings.COMPONENT_SPLIT_REQUEST:
+            name = name + 'Request'
 
         return name
 

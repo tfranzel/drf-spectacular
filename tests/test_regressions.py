@@ -533,3 +533,28 @@ def test_viewset_list_with_envelope(no_warnings):
     operation_retrieve = schema['paths']['/x/{id}/']['get']
     assert operation_retrieve['operationId'] == 'x_retrieve'
     assert get_response_schema(operation_retrieve)['$ref'] == '#/components/schemas/EnvelopedX'
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_component_split_request():
+    class XSerializer(serializers.Serializer):
+        ro = serializers.IntegerField(read_only=True)
+        rw = serializers.IntegerField()
+        wo = serializers.IntegerField(write_only=True)
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def pi(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x', view_function=pi)
+    validate_schema(schema)
+
+    operation = schema['paths']['/x']['post']
+
+    assert get_response_schema(operation)['$ref'] == '#/components/schemas/X'
+    assert get_request_schema(operation)['$ref'] == '#/components/schemas/XRequest'
+    assert len(schema['components']['schemas']['X']['properties']) == 2
+    assert 'wo' not in schema['components']['schemas']['X']['properties']
+    assert len(schema['components']['schemas']['XRequest']['properties']) == 2
+    assert 'ro' not in schema['components']['schemas']['XRequest']['properties']
