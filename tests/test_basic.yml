@@ -218,6 +218,11 @@ components:
       - songs
       - title
       - year
+    GenreEnum:
+      enum:
+      - POP
+      - ROCK
+      type: string
     PatchedAlbum:
       type: object
       properties:
@@ -264,11 +269,6 @@ components:
       - length
       - title
       - top10
-    GenreEnum:
-      enum:
-      - POP
-      - ROCK
-      type: string
   securitySchemes:
     tokenAuth:
       type: http

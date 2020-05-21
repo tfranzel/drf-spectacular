@@ -294,6 +294,11 @@ components:
       - field_j
       - field_k
       - field_l
+    FieldLEnum:
+      enum:
+      - a
+      - b
+      type: string
     Gamma:
       type: object
       properties:
@@ -339,11 +344,6 @@ components:
           - a
       required:
       - stars
-    FieldLEnum:
-      enum:
-      - a
-      - b
-      type: string
   securitySchemes:
     basicAuth:
       type: http

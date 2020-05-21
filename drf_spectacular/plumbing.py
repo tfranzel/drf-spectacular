@@ -317,7 +317,7 @@ class ComponentRegistry:
         self._components = {}
 
     def register(self, component: ResolvedComponent):
-        if self._components.get(component.key, None):
+        if component.key in self._components:
             warn(
                 f'trying to re-register a {component.type} component with name '
                 f'{self._components[component.key].name}. this might lead to '
@@ -408,7 +408,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
         return None
 
 
-def postprocess_schema_enums(result, **kwargs):
+def postprocess_schema_enums(result, generator, **kwargs):
     """
     simple replacement of Enum/Choices that globally share the same name and have
     the same choices. Aids client generation to not generate a separate enum for
@@ -424,7 +424,6 @@ def postprocess_schema_enums(result, **kwargs):
             yield from iter_prop_containers(schema.get('oneOf', []))
             yield from iter_prop_containers(schema.get('allOf', []))
 
-    # schemas will be modified in-place and same result object is returned
     schemas = result.get('components', {}).get('schemas', {})
 
     hash_mapping = defaultdict(set)
@@ -452,11 +451,20 @@ def postprocess_schema_enums(result, **kwargs):
             enum_name = f'{inflection.camelize(prop_name)}Enum'
             enum_schema = {k: v for k, v in prop_schema.items() if k in ['type', 'enum']}
             prop_schema = {k: v for k, v in prop_schema.items() if k not in ['type', 'enum']}
-            prop_schema['$ref'] = f'#/components/schemas/{enum_name}'
 
-            schemas[enum_name] = enum_schema
+            component = ResolvedComponent(
+                name=enum_name,
+                type=ResolvedComponent.SCHEMA,
+                schema=enum_schema,
+                object=enum_name,
+            )
+            if component not in generator.registry:
+                generator.registry.register(component)
+            prop_schema.update(component.ref)
             props[prop_name] = safe_ref(prop_schema)
 
+    # sort again with additional components
+    result['components'] = generator.registry.build(spectacular_settings.APPEND_COMPONENTS)
     return result
 
 
