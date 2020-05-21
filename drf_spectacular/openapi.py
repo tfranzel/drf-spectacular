@@ -434,7 +434,7 @@ class AutoSchema(ViewInspector):
                 schema = self._map_model_field(field.parent.Meta.model._meta.pk, direction)
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
             # signals that attribute. however this does not apply in the context of relations.
-            del schema['readOnly']
+            schema.pop('readOnly', None)
             return append_meta(schema, meta)
 
         if isinstance(field, serializers.StringRelatedField):
