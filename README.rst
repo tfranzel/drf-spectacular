@@ -27,18 +27,18 @@ Features
     - ``MethodSerializerField()`` type via type hinting or ``@extend_schema_field``
     - Tags extraction
     - Description extraction from ``docstrings``
-    - Sane fallbacks where no Serializer is available (free-form objects)
+    - Sane fallbacks
     - Sane ``operation_id`` naming (based on path)
-    - Easy to use hooks for extending the spectacular ``AutoSchema``
     - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)
+    - Optional input/output serializer component split
     - Included support for:
         - `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_
         - `SimpleJWT <https://github.com/SimpleJWT/django-rest-framework-simplejwt>`_
         - `DjangoOAuthToolkit <https://github.com/jazzband/django-oauth-toolkit>`_
         - `djangorestframework-jwt <https://github.com/jpadilla/django-rest-framework-jwt>`_ (tested fork `drf-jwt <https://github.com/Styria-Digital/django-rest-framework-jwt>`_)
 
-Incomplete features (in progress):
-    - optional input/output serializer component split
+
+For more information visit the `documentation <https://drf-spectacular.readthedocs.io>`_.
 
 License
 -------
@@ -169,41 +169,11 @@ the sky is the limit.
             # your action behaviour
 
 
+More customization
+^^^^^^^^^^^^^^^^^^
 
-Customization by overriding ``AutoSchema``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Still not satisifed? You want more! We still got you covered. We prepared some convenient hooks for things that
-are probably up to taste. If you are careful, you can change pretty much anything.
-
-Don't forget to register your custom AutoSchema in the ``DEFAULT_SCHEMA_CLASS``.
-
-.. code:: python
-
-    from drf_spectacular.openapi import AutoSchema
-
-    class CustomAutoSchema(AutoSchema):
-        def get_operation_id(self, path, method):
-            return 'YOUR-ID'.replace('-', '_')
-
-
-Extras
-^^^^^^
-
-got endpoints that yield list of differing objects? Enter ``PolymorphicProxySerializer``
-
-.. code:: python
-
-    @extend_schema(
-        responses=PolymorphicProxySerializer(
-            component_name='MetaPerson',
-            serializers=[SerializerA, SerializerB],
-            resource_type_field_name='type',
-        )
-    )
-    @api_view()
-    def poly_list(request):
-        return Response(list_of_multiple_object_types)
+Still not satisifed? You want more! We still got you covered.
+Visit `customization <https://drf-spectacular.readthedocs.io/en/latest/customization.html>`_ for more information.
 
 
 Testing

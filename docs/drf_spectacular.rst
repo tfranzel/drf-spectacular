@@ -25,6 +25,13 @@ drf\_spectacular\.views
     :undoc-members:
     :show-inheritance:
 
+drf\_spectacular\.extensions
+----------------------------
+
+.. automodule:: drf_spectacular.extensions
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 drf\_spectacular\.openapi
 -------------------------
