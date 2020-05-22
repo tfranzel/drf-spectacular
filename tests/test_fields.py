@@ -10,6 +10,7 @@ from rest_framework import serializers, viewsets
 from rest_framework.routers import SimpleRouter
 from rest_framework.test import APIClient
 
+from drf_spectacular.generators import SchemaGenerator
 from tests import assert_schema, generate_schema
 
 
@@ -148,11 +149,11 @@ router.register('aux', AuxModelViewset)
 urlpatterns = router.urls
 
 
+@pytest.mark.urls(__name__)
 def test_fields(no_warnings):
-    assert_schema(
-        generate_schema('allfields', AllFieldsModelViewset),
-        'tests/test_fields.yml'
-    )
+    generator = SchemaGenerator()
+    schema = generator.get_schema(request=None, public=True)
+    assert_schema(schema, 'tests/test_fields.yml')
 
 
 @pytest.mark.urls(__name__)

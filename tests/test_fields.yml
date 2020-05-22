@@ -46,6 +46,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/AllFields'
           description: ''
+  /aux/:
+    get:
+      operationId: aux_list
+      description: ''
+      tags:
+      - aux
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Aux'
+          description: ''
+  /aux/{id}/:
+    get:
+      operationId: aux_retrieve
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A UUID string identifying this aux.
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - aux
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Aux'
+          description: ''
 components:
   schemas:
     AllFields:
@@ -211,6 +255,19 @@ components:
       - field_text
       - field_url
       - field_uuid
+      - id
+    Aux:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        field_foreign:
+          type: string
+          format: uuid
+          nullable: true
+      required:
       - id
   securitySchemes:
     basicAuth:
