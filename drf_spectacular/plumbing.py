@@ -12,6 +12,7 @@ from django import __version__ as DJANGO_VERSION
 from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver  # type: ignore
 from django.utils.module_loading import import_string
 from rest_framework import fields, serializers, versioning, exceptions
+from uritemplate import URITemplate
 
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
@@ -518,7 +519,9 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
     if issubclass(view.versioning_class, versioning.URLPathVersioning):
         version_param = view.versioning_class.version_param
         # substitute version variable to emulate request
-        path = uritemplate.expand(path, var_dict={version_param: requested_version})
+        path = uritemplate.partial(path, var_dict={version_param: requested_version})
+        if isinstance(path, URITemplate):
+            path = path.uri
         # emulate router behaviour by injecting substituted variable into view
         view.kwargs[version_param] = requested_version
     elif issubclass(view.versioning_class, versioning.NamespaceVersioning):

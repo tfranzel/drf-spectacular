@@ -1,6 +1,7 @@
 import pytest
 import yaml
 from django.conf.urls import include
+from django.db import models
 from django.urls import path, re_path
 from rest_framework import routers
 from rest_framework import serializers, mixins, viewsets
@@ -14,6 +15,10 @@ from drf_spectacular.views import SpectacularAPIView
 from tests import assert_schema
 
 
+class VersioningModel(models.Model):
+    pass
+
+
 class Xv1Serializer(serializers.Serializer):
     id = serializers.IntegerField()
 
@@ -24,10 +29,16 @@ class Xv2Serializer(serializers.Serializer):
 
 class PathVersioningViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     versioning_class = URLPathVersioning
+    queryset = VersioningModel.objects.all()
 
-    @extend_schema(request=Xv1Serializer, responses=Xv1Serializer, versions=['v1'])
-    @extend_schema(request=Xv2Serializer, responses=Xv2Serializer, versions=['v2'])
+    @extend_schema(responses=Xv1Serializer, versions=['v1'])
+    @extend_schema(responses=Xv2Serializer, versions=['v2'])
     def list(self, request, *args, **kwargs):
+        pass  # pragma: no cover
+
+    @extend_schema(responses=Xv1Serializer, versions=['v1'])
+    @extend_schema(responses=Xv2Serializer, versions=['v2'])
+    def retrieve(self, request, *args, **kwargs):
         pass  # pragma: no cover
 
 
@@ -37,8 +48,12 @@ class NamespaceVersioningViewset(PathVersioningViewset):
 
 class PathVersioningViewset2(mixins.ListModelMixin, viewsets.GenericViewSet):
     versioning_class = URLPathVersioning
+    queryset = VersioningModel.objects.all()
 
     def list(self, request, *args, **kwargs):
+        pass  # pragma: no cover
+
+    def retrieve(self, request, *args, **kwargs):
         pass  # pragma: no cover
 
     def get_serializer_class(self):
