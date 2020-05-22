@@ -1,6 +1,7 @@
 import inspect
 import re
 import typing
+import sys
 from collections import OrderedDict
 from decimal import Decimal
 from operator import attrgetter
@@ -725,6 +726,34 @@ class AutoSchema(ViewInspector):
             media_types.append(renderer.media_type)
         return media_types
 
+    def _get_module_serializers(self, module_name):
+        try:
+            module = sys.modules[module_name]
+        except IndexError:
+            raise
+            return []
+
+        serializer_list = []
+        attrs = dir(module)
+        for attr_name in attrs:
+            attr = getattr(module, attr_name)
+            try:
+                if issubclass(attr, serializers.Serializer):
+                    serializer_list.append(attr)
+            except TypeError:
+                pass
+        return serializer_list
+
+    def _get_module_model_serializer(self, serializer_list):
+        if not serializer_list:
+            return
+        model_serializers = list(
+            serializer for serializer in serializer_list
+            if issubclass(serializer, serializers.ModelSerializer))
+        print(model_serializers)
+        if len(model_serializers) == 1:
+            return model_serializers[0]
+
     def _get_serializer(self):
         view = self.view
         try:
@@ -743,7 +772,32 @@ class AutoSchema(ViewInspector):
                     return view.get_serializer_class()()
                 elif hasattr(view, 'serializer_class'):
                     return view.serializer_class
-                else:
+
+                if view.__module__ == 'rest_framework_social_oauth2.views':
+                    # meta; maybe can inspect validator_class
+                    return
+                if view.__module__ == 'silk.profiling.profiler':
+                    # wrapper.  invoke __call__
+                    return
+
+                serializer_list = self._get_module_serializers(view.__module__)
+
+                # Debugging only - trying to find other cases where there are
+                # no models at all, which is highly unusual.
+                assert serializer_list
+
+                if not serializer_list:
+                    return
+                serializer = self._get_module_model_serializer(serializer_list)
+                if serializer:
+                    error(f'Guessed serializer {serializer} for {view.__class__.__name__}.')
+                    return serializer
+                if serializer_list:
+                    error(
+                        f'Unable to guess serializer for {view.__class__.__name__}. Found multiple: '
+                        f'{serializer_list}.'
+                    )
+                if True:
                     error(
                         f'Unable to guess serializer for {view.__class__.__name__}. This is graceful '
                         f'fallback handling for APIViews. Consider using GenericAPIView as view base '
