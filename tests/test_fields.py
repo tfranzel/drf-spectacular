@@ -14,19 +14,6 @@ from drf_spectacular.generators import SchemaGenerator
 from tests import assert_schema
 
 
-# TODO Fields known to DRF and mapping
-# models.BigIntegerField: IntegerField,
-# models.CommaSeparatedIntegerField: CharField,
-# models.Field: ModelField,
-# models.ImageField: ImageField,
-# models.NullBooleanField: NullBooleanField,
-# models.PositiveIntegerField: IntegerField,
-# models.PositiveSmallIntegerField: IntegerField,
-# models.SmallIntegerField: IntegerField,
-# models.TimeField: TimeField,
-# models.FilePathField: FilePathField,
-
-
 class Aux(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     field_foreign = models.ForeignKey('Aux', null=True, on_delete=models.CASCADE)
@@ -53,6 +40,13 @@ class AllFields(models.Model):
     field_datetime = models.DateTimeField()
     field_bigint = models.BigIntegerField()
     field_smallint = models.SmallIntegerField()
+    field_posint = models.PositiveIntegerField()
+    field_possmallint = models.PositiveSmallIntegerField()
+    field_nullbool = models.NullBooleanField()
+    field_time = models.TimeField()
+    # field_image = models.ImageField()
+    # field_filepath = models.FilePathField()
+
     # relations
     field_foreign = models.ForeignKey(Aux, on_delete=models.CASCADE, help_text='main aux object')
     field_m2m = models.ManyToManyField(Aux, help_text='set of related aux objects')
@@ -184,6 +178,10 @@ def test_model_setup_is_valid():
         field_datetime=datetime.now(),
         field_bigint=11111111111111,
         field_smallint=111111,
+        field_posint=123,
+        field_possmallint=1,
+        field_nullbool=None,
+        field_time='00:05:23.283',
         # relations
         field_foreign=aux,
         field_o2o=aux,

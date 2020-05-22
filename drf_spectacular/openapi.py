@@ -482,6 +482,9 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.DateTimeField):
             return append_meta(build_basic_type(OpenApiTypes.DATETIME), meta)
 
+        if isinstance(field, serializers.TimeField):
+            return append_meta(build_basic_type(OpenApiTypes.TIME), meta)
+
         if isinstance(field, serializers.EmailField):
             return append_meta(build_basic_type(OpenApiTypes.EMAIL), meta)
 
@@ -538,7 +541,7 @@ class AutoSchema(ViewInspector):
             method = getattr(field.parent, field.method_name)
             return append_meta(self._map_response_type_hint(method), meta)
 
-        if isinstance(field, serializers.BooleanField):
+        if anyisinstance(field, [serializers.BooleanField, serializers.NullBooleanField]):
             return append_meta(build_basic_type(OpenApiTypes.BOOL), meta)
 
         if anyisinstance(field, [serializers.JSONField, serializers.DictField, serializers.HStoreField]):

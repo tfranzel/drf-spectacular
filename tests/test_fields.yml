@@ -209,6 +209,16 @@ components:
           type: integer
         field_smallint:
           type: integer
+        field_posint:
+          type: integer
+        field_possmallint:
+          type: integer
+        field_nullbool:
+          type: boolean
+          nullable: true
+        field_time:
+          type: string
+          format: time
         field_foreign:
           type: string
           format: uuid
@@ -247,6 +257,8 @@ components:
       - field_method_object
       - field_model_property_float
       - field_o2o
+      - field_posint
+      - field_possmallint
       - field_read_only_nav_uuid
       - field_read_only_nav_uuid_3steps
       - field_regex
@@ -256,6 +268,7 @@ components:
       - field_slug
       - field_smallint
       - field_text
+      - field_time
       - field_url
       - field_uuid
       - id

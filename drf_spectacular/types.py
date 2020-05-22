@@ -28,6 +28,7 @@ class OpenApiTypes(enum.Enum):
     DECIMAL = enum.auto()
     DATETIME = enum.auto()
     DATE = enum.auto()
+    TIME = enum.auto()
     EMAIL = enum.auto()
     OBJECT = enum.auto()
     NONE = enum.auto()
@@ -49,6 +50,7 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.DECIMAL: {'type': 'number', 'format': 'double'},
     OpenApiTypes.DATETIME: {'type': 'string', 'format': 'date-time'},
     OpenApiTypes.DATE: {'type': 'string', 'format': 'date'},
+    OpenApiTypes.TIME: {'type': 'string', 'format': 'time'},
     OpenApiTypes.EMAIL: {'type': 'string', 'format': 'email'},
     OpenApiTypes.OBJECT: {'type': 'object', 'additionalProperties': {}},
     OpenApiTypes.NONE: {},
