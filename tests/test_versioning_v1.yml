@@ -22,6 +22,30 @@ paths:
                 items:
                   $ref: '#/components/schemas/Xv1'
           description: ''
+  /v1/x/{id}/:
+    get:
+      operationId: v1_x_retrieve
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this versioning model.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Xv1'
+          description: ''
 components:
   schemas:
     Xv1:
