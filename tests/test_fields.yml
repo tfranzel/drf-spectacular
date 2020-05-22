@@ -212,14 +212,17 @@ components:
         field_foreign:
           type: string
           format: uuid
+          description: main aux object
         field_o2o:
           type: string
           format: uuid
+          description: bound aux object
         field_m2m:
           type: array
           items:
             type: string
             format: uuid
+          description: set of related aux objects
       required:
       - field_bigint
       - field_bool

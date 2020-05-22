@@ -54,9 +54,9 @@ class AllFields(models.Model):
     field_bigint = models.BigIntegerField()
     field_smallint = models.SmallIntegerField()
     # relations
-    field_foreign = models.ForeignKey(Aux, on_delete=models.CASCADE)
-    field_m2m = models.ManyToManyField(Aux)
-    field_o2o = models.OneToOneField(Aux, on_delete=models.CASCADE)
+    field_foreign = models.ForeignKey(Aux, on_delete=models.CASCADE, help_text='main aux object')
+    field_m2m = models.ManyToManyField(Aux, help_text='set of related aux objects')
+    field_o2o = models.OneToOneField(Aux, on_delete=models.CASCADE, help_text='bound aux object')
     # overrides
     field_regex = models.CharField(max_length=50)
     field_bool_override = models.BooleanField()

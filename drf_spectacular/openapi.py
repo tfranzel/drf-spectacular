@@ -423,6 +423,8 @@ class AutoSchema(ViewInspector):
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
             schema = self._map_serializer_field(field.child_relation, direction)
+            # remove hand-over initkwargs applying only to outer scope
+            schema.pop('description', None)
             return append_meta(build_array_type(schema), meta)
 
         if isinstance(field, serializers.PrimaryKeyRelatedField):
