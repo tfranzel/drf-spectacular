@@ -2,7 +2,7 @@ import uuid
 from typing import Optional
 
 from django.db import models
-from rest_framework import serializers, viewsets
+from rest_framework import generics, serializers, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -72,8 +72,21 @@ class AlbumModelViewset(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)  # pragma: no cover
 
 
-def test_basics(no_warnings):
+class SongModelView(generics.ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    serializer_class = SongSerializer
+    queryset = Song.objects.none()
+
+
+def test_basic_viewset(no_warnings):
     assert_schema(
         generate_schema('albums', AlbumModelViewset),
         'tests/test_basic.yml'
+    )
+
+
+def test_basic_listapiview(no_warnings):
+    assert_schema(
+        generate_schema('songs', view=SongModelView),
+        'tests/test_basic_songs.yml'
     )
