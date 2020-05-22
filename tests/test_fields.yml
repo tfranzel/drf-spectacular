@@ -258,6 +258,7 @@ components:
       - id
     Aux:
       type: object
+      description: description for aux object
       properties:
         id:
           type: string

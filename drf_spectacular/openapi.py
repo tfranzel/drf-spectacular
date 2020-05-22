@@ -27,7 +27,8 @@ from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, build_array_type,
     ComponentRegistry, ResolvedComponent, build_parameter_type, error,
-    resolve_regex_path_parameter, safe_ref, has_override, get_override, append_meta,
+    resolve_regex_path_parameter, safe_ref, has_override, get_override,
+    append_meta, build_object_type,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
@@ -642,18 +643,15 @@ class AutoSchema(ViewInspector):
 
             properties[field.field_name] = safe_ref(schema)
 
-        result = {
-            'type': 'object',
-            'properties': properties
-        }
-
         if spectacular_settings.COMPONENT_SPLIT_PATCH:
             if self.method == 'PATCH' and direction == 'request':
                 required = []
-        if required:
-            result['required'] = sorted(required)
 
-        return result
+        return build_object_type(
+            properties=properties,
+            required=required,
+            description=inspect.getdoc(serializer),
+        )
 
     def _map_field_validators(self, field, schema):
         for v in field.validators:
@@ -791,11 +789,10 @@ class AutoSchema(ViewInspector):
                 f'could not resolve request body for {self.method} {self.path}. defaulting to generic '
                 'free-form object. (maybe annotate a Serializer class?)'
             )
-            schema = {
-                'type': 'object',
-                'additionalProperties': {},  # https://github.com/swagger-api/swagger-codegen/issues/1318
-                'description': 'Unspecified request body',
-            }
+            schema = build_object_type(
+                additionalProperties={},
+                description='Unspecified request body',
+            )
 
         request_body = {
             'content': {

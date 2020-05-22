@@ -144,6 +144,25 @@ def build_array_type(schema):
     }
 
 
+def build_object_type(
+        properties=None,
+        required=None,
+        description=None,
+        **kwargs
+):
+    schema = {'type': 'object'}
+    if description:
+        schema['description'] = description.strip()
+    if properties:
+        schema['properties'] = properties
+    if 'additionalParameters' in kwargs:
+        schema['additionalParameters'] = kwargs.pop('additionalParameters')
+    if required:
+        schema['required'] = sorted(required)
+    schema.update(kwargs)
+    return schema
+
+
 def build_parameter_type(
         name,
         schema,

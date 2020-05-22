@@ -11,7 +11,7 @@ from rest_framework.routers import SimpleRouter
 from rest_framework.test import APIClient
 
 from drf_spectacular.generators import SchemaGenerator
-from tests import assert_schema, generate_schema
+from tests import assert_schema
 
 
 # TODO Fields known to DRF and mapping
@@ -125,6 +125,7 @@ class AllFieldsSerializer(serializers.ModelSerializer):
 
 
 class AuxSerializer(serializers.ModelSerializer):
+    """ description for aux object """
     class Meta:
         fields = '__all__'
         model = Aux

@@ -18,7 +18,7 @@ class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     required_scopes = ['x:read', 'x:write']
 
 
-def test_simplejwt(no_warnings):
+def test_drf_jwt(no_warnings):
     router = routers.SimpleRouter()
     router.register('x', XViewset, basename="x")
 

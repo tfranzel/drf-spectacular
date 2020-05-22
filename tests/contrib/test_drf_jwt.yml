@@ -53,6 +53,12 @@ components:
   schemas:
     JSONWebToken:
       type: object
+      description: |-
+        Serializer class used to validate a username and password.
+
+        'username' is identified by the custom UserModel.USERNAME_FIELD.
+
+        Returns a JSON Web Token that can be used to authenticate later calls.
       properties:
         password:
           type: string
