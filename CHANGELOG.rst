@@ -1,6 +1,18 @@
 Changelog
 =========
 
+0.9.6 (2020-05-23)
+------------------
+
+- overhaul documentation `#52 <https://github.com/tfranzel/drf-spectacular/issues/52>`_
+- improve serializer field mapping (nullbool & time)
+- remove duplicate and misplaced description. `#61 <https://github.com/tfranzel/drf-spectacular/issues/61>`_
+- extract serializer docstring
+- Recognise ListModelMixin as a list [John Vandenberg]
+- bugfix component sorting to include enums. `#60 <https://github.com/tfranzel/drf-spectacular/issues/60>`_
+- bugfix fail on missing readOnly flag
+- Fix incorrect parameter cutting [p.alekseev]
+
 0.9.5 (2020-05-20)
 ------------------
 
@@ -17,6 +29,8 @@ Changelog
 Breaking changes:
 
 - Schemas are funtionally identical, but component sorting changed slightly.
+- All ``read_only`` fields are required by default
+- ``SerializerFieldExtension`` gained direction parameter
 
 0.9.4 (2020-05-13)
 ------------------
