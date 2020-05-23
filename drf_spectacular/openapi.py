@@ -11,6 +11,7 @@ from django.db import models
 from rest_framework import permissions, renderers, serializers
 from rest_framework.fields import _UnvalidatedField, empty
 from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import ListModelMixin
 from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description  # type: ignore
 from rest_framework.settings import api_settings
@@ -102,6 +103,8 @@ class AutoSchema(ViewInspector):
         # list responses are "usually" only returned by GET
         if self.method.lower() != 'get':
             return False
+        if isinstance(self.view, ListModelMixin):
+            return True
         # primary key/lookup variable in path is a strong indicator for retrieve
         if isinstance(self.view, GenericAPIView):
             lookup_url_kwarg = self.view.lookup_url_kwarg or self.view.lookup_field

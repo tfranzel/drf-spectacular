@@ -72,7 +72,7 @@ class AlbumModelViewset(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)  # pragma: no cover
 
 
-def test_basics(no_warnings):
+def test_basic(no_warnings):
     assert_schema(
         generate_schema('albums', AlbumModelViewset),
         'tests/test_basic.yml'
