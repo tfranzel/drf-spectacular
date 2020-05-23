@@ -558,3 +558,16 @@ def test_component_split_request():
     assert 'wo' not in schema['components']['schemas']['X']['properties']
     assert len(schema['components']['schemas']['XRequest']['properties']) == 2
     assert 'ro' not in schema['components']['schemas']['XRequest']['properties']
+
+
+def test_list_api_view(no_warnings):
+    class XSerializer(serializers.Serializer):
+        id = serializers.IntegerField()
+
+    class XView(generics.ListAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    operation = schema['paths']['/x']['get']
+    assert operation['operationId'] == 'x_list'
+    assert get_response_schema(operation)['type'] == 'array'
