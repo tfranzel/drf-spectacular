@@ -5,7 +5,6 @@ from rest_framework.decorators import action
 from rest_framework.views import APIView
 
 from drf_spectacular.utils import extend_schema
-from drf_spectacular.validation import validate_schema
 from tests import generate_schema
 
 
@@ -142,8 +141,7 @@ def test_no_serializer_class_on_apiview(capsys):
         def get(self, request):
             pass  # pragma: no cover
 
-    schema = generate_schema('x', view=XView)
-    validate_schema(schema)
+    generate_schema('x', view=XView)
     assert 'Unable to guess serializer for' in capsys.readouterr().err
 
 

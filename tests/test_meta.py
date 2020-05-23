@@ -2,7 +2,6 @@ from unittest import mock
 
 from rest_framework.views import APIView
 
-from drf_spectacular.validation import validate_schema
 from tests import generate_schema
 
 META = {
@@ -58,7 +57,6 @@ def test_append_extra_components(no_warnings):
         pass
 
     schema = generate_schema('x', view=XAPIView)
-    validate_schema(schema)
     assert schema['info']['version'] == '1.0.0'
     assert schema['info']['description']
     assert 'termsOfService' in schema['info']

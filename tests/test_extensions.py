@@ -7,7 +7,6 @@ from drf_spectacular.extensions import OpenApiSerializerFieldExtension, OpenApiV
 from drf_spectacular.plumbing import build_basic_type
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
-from drf_spectacular.validation import validate_schema
 from tests import generate_schema, get_response_schema
 
 
@@ -29,7 +28,6 @@ def test_serializer_field_extension(no_warnings):
         serializer_class = XSerializer
 
     schema = generate_schema('x', XViewset)
-    validate_schema(schema)
     assert schema['components']['schemas']['X']['properties']['hash']['type'] == 'string'
     assert schema['components']['schemas']['X']['properties']['hash']['format'] == 'byte'
 
@@ -53,7 +51,6 @@ def test_view_extension(no_warnings):
             return Fixed
 
     schema = generate_schema('x', view=XView)
-    validate_schema(schema)
     operation = schema['paths']['/x']['get']
     assert get_response_schema(operation)['type'] == 'number'
 
@@ -73,6 +70,5 @@ def test_view_function_extension(no_warnings):
             return fixed
 
     schema = generate_schema('x', view_function=x_view_function)
-    validate_schema(schema)
     operation = schema['paths']['/x']['get']
     assert get_response_schema(operation)['type'] == 'number'

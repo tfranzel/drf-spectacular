@@ -39,7 +39,6 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
         queryset = M2.objects.none()
 
     schema = generate_schema('m2', M2Viewset)
-    validate_schema(schema)
     props = schema['components']['schemas']['M2']['properties']
     assert props['m1_rw']['type'] == 'integer'
     assert props['m1_r']['type'] == 'integer'
@@ -56,8 +55,7 @@ def test_path_implicit_required(no_warnings):
         def retrieve(self, request, *args, **kwargs):
             pass  # pragma: no cover
 
-    schema = generate_schema('m2', M2Viewset)
-    validate_schema(schema)
+    generate_schema('m2', M2Viewset)
 
 
 def test_free_form_responses(no_warnings):
@@ -204,7 +202,6 @@ def test_multi_method_action(no_warnings):
             pass  # pragma: no cover
 
     schema = generate_schema('x', XViewset)
-    validate_schema(schema)
 
     def get_req_body(s):
         return s['requestBody']['content']['application/json']['schema']['$ref']
@@ -230,7 +227,6 @@ def test_serializer_class_on_apiview(no_warnings):
             pass  # pragma: no cover
 
     schema = generate_schema('x', view=XView)
-    validate_schema(schema)
     comp = '#/components/schemas/X'
     assert get_response_schema(schema['paths']['/x']['get'])['$ref'] == comp
     assert get_response_schema(schema['paths']['/x']['post'])['$ref'] == comp
@@ -257,7 +253,6 @@ def test_customized_list_serializer():
             pass  # pragma: no cover
 
     schema = generate_schema('x', view=XAPIView)
-    validate_schema(schema)
     operation = schema['paths']['/x']['put']
     comp = '#/components/schemas/X'
 
@@ -278,7 +273,6 @@ def test_api_view_decorator(no_warnings):
         pass  # pragma: no cover
 
     schema = generate_schema('x', view_function=pi)
-    validate_schema(schema)
     operation = schema['paths']['/x']['get']
     assert get_response_schema(operation)['type'] == 'number'
 
@@ -292,7 +286,6 @@ def test_api_view_decorator_multi(no_warnings):
         pass  # pragma: no cover
 
     schema = generate_schema('x', view_function=pi)
-    validate_schema(schema)
     operation = schema['paths']['/x']['get']
     assert get_response_schema(operation)['type'] == 'number'
     operation = schema['paths']['/x']['post']
@@ -317,7 +310,6 @@ def test_pk_and_no_id(no_warnings):
         queryset = YModel.objects.all()
 
     schema = generate_schema('y', YViewSet)
-    validate_schema(schema)
     assert schema['components']['schemas']['Y']['properties']['x']['format'] == 'uuid'
 
 
@@ -548,7 +540,6 @@ def test_component_split_request():
         pass  # pragma: no cover
 
     schema = generate_schema('/x', view_function=pi)
-    validate_schema(schema)
 
     operation = schema['paths']['/x']['post']
 

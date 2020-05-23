@@ -34,7 +34,9 @@ def generate_schema(route, viewset=None, view=None, view_function=None):
         patterns = [path(route, view_function)]
 
     generator = SchemaGenerator(patterns=patterns)
-    return generator.get_schema(request=None, public=True)
+    schema = generator.get_schema(request=None, public=True)
+    validate_schema(schema)  # make sure generated schemas are always valid
+    return schema
 
 
 def get_response_schema(operation, status='200'):
