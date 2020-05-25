@@ -3,7 +3,6 @@ from urllib.parse import urljoin
 
 from django.urls import URLResolver, URLPattern
 from rest_framework import viewsets, views
-from rest_framework.compat import get_original_route
 from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignore
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 
@@ -27,7 +26,7 @@ class EndpointEnumerator(BaseEndpointEnumerator):
         api_endpoints = []
 
         for pattern in patterns:
-            path_regex = prefix + get_original_route(pattern)
+            path_regex = prefix + str(pattern.pattern)
             if isinstance(pattern, URLPattern):
                 path = self.get_path_from_regex(path_regex)
                 callback = pattern.callback
