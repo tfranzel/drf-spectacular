@@ -145,6 +145,13 @@ components:
           format: uuid
           readOnly: true
           nullable: true
+        field_read_only_model_function_basic:
+          type: boolean
+          readOnly: true
+        field_read_only_model_function_model:
+          type: string
+          format: uuid
+          readOnly: true
         field_bool_override:
           type: boolean
           readOnly: true
@@ -259,6 +266,8 @@ components:
       - field_o2o
       - field_posint
       - field_possmallint
+      - field_read_only_model_function_basic
+      - field_read_only_model_function_model
       - field_read_only_nav_uuid
       - field_read_only_nav_uuid_3steps
       - field_regex

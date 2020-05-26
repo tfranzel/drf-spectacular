@@ -63,6 +63,12 @@ class AllFields(models.Model):
     def field_list(self):
         return [1.1, 2.2, 3.3]
 
+    def model_function_basic(self) -> bool:
+        return True
+
+    def model_function_model(self) -> Aux:
+        return self.field_foreign
+
 
 class AllFieldsSerializer(serializers.ModelSerializer):
     field_decimal_uncoerced = serializers.DecimalField(
@@ -108,6 +114,9 @@ class AllFieldsSerializer(serializers.ModelSerializer):
         source='field_foreign.field_foreign.field_foreign.id',
         allow_null=True,  # force field output even if traversal fails
     )
+    field_read_only_model_function_basic = serializers.ReadOnlyField(source='model_function_basic')
+    field_read_only_model_function_model = serializers.ReadOnlyField(source='model_function_model.id')
+
     # override default writable bool field with readonly
     field_bool_override = serializers.ReadOnlyField()
 

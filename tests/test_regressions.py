@@ -458,17 +458,21 @@ def test_custom_model_field_from_base_field(no_warnings):
     assert component['properties']['custom_int_field']['type'] == 'integer'
 
 
-def test_follow_field_source_through_intermediate_property(no_warnings):
+def test_follow_field_source_through_intermediate_property_or_function(no_warnings):
     class FieldSourceTraversalModel2(models.Model):
         y = models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3')])
 
     class FieldSourceTraversalModel1(models.Model):
         @property
-        def x(self) -> FieldSourceTraversalModel2:  # property is required for traversal
+        def prop(self) -> FieldSourceTraversalModel2:  # property is required for traversal
+            return  # pragma: no cover
+
+        def func(self) -> FieldSourceTraversalModel2:  # property is required for traversal
             return  # pragma: no cover
 
     class XSerializer(serializers.ModelSerializer):
-        x = serializers.ReadOnlyField(source='x.y')
+        prop = serializers.ReadOnlyField(source='prop.y')
+        func = serializers.ReadOnlyField(source='func.y')
 
         class Meta:
             model = FieldSourceTraversalModel1
@@ -482,9 +486,12 @@ def test_follow_field_source_through_intermediate_property(no_warnings):
     # this checks if field type is correctly estimated AND field was initialized
     # with the model parameters (choices)
     schema = generate_schema('x', view=XAPIView)
-    assert schema['components']['schemas']['X']['properties']['x']['readOnly'] is True
-    assert 'enum' in schema['components']['schemas']['XEnum']
-    assert schema['components']['schemas']['XEnum']['type'] == 'integer'
+    assert schema['components']['schemas']['X']['properties']['func']['readOnly'] is True
+    assert schema['components']['schemas']['X']['properties']['prop']['readOnly'] is True
+    assert 'enum' in schema['components']['schemas']['PropEnum']
+    assert 'enum' in schema['components']['schemas']['FuncEnum']
+    assert schema['components']['schemas']['PropEnum']['type'] == 'integer'
+    assert schema['components']['schemas']['FuncEnum']['type'] == 'integer'
 
 
 def test_viewset_list_with_envelope(no_warnings):

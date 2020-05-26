@@ -256,16 +256,21 @@ def _follow_field_source(model, path):
         # end of traversal
         if isinstance(field_or_property, property):
             return field_or_property.fget
+        elif callable(field_or_property):
+            return field_or_property
         else:
             return get_field_from_model(model, field_or_property)
     else:
-        if isinstance(field_or_property, property):
-            target_model = field_or_property.fget.__annotations__.get('return')
+        if isinstance(field_or_property, property) or callable(field_or_property):
+            if isinstance(field_or_property, property):
+                target_model = field_or_property.fget.__annotations__.get('return')
+            else:
+                target_model = field_or_property.__annotations__.get('return')
             if not target_model:
                 raise UnableToProceedError(
                     f'could not follow field source through intermediate property "{path[0]}" '
-                    f'on model {model}. please add a type hint on the model\'s property to '
-                    f'enable traversal of the source path "{".".join(path)}".'
+                    f'on model {model}. please add a type hint on the model\'s property/function'
+                    f'to enable traversal of the source path "{".".join(path)}".'
                 )
             return _follow_field_source(target_model, path[1:])
         else:
@@ -284,11 +289,11 @@ def follow_field_source(model, path):
         return _follow_field_source(model, path)
     except UnableToProceedError as e:
         warn(e)
-    except:  # noqa: E722
+    except Exception as exc:
         warn(
             f'could not resolve field on model {model} with path "{".".join(path)}". '
             f'this is likely a custom field that does some unknown magic. maybe '
-            f'consider annotating the field/property? defaulting to "string".'
+            f'consider annotating the field/property? defaulting to "string". (Exception: {exc})'
         )
 
     def dummy_property(obj) -> str:
