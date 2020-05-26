@@ -537,8 +537,16 @@ class AutoSchema(ViewInspector):
             return append_meta(content, meta)
 
         if isinstance(field, serializers.FileField):
-            # TODO returns filename. but does it accept binary data on upload?
-            return append_meta(build_basic_type(OpenApiTypes.STR), meta)
+            if direction == 'response':
+                use_url = getattr(field, 'use_url', api_settings.UPLOADED_FILES_USE_URL)
+                if use_url:
+                    return append_meta(build_basic_type(OpenApiTypes.URI), meta)
+                else:
+                    return append_meta(build_basic_type(OpenApiTypes.STR), meta)
+            else:
+                content = build_basic_type(OpenApiTypes.STR)
+                content['format'] = 'binary'
+                return append_meta(content, meta)
 
         if isinstance(field, serializers.SerializerMethodField):
             method = getattr(field.parent, field.method_name)

@@ -204,8 +204,10 @@ components:
           minimum: -1000
         field_file:
           type: string
+          format: uri
         field_img:
           type: string
+          format: uri
         field_date:
           type: string
           format: date
