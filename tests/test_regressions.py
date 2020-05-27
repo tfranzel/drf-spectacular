@@ -5,7 +5,7 @@ from django.conf.urls import url
 from django.db.models import fields
 from django.db import models
 from django.urls import path, re_path
-from rest_framework import serializers, viewsets, mixins, routers, views, generics
+from rest_framework import serializers, viewsets, mixins, routers, views, generics, parsers
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
@@ -569,3 +569,24 @@ def test_list_api_view(no_warnings):
     operation = schema['paths']['/x']['get']
     assert operation['operationId'] == 'x_list'
     assert get_response_schema(operation)['type'] == 'array'
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_file_field_duality_on_split_request(no_warnings):
+    class XSerializer(serializers.Serializer):
+        file = serializers.FileField()
+
+    class XView(generics.ListCreateAPIView):
+        serializer_class = XSerializer
+        parser_classes = [parsers.MultiPartParser]
+
+    schema = generate_schema('/x', view=XView)
+    assert get_response_schema(
+        schema['paths']['/x']['get']
+    )['items']['$ref'] == '#/components/schemas/X'
+    assert get_request_schema(
+        schema['paths']['/x']['post'], content_type='multipart/form-data'
+    )['$ref'] == '#/components/schemas/XRequest'
+
+    assert schema['components']['schemas']['X']['properties']['file']['format'] == 'uri'
+    assert schema['components']['schemas']['XRequest']['properties']['file']['format'] == 'binary'

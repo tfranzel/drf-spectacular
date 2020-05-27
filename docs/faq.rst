@@ -82,3 +82,16 @@ You can easily specify a custom authentication with
 :py:class:`OpenApiAuthenticationExtension <drf_spectacular.extensions.OpenApiAuthenticationExtension>`.
 Have a look at :ref:`customization` on how to use ``Extensions``
 
+
+FileField (ImageField) is not handled properly in the schema
+------------------------------------------------------------
+In contrast to most other fields, ``FileField`` behaves differently for requests and responses.
+This duality is impossible to represent in a single component schema.
+
+For these cases, there is an option to split components into request and response parts
+by setting ``COMPONENT_SPLIT_REQUEST = True``. Note that this influences the whole schema,
+not just components with ``FileFields``.
+
+Also consider explicitly setting ``parser_classes = [parsers.MultiPartParser]`` (or any file compatible parser)
+on your `View` or write a custom `get_parser_classes`. These fields do not work with the default ``JsonParser``
+and that fact should be represented in the schema.

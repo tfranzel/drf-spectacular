@@ -39,9 +39,9 @@ def generate_schema(route, viewset=None, view=None, view_function=None):
     return schema
 
 
-def get_response_schema(operation, status='200'):
-    return operation['responses'][status]['content']['application/json']['schema']
+def get_response_schema(operation, status='200', content_type='application/json'):
+    return operation['responses'][status]['content'][content_type]['schema']
 
 
-def get_request_schema(operation):
-    return operation['requestBody']['content']['application/json']['schema']
+def get_request_schema(operation, content_type='application/json'):
+    return operation['requestBody']['content'][content_type]['schema']
