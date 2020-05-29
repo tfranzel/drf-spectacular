@@ -53,6 +53,24 @@ easily augment those endpoints and serializers with additional information.
 Look at :ref:`customization` options to fill those gaps and make the warnings
 disappear.
 
+
+I get warnings regarding my ``Enum`` or  my ``Enum`` names have a weird suffix
+-------------------------------------------------------------------------------
+This is because the ``Enum`` postprocessing hook is activated by default. Enum suffixes like
+``LanguageCa22Enum`` mean that there was a naming collision that got resolved. Other
+warnings might indicate that you use one and the same choice set under different names.
+
+The naming mechanism will handle all encountered issues automatically, but also notify you of
+potential problems. You can resolve (or silence) enum issues by adding an entry to the
+``ENUM_NAME_OVERRIDES`` setting:
+
+.. code-block:: python
+
+    'ENUM_NAME_OVERRIDES': {
+        'LanguageEnum': language_choices  # e.g. [('US', 'US'), ('RU', 'RU'),]
+    }
+
+
 My endpoints use different serializers depending on the situation
 -----------------------------------------------------------------
 

@@ -460,6 +460,7 @@ def test_custom_model_field_from_base_field(no_warnings):
 
 def test_follow_field_source_through_intermediate_property_or_function(no_warnings):
     class FieldSourceTraversalModel2(models.Model):
+        x = models.IntegerField(choices=[(1, '1'), (2, '2')])
         y = models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3')])
 
     class FieldSourceTraversalModel1(models.Model):
@@ -471,7 +472,7 @@ def test_follow_field_source_through_intermediate_property_or_function(no_warnin
             return  # pragma: no cover
 
     class XSerializer(serializers.ModelSerializer):
-        prop = serializers.ReadOnlyField(source='prop.y')
+        prop = serializers.ReadOnlyField(source='prop.x')
         func = serializers.ReadOnlyField(source='func.y')
 
         class Meta:
