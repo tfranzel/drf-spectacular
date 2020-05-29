@@ -7,10 +7,6 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # path prefix is used for tagging the discovered operations.
     # use '/api/v[0-9]' for tagging apis like '/api/v1/albums' with ['albums']
     'SCHEMA_PATH_PREFIX': r'',
-    # Sorting the operations
-    #   alpha: alphanumerically and then METHOD,
-    #   method: DRF default sorting just by METHOD
-    'OPERATION_SORTER': 'alpha',
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
     # Schema generation parameters to influence how components are constructed.
