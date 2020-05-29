@@ -469,6 +469,9 @@ def postprocess_schema_enums(result, generator, **kwargs):
     the same choices. Aids client generation to not generate a separate enum for
     every occurrence. only takes effect when replacement is guaranteed to be correct.
     """
+    def choice_hash(choices):
+        return hash(json.dumps(choices, sort_keys=True))
+
     def iter_prop_containers(schema):
         if isinstance(schema, list):
             for item in schema:
@@ -481,15 +484,18 @@ def postprocess_schema_enums(result, generator, **kwargs):
 
     schemas = result.get('components', {}).get('schemas', {})
 
+    overrides = {
+        choice_hash(list(dict(choices).keys())): name
+        for name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items()
+    }
+
     hash_mapping = defaultdict(set)
     # collect all enums, their names and contents
     for props in iter_prop_containers(list(schemas.values())):
         for prop_name, prop_schema in props.items():
             if 'enum' not in prop_schema:
                 continue
-            hash_mapping[prop_name].add(
-                hash(json.dumps(prop_schema['enum'], sort_keys=True))
-            )
+            hash_mapping[prop_name].add(choice_hash(prop_schema['enum']))
     # safe replacement requires name to have only one set of enum values
     candidate_enums = {
         prop_name for prop_name, prop_hash_set in hash_mapping.items()
@@ -500,10 +506,13 @@ def postprocess_schema_enums(result, generator, **kwargs):
         for prop_name, prop_schema in props.items():
             if 'enum' not in prop_schema:
                 continue
-            if prop_name not in candidate_enums:
+            elif choice_hash(prop_schema['enum']) in overrides:
+                enum_name = overrides[choice_hash(prop_schema['enum'])]
+            elif prop_name in candidate_enums:
+                enum_name = f'{inflection.camelize(prop_name)}Enum'
+            else:
                 continue
 
-            enum_name = f'{inflection.camelize(prop_name)}Enum'
             enum_schema = {k: v for k, v in prop_schema.items() if k in ['type', 'enum']}
             prop_schema = {k: v for k, v in prop_schema.items() if k not in ['type', 'enum']}
 

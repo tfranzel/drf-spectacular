@@ -1,4 +1,6 @@
-from rest_framework import serializers, viewsets, mixins
+from unittest import mock
+
+from rest_framework import serializers, viewsets, mixins, generics
 from rest_framework.decorators import action
 
 from drf_spectacular.utils import extend_schema
@@ -32,3 +34,21 @@ class AViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
 def test_postprocessing(no_warnings):
     schema = generate_schema('a', AViewset)
     assert_schema(schema, 'tests/test_postprocessing.yml')
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
+    'LanguageEnum': language_choices
+})
+def test_global_enum_naming_override(no_warnings):
+
+    class XSerializer(serializers.Serializer):
+        foo = serializers.ChoiceField(choices=language_choices)
+        bar = serializers.ChoiceField(choices=language_choices)
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    assert 'LanguageEnum' in schema['components']['schemas']['X']['properties']['foo']['$ref']
+    assert 'LanguageEnum' in schema['components']['schemas']['X']['properties']['bar']['$ref']
+    assert len(schema['components']['schemas']) == 2

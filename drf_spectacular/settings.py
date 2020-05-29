@@ -33,6 +33,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
         'drf_spectacular.plumbing.postprocess_schema_enums'
     ],
 
+    # enum name overrides. dict with keys "YourEnum" and their choice values "field.choices"
+    'ENUM_NAME_OVERRIDES': {},
+
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
     'TITLE': '',
