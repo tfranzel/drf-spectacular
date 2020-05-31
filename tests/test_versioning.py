@@ -11,7 +11,7 @@ from rest_framework.versioning import URLPathVersioning, NamespaceVersioning
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
-from drf_spectacular.views import SpectacularAPIView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from tests import assert_schema
 
 
@@ -97,11 +97,21 @@ def test_namespace_versioning(no_warnings, viewset_cls, version):
 
 urlpatterns_namespace = [
     path('x/', NamespaceVersioningViewset.as_view({'get': 'list'})),
-    path('schema/', SpectacularAPIView.as_view(versioning_class=NamespaceVersioning)),
+    path('schema/', SpectacularAPIView.as_view(
+        versioning_class=NamespaceVersioning
+    ), name='schema-nv-versioned'),
+    path('schema/ui', SpectacularSwaggerView.as_view(
+        versioning_class=NamespaceVersioning, url_name='schema-nv-versioned'
+    )),
 ]
 urlpatterns_path = [
     path('x/', PathVersioningViewset2.as_view({'get': 'list'})),
-    path('schema/', SpectacularAPIView.as_view(versioning_class=URLPathVersioning)),
+    path('schema/', SpectacularAPIView.as_view(
+        versioning_class=URLPathVersioning
+    ), name='schema-pv-versioned'),
+    path('schema/ui', SpectacularSwaggerView.as_view(
+        versioning_class=URLPathVersioning, url_name='schema-pv-versioned'
+    )),
 ]
 urlpatterns = [
     # path versioning
@@ -129,3 +139,15 @@ def test_spectacular_view_versioning(no_warnings, url, path_count):
     schema = yaml.load(response.content, Loader=yaml.SafeLoader)
     validate_schema(schema)
     assert len(schema['paths']) == path_count
+
+
+@pytest.mark.parametrize(['url', 'schema_url'], [
+    ('/api/nv/v1/schema/ui', b'/api/nv/v1/schema/'),
+    ('/api/nv/v2/schema/ui', b'/api/nv/v2/schema/'),
+    ('/api/pv/v1/schema/ui', b'/api/pv/v1/schema/'),
+    ('/api/pv/v2/schema/ui', b'/api/pv/v2/schema/'),
+])
+@pytest.mark.urls(__name__)
+def test_spectacular_ui_view_versioning(no_warnings, url, schema_url):
+    response = APIClient().get(url)
+    assert schema_url in response.content

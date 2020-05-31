@@ -1,8 +1,9 @@
 from collections import namedtuple
 from typing import Dict, Any
 
-from django.views.generic import TemplateView
+from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from drf_spectacular.renderers import (
@@ -55,25 +56,27 @@ class SpectacularJSONAPIView(SpectacularAPIView):
     renderer_classes = [OpenApiJsonRenderer, OpenApiJsonRenderer2]
 
 
-class SpectacularSwaggerView(TemplateView):
+class SpectacularSwaggerView(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
     url_name = 'schema'
+    template_name = 'drf_spectacular/swagger_ui.html'
 
-    @classmethod
-    def as_view(cls, **initkwargs):
-        initkwargs.setdefault('template_name', 'drf_spectacular/swagger_ui.html')
-        initkwargs.setdefault('extra_context', {
-            'url_name': initkwargs.get('url_name') or cls.url_name
-        })
-        return super().as_view(**initkwargs)
+    @extend_schema(exclude=True)
+    def get(self, request, *args, **kwargs):
+        return Response(
+            {'url_name': reverse(self.url_name, request=request)},
+            template_name=self.template_name
+        )
 
 
-class SpectacularRedocView(TemplateView):
+class SpectacularRedocView(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
     url_name = 'schema'
+    template_name = 'drf_spectacular/redoc.html'
 
-    @classmethod
-    def as_view(cls, **initkwargs):
-        initkwargs.setdefault('template_name', 'drf_spectacular/redoc.html')
-        initkwargs.setdefault('extra_context', {
-            'url_name': initkwargs.get('url_name') or cls.url_name
-        })
-        return super().as_view(**initkwargs)
+    @extend_schema(exclude=True)
+    def get(self, request, *args, **kwargs):
+        return Response(
+            {'url_name': reverse(self.url_name, request=request)},
+            template_name=self.template_name
+        )
