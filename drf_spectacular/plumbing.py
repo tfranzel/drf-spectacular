@@ -3,9 +3,10 @@ import inspect
 import json
 import sys
 from abc import ABCMeta
-from collections import defaultdict, OrderedDict
+from collections import defaultdict, OrderedDict, Iterable
 from collections.abc import Hashable
 from decimal import Decimal
+from enum import Enum
 from typing import List, Type, Optional, TypeVar, Union, Generic, DefaultDict
 
 import inflection
@@ -21,6 +22,12 @@ from drf_spectacular.types import (
     OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, DJANGO_PATH_CONVERTER_MAPPING, OpenApiTypes
 )
 from drf_spectacular.utils import OpenApiParameter
+
+try:
+    from django.db.models.enums import Choices  # only available in Django>3
+except ImportError:
+    class Choices:  # type: ignore
+        pass
 
 T = TypeVar('T')
 
@@ -464,17 +471,57 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
         return None
 
 
+def deep_import_string(string):
+    """ augmented import from string, e.g. MODULE.CLASS/OBJECT.ATTRIBUTE """
+    try:
+        return import_string(string)
+    except ImportError:
+        pass
+    try:
+        *path, attr = string.split('.')
+        obj = import_string('.'.join(path))
+        return getattr(obj, attr)
+    except (ImportError, AttributeError):
+        pass
+
+
+def load_enum_name_overrides():
+    overrides = {}
+    for name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items():
+        if isinstance(choices, str):
+            choices = deep_import_string(choices)
+        if not choices:
+            warn(
+                f'unable to load choice override for {name} from ENUM_NAME_OVERRIDES. '
+                f'please check module path string.'
+            )
+            continue
+        if inspect.isclass(choices) and issubclass(choices, Choices):
+            choices = choices.choices
+        if inspect.isclass(choices) and issubclass(choices, Enum):
+            choices = [c.value for c in choices]
+        if isinstance(choices, Iterable) and isinstance(choices[0], str):
+            choices = [(c, c) for c in choices]
+        overrides[list_hash(list(dict(choices).keys()))] = name
+
+    if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
+        error(
+            'ENUM_NAME_OVERRIDES has duplication issues. encountered multiple names '
+            'for the same choice set. enum naming might be unexpected.'
+        )
+    return overrides
+
+
+def list_hash(lst):
+    return hashlib.blake2b(json.dumps(list(lst), sort_keys=True).encode()).hexdigest()
+
+
 def postprocess_schema_enums(result, generator, **kwargs):
     """
     simple replacement of Enum/Choices that globally share the same name and have
     the same choices. Aids client generation to not generate a separate enum for
     every occurrence. only takes effect when replacement is guaranteed to be correct.
     """
-    def choice_hash(choices):
-        return hashlib.blake2b(
-            json.dumps(choices, sort_keys=True).encode()
-        ).hexdigest()
-
     def iter_prop_containers(schema):
         if isinstance(schema, list):
             for item in schema:
@@ -487,15 +534,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
 
     schemas = result.get('components', {}).get('schemas', {})
 
-    overrides = {
-        choice_hash(list(dict(choices).keys())): name
-        for name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items()
-    }
-    if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
-        error(
-            'ENUM_NAME_OVERRIDES has issues. encountered multiple names for the '
-            'same choice set. enum naming in schema might be unexpected.'
-        )
+    overrides = load_enum_name_overrides()
 
     hash_mapping = defaultdict(set)
     # collect all enums, their names and choice sets
@@ -503,7 +542,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
         for prop_name, prop_schema in props.items():
             if 'enum' not in prop_schema:
                 continue
-            hash_mapping[prop_name].add(choice_hash(prop_schema['enum']))
+            hash_mapping[prop_name].add(list_hash(prop_schema['enum']))
 
     # traverse all enum properties and generate a name for the choice set. naming collisions
     # are resolved and a warning is emitted. giving a choice set multiple names is technically
@@ -540,7 +579,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
             if 'enum' not in prop_schema:
                 continue
 
-            prop_hash = choice_hash(prop_schema['enum'])
+            prop_hash = list_hash(prop_schema['enum'])
             # when choice sets are reused under multiple names, the generated name cannot be
             # resolved from the hash alone. fall back to prop_name and hash for resolution.
             enum_name = enum_name_mapping.get(prop_hash) or enum_name_mapping[prop_hash, prop_name]

@@ -38,7 +38,7 @@ def test_postprocessing(no_warnings):
 
 
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
-    'LanguageEnum': language_choices
+    'LanguageEnum': 'tests.test_postprocessing.language_choices'
 })
 def test_global_enum_naming_override(no_warnings):
     # the override will prevent the warning for multiple names

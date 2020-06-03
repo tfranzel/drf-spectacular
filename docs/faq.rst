@@ -62,7 +62,9 @@ warnings might indicate that you use one and the same choice set under different
 
 The naming mechanism will handle all encountered issues automatically, but also notify you of
 potential problems. You can resolve (or silence) enum issues by adding an entry to the
-``ENUM_NAME_OVERRIDES`` setting:
+``ENUM_NAME_OVERRIDES`` setting. Values can take the form of choices (list of tuples), value lists
+(list of strings), or import strings. Django's ``models.Choices`` and Python's ``Enum`` classes
+are supported as well.
 
 .. code-block:: python
 
