@@ -1,6 +1,30 @@
 Changelog
 =========
 
+0.9.7 (2020-06-05)
+------------------
+
+- put contrib code in packages named files
+- improve djangorestframework-camel-case support `#73 <https://github.com/tfranzel/drf-spectacular/issues/73>`_
+- Add support to djangorestframework-camel-case [Jair Henrique]
+- ENUM_NAME_OVERRIDES accepts import string for easier handling `#70 <https://github.com/tfranzel/drf-spectacular/issues/70>`_
+- honor versioning on schema UIs `#71 <https://github.com/tfranzel/drf-spectacular/issues/71>`_
+- improve enum naming mechanism. `#63 <https://github.com/tfranzel/drf-spectacular/issues/63>`_ `#70 <https://github.com/tfranzel/drf-spectacular/issues/70>`_
+- provide global enum naming. `#70 <https://github.com/tfranzel/drf-spectacular/issues/70>`_
+- refactor choice field
+- remove unused sorter setting
+- improve FileField, add test and documentation. `#69 <https://github.com/tfranzel/drf-spectacular/issues/69>`_
+- Fix file fields [John Vandenberg]
+- allow for functions on models beside properties. `#68 <https://github.com/tfranzel/drf-spectacular/issues/68>`_
+- replace removed DRF compat function
+
+Breaking changes:
+
+- Enum naming conflicts are now resolved explicitly. `how to resolve conflicts <https://drf-spectacular.readthedocs.io/en/latest/faq.html#i-get-warnings-regarding-my-enum-or-my-enum-names-have-a-weird-suffix>`_
+- Choice fields may be rendered slightly different
+- Swagger UI and Redoc views now honor versioned requests
+- Contrib package code moved. each package has its own file now
+
 0.9.6 (2020-05-23)
 ------------------
 
