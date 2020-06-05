@@ -23,3 +23,4 @@ generated_clients/
 
 !.gitignore
 !.travis.yml
+!.editorconfig
