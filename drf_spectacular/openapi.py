@@ -20,8 +20,7 @@ from drf_spectacular.extensions import (
     OpenApiSerializerFieldExtension, OpenApiSerializerExtension
 )
 from drf_spectacular.settings import spectacular_settings
-from drf_spectacular.contrib.authentication import *  # noqa: F403, F401
-from drf_spectacular.contrib.serializers import *  # noqa: F403, F401
+from drf_spectacular.contrib import *  # noqa: F403, F401
 from drf_spectacular.plumbing import (
     build_basic_type, warn, anyisinstance, force_instance, is_serializer,
     follow_field_source, is_field, is_basic_type, build_array_type,

@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 
 from drf_spectacular.utils import extend_schema
 from tests import generate_schema
-from drf_spectacular.contrib.postprocess import camelize_serializer_fields
+from drf_spectacular.contrib.djangorestframework_camel_case import camelize_serializer_fields
 
 
 class FakeSerializer(serializers.Serializer):
