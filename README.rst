@@ -36,6 +36,7 @@ Features
         - `SimpleJWT <https://github.com/SimpleJWT/django-rest-framework-simplejwt>`_
         - `DjangoOAuthToolkit <https://github.com/jazzband/django-oauth-toolkit>`_
         - `djangorestframework-jwt <https://github.com/jpadilla/django-rest-framework-jwt>`_ (tested fork `drf-jwt <https://github.com/Styria-Digital/django-rest-framework-jwt>`_)
+        - `djangorestframework-camel-case <https://github.com/vbabiy/djangorestframework-camel-case>`_ (via postprocessing hook ``camelize_serializer_fields``)
 
 
 For more information visit the `documentation <https://drf-spectacular.readthedocs.io>`_.
