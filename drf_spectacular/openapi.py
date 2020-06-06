@@ -405,8 +405,13 @@ class AutoSchema(ViewInspector):
             # to hit the database.
             if getattr(field, 'queryset', None) is not None:
                 schema = self._map_model_field(field.queryset.model._meta.pk, direction)
-            else:
+            elif hasattr(field.parent, 'Meta'):
                 schema = self._map_model_field(field.parent.Meta.model._meta.pk, direction)
+            elif isinstance(field.parent, serializers.ManyRelatedField):
+                schema = build_array_type(build_object_type())
+            else:
+                schema = build_basic_type(OpenApiTypes.STR)
+
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
             # signals that attribute. however this does not apply in the context of relations.
             schema.pop('readOnly', None)
