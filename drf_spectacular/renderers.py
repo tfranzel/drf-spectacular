@@ -1,7 +1,8 @@
+from collections import OrderedDict
+
 import yaml
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.renderers import JSONRenderer, BaseRenderer
-from collections import OrderedDict
 
 
 class OpenApiYamlRenderer(BaseRenderer):
@@ -25,9 +26,9 @@ class OpenApiYamlRenderer(BaseRenderer):
             return scalar
         Dumper.add_representer(str, multiline_str_representer)
 
-        def map_representer(dumper, data):
-            return dumper.represent_dict(data.items())
-        Dumper.add_representer(OrderedDict, map_representer)
+        def ordered_dict_representer(dumper, data):
+            return dumper.represent_dict(data)
+        Dumper.add_representer(OrderedDict, ordered_dict_representer)
 
         return yaml.dump(
             data,

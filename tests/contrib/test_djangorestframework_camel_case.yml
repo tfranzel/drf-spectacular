@@ -1,0 +1,61 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /a_b_c/:
+    get:
+      operationId: a_b_c_list
+      description: ''
+      tags:
+      - a_b_c
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Fake'
+          description: ''
+  /a_b_c/home/:
+    get:
+      operationId: a_b_c_home_retrieve
+      description: ''
+      tags:
+      - a_b_c
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fake'
+          description: ''
+components:
+  schemas:
+    Fake:
+      type: object
+      properties:
+        fieldOne:
+          type: string
+        fieldTwo:
+          type: string
+      required:
+      - fieldOne
+      - fieldTwo
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

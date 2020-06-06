@@ -2,9 +2,11 @@ from drf_spectacular.validation import validate_schema
 
 
 def assert_schema(schema, reference_file):
-    from drf_spectacular.renderers import OpenApiYamlRenderer
+    from drf_spectacular.renderers import OpenApiYamlRenderer, OpenApiJsonRenderer
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
+    # render also a json and provoke serialization issues
+    OpenApiJsonRenderer().render(schema, renderer_context={})
 
     with open(reference_file.replace('.yml', '_out.yml'), 'wb') as fh:
         fh.write(schema_yml)

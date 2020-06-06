@@ -4,7 +4,7 @@ from rest_framework import serializers, viewsets, mixins
 from rest_framework.decorators import action
 
 from drf_spectacular.utils import extend_schema
-from tests import generate_schema
+from tests import generate_schema, assert_schema
 from drf_spectacular.contrib.djangorestframework_camel_case import camelize_serializer_fields
 
 
@@ -26,13 +26,8 @@ class FakeViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     'drf_spectacular.settings.spectacular_settings.POSTPROCESSING_HOOKS',
     [camelize_serializer_fields]
 )
-def test_should_camelize_result():
-    schema = generate_schema('a_b_c', FakeViewset)
-
-    assert '/a_b_c/' in schema['paths']
-
-    fake = schema['components']['schemas']['Fake']
-    assert 'fieldOne' in fake['properties']
-    assert 'fieldTwo' in fake['properties']
-    assert 'fieldOne' in fake['required']
-    assert 'fieldTwo' in fake['required']
+def test_camelize_serializer_fields():
+    assert_schema(
+        generate_schema('a_b_c', FakeViewset),
+        'tests/contrib/test_djangorestframework_camel_case.yml'
+    )
