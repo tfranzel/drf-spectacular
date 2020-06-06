@@ -3,8 +3,8 @@ import inspect
 import json
 import sys
 from abc import ABCMeta
-from collections import defaultdict, OrderedDict, Iterable
-from collections.abc import Hashable
+from collections import defaultdict, OrderedDict
+from collections.abc import Hashable, Iterable
 from decimal import Decimal
 from enum import Enum
 from typing import List, Type, Optional, TypeVar, Union, Generic, DefaultDict
