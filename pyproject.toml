@@ -1,0 +1,7 @@
+[tool.isort]
+line_length = 120
+known_first_party = "drf_spectacular"
+known_third_party = "django,rest_framework,djstripe,rest_framework_jwt"
+multi_line_output = 3
+use_parentheses = true
+include_trailing_comma = true
