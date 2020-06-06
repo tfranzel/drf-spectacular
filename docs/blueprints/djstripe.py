@@ -1,4 +1,4 @@
-from djstripe.contrib.rest_framework.serializers import SubscriptionSerializer, CreateSubscriptionSerializer
+from djstripe.contrib.rest_framework.serializers import CreateSubscriptionSerializer, SubscriptionSerializer
 
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.utils import extend_schema

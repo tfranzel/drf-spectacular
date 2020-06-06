@@ -3,10 +3,9 @@ import yaml
 from django.conf.urls import include
 from django.db import models
 from django.urls import path, re_path
-from rest_framework import routers
-from rest_framework import serializers, mixins, viewsets
+from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient
-from rest_framework.versioning import URLPathVersioning, NamespaceVersioning
+from rest_framework.versioning import NamespaceVersioning, URLPathVersioning
 
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.utils import extend_schema

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import re
 import os
+import re
 import shutil
 import sys
-from setuptools import setup
 
+from setuptools import setup
 
 name = 'drf-spectacular'
 package = 'drf_spectacular'

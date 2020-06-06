@@ -4,7 +4,8 @@ import typing
 from operator import attrgetter
 
 import uritemplate
-from django.core import validators, exceptions as django_exceptions
+from django.core import exceptions as django_exceptions
+from django.core import validators
 from django.db import models
 from rest_framework import permissions, renderers, serializers
 from rest_framework.fields import _UnvalidatedField, empty
@@ -16,21 +17,34 @@ from rest_framework.settings import api_settings
 from rest_framework.utils.model_meta import get_field_info
 from rest_framework.views import APIView
 
-from drf_spectacular.extensions import (
-    OpenApiSerializerFieldExtension, OpenApiSerializerExtension
+from drf_spectacular.authentication import OpenApiAuthenticationExtension
+from drf_spectacular.contrib import *  # noqa: F403, F401
+from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerializerFieldExtension
+from drf_spectacular.plumbing import (
+    ComponentRegistry,
+    ResolvedComponent,
+    anyisinstance,
+    append_meta,
+    build_array_type,
+    build_basic_type,
+    build_choice_field,
+    build_object_type,
+    build_parameter_type,
+    error,
+    follow_field_source,
+    force_instance,
+    get_override,
+    has_override,
+    is_basic_type,
+    is_field,
+    is_serializer,
+    resolve_regex_path_parameter,
+    safe_ref,
+    warn,
 )
 from drf_spectacular.settings import spectacular_settings
-from drf_spectacular.contrib import *  # noqa: F403, F401
-from drf_spectacular.plumbing import (
-    build_basic_type, warn, anyisinstance, force_instance, is_serializer,
-    follow_field_source, is_field, is_basic_type, build_array_type,
-    ComponentRegistry, ResolvedComponent, build_parameter_type, error,
-    resolve_regex_path_parameter, safe_ref, has_override, get_override,
-    append_meta, build_object_type, build_choice_field,
-)
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
-from drf_spectacular.authentication import OpenApiAuthenticationExtension
 
 
 class AutoSchema(ViewInspector):

@@ -1,11 +1,11 @@
 from unittest import mock
 
-from rest_framework import serializers, viewsets, mixins
+from rest_framework import mixins, serializers, viewsets
 from rest_framework.decorators import action
 
-from drf_spectacular.utils import extend_schema
-from tests import generate_schema, assert_schema
 from drf_spectacular.contrib.djangorestframework_camel_case import camelize_serializer_fields
+from drf_spectacular.utils import extend_schema
+from tests import assert_schema, generate_schema
 
 
 class FakeSerializer(serializers.Serializer):

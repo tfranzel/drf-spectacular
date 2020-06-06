@@ -2,9 +2,12 @@ from unittest import mock
 
 from django.urls import include, path
 from oauth2_provider.contrib.rest_framework import (
-    OAuth2Authentication, TokenHasReadWriteScope, TokenHasResourceScope, IsAuthenticatedOrTokenHasScope
+    IsAuthenticatedOrTokenHasScope,
+    OAuth2Authentication,
+    TokenHasReadWriteScope,
+    TokenHasResourceScope,
 )
-from rest_framework import serializers, viewsets, mixins, routers
+from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.authentication import BasicAuthentication
 
 from drf_spectacular.generators import SchemaGenerator

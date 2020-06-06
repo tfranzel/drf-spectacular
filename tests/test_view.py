@@ -8,7 +8,7 @@ from rest_framework.test import APIClient
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 
 @extend_schema(responses=OpenApiTypes.FLOAT)

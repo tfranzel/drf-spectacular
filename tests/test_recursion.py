@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 from django.db import models
-from rest_framework import serializers, viewsets, mixins
+from rest_framework import mixins, serializers, viewsets
 from rest_framework.renderers import JSONRenderer
 
 from tests import assert_schema, generate_schema

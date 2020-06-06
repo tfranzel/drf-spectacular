@@ -3,24 +3,22 @@ import inspect
 import json
 import sys
 from abc import ABCMeta
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from collections.abc import Hashable, Iterable
 from decimal import Decimal
 from enum import Enum
-from typing import List, Type, Optional, TypeVar, Union, Generic, DefaultDict
+from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 
 import inflection
 import uritemplate
 from django import __version__ as DJANGO_VERSION
 from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver  # type: ignore
 from django.utils.module_loading import import_string
-from rest_framework import fields, serializers, versioning, exceptions
+from rest_framework import exceptions, fields, serializers, versioning
 from uritemplate import URITemplate
 
 from drf_spectacular.settings import spectacular_settings
-from drf_spectacular.types import (
-    OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, DJANGO_PATH_CONVERTER_MAPPING, OpenApiTypes
-)
+from drf_spectacular.types import DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
 
 try:

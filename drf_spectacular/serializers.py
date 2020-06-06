@@ -1,5 +1,5 @@
 from drf_spectacular.extensions import OpenApiSerializerExtension
-from drf_spectacular.plumbing import warn, force_instance
+from drf_spectacular.plumbing import force_instance, warn
 
 
 class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):

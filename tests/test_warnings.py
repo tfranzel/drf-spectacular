@@ -1,5 +1,5 @@
 from django.db import models
-from rest_framework import serializers, mixins, viewsets, views
+from rest_framework import mixins, serializers, views, viewsets
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.decorators import action
 from rest_framework.views import APIView

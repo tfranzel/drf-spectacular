@@ -1,6 +1,6 @@
 from unittest import mock
 
-from rest_framework import serializers, viewsets, mixins, generics
+from rest_framework import generics, mixins, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 

@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter, extend_schema_field
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field
 from tests import assert_schema, generate_schema
 
 

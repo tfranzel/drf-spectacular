@@ -1,15 +1,22 @@
 import inspect
 from urllib.parse import urljoin
 
-from django.urls import URLResolver, URLPattern
-from rest_framework import viewsets, views
+from django.urls import URLPattern, URLResolver
+from rest_framework import views, viewsets
 from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignore
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.plumbing import (
-    ComponentRegistry, error, alpha_operation_sorter, reset_generator_stats, build_root_object,
-    modify_for_versioning, operation_matches_version, warn, is_versioning_supported
+    ComponentRegistry,
+    alpha_operation_sorter,
+    build_root_object,
+    error,
+    is_versioning_supported,
+    modify_for_versioning,
+    operation_matches_version,
+    reset_generator_stats,
+    warn,
 )
 from drf_spectacular.settings import spectacular_settings
 

@@ -3,9 +3,9 @@ from textwrap import dedent
 from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
 
-from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.plumbing import GENERATOR_STATS
-from drf_spectacular.renderers import OpenApiYamlRenderer, OpenApiJsonRenderer
+from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
+from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.validation import validate_schema
 
 

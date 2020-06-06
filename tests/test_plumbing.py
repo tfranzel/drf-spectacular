@@ -1,7 +1,7 @@
 from django.db import models
 from rest_framework import serializers
 
-from drf_spectacular.plumbing import is_serializer, force_instance, is_field
+from drf_spectacular.plumbing import force_instance, is_field, is_serializer
 
 
 def test_is_serializer():

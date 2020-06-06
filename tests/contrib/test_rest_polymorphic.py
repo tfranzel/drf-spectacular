@@ -1,7 +1,7 @@
 import pytest
 from django.db import models
 from polymorphic.models import PolymorphicModel
-from rest_framework import viewsets, serializers
+from rest_framework import serializers, viewsets
 from rest_framework.renderers import JSONRenderer
 from rest_polymorphic.serializers import PolymorphicSerializer
 

@@ -1,10 +1,7 @@
 from django.urls import path
-from rest_framework import serializers, viewsets, mixins, routers
+from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from drf_spectacular.generators import SchemaGenerator
 from tests import assert_schema

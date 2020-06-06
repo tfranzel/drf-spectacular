@@ -2,10 +2,10 @@ import uuid
 from unittest import mock
 
 from django.conf.urls import url
-from django.db.models import fields
 from django.db import models
+from django.db.models import fields
 from django.urls import path, re_path
-from rest_framework import serializers, viewsets, mixins, routers, views, generics, parsers
+from rest_framework import generics, mixins, parsers, routers, serializers, views, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
@@ -14,7 +14,7 @@ from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_serializer
 from drf_spectacular.validation import validate_schema
-from tests import generate_schema, get_response_schema, get_request_schema
+from tests import generate_schema, get_request_schema, get_response_schema
 
 
 def test_primary_key_read_only_queryset_not_found(no_warnings):

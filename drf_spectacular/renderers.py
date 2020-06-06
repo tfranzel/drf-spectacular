@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 import yaml
 from rest_framework.exceptions import ErrorDetail
-from rest_framework.renderers import JSONRenderer, BaseRenderer
+from rest_framework.renderers import BaseRenderer, JSONRenderer
 
 
 class OpenApiYamlRenderer(BaseRenderer):

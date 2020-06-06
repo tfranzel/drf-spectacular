@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Dict, Any
+from typing import Any, Dict
 
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
@@ -7,8 +7,10 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from drf_spectacular.renderers import (
-    OpenApiJsonRenderer, OpenApiJsonRenderer2,
-    OpenApiYamlRenderer, OpenApiYamlRenderer2
+    OpenApiJsonRenderer,
+    OpenApiJsonRenderer2,
+    OpenApiYamlRenderer,
+    OpenApiYamlRenderer2,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes

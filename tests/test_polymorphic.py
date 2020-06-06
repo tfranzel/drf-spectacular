@@ -1,11 +1,11 @@
 from unittest import mock
 
 from django.db import models
-from rest_framework import viewsets, serializers
+from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
-from drf_spectacular.utils import extend_schema, PolymorphicProxySerializer
+from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema
 from tests import assert_schema, generate_schema
 
 
