@@ -1,6 +1,7 @@
 import yaml
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.renderers import JSONRenderer, BaseRenderer
+from collections import OrderedDict
 
 
 class OpenApiYamlRenderer(BaseRenderer):
@@ -23,6 +24,10 @@ class OpenApiYamlRenderer(BaseRenderer):
             scalar.style = '|' if '\n' in data else None
             return scalar
         Dumper.add_representer(str, multiline_str_representer)
+
+        def map_representer(dumper, data):
+            return dumper.represent_dict(data.items())
+        Dumper.add_representer(OrderedDict, map_representer)
 
         return yaml.dump(
             data,
