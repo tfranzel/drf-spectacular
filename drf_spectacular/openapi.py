@@ -616,7 +616,14 @@ class AutoSchema(ViewInspector):
             if isinstance(field, serializers.HiddenField):
                 continue
 
-            schema = self._map_serializer_field(field, direction)
+            try:
+                schema = self._map_serializer_field(field, direction)
+            except Exception as exc:
+                error(
+                    f'Exception raised while getting serializer from field {field.__class__.__name__}. '
+                    f'Ignoring the field for now. (Exception: {exc})'
+                )
+                schema = {}
 
             if field.required or schema.get('readOnly'):
                 required.add(field.field_name)
