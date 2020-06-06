@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -44,6 +44,7 @@ class AllFields(models.Model):
     field_possmallint = models.PositiveSmallIntegerField()
     field_nullbool = models.NullBooleanField()
     field_time = models.TimeField()
+    field_duration = models.DurationField()
     # field_image = models.ImageField()
     # field_filepath = models.FilePathField()
 
@@ -191,6 +192,7 @@ def test_model_setup_is_valid():
         field_possmallint=1,
         field_nullbool=None,
         field_time='00:05:23.283',
+        field_duration=timedelta(seconds=10),
         # relations
         field_foreign=aux,
         field_o2o=aux,

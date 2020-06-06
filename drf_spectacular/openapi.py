@@ -462,6 +462,9 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.UUIDField):
             return append_meta(build_basic_type(OpenApiTypes.UUID), meta)
 
+        if isinstance(field, serializers.DurationField):
+            return append_meta(build_basic_type(OpenApiTypes.STR), meta)
+
         if isinstance(field, serializers.IPAddressField):
             # TODO this might be a DRF bug. protocol is not propagated to serializer although it
             #  should have been. results in always 'both' (thus no format)

@@ -228,6 +228,8 @@ components:
         field_time:
           type: string
           format: time
+        field_duration:
+          type: string
         field_foreign:
           type: string
           format: uuid
@@ -251,6 +253,7 @@ components:
       - field_datetime
       - field_decimal
       - field_decimal_uncoerced
+      - field_duration
       - field_email
       - field_file
       - field_float
