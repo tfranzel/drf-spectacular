@@ -56,7 +56,7 @@ class SpectacularJSONAPIView(SpectacularAPIView):
     renderer_classes = [OpenApiJsonRenderer, OpenApiJsonRenderer2]
 
 
-class SpectacularSwaggerView(APIView):
+class SpectacularSwaggerView(SpectacularAPIView):
     renderer_classes = [TemplateHTMLRenderer]
     url_name = 'schema'
     template_name = 'drf_spectacular/swagger_ui.html'
@@ -69,7 +69,7 @@ class SpectacularSwaggerView(APIView):
         )
 
 
-class SpectacularRedocView(APIView):
+class SpectacularRedocView(SpectacularAPIView):
     renderer_classes = [TemplateHTMLRenderer]
     url_name = 'schema'
     template_name = 'drf_spectacular/redoc.html'
