@@ -397,6 +397,7 @@ class AutoSchema(ViewInspector):
             schema = self._map_serializer_field(field.child_relation, direction)
             # remove hand-over initkwargs applying only to outer scope
             schema.pop('description', None)
+            schema.pop('readOnly', None)
             return append_meta(build_array_type(schema), meta)
 
         if isinstance(field, serializers.PrimaryKeyRelatedField):
@@ -404,11 +405,16 @@ class AutoSchema(ViewInspector):
             # from parent. also avoid calling Manager. __bool__ as it might be customized
             # to hit the database.
             if getattr(field, 'queryset', None) is not None:
-                schema = self._map_model_field(field.queryset.model._meta.pk, direction)
+                model_field = field.queryset.model._meta.pk
             else:
-                schema = self._map_model_field(field.parent.Meta.model._meta.pk, direction)
+                if isinstance(field.parent, serializers.ManyRelatedField):
+                    model_field = field.parent.parent.Meta.model._meta.pk
+                else:
+                    model_field = field.parent.Meta.model._meta.pk
+
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
             # signals that attribute. however this does not apply in the context of relations.
+            schema = self._map_model_field(model_field, direction)
             schema.pop('readOnly', None)
             return append_meta(schema, meta)
 

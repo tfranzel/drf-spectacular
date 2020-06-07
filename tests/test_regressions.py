@@ -591,3 +591,29 @@ def test_file_field_duality_on_split_request(no_warnings):
 
     assert schema['components']['schemas']['X']['properties']['file']['format'] == 'uri'
     assert schema['components']['schemas']['XRequest']['properties']['file']['format'] == 'binary'
+
+
+def test_read_only_many_related_field(no_warnings):
+    class ManyRelatedTargetModel(models.Model):
+        field = models.IntegerField()
+
+    class ManyRelatedModel(models.Model):
+        field_m2m = models.ManyToManyField(ManyRelatedTargetModel)
+        field_m2m_ro = models.ManyToManyField(ManyRelatedTargetModel)
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = ManyRelatedModel
+            fields = '__all__'
+            read_only_fields = ['field_m2m_ro']
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XAPIView)
+    assert schema['components']['schemas']['X']['properties']['field_m2m_ro']['readOnly'] is True
+    # readOnly only needed on outer object, not in items
+    assert 'readOnly' not in schema['components']['schemas']['X']['properties']['field_m2m_ro']['items']
+    assert 'readOnly' not in schema['components']['schemas']['X']['properties']['field_m2m']
