@@ -14,9 +14,9 @@ schema closer to your API.
 
 Step 1: ``queryset`` and ``serializer_class``
 ---------------------------------------------
-Introspection heavily relies on those two attributes. `get_serializer_class()`
-and `get_serializer()` are also used if available. You can also set those
-on `APIView`. Even though this is not supported by DRF, `drf-spectacular` will pick
+Introspection heavily relies on those two attributes. ``get_serializer_class()``
+and ``get_serializer()`` are also used if available. You can also set those
+on ``APIView``. Even though this is not supported by DRF, `drf-spectacular` will pick
 them up and use them.
 
 
@@ -39,9 +39,10 @@ discovered in the introspection.
 
 Step 3: :py:class:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` and type hints
 ---------------------------------------------------------------------------------------------------
-Custom `SerializerField`s might not get picked up properly. You can inform `drf-spectacular`
+Custom ``SerializerField``s might not get picked up properly. You can inform `drf-spectacular`
 on what is to be expected with the :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>`
-decorator.
+decorator. It takes either basic types or a ``Serializer`` as argument. In case of basic types
+(e.g. str int etc.) a type hint is already sufficient.
 
 .. code-block:: python
 
@@ -50,6 +51,17 @@ decorator.
         def to_representation(self, value):
             return urlsafe_base64_encode(b'\xf0\xf1\xf2')
 
+
+You can apply it also to the method of a `SerializerMethodField`.
+
+.. code-block:: python
+
+    class ErrorDetailSerializer(serializers.Serializer):
+        field_custom = serializers.SerializerMethodField()
+
+        @extend_schema_field(OpenApiTypes.DATETIME)
+        def get_field_custom(self, object):
+            return '2020-03-06 20:54:00.104248'
 
 Step 4: Extensions
 ------------------

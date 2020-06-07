@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.9.8 (2020-06-07)
+------------------
+
+- bugfix read-only many2many relation processing `#79 <https://github.com/tfranzel/drf-spectacular/issues/79>`_
+- Implement OrderedDict representer for yaml dumper [Jair Henrique]
+- bugfix UI permissions `#84 <https://github.com/tfranzel/drf-spectacular/issues/84>`_
+- fix abc import `#82 <https://github.com/tfranzel/drf-spectacular/issues/82>`_
+- add duration field `#78 <https://github.com/tfranzel/drf-spectacular/issues/78>`_
+
 0.9.7 (2020-06-05)
 ------------------
 
