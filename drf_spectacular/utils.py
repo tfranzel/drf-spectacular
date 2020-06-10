@@ -1,5 +1,7 @@
 import inspect
+from typing import Dict
 
+from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
 
@@ -23,6 +25,39 @@ class PolymorphicProxySerializer:
         self.component_name = component_name
         self.serializers = serializers
         self.resource_type_field_name = resource_type_field_name
+
+
+class ManualPolymorphicProxySerializer:
+    """
+    This class is to be used with :func:`@extend_schema <.extend_schema>` to
+    signal a request/response might be polymorphic (accepts/returns data
+    possibly from different serializers)
+
+    Beware that this is not a real serializer and therefore is not derived from
+    serializers.Serializer. It *cannot* be used in views as `serializer_class`
+    or as field in a actual serializer. You likely want to handle this in the
+    view method.
+
+    Instead of PolymorphicProxySerializer, to use ManualPolymorphicProxySerializer,
+    you must describe manualy the mapping of resorce field and the property name
+    who represents your dynamic data.
+
+    @extend_schema(
+        request=ManualPolymorphicProxySerializer(
+            component_name='MetaPerson',
+            serializers={
+                'legal': LegalPersonSerializer,
+                'natural': NaturalPersonSerializer,
+            },
+            property_name='person_type',
+        )
+    )
+    """
+
+    def __init__(self, component_name: str, property_name: str, serializers: Dict[str, Serializer]):
+        self.component_name = component_name
+        self.serializers = serializers
+        self.property_name = property_name
 
 
 class OpenApiSchemaBase:

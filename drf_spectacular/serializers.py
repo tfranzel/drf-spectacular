@@ -37,3 +37,28 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
                 'mapping': {resource_type: ref['$ref'] for resource_type, ref in sub_components}
             }
         }
+
+
+class ManualPolymorphicProxySerializerExtension(OpenApiSerializerExtension):
+    target_class = 'drf_spectacular.utils.ManualPolymorphicProxySerializer'
+
+    def get_name(self):
+        return self.target.component_name
+
+    def map_serializer(self, auto_schema, direction):
+        """ custom handling for @extend_schema's injection of ManualPolymorphicProxySerializer """
+        serializer = self.target
+        sub_components = []
+
+        for resource_type, sub_serializer in serializer.serializers.items():
+            sub_serializer = force_instance(sub_serializer)
+            resolved_sub_serializer = auto_schema.resolve_serializer(sub_serializer, direction)
+            sub_components.append((resource_type, resolved_sub_serializer.ref))
+
+        return {
+            'oneOf': [ref for _, ref in sub_components],
+            'discriminator': {
+                'propertyName': serializer.property_name,
+                'mapping': {resource_type: ref['$ref'] for resource_type, ref in sub_components}
+            }
+        }
