@@ -1,9 +1,11 @@
+import tempfile
 import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
 from django.core.files.base import ContentFile
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.urls import reverse
 from rest_framework import serializers, viewsets
@@ -12,6 +14,8 @@ from rest_framework.test import APIClient
 
 from drf_spectacular.generators import SchemaGenerator
 from tests import assert_schema
+
+fs = FileSystemStorage(location=tempfile.gettempdir())
 
 
 class Aux(models.Model):
@@ -34,8 +38,8 @@ class AllFields(models.Model):
     field_ip = models.IPAddressField()
     field_ip_generic = models.GenericIPAddressField(protocol='ipv6')
     field_decimal = models.DecimalField(max_digits=6, decimal_places=3)
-    field_file = models.FileField()
-    field_img = models.ImageField()
+    field_file = models.FileField(storage=fs)
+    field_img = models.ImageField(storage=fs)
     field_date = models.DateField()
     field_datetime = models.DateTimeField()
     field_bigint = models.BigIntegerField()
@@ -45,8 +49,6 @@ class AllFields(models.Model):
     field_nullbool = models.NullBooleanField()
     field_time = models.TimeField()
     field_duration = models.DurationField()
-    # field_image = models.ImageField()
-    # field_filepath = models.FilePathField()
 
     # relations
     field_foreign = models.ForeignKey(Aux, on_delete=models.CASCADE, help_text='main aux object')
