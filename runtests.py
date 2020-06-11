@@ -106,5 +106,5 @@ if __name__ == "__main__":
         exit_on_failure(pytest.main(pytest_args))
     if run_lint:
         exit_on_failure(flake8_main(FLAKE8_ARGS))
-        exit_on_failure(mypy_main(MYPY_ARGS))
         exit_on_failure(isort_main(ISORT_ARGS))
+        exit_on_failure(mypy_main(MYPY_ARGS))

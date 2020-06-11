@@ -1,7 +1,8 @@
-
 from rest_framework import serializers
 
-from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerializerFieldExtension, OpenApiViewExtension
+from drf_spectacular.extensions import (
+    OpenApiSerializerExtension, OpenApiSerializerFieldExtension, OpenApiViewExtension
+)
 from drf_spectacular.plumbing import build_basic_type
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field

@@ -2,9 +2,7 @@ from unittest import mock
 
 from django.urls import include, path
 from oauth2_provider.contrib.rest_framework import (
-    IsAuthenticatedOrTokenHasScope,
-    OAuth2Authentication,
-    TokenHasReadWriteScope,
+    IsAuthenticatedOrTokenHasScope, OAuth2Authentication, TokenHasReadWriteScope,
     TokenHasResourceScope,
 )
 from rest_framework import mixins, routers, serializers, viewsets

@@ -18,7 +18,9 @@ from rest_framework import exceptions, fields, serializers, versioning
 from uritemplate import URITemplate
 
 from drf_spectacular.settings import spectacular_settings
-from drf_spectacular.types import DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes
+from drf_spectacular.types import (
+    DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,
+)
 from drf_spectacular.utils import OpenApiParameter
 
 try:
