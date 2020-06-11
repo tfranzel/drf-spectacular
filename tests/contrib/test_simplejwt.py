@@ -1,10 +1,15 @@
+import pytest
 from django.urls import path
 from rest_framework import mixins, routers, serializers, viewsets
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from drf_spectacular.generators import SchemaGenerator
 from tests import assert_schema
+
+try:
+    from rest_framework_simplejwt.authentication import JWTAuthentication
+    from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+except ImportError:
+    JWTAuthentication = None
 
 
 class XSerializer(serializers.Serializer):
@@ -17,6 +22,7 @@ class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     required_scopes = ['x:read', 'x:write']
 
 
+@pytest.mark.contrib('rest_framework_simplejwt')
 def test_simplejwt(no_warnings):
     router = routers.SimpleRouter()
     router.register('x', XViewset, basename="x")

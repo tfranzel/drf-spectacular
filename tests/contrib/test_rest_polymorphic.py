@@ -1,12 +1,20 @@
 import pytest
 from django.db import models
-from polymorphic.models import PolymorphicModel
 from rest_framework import serializers, viewsets
 from rest_framework.renderers import JSONRenderer
-from rest_polymorphic.serializers import PolymorphicSerializer
 
 from drf_spectacular.helpers import lazy_serializer
 from tests import assert_schema, generate_schema
+
+try:
+    from polymorphic.models import PolymorphicModel
+    from rest_polymorphic.serializers import PolymorphicSerializer
+except ImportError:
+    class PolymorphicModel(models.Model):
+        pass
+
+    class PolymorphicSerializer(serializers.Serializer):
+        pass
 
 
 class Person(PolymorphicModel):
@@ -60,6 +68,7 @@ class PersonViewSet(viewsets.ModelViewSet):
     serializer_class = PersonSerializer
 
 
+@pytest.mark.contrib('polymorphic', 'rest_polymorphic')
 def test_rest_polymorphic(no_warnings):
     assert_schema(
         generate_schema('persons', PersonViewSet),
@@ -67,6 +76,7 @@ def test_rest_polymorphic(no_warnings):
     )
 
 
+@pytest.mark.contrib('polymorphic', 'rest_polymorphic')
 @pytest.mark.django_db
 def test_model_setup_is_valid():
     peter = NaturalPerson(first_name='Peter', last_name='Parker')

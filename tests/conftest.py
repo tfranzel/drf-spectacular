@@ -1,10 +1,21 @@
+from importlib import import_module
+
 import django
 import pytest
 from django.core import management
 
 
-def pytest_configure():
+def pytest_configure(config):
     from django.conf import settings
+
+    config.addinivalue_line(
+        "markers", "contrib(name): mark required contrib package"
+    )
+
+    contrib_apps = [
+        'rest_framework_jwt',
+        'oauth2_provider',
+    ]
 
     settings.configure(
         DEBUG_PROPAGATE_EXCEPTIONS=True,
@@ -46,8 +57,7 @@ def pytest_configure():
             'django.contrib.staticfiles',
             'rest_framework',
             'rest_framework.authtoken',
-            'rest_framework_jwt',
-            'oauth2_provider',
+            *[app for app in contrib_apps if module_available(app)],
             'drf_spectacular',
             'tests',
         ),
@@ -71,6 +81,26 @@ def pytest_configure():
     management.call_command('migrate')
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--skip-missing-contrib",
+        action="store_true",
+        default=False,
+        help="skip tests depending on missing contrib packages"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    if not config.getoption("--skip-missing-contrib"):
+        return
+    skip_missing_contrib = pytest.mark.skip(reason="skip tests for missing contrib package")
+    for item in items:
+        for marker in item.own_markers:
+            if marker.name == 'contrib':
+                if not all([module_available(module_str) for module_str in marker.args]):
+                    item.add_marker(skip_missing_contrib)
+
+
 @pytest.fixture()
 def no_warnings(capsys):
     """ make sure test emits no warnings """
@@ -86,3 +116,12 @@ def warnings(capsys):
     yield capsys
     captured = capsys.readouterr()
     assert captured.err
+
+
+def module_available(module_str):
+    try:
+        import_module(module_str)
+    except ImportError:
+        return False
+    else:
+        return True
