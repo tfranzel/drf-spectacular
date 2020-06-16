@@ -35,9 +35,10 @@ def get_packages(package):
     """
     Return root package and all sub-packages.
     """
-    return [dirpath
-            for dirpath, dirnames, filenames in os.walk(package)
-            if os.path.exists(os.path.join(dirpath, '__init__.py'))]
+    return [
+        dirpath for dirpath, dirnames, filenames in os.walk(package)
+        if os.path.exists(os.path.join(dirpath, '__init__.py'))
+    ]
 
 
 version = get_version(package)
