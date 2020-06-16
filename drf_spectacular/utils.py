@@ -124,7 +124,7 @@ def extend_schema(
                     return operation
                 return super().get_operation(path, path_regex, method, registry)
 
-            def get_summary(self, path, method):
+            def get_summary(self):
                 if summary and is_in_scope(self):
                     return summary
                 
