@@ -47,6 +47,10 @@ class AutoSchema(ViewInspector):
         self.method = method
 
         operation = {}
+        
+        summary = self.get_summary(path, method)
+        if summary:
+            operation['summary'] = summary
 
         operation['operationId'] = self.get_operation_id()
         operation['description'] = self.get_description()
