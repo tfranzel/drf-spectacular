@@ -15,6 +15,7 @@ def pytest_configure(config):
     contrib_apps = [
         'rest_framework_jwt',
         'oauth2_provider',
+        'polymorphic',
     ]
 
     settings.configure(
