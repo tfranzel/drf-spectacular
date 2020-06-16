@@ -48,7 +48,7 @@ class AutoSchema(ViewInspector):
 
         operation = {}
         
-        summary = self.get_summary(path, method)
+        summary = self.get_summary()
         if summary:
             operation['summary'] = summary
 
