@@ -593,6 +593,47 @@ def test_file_field_duality_on_split_request(no_warnings):
     assert schema['components']['schemas']['XRequest']['properties']['file']['format'] == 'binary'
 
 
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_component_split_nested_ro_wo_serializer(no_warnings):
+    class RoSerializer(serializers.Serializer):
+        ro_field = serializers.IntegerField(read_only=True)
+
+    class WoSerializer(serializers.Serializer):
+        wo_field = serializers.IntegerField(write_only=True)
+
+    class XSerializer(serializers.Serializer):
+        ro = RoSerializer()
+        wo = WoSerializer()
+
+    class XView(generics.ListCreateAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    assert 'RoRequest' not in schema['components']['schemas']
+    assert 'Wo' not in schema['components']['schemas']
+    assert len(schema['components']['schemas']['X']['properties']) == 1
+    assert len(schema['components']['schemas']['XRequest']['properties']) == 1
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_component_split_nested_explicit_ro_wo_serializer(no_warnings):
+    class NestedSerializer(serializers.Serializer):
+        field = serializers.IntegerField()
+
+    class XSerializer(serializers.Serializer):
+        ro = NestedSerializer(read_only=True)
+        wo = NestedSerializer(write_only=True)
+
+    class XView(generics.ListCreateAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    assert 'NestedRequest' in schema['components']['schemas']
+    assert 'Nested' in schema['components']['schemas']
+    assert len(schema['components']['schemas']['X']['properties']) == 1
+    assert len(schema['components']['schemas']['XRequest']['properties']) == 1
+
+
 def test_read_only_many_related_field(no_warnings):
     class ManyRelatedTargetModel(models.Model):
         field = models.IntegerField()

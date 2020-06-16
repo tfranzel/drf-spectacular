@@ -382,13 +382,13 @@ class AutoSchema(ViewInspector):
 
         # nested serializer
         if isinstance(field, serializers.Serializer):
-            schema = self.resolve_serializer(field, direction).ref
-            return append_meta(schema, meta)
+            component = self.resolve_serializer(field, direction)
+            return append_meta(component.ref, meta) if component else None
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if isinstance(field, serializers.ListSerializer):
-            schema = self.resolve_serializer(field.child, direction).ref
-            return append_meta(build_array_type(schema), meta)
+            component = self.resolve_serializer(field.child, direction)
+            return append_meta(build_array_type(component.ref), meta) if component else None
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
@@ -619,6 +619,9 @@ class AutoSchema(ViewInspector):
                 continue
 
             schema = self._map_serializer_field(field, direction)
+            # skip field if there is no schema for the direction
+            if not schema:
+                continue
 
             if field.required or schema.get('readOnly'):
                 required.add(field.field_name)
@@ -754,7 +757,7 @@ class AutoSchema(ViewInspector):
             request_body_required = True
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'request')
-            if not component:
+            if not component.schema:
                 # serializer is empty so skip content enumeration
                 return None
             schema = component.ref
@@ -820,7 +823,7 @@ class AutoSchema(ViewInspector):
             schema = self.resolve_serializer(serializer.child, 'response').ref
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'response')
-            if not component:
+            if not component.schema:
                 return {'description': 'No response body'}
             schema = component.ref
         elif is_basic_type(serializer):

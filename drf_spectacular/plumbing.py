@@ -363,7 +363,7 @@ class ResolvedComponent:
         self.object = object
 
     def __bool__(self):
-        return bool(self.schema)
+        return bool(self.name and self.type and self.object)
 
     @property
     def key(self):
