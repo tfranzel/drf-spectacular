@@ -51,6 +51,10 @@ class AutoSchema(ViewInspector):
         operation['operationId'] = self.get_operation_id()
         operation['description'] = self.get_description()
 
+        summary = self.get_summary()
+        if summary:
+            operation['summary'] = summary
+
         parameters = self._get_parameters()
         if parameters:
             operation['parameters'] = parameters
@@ -170,6 +174,10 @@ class AutoSchema(ViewInspector):
         view_doc = inspect.getdoc(self.view) or ''
         action_doc = inspect.getdoc(action_or_method) or ''
         return action_doc or view_doc
+
+    def get_summary(self):
+        """ override this for custom behaviour """
+        return None
 
     def get_auth(self):
         """

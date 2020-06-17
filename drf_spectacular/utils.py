@@ -52,6 +52,7 @@ def extend_schema(
         responses=None,
         auth=None,
         description=None,
+        summary=None,
         deprecated=None,
         tags=None,
         exclude=False,
@@ -79,6 +80,7 @@ def extend_schema(
     :param request: replaces the discovered ``Serializer``.
     :param auth:
     :param description: replaces discovered doc strings
+    :param summary: an optional short summary of the description
     :param deprecated: mark operation as deprecated
     :param tags: override default list of tags
     :param exclude: set True to exclude operation from schema
@@ -151,6 +153,11 @@ def extend_schema(
                 if description and is_in_scope(self):
                     return description
                 return super().get_description()
+
+            def get_summary(self):
+                if summary and is_in_scope(self):
+                    return summary
+                return super().get_summary()
 
             def is_deprecated(self):
                 if deprecated and is_in_scope(self):
