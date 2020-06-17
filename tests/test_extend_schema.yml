@@ -7,6 +7,7 @@ paths:
     post:
       operationId: customname_create
       description: this weird endpoint needs some explaining
+      summary: short summary
       parameters:
       - in: query
         name: expiration_date

@@ -97,6 +97,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
                 )
             ],
             description='this weird endpoint needs some explaining',
+            summary='short summary',
             deprecated=True,
             tags=['custom_tag'],
         )
