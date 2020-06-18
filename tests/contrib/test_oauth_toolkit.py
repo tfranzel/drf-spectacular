@@ -1,15 +1,23 @@
 from unittest import mock
 
+import pytest
 from django.urls import include, path
-from oauth2_provider.contrib.rest_framework import (
-    IsAuthenticatedOrTokenHasScope, OAuth2Authentication, TokenHasReadWriteScope,
-    TokenHasResourceScope,
-)
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.authentication import BasicAuthentication
 
 from drf_spectacular.generators import SchemaGenerator
 from tests import assert_schema
+
+try:
+    from oauth2_provider.contrib.rest_framework import (
+        IsAuthenticatedOrTokenHasScope, OAuth2Authentication,
+        TokenHasReadWriteScope, TokenHasResourceScope,
+    )
+except ImportError:
+    IsAuthenticatedOrTokenHasScope = None
+    OAuth2Authentication = None
+    TokenHasReadWriteScope = None
+    TokenHasResourceScope = None
 
 
 class XSerializer(serializers.Serializer):
@@ -57,6 +65,7 @@ class IsAuthenticatedOrTokenHasScopeViewset(mixins.ListModelMixin, viewsets.Gene
     'oauth2_provider.settings.oauth2_settings.DEFAULT_SCOPES',
     ["read", "write"]
 )
+@pytest.mark.contrib('oauth2_provider')
 def test_oauth2_toolkit(no_warnings):
     router = routers.SimpleRouter()
     router.register('TokenHasReadWriteScope', TokenHasReadWriteScopeViewset, basename="x1")

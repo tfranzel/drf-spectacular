@@ -2,6 +2,12 @@ include *.rst
 include LICENSE
 include drf_spectacular/validation/*.json
 include drf_spectacular/templates/drf_spectacular/*.html
-recursive-include requirements *
+include runtests.py
+graft tests
+recursive-exclude tests *_out.yml
+graft requirements
+graft docs
+prune docs/_build
+prune docs/_static
 global-exclude __pycache__
 global-exclude *.py[co]
