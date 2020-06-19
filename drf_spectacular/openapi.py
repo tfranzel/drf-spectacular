@@ -1,4 +1,3 @@
-import inspect
 import re
 import typing
 from operator import attrgetter
@@ -23,8 +22,8 @@ from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerial
 from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, anyisinstance, append_meta, build_array_type,
     build_basic_type, build_choice_field, build_object_type, build_parameter_type, error,
-    follow_field_source, force_instance, get_override, has_override, is_basic_type, is_field,
-    is_serializer, resolve_regex_path_parameter, safe_ref, warn,
+    follow_field_source, force_instance, get_doc, get_override, has_override, is_basic_type,
+    is_field, is_serializer, resolve_regex_path_parameter, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -171,8 +170,8 @@ class AutoSchema(ViewInspector):
     def get_description(self):
         """ override this for custom behaviour """
         action_or_method = getattr(self.view, getattr(self.view, 'action', self.method.lower()), None)
-        view_doc = inspect.getdoc(self.view) or ''
-        action_doc = inspect.getdoc(action_or_method) or ''
+        view_doc = get_doc(self.view.__class__)
+        action_doc = get_doc(action_or_method)
         return action_doc or view_doc
 
     def get_summary(self):
@@ -645,7 +644,7 @@ class AutoSchema(ViewInspector):
         return build_object_type(
             properties=properties,
             required=required,
-            description=inspect.getdoc(serializer),
+            description=get_doc(serializer.__class__),
         )
 
     def _map_field_validators(self, field, schema):

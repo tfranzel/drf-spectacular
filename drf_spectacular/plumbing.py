@@ -14,7 +14,9 @@ import uritemplate
 from django import __version__ as DJANGO_VERSION
 from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver  # type: ignore
 from django.utils.module_loading import import_string
-from rest_framework import exceptions, fields, serializers, versioning
+from rest_framework import (
+    exceptions, fields, generics, mixins, serializers, versioning, views, viewsets,
+)
 from uritemplate import URITemplate
 
 from drf_spectacular.settings import spectacular_settings
@@ -129,6 +131,40 @@ def get_override(obj, prop):
     if not has_override(obj, prop):
         return None
     return obj._spectacular_annotation[prop]
+
+
+def get_doc(obj):
+    """ get doc string with fallback on obj's base classes (ignoring DRF documentation). """
+    if not inspect.isclass(obj):
+        return inspect.getdoc(obj) or ''
+
+    def safe_index(lst, item):
+        try:
+            return lst.index(item)
+        except ValueError:
+            return float("inf")
+
+    lib_doc_excludes = [
+        serializers.Serializer,
+        serializers.ModelSerializer,
+        serializers.HyperlinkedModelSerializer,
+        viewsets.ModelViewSet,
+        viewsets.GenericViewSet,
+        viewsets.ViewSet,
+        viewsets.ReadOnlyModelViewSet,
+        generics.GenericAPIView,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
+        mixins.DestroyModelMixin,
+        views.APIView,
+    ]
+    lib_barrier = min(safe_index(obj.__mro__, c) for c in lib_doc_excludes)
+    for cls in obj.__mro__[:lib_barrier]:
+        if cls.__doc__:
+            return inspect.cleandoc(cls.__doc__)
+    return ''
 
 
 def build_basic_type(obj):

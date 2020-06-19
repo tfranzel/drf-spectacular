@@ -35,6 +35,7 @@ def test_serializer_field_extension(no_warnings):
 class XView(APIView):
     """ underspecified library view """
     def get(self):
+        """ docstring for GET """
         return Response(1.234)  # pragma: no cover
 
 
@@ -53,6 +54,7 @@ def test_view_extension(no_warnings):
     schema = generate_schema('x', view=XView)
     operation = schema['paths']['/x']['get']
     assert get_response_schema(operation)['type'] == 'number'
+    assert operation['description'].strip() == 'docstring for GET'
 
 
 @api_view()
@@ -72,3 +74,4 @@ def test_view_function_extension(no_warnings):
     schema = generate_schema('x', view_function=x_view_function)
     operation = schema['paths']['/x']['get']
     assert get_response_schema(operation)['type'] == 'number'
+    assert operation['description'].strip() == 'underspecified library view'
