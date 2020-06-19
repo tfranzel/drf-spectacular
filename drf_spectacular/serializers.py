@@ -10,55 +10,45 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
 
     def map_serializer(self, auto_schema, direction):
         """ custom handling for @extend_schema's injection of PolymorphicProxySerializer """
-        serializer = self.target
-        sub_components = []
+        if isinstance(self.target.serializers, dict):
+            sub_components = self._get_explicit_sub_components(auto_schema, direction)
+        else:
+            sub_components = self._get_implicit_sub_components(auto_schema, direction)
 
-        for sub_serializer in serializer.serializers:
+        return {
+            'oneOf': [ref for _, ref in sub_components],
+            'discriminator': {
+                'propertyName': self.target.resource_type_field_name,
+                'mapping': {resource_type: ref['$ref'] for resource_type, ref in sub_components}
+            }
+        }
+
+    def _get_implicit_sub_components(self, auto_schema, direction):
+        sub_components = []
+        for sub_serializer in self.target.serializers:
             sub_serializer = force_instance(sub_serializer)
             resolved_sub_serializer = auto_schema.resolve_serializer(sub_serializer, direction)
 
             try:
-                discriminator_field = sub_serializer.fields[serializer.resource_type_field_name]
+                discriminator_field = sub_serializer.fields[self.target.resource_type_field_name]
                 resource_type = discriminator_field.to_representation(None)
             except:  # noqa: E722
                 warn(
-                    f'sub-serializer {resolved_sub_serializer.name} of {serializer.component_name} '
-                    f'must contain the discriminator field "{serializer.resource_type_field_name}". '
+                    f'sub-serializer {resolved_sub_serializer.name} of {self.target.component_name} '
+                    f'must contain the discriminator field "{self.target.resource_type_field_name}". '
                     f'defaulting to sub-serializer name, but schema will likely not match the API.'
                 )
                 resource_type = resolved_sub_serializer.name
 
             sub_components.append((resource_type, resolved_sub_serializer.ref))
 
-        return {
-            'oneOf': [ref for _, ref in sub_components],
-            'discriminator': {
-                'propertyName': serializer.resource_type_field_name,
-                'mapping': {resource_type: ref['$ref'] for resource_type, ref in sub_components}
-            }
-        }
+        return sub_components
 
-
-class ManualPolymorphicProxySerializerExtension(OpenApiSerializerExtension):
-    target_class = 'drf_spectacular.utils.ManualPolymorphicProxySerializer'
-
-    def get_name(self):
-        return self.target.component_name
-
-    def map_serializer(self, auto_schema, direction):
-        """ custom handling for @extend_schema's injection of ManualPolymorphicProxySerializer """
-        serializer = self.target
+    def _get_explicit_sub_components(self, auto_schema, direction):
         sub_components = []
-
-        for resource_type, sub_serializer in serializer.serializers.items():
+        for resource_type, sub_serializer in self.target.serializers.items():
             sub_serializer = force_instance(sub_serializer)
             resolved_sub_serializer = auto_schema.resolve_serializer(sub_serializer, direction)
             sub_components.append((resource_type, resolved_sub_serializer.ref))
 
-        return {
-            'oneOf': [ref for _, ref in sub_components],
-            'discriminator': {
-                'propertyName': serializer.property_name,
-                'mapping': {resource_type: ref['$ref'] for resource_type, ref in sub_components}
-            }
-        }
+        return sub_components
