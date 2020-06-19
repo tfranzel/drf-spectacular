@@ -39,7 +39,7 @@ discovered in the introspection.
 
 Step 3: :py:class:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` and type hints
 ---------------------------------------------------------------------------------------------------
-Custom ``SerializerField``s might not get picked up properly. You can inform `drf-spectacular`
+A custom ``SerializerField`` might not get picked up properly. You can inform `drf-spectacular`
 on what is to be expected with the :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>`
 decorator. It takes either basic types or a ``Serializer`` as argument. In case of basic types
 (e.g. str int etc.) a type hint is already sufficient.
