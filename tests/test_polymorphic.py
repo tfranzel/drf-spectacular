@@ -1,5 +1,6 @@
 from unittest import mock
 
+import pytest
 from django.db import models
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
@@ -41,25 +42,35 @@ class NaturalPersonSerializer(serializers.ModelSerializer):
 
 
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):
-    class PersonViewSet(viewsets.GenericViewSet):
-        @extend_schema(
-            request=PolymorphicProxySerializer(
-                component_name='MetaPerson',
-                serializers=[LegalPersonSerializer, NaturalPersonSerializer],
-                resource_type_field_name='type',
-            ),
-            responses=PolymorphicProxySerializer(
-                component_name='MetaPerson',
-                serializers=[LegalPersonSerializer, NaturalPersonSerializer],
-                resource_type_field_name='type',
-            )
-        )
+    implicit_poly_proxy = PolymorphicProxySerializer(
+        component_name='MetaPerson',
+        serializers=[LegalPersonSerializer, NaturalPersonSerializer],
+        resource_type_field_name='type',
+    )
+
+    class ImplicitPersonViewSet(viewsets.GenericViewSet):
+        @extend_schema(request=implicit_poly_proxy, responses=implicit_poly_proxy)
+        def create(self, request, *args, **kwargs):
+            return Response({})  # pragma: no cover
+
+    explicit_poly_proxy = PolymorphicProxySerializer(
+        component_name='MetaPerson',
+        serializers={
+            'legal': LegalPersonSerializer,
+            'natural': NaturalPersonSerializer,
+        },
+        resource_type_field_name='type',
+    )
+
+    class ExplicitPersonViewSet(viewsets.GenericViewSet):
+        @extend_schema(request=explicit_poly_proxy, responses=explicit_poly_proxy)
         def create(self, request, *args, **kwargs):
             return Response({})  # pragma: no cover
 
 
-def test_polymorphic(no_warnings):
+@pytest.mark.parametrize('viewset', [ImplicitPersonViewSet, ExplicitPersonViewSet])
+def test_polymorphic(no_warnings, viewset):
     assert_schema(
-        generate_schema('persons', PersonViewSet),
+        generate_schema('persons', viewset),
         'tests/test_polymorphic.yml'
     )

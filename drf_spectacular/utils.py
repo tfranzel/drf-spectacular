@@ -1,13 +1,31 @@
 import inspect
+from typing import Dict, List, Type, Union
 
+from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
+
+SerializerType = Union[Serializer, Type[Serializer]]
 
 
 class PolymorphicProxySerializer:
     """
     This class is to be used with :func:`@extend_schema <.extend_schema>` to
     signal a request/response might be polymorphic (accepts/returns data
-    possibly from different serializers)
+    possibly from different serializers). Usage usually looks like this:
+
+    .. code-block::
+
+        @extend_schema(
+            request=PolymorphicProxySerializer(
+                component_name='MetaPerson',
+                serializers=[
+                    LegalPersonSerializer, NaturalPersonSerializer,
+                ],
+                resource_type_field_name='person_type',
+            )
+        )
+        def create(self, request, *args, **kwargs):
+            return Response(...)
 
     Beware that this is not a real serializer and therefore is not derived from
     serializers.Serializer. It *cannot* be used in views as `serializer_class`
@@ -15,11 +33,22 @@ class PolymorphicProxySerializer:
     view method.
 
     Also make sure that each sub-serializer has a field named after the value of
-    `resource_type_field` (discriminator field) for the the mapping and parity
-    with with the generated schema.
-    """
+    ``resource_type_field_name`` (discriminator field). Generated clients will likely
+    depend on the existence of this field.
 
-    def __init__(self, component_name, serializers, resource_type_field_name):
+    For that reason, it is **strongly** recommended to pass the ``Serializers`` as **list**,
+    and by that let *drf-spectacular* retrieve the field and handle the mapping
+    automatically. In special circumstances, the field may not available when
+    drf-spectacular processes the serializer. In those cases you can explicitly state
+    the mapping with ``{'legal': LegalPersonSerializer, ...}``, but it is then your
+    responsibility to have a valid mapping.
+    """
+    def __init__(
+            self,
+            component_name: str,
+            serializers: Union[List[SerializerType], Dict[str, SerializerType]],
+            resource_type_field_name: str
+    ):
         self.component_name = component_name
         self.serializers = serializers
         self.resource_type_field_name = resource_type_field_name
