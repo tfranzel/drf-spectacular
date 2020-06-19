@@ -1,6 +1,21 @@
 Changelog
 =========
 
+0.9.9 (2020-06-19)
+------------------
+
+- improve auth extension doc `#99 <https://github.com/tfranzel/drf-spectacular/issues/99>`_
+- bugfix attr typo with Token auth extension `#99 <https://github.com/tfranzel/drf-spectacular/issues/99>`_
+- improve docstring extraction `#96 <https://github.com/tfranzel/drf-spectacular/issues/96>`_
+- Manual polymorphic [Jair Henrique]
+- Add summary field to extend_schema `#97 <https://github.com/tfranzel/drf-spectacular/issues/97>`_ [lilisha100]
+- reduce minimal package requirements
+- extend sdist with tests & doc
+- bugfix nested RO/WO serializer on COMPONENT_SPLIT_REQUEST
+- add pytest option --skip-missing-contrib `#87 <https://github.com/tfranzel/drf-spectacular/issues/87>`_
+- Save test files in temporary folder [Jair Henrique]
+- Setup isort library [Jair Henrique]
+
 0.9.8 (2020-06-07)
 ------------------
 
