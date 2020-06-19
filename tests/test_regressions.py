@@ -658,3 +658,22 @@ def test_read_only_many_related_field(no_warnings):
     # readOnly only needed on outer object, not in items
     assert 'readOnly' not in schema['components']['schemas']['X']['properties']['field_m2m_ro']['items']
     assert 'readOnly' not in schema['components']['schemas']['X']['properties']['field_m2m']
+
+
+def test_extension_subclass_discovery(no_warnings):
+    from rest_framework.authentication import TokenAuthentication
+
+    class CustomAuth(TokenAuthentication):
+        pass
+
+    class XSerializer(serializers.Serializer):
+        field = serializers.IntegerField
+
+    class XAPIView(APIView):
+        authentication_classes = [CustomAuth]
+
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('x', view=XAPIView)

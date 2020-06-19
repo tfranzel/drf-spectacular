@@ -27,7 +27,7 @@ class BasicScheme(OpenApiAuthenticationExtension):
 class TokenScheme(OpenApiAuthenticationExtension):
     target_class = 'rest_framework.authentication.TokenAuthentication'
     name = 'tokenAuth'
-    matches_subclass = True
+    match_subclasses = True
 
     def get_security_definition(self, auto_schema):
         return {
