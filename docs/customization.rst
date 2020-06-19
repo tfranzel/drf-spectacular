@@ -99,6 +99,21 @@ Specify authentication with :py:class:`OpenApiAuthenticationExtension <drf_spect
 Authentication classes that do not have 3rd party support will emit warnings and be ignored.
 Luckily authentication extensions are very easy to implement. Have a look at the
 `default authentication method extensions <https://github.com/tfranzel/drf-spectacular/blob/master/drf_spectacular/authentication.py>`_.
+A simple custom HTTP header based authentication could be achieved like this:
+
+.. code-block:: python
+
+    class MyAuthenticationScheme(OpenApiAuthenticationExtension):
+        target_class = 'my_app.MyAuthentication'  # full import path OR class ref
+        name = 'MyAuthentication'  # name used in the schema
+
+        def get_security_definition(self, auto_schema):
+            return {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'api_key',
+            }
+
 
 Declare field output with :py:class:`OpenApiSerializerFieldExtension <drf_spectacular.extensions.OpenApiSerializerFieldExtension>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
