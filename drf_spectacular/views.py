@@ -59,12 +59,13 @@ class SpectacularSwaggerView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
     url_name = 'schema'
+    url = None
     template_name = 'drf_spectacular/swagger_ui.html'
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
         return Response(
-            {'url_name': reverse(self.url_name, request=request)},
+            {'schema_url': self.url or reverse(self.url_name, request=request)},
             template_name=self.template_name
         )
 
@@ -73,11 +74,12 @@ class SpectacularRedocView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
     url_name = 'schema'
+    url = None
     template_name = 'drf_spectacular/redoc.html'
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
         return Response(
-            {'url_name': reverse(self.url_name, request=request)},
+            {'schema_url': self.url or reverse(self.url_name, request=request)},
             template_name=self.template_name
         )
