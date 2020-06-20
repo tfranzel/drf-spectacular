@@ -1,9 +1,10 @@
 Changelog
 =========
 
-0.9.9 (2020-06-19)
+0.9.9 (2020-06-20)
 ------------------
 
+- added explicit URL option to UI views. `#103 <https://github.com/tfranzel/drf-spectacular/issues/103>`_
 - improve auth extension doc `#99 <https://github.com/tfranzel/drf-spectacular/issues/99>`_
 - bugfix attr typo with Token auth extension `#99 <https://github.com/tfranzel/drf-spectacular/issues/99>`_
 - improve docstring extraction `#96 <https://github.com/tfranzel/drf-spectacular/issues/96>`_
