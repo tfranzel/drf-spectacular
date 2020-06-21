@@ -15,7 +15,9 @@ def pytest_configure(config):
     contrib_apps = [
         'rest_framework_jwt',
         'oauth2_provider',
-        'polymorphic',
+        # this is not strictly required and when added django-polymorphic
+        # currently breaks the whole Django/DRF upstream testing.
+        # 'polymorphic',
     ]
 
     settings.configure(
@@ -89,17 +91,24 @@ def pytest_addoption(parser):
         default=False,
         help="skip tests depending on missing contrib packages"
     )
+    parser.addoption(
+        "--allow-contrib-fail",
+        action="store_true",
+        default=False,
+        help="run contrib tests but allow them to fail"
+    )
 
 
 def pytest_collection_modifyitems(config, items):
-    if not config.getoption("--skip-missing-contrib"):
-        return
     skip_missing_contrib = pytest.mark.skip(reason="skip tests for missing contrib package")
+    allow_contrib_fail = pytest.mark.xfail(reason="contrib test were allowed to fail")
     for item in items:
         for marker in item.own_markers:
-            if marker.name == 'contrib':
+            if marker.name == 'contrib' and config.getoption("--skip-missing-contrib"):
                 if not all([module_available(module_str) for module_str in marker.args]):
                     item.add_marker(skip_missing_contrib)
+            if marker.name == 'contrib' and config.getoption("--allow-contrib-fail"):
+                item.add_marker(allow_contrib_fail)
 
 
 @pytest.fixture()
