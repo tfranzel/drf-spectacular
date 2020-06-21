@@ -362,7 +362,13 @@ class AutoSchema(ViewInspector):
         elif hasattr(models, model_field.get_internal_type()):
             # be graceful when the model field is not explicitly mapped to a serializer
             internal_type = getattr(models, model_field.get_internal_type())
-            field_cls = serializers.ModelSerializer.serializer_field_mapping[internal_type]
+            field_cls = serializers.ModelSerializer.serializer_field_mapping.get(internal_type)
+            if not field_cls:
+                warn(
+                    f'model field "{model_field.get_internal_type()}" has no mapping in '
+                    f'ModelSerializer. it may be a deprecated field. defaulting to "string"'
+                )
+                return build_basic_type(OpenApiTypes.STR)
             return self._map_serializer_field(field_cls(), direction)
         else:
             error(

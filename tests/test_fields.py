@@ -35,7 +35,10 @@ class AllFields(models.Model):
     field_email = models.EmailField()
     field_uuid = models.UUIDField()
     field_url = models.URLField()
-    field_ip = models.IPAddressField()
+    if models.IPAddressField in serializers.ModelSerializer.serializer_field_mapping:
+        field_ip = models.IPAddressField()
+    else:
+        field_ip = models.GenericIPAddressField(protocol='ipv6')
     field_ip_generic = models.GenericIPAddressField(protocol='ipv6')
     field_decimal = models.DecimalField(max_digits=6, decimal_places=3)
     field_file = models.FileField(storage=fs)
@@ -158,8 +161,16 @@ urlpatterns = router.urls
 
 @pytest.mark.urls(__name__)
 def test_fields(no_warnings):
+    from django.core.validators import URLValidator
+
     generator = SchemaGenerator()
     schema = generator.get_schema(request=None, public=True)
+
+    # url pattern changed between django 3.0 and 3.1
+    field_url = schema['components']['schemas']['AllFields']['properties']['field_url']
+    assert field_url['pattern'] == URLValidator.regex.pattern
+    field_url['pattern'] = 'URL_REGEX_PATTERN'
+
     assert_schema(schema, 'tests/test_fields.yml')
 
 
