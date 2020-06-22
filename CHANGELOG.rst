@@ -2,7 +2,7 @@ Changelog
 =========
 
 0.9.10 (2020-06-23)
-------------------
+-------------------
 
 - bugfix cyclic import in plumbing. `#104 <https://github.com/tfranzel/drf-spectacular/issues/104>`_
 - add upstream test target with contrib allowed to fail
