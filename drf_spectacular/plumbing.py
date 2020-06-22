@@ -14,9 +14,7 @@ import uritemplate
 from django import __version__ as DJANGO_VERSION
 from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver  # type: ignore
 from django.utils.module_loading import import_string
-from rest_framework import (
-    exceptions, fields, generics, mixins, serializers, versioning, views, viewsets,
-)
+from rest_framework import exceptions, fields, mixins, serializers, versioning
 from uritemplate import URITemplate
 
 from drf_spectacular.settings import spectacular_settings
@@ -137,6 +135,11 @@ def get_doc(obj):
     """ get doc string with fallback on obj's base classes (ignoring DRF documentation). """
     if not inspect.isclass(obj):
         return inspect.getdoc(obj) or ''
+
+    # do not import on package level due to potential import recursion when loading
+    # extensions as recommended:  USER's settings.py -> USER EXTENSIONS -> extensions.py
+    # -> plumbing.py -> DRF views -> DRF DefaultSchema -> openapi.py - plumbing.py -> Loop
+    from rest_framework import generics, viewsets, views
 
     def safe_index(lst, item):
         try:
