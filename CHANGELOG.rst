@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.9.10 (2020-06-23)
+------------------
+
+- bugfix cyclic import in plumbing. `#104 <https://github.com/tfranzel/drf-spectacular/issues/104>`_
+- add upstream test target with contrib allowed to fail
+- preparations for django 3.1 and DRF 3.12
+- improve tox targets for unreleased upstream
+
 0.9.9 (2020-06-20)
 ------------------
 
