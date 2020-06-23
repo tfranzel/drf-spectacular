@@ -1,6 +1,7 @@
 import inspect
 from typing import Dict, List, Type, Union
 
+from rest_framework.fields import empty
 from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
@@ -77,8 +78,8 @@ class OpenApiParameter(OpenApiSchemaBase):
 def extend_schema(
         operation_id=None,
         parameters=None,
-        request=None,
-        responses=None,
+        request=empty,
+        responses=empty,
         auth=None,
         description=None,
         summary=None,
@@ -169,12 +170,12 @@ def extend_schema(
                 return super().get_auth()
 
             def get_request_serializer(self):
-                if request and is_in_scope(self):
+                if request is not empty and is_in_scope(self):
                     return request
                 return super().get_request_serializer()
 
             def get_response_serializers(self):
-                if responses and is_in_scope(self):
+                if responses is not empty and is_in_scope(self):
                     return responses
                 return super().get_response_serializers()
 

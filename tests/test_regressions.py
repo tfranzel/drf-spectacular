@@ -677,3 +677,17 @@ def test_extension_subclass_discovery(no_warnings):
             pass  # pragma: no cover
 
     generate_schema('x', view=XAPIView)
+
+
+def test_extend_schema_no_req_no_res(no_warnings):
+    class XAPIView(APIView):
+        @extend_schema(request=None, responses=None)
+        def post(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', view=XAPIView)
+    validate_schema(schema)
+    operation = schema['paths']['/x']['post']
+    assert 'requestBody' not in operation
+    assert len(operation['responses']['200']) == 1
+    assert 'description' in operation['responses']['200']

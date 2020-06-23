@@ -110,7 +110,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
 
         @extend_schema(
             parameters=[OpenApiParameter('id', OpenApiTypes.INT, OpenApiParameter.PATH)],
-            request=OpenApiTypes.NONE,
+            request=None,
             responses={201: None},
         )
         @action(detail=True, methods=['POST'])

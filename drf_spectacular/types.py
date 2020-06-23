@@ -67,6 +67,7 @@ PYTHON_TYPE_MAPPING = {
     datetime: OpenApiTypes.DATETIME,
     date: OpenApiTypes.DATE,
     dict: OpenApiTypes.OBJECT,
+    None: OpenApiTypes.NONE,
 }
 
 DJANGO_PATH_CONVERTER_MAPPING = {
