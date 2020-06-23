@@ -622,7 +622,7 @@ def test_component_split_nested_explicit_ro_wo_serializer(no_warnings):
 
     class XSerializer(serializers.Serializer):
         ro = NestedSerializer(read_only=True)
-        wo = NestedSerializer(write_only=True)
+        wo = NestedSerializer(write_only=True, required=False)
 
     class XView(generics.ListCreateAPIView):
         serializer_class = XSerializer

@@ -603,6 +603,9 @@ class AutoSchema(ViewInspector):
                 if prop_name in required:
                     required.remove(prop_name)
 
+        # remove empty listing as it violates schema specification
+        if 'required' in schema and not required:
+            del schema['required']
         return schema
 
     def _get_serializer_field_meta(self, field):
