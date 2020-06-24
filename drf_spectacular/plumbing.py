@@ -125,9 +125,9 @@ def has_override(obj, prop):
     return True
 
 
-def get_override(obj, prop):
+def get_override(obj, prop, default=None):
     if not has_override(obj, prop):
-        return None
+        return default
     return obj._spectacular_annotation[prop]
 
 

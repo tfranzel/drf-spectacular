@@ -12,7 +12,9 @@ from rest_framework.views import APIView
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_serializer
+from drf_spectacular.utils import (
+    OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
+)
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema, get_request_schema, get_response_schema
 
@@ -691,3 +693,35 @@ def test_extend_schema_no_req_no_res(no_warnings):
     assert 'requestBody' not in operation
     assert len(operation['responses']['200']) == 1
     assert 'description' in operation['responses']['200']
+
+
+def test_extend_schema_field_exclusion(no_warnings):
+    @extend_schema_field(None)
+    class CustomField(serializers.IntegerField):
+        pass  # pragma: no cover
+
+    class XSerializer(serializers.Serializer):
+        id = serializers.IntegerField()
+        hidden = CustomField()
+
+    class XView(generics.CreateAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    assert 'hidden' not in schema['components']['schemas']['X']['properties']
+
+
+def test_extend_schema_serializer_field_exclusion(no_warnings):
+    @extend_schema_serializer(exclude_fields=['hidden1', 'hidden2'])
+    class XSerializer(serializers.Serializer):
+        integer = serializers.IntegerField()
+        hidden1 = serializers.IntegerField()
+        hidden2 = serializers.CharField()
+
+    class XView(generics.ListCreateAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    assert 'integer' in schema['components']['schemas']['X']['properties']
+    assert 'hidden1' not in schema['components']['schemas']['X']['properties']
+    assert 'hidden2' not in schema['components']['schemas']['X']['properties']

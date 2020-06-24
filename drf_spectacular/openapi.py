@@ -633,6 +633,8 @@ class AutoSchema(ViewInspector):
         for field in serializer.fields.values():
             if isinstance(field, serializers.HiddenField):
                 continue
+            if field.field_name in get_override(serializer, 'exclude_fields', []):
+                continue
 
             schema = self._map_serializer_field(field, direction)
             # skip field if there is no schema for the direction

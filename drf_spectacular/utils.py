@@ -249,19 +249,23 @@ def extend_schema_field(field):
     return decorator
 
 
-def extend_schema_serializer(many=None):
+def extend_schema_serializer(many=None, exclude_fields=None):
     """
     Decorator for the "serializer" kind. Intended for overriding default serializer behaviour that
     cannot be influenced through `.extend_schema`.
 
     :param many: override how serializer is initialized. Mainly used to coerce the list view detection
         heuristic to acknowledge a non-list serializer.
+    :param exclude_fields: fields to ignore while processing the serializer. only affects the
+        schema. fields will still be exposed through the API.
     """
     def decorator(klass):
         if not hasattr(klass, '_spectacular_annotation'):
             klass._spectacular_annotation = {}
         if many is not None:
             klass._spectacular_annotation['many'] = many
+        if exclude_fields:
+            klass._spectacular_annotation['exclude_fields'] = exclude_fields
         return klass
 
     return decorator
