@@ -73,13 +73,18 @@ All extensions work on the same principle. You provide a ``target_class`` (impor
 string or actual class) and then state what `drf-spectcular` should use instead of what
 it would normally discover.
 
+.. note:: Only the first Extension matching the criteria is used. By setting the ``priority`` attribute
+  on your extension, you can influence the matching order (default ``0``).
+  Built-in Extensions have a priority of ``-1``. If you subclass built-in Extensions, don't forget to
+  increase the priority.
+
 
 Replace views with :py:class:`OpenApiViewExtension <drf_spectacular.extensions.OpenApiViewExtension>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Many libraries use ``@api_view`` or ``APIView`` instead of `ViewSet` or `GenericAPIView`.
 In those cases, introspection has very little to work with. The purpose of this extension
 is to augment or switch out the encountered view (only for schema generation). Simply extending
-the discovered class (``class Fixed(self.target_class)``) with a ``queryset`` or
+the discovered class ``class Fixed(self.target_class)`` with a ``queryset`` or
 ``serializer_class`` attribute will often solve most issues.
 
 .. code-block:: python

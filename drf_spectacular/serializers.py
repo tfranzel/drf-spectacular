@@ -4,6 +4,7 @@ from drf_spectacular.plumbing import force_instance, warn
 
 class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
     target_class = 'drf_spectacular.utils.PolymorphicProxySerializer'
+    priority = -1
 
     def get_name(self):
         return self.target.component_name

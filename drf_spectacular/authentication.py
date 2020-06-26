@@ -4,6 +4,7 @@ from drf_spectacular.extensions import OpenApiAuthenticationExtension
 class SessionScheme(OpenApiAuthenticationExtension):
     target_class = 'rest_framework.authentication.SessionAuthentication'
     name = 'cookieAuth'
+    priority = -1
 
     def get_security_definition(self, auto_schema):
         return {
@@ -16,6 +17,7 @@ class SessionScheme(OpenApiAuthenticationExtension):
 class BasicScheme(OpenApiAuthenticationExtension):
     target_class = 'rest_framework.authentication.BasicAuthentication'
     name = 'basicAuth'
+    priority = -1
 
     def get_security_definition(self, auto_schema):
         return {
@@ -28,6 +30,7 @@ class TokenScheme(OpenApiAuthenticationExtension):
     target_class = 'rest_framework.authentication.TokenAuthentication'
     name = 'tokenAuth'
     match_subclasses = True
+    priority = -1
 
     def get_security_definition(self, auto_schema):
         return {
