@@ -16,6 +16,15 @@ from drf_spectacular.settings import spectacular_settings
 
 class EndpointEnumerator(BaseEndpointEnumerator):
     def get_api_endpoints(self, patterns=None, prefix=''):
+        api_endpoints = self._get_api_endpoints(patterns, prefix)
+        api_endpoints_deduplicated = {}
+        for path, path_regex, method, callback in api_endpoints:
+            if (path, method) not in api_endpoints_deduplicated:
+                api_endpoints_deduplicated[path, method] = (path, path_regex, method, callback)
+
+        return sorted(api_endpoints_deduplicated.values(), key=alpha_operation_sorter)
+
+    def _get_api_endpoints(self, patterns, prefix):
         """
         Return a list of all available API endpoints by inspecting the URL conf.
         Only modification the the DRF version is passing through the path_regex.
@@ -36,13 +45,13 @@ class EndpointEnumerator(BaseEndpointEnumerator):
                         api_endpoints.append(endpoint)
 
             elif isinstance(pattern, URLResolver):
-                nested_endpoints = self.get_api_endpoints(
+                nested_endpoints = self._get_api_endpoints(
                     patterns=pattern.url_patterns,
                     prefix=path_regex
                 )
                 api_endpoints.extend(nested_endpoints)
 
-        return sorted(api_endpoints, key=alpha_operation_sorter)
+        return api_endpoints
 
 
 class SchemaGenerator(BaseSchemaGenerator):

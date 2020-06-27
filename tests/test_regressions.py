@@ -725,3 +725,32 @@ def test_extend_schema_serializer_field_exclusion(no_warnings):
     assert 'integer' in schema['components']['schemas']['X']['properties']
     assert 'hidden1' not in schema['components']['schemas']['X']['properties']
     assert 'hidden2' not in schema['components']['schemas']['X']['properties']
+
+
+def test_schema_contains_only_urlpatterns_first_match(no_warnings):
+    class XSerializer(serializers.Serializer):
+        integer = serializers.IntegerField()
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    class YSerializer(serializers.Serializer):
+        integer = serializers.DateTimeField()
+
+    class YAPIView(APIView):
+        @extend_schema(responses=YSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    urlpatterns = [
+        path('api/x/', XAPIView.as_view()),  # only first occurrence is used
+        path('api/x/', YAPIView.as_view()),
+    ]
+    generator = SchemaGenerator(patterns=urlpatterns)
+    schema = generator.get_schema(request=None, public=True)
+    assert len(schema['components']['schemas']) == 1
+    assert 'X' in schema['components']['schemas']
+    operation = schema['paths']['/api/x/']['get']
+    assert '#/components/schemas/X' in get_response_schema(operation)['$ref']
