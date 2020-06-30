@@ -131,15 +131,24 @@ def get_override(obj, prop, default=None):
     return obj._spectacular_annotation[prop]
 
 
-def get_doc(obj):
-    """ get doc string with fallback on obj's base classes (ignoring DRF documentation). """
-    if not inspect.isclass(obj):
-        return inspect.getdoc(obj) or ''
-
+def get_lib_doc_excludes():
     # do not import on package level due to potential import recursion when loading
     # extensions as recommended:  USER's settings.py -> USER EXTENSIONS -> extensions.py
     # -> plumbing.py -> DRF views -> DRF DefaultSchema -> openapi.py - plumbing.py -> Loop
     from rest_framework import generics, viewsets, views
+    return [
+        views.APIView,
+        *[getattr(serializers, c) for c in dir(serializers) if c.endswith('Serializer')],
+        *[getattr(viewsets, c) for c in dir(viewsets) if c.endswith('ViewSet')],
+        *[getattr(generics, c) for c in dir(generics) if c.endswith('APIView')],
+        *[getattr(mixins, c) for c in dir(mixins) if c.endswith('Mixin')],
+    ]
+
+
+def get_doc(obj):
+    """ get doc string with fallback on obj's base classes (ignoring DRF documentation). """
+    if not inspect.isclass(obj):
+        return inspect.getdoc(obj) or ''
 
     def safe_index(lst, item):
         try:
@@ -147,23 +156,9 @@ def get_doc(obj):
         except ValueError:
             return float("inf")
 
-    lib_doc_excludes = [
-        serializers.Serializer,
-        serializers.ModelSerializer,
-        serializers.HyperlinkedModelSerializer,
-        viewsets.ModelViewSet,
-        viewsets.GenericViewSet,
-        viewsets.ViewSet,
-        viewsets.ReadOnlyModelViewSet,
-        generics.GenericAPIView,
-        mixins.ListModelMixin,
-        mixins.CreateModelMixin,
-        mixins.RetrieveModelMixin,
-        mixins.UpdateModelMixin,
-        mixins.DestroyModelMixin,
-        views.APIView,
-    ]
-    lib_barrier = min(safe_index(obj.__mro__, c) for c in lib_doc_excludes)
+    lib_barrier = min(
+        safe_index(obj.__mro__, c) for c in spectacular_settings.GET_LIB_DOC_EXCLUDES()
+    )
     for cls in obj.__mro__[:lib_barrier]:
         if cls.__doc__:
             return inspect.cleandoc(cls.__doc__)

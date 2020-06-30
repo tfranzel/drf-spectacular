@@ -36,6 +36,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # enum name overrides. dict with keys "YourEnum" and their choice values "field.choices"
     'ENUM_NAME_OVERRIDES': {},
 
+    # function that returns a list of all classes that should be excluded from doc string extraction
+    'GET_LIB_DOC_EXCLUDES': 'drf_spectacular.plumbing.get_lib_doc_excludes',
+
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
     'TITLE': '',
@@ -69,6 +72,7 @@ IMPORT_STRINGS = [
     'DEFAULT_GENERATOR_CLASS',
     'SERVE_PERMISSIONS',
     'POSTPROCESSING_HOOKS',
+    'GET_LIB_DOC_EXCLUDES',
 ]
 
 spectacular_settings = APISettings(
