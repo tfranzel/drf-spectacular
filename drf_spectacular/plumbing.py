@@ -649,12 +649,11 @@ def resolve_regex_path_parameter(path_regex, variable):
             converter = 'drf_format_suffix'  # remove appended options
 
         if parameter == variable and converter in DJANGO_PATH_CONVERTER_MAPPING:
-            return {
-                'name': parameter,
-                'schema': build_basic_type(DJANGO_PATH_CONVERTER_MAPPING[converter]),
-                'in': OpenApiParameter.PATH,
-                'required': False if converter == 'drf_format_suffix' else True,
-            }
+            return build_parameter_type(
+                name=parameter,
+                schema=build_basic_type(DJANGO_PATH_CONVERTER_MAPPING[converter]),
+                location=OpenApiParameter.PATH,
+            )
 
     return None
 

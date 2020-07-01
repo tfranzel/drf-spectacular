@@ -328,11 +328,11 @@ def test_drf_format_suffix_parameter(no_warnings):
 
     generator = SchemaGenerator(patterns=urlpatterns)
     schema = generator.get_schema(request=None, public=True)
-
+    validate_schema(schema)
     assert len(schema['paths']) == 2
     format_parameter = schema['paths']['/pi{format}']['get']['parameters'][0]
     assert format_parameter['name'] == 'format'
-    assert format_parameter['required'] is False
+    assert format_parameter['required'] is True
     assert format_parameter['in'] == 'path'
 
 
@@ -345,6 +345,7 @@ def test_regex_path_parameter_discovery(no_warnings):
     urlpatterns = [re_path(r'^/pi/<int:precision>', pi)]
     generator = SchemaGenerator(patterns=urlpatterns)
     schema = generator.get_schema(request=None, public=True)
+    validate_schema(schema)
     parameter = schema['paths']['/pi/{precision}']['get']['parameters'][0]
     assert parameter['name'] == 'precision'
     assert parameter['in'] == 'path'
@@ -750,6 +751,7 @@ def test_schema_contains_only_urlpatterns_first_match(no_warnings):
     ]
     generator = SchemaGenerator(patterns=urlpatterns)
     schema = generator.get_schema(request=None, public=True)
+    validate_schema(schema)
     assert len(schema['components']['schemas']) == 1
     assert 'X' in schema['components']['schemas']
     operation = schema['paths']['/api/x/']['get']
