@@ -1,3 +1,4 @@
+import os
 from importlib import import_module
 
 import django
@@ -20,6 +21,8 @@ def pytest_configure(config):
         # 'polymorphic',
     ]
 
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
     settings.configure(
         DEBUG_PROPAGATE_EXCEPTIONS=True,
         DATABASES={'default': {
@@ -30,6 +33,13 @@ def pytest_configure(config):
         SECRET_KEY='not very secret in tests',
         USE_I18N=True,
         USE_L10N=True,
+        LANGUAGES=[
+            ('de-de', 'German'),
+            ('en-us', 'English'),
+        ],
+        LOCALE_PATHS=[
+            base_dir + '/locale/'
+        ],
         STATIC_URL='/static/',
         ROOT_URLCONF='tests.urls',
         TEMPLATES=[
@@ -44,12 +54,11 @@ def pytest_configure(config):
                 },
             },
         ],
-        MIDDLEWARE_CLASSES=(
-            'django.middleware.common.CommonMiddleware',
+        MIDDLEWARE=(
             'django.contrib.sessions.middleware.SessionMiddleware',
-            'django.middleware.csrf.CsrfViewMiddleware',
+            'django.middleware.common.CommonMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
-            'django.contrib.messages.middleware.MessageMiddleware',
+            'django.middleware.locale.LocaleMiddleware',
         ),
         INSTALLED_APPS=(
             'django.contrib.auth',

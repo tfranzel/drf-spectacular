@@ -14,6 +14,7 @@ import uritemplate
 from django import __version__ as DJANGO_VERSION
 from django.apps import apps
 from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver  # type: ignore
+from django.utils.functional import Promise
 from django.utils.module_loading import import_string
 from rest_framework import exceptions, fields, mixins, serializers, versioning
 from uritemplate import URITemplate
@@ -702,3 +703,14 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         mocked_request.resolver_match = get_resolver(tuple(patterns)).resolve(path)
 
     return path
+
+
+def normalize_result_object(result):
+    """ resolve non-serializable objects like lazy translation strings and OrderedDict """
+    if isinstance(result, dict) or isinstance(result, OrderedDict):
+        return {k: normalize_result_object(v) for k, v in result.items()}
+    if isinstance(result, list) or isinstance(result, tuple):
+        return [normalize_result_object(v) for v in result]
+    if isinstance(result, Promise):
+        return str(result)
+    return result

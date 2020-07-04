@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 import yaml
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.renderers import BaseRenderer, JSONRenderer
@@ -7,7 +5,6 @@ from rest_framework.renderers import BaseRenderer, JSONRenderer
 
 class OpenApiYamlRenderer(BaseRenderer):
     media_type = 'application/vnd.oai.openapi'
-    charset = None
     format = 'openapi'
 
     def render(self, data, media_type=None, renderer_context=None):
@@ -26,14 +23,11 @@ class OpenApiYamlRenderer(BaseRenderer):
             return scalar
         Dumper.add_representer(str, multiline_str_representer)
 
-        def ordered_dict_representer(dumper, data):
-            return dumper.represent_dict(data)
-        Dumper.add_representer(OrderedDict, ordered_dict_representer)
-
         return yaml.dump(
             data,
             default_flow_style=False,
             sort_keys=False,
+            allow_unicode=True,
             Dumper=Dumper
         ).encode('utf-8')
 

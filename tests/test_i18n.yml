@@ -1,0 +1,137 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+  description: Lazy translated description with missing translation
+paths:
+  /api/schema/:
+    get:
+      operationId: api_schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - de-de
+          - en-us
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/x/:
+    get:
+      operationId: api_x_list
+      description: Eine laengere Erklaerung des Views
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/X'
+          description: ''
+    post:
+      operationId: api_x_create
+      description: Eine laengere Erklaerung des Views
+      summary: Hauptendpunkt fuer die Erstellung von X
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/X'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/X'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/X'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: Kein Inhalt
+  /api/x/{id}/:
+    get:
+      operationId: api_x_retrieve
+      description: Eine laengere Erklaerung des Views
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this Internätiönalisierung.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/X'
+          description: ''
+components:
+  schemas:
+    X:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        field_str:
+          type: string
+      required:
+      - field_str
+      - id
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
