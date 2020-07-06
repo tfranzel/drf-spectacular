@@ -641,7 +641,11 @@ class AutoSchema(ViewInspector):
             if not schema:
                 continue
 
-            if field.required or schema.get('readOnly'):
+            add_to_required = (
+                field.required
+                or (schema.get('readOnly') and not spectacular_settings.COMPONENT_NO_READ_ONLY_REQUIRED)
+            )
+            if add_to_required:
                 required.add(field.field_name)
 
             self._map_field_validators(field, schema)

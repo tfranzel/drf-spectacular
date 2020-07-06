@@ -11,9 +11,14 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # Schema generation parameters to influence how components are constructed.
     # Some schema features might not translate well to your target.
-    # Demultiplexing components might help alleviate those issues.
+    # Demultiplexing/modifying components might help alleviate those issues.
+    #
+    # Create separate components for PATCH endpoints (without required list)
     'COMPONENT_SPLIT_PATCH': True,
+    # Split components into request and response parts where appropriate
     'COMPONENT_SPLIT_REQUEST': False,
+    # Aid client generator targets that have trouble with read-only properties.
+    "COMPONENT_NO_READ_ONLY_REQUIRED": False,
 
     # Configuration for serving the schema with SpectacularAPIView
     'SERVE_URLCONF': None,
