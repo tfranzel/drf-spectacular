@@ -6,11 +6,12 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
     name = 'oauth2'
 
     def get_security_requirement(self, auto_schema):
-        from oauth2_provider.contrib.rest_framework import (
-            TokenHasScope, TokenMatchesOASRequirements, IsAuthenticatedOrTokenHasScope
-        )
         # TODO generalize (will also be used in versioning)
         from collections import namedtuple
+
+        from oauth2_provider.contrib.rest_framework import (
+            IsAuthenticatedOrTokenHasScope, TokenHasScope, TokenMatchesOASRequirements,
+        )
         Request = namedtuple('Request', ['method'])
 
         view = auto_schema.view
@@ -26,8 +27,9 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
                 return {self.name: permission.get_scopes(request, view)}
 
     def get_security_definition(self, auto_schema):
-        from drf_spectacular.settings import spectacular_settings
         from oauth2_provider.settings import oauth2_settings
+
+        from drf_spectacular.settings import spectacular_settings
 
         flows = {}
         for flow_type in spectacular_settings.OAUTH2_FLOWS:

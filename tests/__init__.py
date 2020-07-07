@@ -2,7 +2,7 @@ from drf_spectacular.validation import validate_schema
 
 
 def assert_schema(schema, reference_file):
-    from drf_spectacular.renderers import OpenApiYamlRenderer, OpenApiJsonRenderer
+    from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
     # render also a json and provoke serialization issues
@@ -22,6 +22,7 @@ def generate_schema(route, viewset=None, view=None, view_function=None):
     from django.urls import path
     from rest_framework import routers
     from rest_framework.viewsets import ViewSetMixin
+
     from drf_spectacular.generators import SchemaGenerator
 
     patterns = []

@@ -10,8 +10,8 @@ from tests import assert_schema
 
 try:
     from oauth2_provider.contrib.rest_framework import (
-        IsAuthenticatedOrTokenHasScope, OAuth2Authentication,
-        TokenHasReadWriteScope, TokenHasResourceScope,
+        IsAuthenticatedOrTokenHasScope, OAuth2Authentication, TokenHasReadWriteScope,
+        TokenHasResourceScope,
     )
 except ImportError:
     IsAuthenticatedOrTokenHasScope = None

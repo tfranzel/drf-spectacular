@@ -16,7 +16,7 @@ FLAKE8_ARGS = ['drf_spectacular', 'tests']
 
 MYPY_ARGS = ['--config-file=tox.ini', 'drf_spectacular']
 
-ISORT_ARGS = ['--check', '-df']
+ISORT_ARGS = ['--check', '--diff', '.']
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -43,7 +43,7 @@ def mypy_main(args):
 def isort_main(args):
     print('Running isort code linting')
     ret = subprocess.call(['isort'] + args)
-    print('isort failed, run: isort -rc .' if ret else 'isort passed')
+    print('isort failed, run: isort --interactive .' if ret else 'isort passed')
     return ret
 
 

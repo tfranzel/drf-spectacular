@@ -7,6 +7,7 @@ class SimpleJWTScheme(OpenApiAuthenticationExtension):
 
     def get_security_definition(self, auto_schema):
         from rest_framework_simplejwt.settings import api_settings
+
         from drf_spectacular.plumbing import warn
 
         if len(api_settings.AUTH_HEADER_TYPES) > 1:

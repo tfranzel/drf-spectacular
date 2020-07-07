@@ -135,7 +135,7 @@ def get_lib_doc_excludes():
     # do not import on package level due to potential import recursion when loading
     # extensions as recommended:  USER's settings.py -> USER EXTENSIONS -> extensions.py
     # -> plumbing.py -> DRF views -> DRF DefaultSchema -> openapi.py - plumbing.py -> Loop
-    from rest_framework import generics, viewsets, views
+    from rest_framework import generics, views, viewsets
     return [
         views.APIView,
         *[getattr(serializers, c) for c in dir(serializers) if c.endswith('Serializer')],
