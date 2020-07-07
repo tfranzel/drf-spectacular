@@ -2,7 +2,7 @@ Changelog
 =========
 
 0.9.11 (2020-07-08)
-------------------
+-------------------
 
 - extend instead of replace extra parameters `#111 <https://github.com/tfranzel/drf-spectacular/issues/111>`_
 - add client generator helper settings for readOnly
