@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.generators import SchemaGenerator
+from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
@@ -756,3 +757,31 @@ def test_schema_contains_only_urlpatterns_first_match(no_warnings):
     assert 'X' in schema['components']['schemas']
     operation = schema['paths']['/api/x/']['get']
     assert '#/components/schemas/X' in get_response_schema(operation)['$ref']
+
+
+def test_auto_schema_and_extend_parameters(no_warnings):
+    class CustomAutoSchema(AutoSchema):
+        def get_override_parameters(self):
+            return [
+                OpenApiParameter("id", str, OpenApiParameter.PATH),
+                OpenApiParameter("foo", str),
+                OpenApiParameter("bar", str),
+            ]
+
+    class XSerializer(serializers.Serializer):
+        id = serializers.IntegerField()
+
+    with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', CustomAutoSchema):
+        class XViewSet(viewsets.GenericViewSet):
+            serializer_class = XSerializer
+
+            @extend_schema(parameters=[OpenApiParameter("bar", int)])
+            def list(self, request, *args, **kwargs):
+                pass  # pragma: no cover
+
+        schema = generate_schema('x', XViewSet)
+
+    parameters = schema['paths']['/x/']['get']['parameters']
+    assert parameters[0]['name'] == 'bar' and parameters[0]['schema']['type'] == 'integer'
+    assert parameters[1]['name'] == 'foo' and parameters[1]['schema']['type'] == 'string'
+    assert parameters[2]['name'] == 'id'

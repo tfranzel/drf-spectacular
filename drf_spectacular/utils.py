@@ -161,7 +161,7 @@ def extend_schema(
 
             def get_override_parameters(self):
                 if parameters and is_in_scope(self):
-                    return parameters
+                    return super().get_override_parameters() + parameters
                 return super().get_override_parameters()
 
             def get_auth(self):
