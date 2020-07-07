@@ -1,6 +1,24 @@
 Changelog
 =========
 
+0.9.11 (2020-07-08)
+------------------
+
+- extend instead of replace extra parameters `#111 <https://github.com/tfranzel/drf-spectacular/issues/111>`_
+- add client generator helper settings for readOnly
+- bugfix format param: path params must be required=True
+- bugfix DRF docstring excludes and configuration `#107 <https://github.com/tfranzel/drf-spectacular/issues/107>`_
+- bugfix operations with urlpattern override `#92 <https://github.com/tfranzel/drf-spectacular/issues/92>`_
+- decrease built-in extension priority and improve doc `#106 <https://github.com/tfranzel/drf-spectacular/issues/106>`_
+- add option to hide serializer fields `#100 <https://github.com/tfranzel/drf-spectacular/issues/100>`_
+- allow None on @extend_schema request/response
+- bugfix json spec violation on "required :[]" for COMPONENT_SPLIT_REQUEST
+
+Breaking changes:
+
+- ``@extend_schema(parameters=...)`` is extending instead of replacing for custom ``AutoSchema``
+- path parameter are now always ``required=True`` as required by specification
+
 0.9.10 (2020-06-23)
 -------------------
 
