@@ -12,6 +12,7 @@ from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 import inflection
 import uritemplate
 from django import __version__ as DJANGO_VERSION
+from django.conf import settings
 from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver  # type: ignore
 from django.utils.module_loading import import_string
 from rest_framework import exceptions, fields, mixins, serializers, versioning
@@ -483,6 +484,11 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
         try:
             cls.target_class = import_string(cls.target_class)
         except ImportError:
+            if any(cls.target_class.startswith(app + '.') for app in settings.INSTALLED_APPS):
+                warn(
+                    f'registered extensions {cls.__name__} for "{cls.target_class}" '
+                    f'has an installed app but target class was not found.'
+                )
             cls.target_class = None
 
     @classmethod

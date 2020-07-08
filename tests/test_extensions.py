@@ -75,3 +75,15 @@ def test_view_function_extension(no_warnings):
     operation = schema['paths']['/x']['get']
     assert get_response_schema(operation)['type'] == 'number'
     assert operation['description'].strip() == 'underspecified library view'
+
+
+def test_extension_not_found_for_installed_app(capsys):
+    class FixXFunctionView(OpenApiViewExtension):
+        target_class = 'tests.test_extensions.NotExistingClass'
+
+        def view_replacement(self):
+            fixed = extend_schema(responses=OpenApiTypes.FLOAT)(self.target_class)
+            return fixed
+
+    generate_schema('x', view_function=x_view_function)
+    assert 'target class was not found' in capsys.readouterr().err
