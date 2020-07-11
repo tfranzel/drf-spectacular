@@ -165,6 +165,7 @@ class AutoSchema(ViewInspector):
         # override/add @extend_schema parameters
         for key, parameter in override_parameters.items():
             parameters[key] = parameter
+
         return sorted(parameters.values(), key=lambda p: p['name'])
 
     def get_description(self):
@@ -270,7 +271,9 @@ class AutoSchema(ViewInspector):
             description = ''
             required = True
 
-            resolved_parameter = resolve_regex_path_parameter(self.path_regex, variable)
+            resolved_parameter = resolve_regex_path_parameter(
+                self.path_regex, variable, self.map_formats(),
+            )
 
             if resolved_parameter:
                 schema, required = resolved_parameter['schema'], resolved_parameter['required']
@@ -731,6 +734,15 @@ class AutoSchema(ViewInspector):
                 continue
             media_types.append(renderer.media_type)
         return media_types
+
+    def map_formats(self):
+        formats = set()
+        for renderer in self.view.renderer_classes:
+            # BrowsableAPIRenderer not relevant to OpenAPI spec
+            if renderer == renderers.BrowsableAPIRenderer:
+                continue
+            formats.add(renderer.format)
+        return list(formats)
 
     def _get_serializer(self):
         view = self.view

@@ -643,22 +643,29 @@ def postprocess_schema_enums(result, generator, **kwargs):
     return result
 
 
-def resolve_regex_path_parameter(path_regex, variable):
+def resolve_regex_path_parameter(path_regex, variable, available_formats=None):
     """
     convert django style path parameters to OpenAPI parameters.
     TODO also try to handle regular grouped regex parameters
     """
     for match in _PATH_PARAMETER_COMPONENT_RE.finditer(path_regex):
         converter, parameter = match.group('converter'), match.group('parameter')
+        enum_values = None
 
         if converter and converter.startswith('drf_format_suffix_'):
-            converter = 'drf_format_suffix'  # remove appended options
+            view_formats = converter[len('drf_format_suffix_'):].split('_')
+            enum_values = [f'.{suffix}' for suffix in view_formats
+                           if suffix in available_formats]
+            converter = 'drf_format_suffix'
+        elif converter == 'drf_format_suffix':
+            enum_values = [f'.{suffix}' for suffix in available_formats]
 
         if parameter == variable and converter in DJANGO_PATH_CONVERTER_MAPPING:
             return build_parameter_type(
                 name=parameter,
                 schema=build_basic_type(DJANGO_PATH_CONVERTER_MAPPING[converter]),
                 location=OpenApiParameter.PATH,
+                enum=enum_values,
             )
 
     return None
