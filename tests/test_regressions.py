@@ -343,12 +343,13 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
     assert list(schema['paths'].keys()) == [
         '/pi',
         '/pi/',
+        '/pi{format}',
         '/pi/subpath',
         '/pi/subpath{format}',
         '/pick',
         '/pick{format}',
-        '/pi{format}',
     ]
+
     format_parameter = schema['paths']['/pi{format}']['get']['parameters'][0]
     assert format_parameter['name'] == 'format'
     assert format_parameter['required'] is True

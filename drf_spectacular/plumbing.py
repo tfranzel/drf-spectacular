@@ -384,6 +384,12 @@ def alpha_operation_sorter(endpoint):
         'PATCH': 3,
         'DELETE': 4
     }.get(method, 5)
+
+    # Sort foo{arg} after foo/, but before foo/bar
+    if path.endswith('/'):
+        path = path[:-1] + ' '
+    path = path.replace('{', '!')
+
     return path, method_priority
 
 
