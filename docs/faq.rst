@@ -69,7 +69,12 @@ are supported as well.
 .. code-block:: python
 
     'ENUM_NAME_OVERRIDES': {
-        'LanguageEnum': language_choices  # e.g. [('US', 'US'), ('RU', 'RU'),]
+        # variable containing list of tuples, e.g. [('US', 'US'), ('RU', 'RU'),]
+        'LanguageEnum': language_choices,
+        # dedicated Enum or models.Choices class
+        'CountryEnum': 'import_path.enums.CountryEnum',
+        # choices is an attribute of class CurrencyContainer containing a list of tuples
+        'CurrencyEnum': 'import_path.CurrencyContainer.choices',
     }
 
 
