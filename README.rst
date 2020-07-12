@@ -25,6 +25,7 @@ Features
     - Authentication support (DRF natives included, easily extendable)
     - Custom serializer class support (easily extendable)
     - ``MethodSerializerField()`` type via type hinting or ``@extend_schema_field``
+    - i18n support
     - Tags extraction
     - Description extraction from ``docstrings``
     - Sane fallbacks
