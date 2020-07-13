@@ -108,6 +108,32 @@ You can easily specify a custom authentication with
 Have a look at :ref:`customization` on how to use ``Extensions``
 
 
+How can I i18n/internationalize my schema and UI?
+----------------------------------------------------
+
+You can use the Django internationalization as you would normally do. The workflow is as one
+would expect: ``USE_I18N=True``, settings the languages, ``makemessages``, and ``compilemessages``.
+
+The CLI tool accepts a language parameter (``./manage.py spectacular --lang="de-de"``) for offline
+generation. The schema view as well as the UI views accept a ``lang`` query parameter for
+explicitly requesting a language (``example.com/api/schema?lang=de``). If i18n is enabled and there
+is no query parameter provided, the ``ACCEPT_LANGUAGE`` header is used. Otherwise the translation
+falls back to the default language.
+
+.. code-block:: python
+
+    from django.utils.translation import gettext_lazy as _
+
+    class PersonView(viewsets.GenericViewSet):
+        __doc__ = _("""
+        More lengthy explanation of the view
+        """)
+
+        @extend_schema(summary=_('Main endpoint for creating person'))
+        def retrieve(self, request, *args, **kwargs)
+            pass
+
+
 FileField (ImageField) is not handled properly in the schema
 ------------------------------------------------------------
 In contrast to most other fields, ``FileField`` behaves differently for requests and responses.

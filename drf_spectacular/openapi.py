@@ -6,6 +6,7 @@ import uritemplate
 from django.core import exceptions as django_exceptions
 from django.core import validators
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from rest_framework import permissions, renderers, serializers
 from rest_framework.fields import _UnvalidatedField, empty
 from rest_framework.generics import GenericAPIView
@@ -818,7 +819,7 @@ class AutoSchema(ViewInspector):
 
         if is_serializer(response_serializers) or is_basic_type(response_serializers):
             if self.method == 'DELETE':
-                return {'204': {'description': 'No response body'}}
+                return {'204': {'description': _('No response body')}}
             return {'200': self._get_response_for_code(response_serializers)}
         elif isinstance(response_serializers, dict):
             # custom handling for overriding default return codes with @extend_schema
@@ -833,20 +834,20 @@ class AutoSchema(ViewInspector):
                 f'defaulting to generic free-form object.'
             )
             schema = build_basic_type(OpenApiTypes.OBJECT)
-            schema['description'] = 'Unspecified response body'
+            schema['description'] = _('Unspecified response body')
             return {'200': self._get_response_for_code(schema)}
 
     def _get_response_for_code(self, serializer):
         serializer = force_instance(serializer)
 
         if not serializer:
-            return {'description': 'No response body'}
+            return {'description': _('No response body')}
         elif isinstance(serializer, serializers.ListSerializer):
             schema = self.resolve_serializer(serializer.child, 'response').ref
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'response')
             if not component.schema:
-                return {'description': 'No response body'}
+                return {'description': _('No response body')}
             schema = component.ref
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
@@ -860,7 +861,7 @@ class AutoSchema(ViewInspector):
                 f'generic free-form object.'
             )
             schema = build_basic_type(OpenApiTypes.OBJECT)
-            schema['description'] = 'Unspecified response body'
+            schema['description'] = _('Unspecified response body')
 
         if self._is_list_view(serializer) and not get_override(serializer, 'many') is False:
             schema = build_array_type(schema)

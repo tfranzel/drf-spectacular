@@ -186,7 +186,7 @@ def extend_schema(
 
             def get_summary(self):
                 if summary and is_in_scope(self):
-                    return summary
+                    return str(summary)
                 return super().get_summary()
 
             def is_deprecated(self):

@@ -15,7 +15,7 @@ import sys
 
 from django.conf import settings  # noqa: E402
 
-settings.configure()
+settings.configure(USE_I18N=False, USE_L10N=False)
 
 sys.path.insert(0, os.path.abspath('../'))
 

@@ -1,6 +1,7 @@
 from textwrap import dedent
 
 from django.core.management.base import BaseCommand
+from django.utils import translation
 from django.utils.module_loading import import_string
 
 from drf_spectacular.plumbing import GENERATOR_STATS
@@ -30,6 +31,7 @@ class Command(BaseCommand):
         parser.add_argument('--fail-on-warn', dest="fail_on_warn", default=False, action='store_true')
         parser.add_argument('--validate', dest="validate", default=False, action='store_true')
         parser.add_argument('--api-version', dest="api_version", default=None, type=str)
+        parser.add_argument('--lang', dest="lang", default=None, type=str)
 
     def handle(self, *args, **options):
         if options['generator_class']:
@@ -41,7 +43,11 @@ class Command(BaseCommand):
             urlconf=options['urlconf'],
             api_version=options['api_version'],
         )
-        schema = generator.get_schema(request=None, public=True)
+        if options['lang']:
+            with translation.override(options['lang']):
+                schema = generator.get_schema(request=None, public=True)
+        else:
+            schema = generator.get_schema(request=None, public=True)
 
         GENERATOR_STATS.emit_summary()
 
