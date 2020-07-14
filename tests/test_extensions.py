@@ -82,8 +82,7 @@ def test_extension_not_found_for_installed_app(capsys):
         target_class = 'tests.test_extensions.NotExistingClass'
 
         def view_replacement(self):
-            fixed = extend_schema(responses=OpenApiTypes.FLOAT)(self.target_class)
-            return fixed
+            pass  # pragma: no cover
 
     generate_schema('x', view_function=x_view_function)
     assert 'target class was not found' in capsys.readouterr().err

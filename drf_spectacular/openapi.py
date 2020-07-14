@@ -401,8 +401,12 @@ class AutoSchema(ViewInspector):
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if isinstance(field, serializers.ListSerializer):
-            component = self.resolve_serializer(field.child, direction)
-            return append_meta(build_array_type(component.ref), meta) if component else None
+            if is_serializer(field.child):
+                component = self.resolve_serializer(field.child, direction)
+                return append_meta(build_array_type(component.ref), meta) if component else None
+            else:
+                schema = self._map_serializer_field(field.child, direction)
+                return append_meta(build_array_type(schema), meta)
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
@@ -775,8 +779,11 @@ class AutoSchema(ViewInspector):
 
         request_body_required = False
         if isinstance(serializer, serializers.ListSerializer):
-            component = self.resolve_serializer(serializer.child, 'request')
-            schema = build_array_type(component.ref)
+            if is_serializer(serializer.child):
+                component = self.resolve_serializer(serializer.child, 'request')
+                schema = build_array_type(component.ref)
+            else:
+                schema = build_array_type(self._map_serializer_field(serializer.child, 'request'))
             request_body_required = True
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'request')
@@ -843,7 +850,10 @@ class AutoSchema(ViewInspector):
         if not serializer:
             return {'description': _('No response body')}
         elif isinstance(serializer, serializers.ListSerializer):
-            schema = self.resolve_serializer(serializer.child, 'response').ref
+            if is_serializer(serializer.child):
+                schema = self.resolve_serializer(serializer.child, 'response').ref
+            else:
+                schema = self._map_serializer_field(serializer.child, 'response')
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'response')
             if not component.schema:

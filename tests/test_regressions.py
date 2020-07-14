@@ -785,3 +785,42 @@ def test_auto_schema_and_extend_parameters(no_warnings):
     assert parameters[0]['name'] == 'bar' and parameters[0]['schema']['type'] == 'integer'
     assert parameters[1]['name'] == 'foo' and parameters[1]['schema']['type'] == 'string'
     assert parameters[2]['name'] == 'id'
+
+
+def test_list_serializer_with_field_child():
+    class XSerializer(serializers.Serializer):
+        field = serializers.ListSerializer(child=serializers.IntegerField())
+
+    class XAPIView(views.APIView):
+        serializer_class = XSerializer
+
+        def post(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    # assumption on Serializer functionality
+    assert XSerializer({'field': [1, 2, 3]}).data['field'] == [1, 2, 3]
+
+    schema = generate_schema('x', view=XAPIView)
+    assert get_request_schema(schema['paths']['/x']['post'])['$ref'] == '#/components/schemas/X'
+    assert get_response_schema(schema['paths']['/x']['post'])['$ref'] == '#/components/schemas/X'
+
+    properties = schema['components']['schemas']['X']['properties']
+    assert properties['field']['type'] == 'array'
+    assert properties['field']['items']['type'] == 'integer'
+
+
+def test_list_serializer_with_field_child_on_extend_schema():
+    class XAPIView(APIView):
+        @extend_schema(
+            request=serializers.ListSerializer(child=serializers.IntegerField()),
+            responses=serializers.ListSerializer(child=serializers.IntegerField()),
+        )
+        def post(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XAPIView)
+    req_schema = get_request_schema(schema['paths']['/x']['post'])
+    res_schema = get_response_schema(schema['paths']['/x']['post'])
+    for s in [req_schema, res_schema]:
+        assert s['type'] == 'array'
+        assert s['items']['type'] == 'integer'
