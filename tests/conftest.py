@@ -14,6 +14,8 @@ def pytest_configure(config):
     )
 
     contrib_apps = [
+        'rest_auth',
+        'rest_auth.registration',
         'rest_framework_jwt',
         'oauth2_provider',
         # this is not strictly required and when added django-polymorphic
@@ -69,6 +71,8 @@ def pytest_configure(config):
             'django.contrib.staticfiles',
             'rest_framework',
             'rest_framework.authtoken',
+            'allauth',
+            'allauth.account',
             *[app for app in contrib_apps if module_available(app)],
             'drf_spectacular',
             'tests',

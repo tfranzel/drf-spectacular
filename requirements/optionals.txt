@@ -1,4 +1,6 @@
+django-allauth
 drf-jwt>=0.13.0
+django-rest-auth
 djangorestframework-simplejwt>=4.4.0
 django-polymorphic>=2.1
 django-rest-polymorphic>=0.1.8

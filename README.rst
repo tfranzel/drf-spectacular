@@ -33,6 +33,7 @@ Features
     - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)
     - Optional input/output serializer component split
     - Included support for:
+        - `django-rest-auth <https://github.com/Tivix/django-rest-auth>`_
         - `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_
         - `SimpleJWT <https://github.com/SimpleJWT/django-rest-framework-simplejwt>`_
         - `DjangoOAuthToolkit <https://github.com/jazzband/django-oauth-toolkit>`_
