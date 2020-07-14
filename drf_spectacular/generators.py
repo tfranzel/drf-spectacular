@@ -56,12 +56,14 @@ class EndpointEnumerator(BaseEndpointEnumerator):
 
 
 class SchemaGenerator(BaseSchemaGenerator):
-    endpoint_inspector_cls = EndpointEnumerator
+    endpoint_inspector_cls = None
 
     def __init__(self, *args, **kwargs):
         self.registry = ComponentRegistry()
         self.api_version = kwargs.pop('api_version', None)
         self.inspector = None
+        self.endpoint_inspector_cls = spectacular_settings.ENDPOINT_ENUMERATOR_CLASS
+
         super().__init__(*args, **kwargs)
 
     def create_view(self, callback, method, request=None):

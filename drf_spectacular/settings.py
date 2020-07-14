@@ -7,6 +7,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # path prefix is used for tagging the discovered operations.
     # use '/api/v[0-9]' for tagging apis like '/api/v1/albums' with ['albums']
     'SCHEMA_PATH_PREFIX': r'',
+    'ENDPOINT_ENUMERATOR_CLASS': 'drf_spectacular.generators.EndpointEnumerator',
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
     # Schema generation parameters to influence how components are constructed.
@@ -75,6 +76,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 IMPORT_STRINGS = [
     'SCHEMA_AUTHENTICATION_CLASSES',
     'DEFAULT_GENERATOR_CLASS',
+    'ENDPOINT_ENUMERATOR_CLASS',
     'SERVE_PERMISSIONS',
     'POSTPROCESSING_HOOKS',
     'GET_LIB_DOC_EXCLUDES',

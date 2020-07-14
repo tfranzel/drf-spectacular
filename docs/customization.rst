@@ -158,6 +158,95 @@ the choice ``Enum`` are consolidated into component objects. You can register ad
         return result
 
 
+Step 6: Preprocessing
+---------------------
+
+While most schema problems should be addressed using postprocessing hooks, there
+are also two preprocessing settings ``ENDPOINT_ENUMERATOR_CLASS`` and ``DEFAULT_GENERATOR_CLASS``
+that can be changed to custom classes that alter the endpoints to be processed, and the
+broad generation process.
+
+The enumeration class can be used to exclude certain endpoints, preventing them from
+going through the inspection of the generation processes.
+
+The following prevents any occurrence of `{format}` at the end of endpoint paths.
+
+.. code-block:: python
+
+    class NoFormatEndpointEnumerator(EndpointEnumerator):
+
+        def should_include_endpoint(self, path, callback):
+            """
+            Return `True` if the given endpoint should be included.
+            """
+            if not super().should_include_endpoint(path, callback):
+                return False
+
+            # DRF only excludes .json style URLs.
+            # This also excludes other uses of `{format}` at the end of the path
+            if path.endswith('{format}') or path.endswith('{format}/'):
+                return False
+
+            return True
+
+
+The generator class is responsible for the entire process of generating the
+OpenAPI document.  It provides the implementation for instantiating views and view inspectors
+for each enumerated endpoint, obtaining the schemas from each view inspector, and
+combining everything into the final OpenAPI document.
+
+This includes checking of the view permissions and API versioning of the endpoints.
+
+As such, extending the schema generator class provides many opportunities for radically
+altering the way the API is constructed.
+
+For example, if using ``@extend_schema`` and extensions are impractical because there are many views
+using the same pattern that the schema inspector does not support, or seems impossible because the
+views are dynamically generated or varies based on the request, a custom view inspector can be created
+for those views.
+
+.. code-block:: python
+
+    class ProjectSpecificSchemaGenerator(SchemaGenerator):
+
+        def create_view(self, callback, method, request=None):
+            if hasattr(view, 'get_response_serializer'):
+                from drf_spectacular.openapi import AutoSchema
+                import mock
+
+                request = mock.Mock()
+                request.method = method
+                ...
+
+                view = super().create_view(callback, method, request)
+
+                response_serializer = view.get_response_serializer()
+
+                class CustomResponseSchema(AutoSchema):
+                    def get_response_serializers(self):
+                        return response_serializer
+
+                view.schema = CustomResponseSchema()
+                return view
+
+            return super().create_view(callback, method, request)
+
+
+If the view instantiation and resulting schema does not depend on the request,
+the above example could be more simply achieved by extending
+:py:class:`AutoSchema <drf_spectacular.openapi.AutoSchema>`,
+and declaring that in ``REST_FRAMEWORK['DEFAULT_SCHEMA_CLASS']``.
+
+.. code-block:: python
+
+    class ProjectSpecificAutoSchema(AutoSchema):
+        def get_response_serializers(self):
+            if hasattr(self.view, 'get_response_serializer'):
+                return self.view.response_serializer
+            else:
+                return super().get_response_serializers()
+
+
 Congratulations
 ---------------
 
