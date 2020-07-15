@@ -614,6 +614,14 @@ class AutoSchema(ViewInspector):
         return schema
 
     def _get_serializer_field_meta(self, field):
+        if not isinstance(field, serializers.Field):
+            warn(
+                f'unable to extract field metadata from field "{field}" because it appears '
+                f'to be neither a Field nor a Serializer. Proper handling may require an '
+                f'Extension or @extend_serializer_field. Skipping metadata extraction. '
+            )
+            return {}
+
         meta = {}
         if field.read_only:
             meta['readOnly'] = True
