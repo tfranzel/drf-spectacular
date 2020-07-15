@@ -923,7 +923,12 @@ class AutoSchema(ViewInspector):
         return name
 
     def resolve_serializer(self, serializer, direction) -> ResolvedComponent:
-        assert is_serializer(serializer)
+        assert is_serializer(serializer), (
+            f'internal assumption violated because we expected a serializer here and instead '
+            f'got a "{serializer}". This may be the result of another app doing some unexpected '
+            f'magic or an invalid internal call. Feel free to report this as a bug at '
+            f'https://github.com/tfranzel/drf-spectacular/issues '
+        )
         serializer = force_instance(serializer)
 
         component = ResolvedComponent(
