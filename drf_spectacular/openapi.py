@@ -549,7 +549,7 @@ class AutoSchema(ViewInspector):
 
         if isinstance(field, serializers.ReadOnlyField):
             # direct source from the serializer
-            assert field.source_attrs, 'ReadOnlyField needs a proper source'
+            assert field.source_attrs, f'ReadOnlyField "{field}" needs a proper source'
             target = follow_field_source(field.parent.Meta.model, field.source_attrs)
 
             if callable(target):
@@ -557,7 +557,8 @@ class AutoSchema(ViewInspector):
             elif isinstance(target, models.Field):
                 schema = self._map_model_field(target, direction)
             else:
-                assert False, 'ReadOnlyField target must be property or model field'
+
+                assert False, f'ReadOnlyField target "{field}" must be property or model field'
             return append_meta(schema, meta)
 
         # DRF was not able to match the model field to an explicit SerializerField and therefore
@@ -566,7 +567,7 @@ class AutoSchema(ViewInspector):
             schema = self._map_model_field(field.model_field, direction)
             return append_meta(schema, meta)
 
-        warn(f'could not resolve serializer field {field}. defaulting to "string"')
+        warn(f'could not resolve serializer field "{field}". defaulting to "string"')
         return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
     def _map_min_max(self, field, content):
