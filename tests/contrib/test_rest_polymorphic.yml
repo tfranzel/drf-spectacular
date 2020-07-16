@@ -54,12 +54,12 @@ paths:
       operationId: persons_retrieve
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A unique integer value identifying this person.
+      - in: path
+        name: id
         schema:
           type: integer
+        description: A unique integer value identifying this person.
+        required: true
       tags:
       - persons
       security:
@@ -77,12 +77,12 @@ paths:
       operationId: persons_update
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A unique integer value identifying this person.
+      - in: path
+        name: id
         schema:
           type: integer
+        description: A unique integer value identifying this person.
+        required: true
       tags:
       - persons
       requestBody:
@@ -111,12 +111,12 @@ paths:
       operationId: persons_partial_update
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A unique integer value identifying this person.
+      - in: path
+        name: id
         schema:
           type: integer
+        description: A unique integer value identifying this person.
+        required: true
       tags:
       - persons
       requestBody:
@@ -145,12 +145,12 @@ paths:
       operationId: persons_destroy
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A unique integer value identifying this person.
+      - in: path
+        name: id
         schema:
           type: integer
+        description: A unique integer value identifying this person.
+        required: true
       tags:
       - persons
       security:

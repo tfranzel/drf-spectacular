@@ -63,6 +63,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorDetail'
           description: ''
+  /doesitall/{id}/subscribe/:
+    post:
+      operationId: doesitall_subscribe_create
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - doesitall
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          description: No response body
   /doesitall/callback/{ephemeral}/:
     post:
       operationId: doesitall_callback_create
@@ -217,25 +236,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Alpha'
           description: ''
-  /doesitall/{id}/subscribe/:
-    post:
-      operationId: doesitall_subscribe_create
-      description: ''
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - doesitall
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '201':
-          description: No response body
 components:
   schemas:
     Alpha:

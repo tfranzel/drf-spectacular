@@ -27,12 +27,12 @@ paths:
       operationId: v2_x_retrieve
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A unique integer value identifying this versioning model.
+      - in: path
+        name: id
         schema:
           type: integer
+        description: A unique integer value identifying this versioning model.
+        required: true
       tags:
       - v2
       security:

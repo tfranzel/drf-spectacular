@@ -95,12 +95,12 @@ paths:
       operationId: api_x_retrieve
       description: Eine laengere Erklaerung des Views
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A unique integer value identifying this Internätiönalisierung.
+      - in: path
+        name: id
         schema:
           type: integer
+        description: A unique integer value identifying this Internätiönalisierung.
+        required: true
       tags:
       - api
       security:

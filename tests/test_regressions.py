@@ -1,6 +1,7 @@
 import uuid
 from unittest import mock
 
+import pytest
 from django.conf.urls import url
 from django.db import models
 from django.db.models import fields
@@ -316,25 +317,47 @@ def test_pk_and_no_id(no_warnings):
     assert schema['components']['schemas']['Y']['properties']['x']['format'] == 'uuid'
 
 
-def test_drf_format_suffix_parameter(no_warnings):
+@pytest.mark.parametrize('allowed', [None, ['json', 'NoRendererAvailable']])
+def test_drf_format_suffix_parameter(no_warnings, allowed):
     from rest_framework.urlpatterns import format_suffix_patterns
 
     @extend_schema(responses=OpenApiTypes.FLOAT)
     @api_view(['GET'])
-    def pi(request, format=None):
+    def view_func(request, format=None):
         pass  # pragma: no cover
 
-    urlpatterns = [path('pi', pi)]
-    urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'html'])
+    urlpatterns = [
+        path('pi', view_func),
+        path('pi/', view_func),
+        path('pi/subpath', view_func),
+        path('pick', view_func),
+    ]
+    urlpatterns = format_suffix_patterns(urlpatterns, allowed=allowed)
 
     generator = SchemaGenerator(patterns=urlpatterns)
     schema = generator.get_schema(request=None, public=True)
     validate_schema(schema)
-    assert len(schema['paths']) == 2
+
+    # Only seven alternatives are created, as /pi/{format} would be
+    # /pi/.json which is not supported.
+    assert list(schema['paths'].keys()) == [
+        '/pi',
+        '/pi/',
+        '/pi{format}',
+        '/pi/subpath',
+        '/pi/subpath{format}',
+        '/pick',
+        '/pick{format}',
+    ]
+
     format_parameter = schema['paths']['/pi{format}']['get']['parameters'][0]
     assert format_parameter['name'] == 'format'
     assert format_parameter['required'] is True
     assert format_parameter['in'] == 'path'
+    assert format_parameter['schema']['type'] == 'string'
+    # When allowed is not specified, all of the default formats are possible.
+    # Even if other values are provided, only the valid formats are possible.
+    assert format_parameter['schema']['enum'] == ['.json']
 
 
 def test_regex_path_parameter_discovery(no_warnings):

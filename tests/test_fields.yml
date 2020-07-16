@@ -27,12 +27,12 @@ paths:
       operationId: allfields_retrieve
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A unique integer value identifying this all fields.
+      - in: path
+        name: id
         schema:
           type: integer
+        description: A unique integer value identifying this all fields.
+        required: true
       tags:
       - allfields
       security:
@@ -70,13 +70,13 @@ paths:
       operationId: aux_retrieve
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A UUID string identifying this aux.
+      - in: path
+        name: id
         schema:
           type: string
           format: uuid
+        description: A UUID string identifying this aux.
+        required: true
       tags:
       - aux
       security:
