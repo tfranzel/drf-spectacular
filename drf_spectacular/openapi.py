@@ -266,17 +266,16 @@ class AutoSchema(ViewInspector):
         model = getattr(getattr(self.view, 'queryset', None), 'model', None)
         parameters = []
 
-        for idx, variable in enumerate(variables):
+        for variable in variables:
             schema = build_basic_type(OpenApiTypes.STR)
             description = ''
-            required = True
 
             resolved_parameter = resolve_regex_path_parameter(
                 self.path_regex, variable, self.map_formats(),
             )
 
             if resolved_parameter:
-                schema, required = resolved_parameter['schema'], resolved_parameter['required']
+                schema = resolved_parameter['schema']
             elif not model:
                 warn(
                     f'could not derive type of path parameter "{variable}" because '
@@ -299,13 +298,12 @@ class AutoSchema(ViewInspector):
                         f'parameter with @extend_schema. defaulting to "string".'
                     )
 
-            parameters.append({
-                "name": variable,
-                "in": "path",
-                "required": required,
-                "description": description,
-                'schema': schema,
-            })
+            parameters.append(build_parameter_type(
+                name=variable,
+                location=OpenApiParameter.PATH,
+                description=description,
+                schema=schema
+            ))
 
         return parameters
 

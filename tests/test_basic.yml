@@ -56,13 +56,13 @@ paths:
       operationId: albums_retrieve
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A UUID string identifying this album.
+      - in: path
+        name: id
         schema:
           type: string
           format: uuid
+        description: A UUID string identifying this album.
+        required: true
       tags:
       - albums
       security:
@@ -79,13 +79,13 @@ paths:
       operationId: albums_update
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A UUID string identifying this album.
+      - in: path
+        name: id
         schema:
           type: string
           format: uuid
+        description: A UUID string identifying this album.
+        required: true
       tags:
       - albums
       requestBody:
@@ -114,13 +114,13 @@ paths:
       operationId: albums_partial_update
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A UUID string identifying this album.
+      - in: path
+        name: id
         schema:
           type: string
           format: uuid
+        description: A UUID string identifying this album.
+        required: true
       tags:
       - albums
       requestBody:
@@ -148,13 +148,13 @@ paths:
       operationId: albums_destroy
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A UUID string identifying this album.
+      - in: path
+        name: id
         schema:
           type: string
           format: uuid
+        description: A UUID string identifying this album.
+        required: true
       tags:
       - albums
       security:
@@ -168,13 +168,13 @@ paths:
       operationId: albums_like_create
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A UUID string identifying this album.
+      - in: path
+        name: id
         schema:
           type: string
           format: uuid
+        description: A UUID string identifying this album.
+        required: true
       tags:
       - albums
       security:

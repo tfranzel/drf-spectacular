@@ -7,8 +7,7 @@ from rest_framework.renderers import BaseRenderer, JSONRenderer
 
 class OpenApiYamlRenderer(BaseRenderer):
     media_type = 'application/vnd.oai.openapi'
-    charset = None
-    format = 'openapi'
+    format = 'yaml'
 
     def render(self, data, media_type=None, renderer_context=None):
         # disable yaml advanced feature 'alias' for clean, portable, and readable output

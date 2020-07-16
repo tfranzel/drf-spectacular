@@ -649,7 +649,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
     return result
 
 
-def resolve_regex_path_parameter(path_regex, variable, available_formats=None):
+def resolve_regex_path_parameter(path_regex, variable, available_formats):
     """
     convert django style path parameters to OpenAPI parameters.
     TODO also try to handle regular grouped regex parameters
@@ -659,9 +659,10 @@ def resolve_regex_path_parameter(path_regex, variable, available_formats=None):
         enum_values = None
 
         if converter and converter.startswith('drf_format_suffix_'):
-            view_formats = converter[len('drf_format_suffix_'):].split('_')
-            enum_values = [f'.{suffix}' for suffix in view_formats
-                           if suffix in available_formats]
+            explicit_formats = converter[len('drf_format_suffix_'):].split('_')
+            enum_values = [
+                f'.{suffix}' for suffix in explicit_formats if suffix in available_formats
+            ]
             converter = 'drf_format_suffix'
         elif converter == 'drf_format_suffix':
             enum_values = [f'.{suffix}' for suffix in available_formats]

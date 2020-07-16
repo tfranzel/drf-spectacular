@@ -8,13 +8,13 @@ paths:
       operationId: nodes_retrieve
       description: ''
       parameters:
-      - name: id
-        in: path
-        required: true
-        description: A UUID string identifying this tree node.
+      - in: path
+        name: id
         schema:
           type: string
           format: uuid
+        description: A UUID string identifying this tree node.
+        required: true
       tags:
       - nodes
       security:

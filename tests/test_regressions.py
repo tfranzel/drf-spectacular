@@ -317,7 +317,7 @@ def test_pk_and_no_id(no_warnings):
     assert schema['components']['schemas']['Y']['properties']['x']['format'] == 'uuid'
 
 
-@pytest.mark.parametrize('allowed', [None, ['json', 'api']])
+@pytest.mark.parametrize('allowed', [None, ['json', 'NoRendererAvailable']])
 def test_drf_format_suffix_parameter(no_warnings, allowed):
     from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -357,8 +357,7 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
     assert format_parameter['schema']['type'] == 'string'
     # When allowed is not specified, all of the default formats are possible.
     # Even if other values are provided, only the valid formats are possible.
-    allowed = ['json']
-    assert format_parameter['schema']['enum'] == [f'.{suffix}' for suffix in allowed]
+    assert format_parameter['schema']['enum'] == ['.json']
 
 
 def test_regex_path_parameter_discovery(no_warnings):
