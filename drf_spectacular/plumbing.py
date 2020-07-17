@@ -234,8 +234,8 @@ def build_parameter_type(
         schema['explode'] = explode
     if style is not None:
         schema['style'] = style
-    if enum is not None:
-        schema['schema']['enum'] = enum
+    if enum:
+        schema['schema']['enum'] = sorted(enum)
     return schema
 
 

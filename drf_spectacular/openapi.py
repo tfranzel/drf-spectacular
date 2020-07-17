@@ -149,6 +149,18 @@ class AutoSchema(ViewInspector):
                 warn(f'could not resolve parameter annotation {parameter}. skipping.')
         return result
 
+    def _get_format_parameters(self):
+        parameters = []
+        formats = self.map_renderers('format')
+        if api_settings.URL_FORMAT_OVERRIDE and len(formats) > 1:
+            parameters.append(build_parameter_type(
+                name=api_settings.URL_FORMAT_OVERRIDE,
+                schema=build_basic_type(OpenApiTypes.STR),
+                location=OpenApiParameter.QUERY,
+                enum=formats
+            ))
+        return parameters
+
     def _get_parameters(self):
         def dict_helper(parameters):
             return {(p['name'], p['in']): p for p in parameters}
@@ -162,6 +174,7 @@ class AutoSchema(ViewInspector):
             **dict_helper(self._resolve_path_parameters(path_variables)),
             **dict_helper(self._get_filter_parameters()),
             **dict_helper(self._get_pagination_parameters()),
+            **dict_helper(self._get_format_parameters()),
         }
         # override/add @extend_schema parameters
         for key, parameter in override_parameters.items():
@@ -272,7 +285,7 @@ class AutoSchema(ViewInspector):
             description = ''
 
             resolved_parameter = resolve_regex_path_parameter(
-                self.path_regex, variable, self.map_formats(),
+                self.path_regex, variable, self.map_renderers('format'),
             )
 
             if resolved_parameter:
@@ -738,23 +751,12 @@ class AutoSchema(ViewInspector):
     def map_parsers(self):
         return list(map(attrgetter('media_type'), self.view.parser_classes))
 
-    def map_renderers(self):
-        media_types = []
-        for renderer in self.view.renderer_classes:
-            # BrowsableAPIRenderer not relevant to OpenAPI spec
-            if renderer == renderers.BrowsableAPIRenderer:
-                continue
-            media_types.append(renderer.media_type)
-        return media_types
-
-    def map_formats(self):
-        formats = set()
-        for renderer in self.view.renderer_classes:
-            # BrowsableAPIRenderer not relevant to OpenAPI spec
-            if renderer == renderers.BrowsableAPIRenderer:
-                continue
-            formats.add(renderer.format)
-        return list(formats)
+    def map_renderers(self, attribute):
+        assert attribute in ['media_type', 'format']
+        return list(dict.fromkeys([
+            getattr(r, attribute) for r in self.view.renderer_classes
+            if r != renderers.BrowsableAPIRenderer
+        ]))
 
     def _get_serializer(self):
         view = self.view
@@ -900,7 +902,7 @@ class AutoSchema(ViewInspector):
 
         return {
             'content': {
-                mt: {'schema': schema} for mt in self.map_renderers()
+                mt: {'schema': schema} for mt in self.map_renderers('media_type')
             },
             # Description is required by spec, but descriptions for each response code don't really
             # fit into our model. Description is therefore put into the higher level slots.

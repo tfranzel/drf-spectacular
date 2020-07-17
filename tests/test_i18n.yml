@@ -14,6 +14,13 @@ paths:
         - JSON: application/vnd.oai.openapi+json
       parameters:
       - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
         name: lang
         schema:
           type: string

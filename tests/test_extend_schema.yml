@@ -20,8 +20,8 @@ paths:
         schema:
           type: boolean
           enum:
-          - true
           - false
+          - true
         description: creation will be in the sandbox
       tags:
       - custom_tag
