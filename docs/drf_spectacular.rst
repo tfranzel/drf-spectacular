@@ -12,7 +12,6 @@ drf\_spectacular\.utils
 
 drf\_spectacular\.types
 -------------------------
-
 .. autoclass:: drf_spectacular.types.OpenApiTypes
     :members:
     :undoc-members:
@@ -27,15 +26,20 @@ drf\_spectacular\.views
 
 drf\_spectacular\.extensions
 ----------------------------
-
 .. automodule:: drf_spectacular.extensions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+drf\_spectacular\.hooks
+----------------------------
+.. automodule:: drf_spectacular.hooks
     :members:
     :undoc-members:
     :show-inheritance:
 
 drf\_spectacular\.openapi
 -------------------------
-
 .. automodule:: drf_spectacular.openapi
     :members:
     :undoc-members:

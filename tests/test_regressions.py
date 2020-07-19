@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.generators import SchemaGenerator
+from drf_spectacular.hooks import preprocess_exclude_path_format
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
@@ -358,6 +359,27 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
     # When allowed is not specified, all of the default formats are possible.
     # Even if other values are provided, only the valid formats are possible.
     assert format_parameter['schema']['enum'] == ['.json']
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.PREPROCESSING_HOOKS',
+    [preprocess_exclude_path_format]
+)
+def test_drf_format_suffix_parameter_exclude(no_warnings):
+    from rest_framework.urlpatterns import format_suffix_patterns
+
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    urlpatterns = format_suffix_patterns([
+        path('pi', view_func),
+    ])
+    generator = SchemaGenerator(patterns=urlpatterns)
+    schema = generator.get_schema(request=None, public=True)
+    validate_schema(schema)
+    assert list(schema['paths'].keys()) == ['/pi']
 
 
 def test_regex_path_parameter_discovery(no_warnings):

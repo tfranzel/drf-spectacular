@@ -43,6 +43,12 @@ under varying situations. In those cases it is best to override what the introsp
 decuded and state explicitly what is to be expected.
 Work through the steps in :ref:`customization` to adapt your schema.
 
+I get duplicated operations with a ``{format}``-suffix
+------------------------------------------------------
+Your app likely uses DRF's ``format_suffix_patterns``. If those operations are
+undesireable in your schema, you can simply exclude them with an already provided
+:ref:`preprocessing hook <customization_preprocessing_hooks>`.
+
 
 I get a lot of warnings
 -----------------------

@@ -18,6 +18,10 @@ from drf_spectacular.settings import spectacular_settings
 class EndpointEnumerator(BaseEndpointEnumerator):
     def get_api_endpoints(self, patterns=None, prefix=''):
         api_endpoints = self._get_api_endpoints(patterns, prefix)
+
+        for hook in spectacular_settings.PREPROCESSING_HOOKS:
+            api_endpoints = hook(endpoints=api_endpoints)
+
         api_endpoints_deduplicated = {}
         for path, path_regex, method, callback in api_endpoints:
             if (path, method) not in api_endpoints_deduplicated:

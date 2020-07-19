@@ -153,10 +153,34 @@ the choice ``Enum`` are consolidated into component objects. You can register ad
 
 .. code-block:: python
 
-    def custom_hook(result, generator, request, public):
+    def custom_postprocessing_hook(result, generator, request, public):
         # your modifications to the schema in parameter result
         return result
 
+
+Step 6: Preprocessing hooks
+---------------------------
+.. _customization_preprocessing_hooks:
+
+Preprocessing hooks are applied shortly after collecting all API operations and before the
+actual schema generation starts. They provide an easy mechanism to alter which operations
+should be represented in your schema. You can exclude specific operations, prefix paths,
+introduce or hardcode path parameters or modify view initiation.
+additional hooks with the ``PREPROCESSING_HOOKS`` setting.
+
+.. code-block:: python
+
+    def custom_preprocessing_hook(endpoints):
+        # your modifications to the list of operations that are exposed in the schema
+        for (path, path_regex, method, callback) in endpoints:
+            pass
+        return endpoints
+
+
+.. note:: A common use case would be the removal of duplicated ``{format}``-suffixed operations,
+  for which we already provide the
+  :py:func:`drf_spectacular.hooks.preprocess_exclude_path_format <drf_spectacular.hooks.preprocess_exclude_path_format>`
+  hook. You can simply enable this hook by adding the import path string to the ``PREPROCESSING_HOOKS``.
 
 Congratulations
 ---------------

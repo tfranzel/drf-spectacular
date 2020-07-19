@@ -35,8 +35,14 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Postprocessing functions that run at the end of schema generation.
     # must satisfy interface result = hook(generator, request, public, result)
     'POSTPROCESSING_HOOKS': [
-        'drf_spectacular.plumbing.postprocess_schema_enums'
+        'drf_spectacular.hooks.postprocess_schema_enums'
     ],
+
+    # Preprocessing functions that run before schema generation.
+    # must satisfy interface result = hook(endpoints=result) where result
+    # is a list of Tuples (path, path_regex, method, callback).
+    # Example: 'drf_spectacular.hooks.preprocess_exclude_path_format'
+    'PREPROCESSING_HOOKS': [],
 
     # enum name overrides. dict with keys "YourEnum" and their choice values "field.choices"
     'ENUM_NAME_OVERRIDES': {},
@@ -77,6 +83,7 @@ IMPORT_STRINGS = [
     'DEFAULT_GENERATOR_CLASS',
     'SERVE_PERMISSIONS',
     'POSTPROCESSING_HOOKS',
+    'PREPROCESSING_HOOKS',
     'GET_LIB_DOC_EXCLUDES',
 ]
 
