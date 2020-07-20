@@ -124,10 +124,23 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(allow_contrib_fail)
 
 
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item, call):
+    """ store outcome result in request """
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, "rep_" + rep.when, rep)
+    return rep
+
+
 @pytest.fixture()
-def no_warnings(capsys):
-    """ make sure test emits no warnings """
+def no_warnings(capsys, request):
+    """ make sure successful test emits no warnings """
     yield capsys
+
+    if request.node.rep_call.failed:
+        return
+
     captured = capsys.readouterr()
     assert not captured.out
     assert not captured.err
