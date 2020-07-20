@@ -6,7 +6,7 @@ from diff_match_patch import diff_match_patch
 from drf_spectacular.validation import validate_schema
 
 
-def assert_schema(schema, reference_filename):
+def assert_schema(schema, reference_filename, transforms=None):
     from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
@@ -32,13 +32,29 @@ def assert_schema(schema, reference_filename):
     with open(reference_filename) as fh:
         expected = fh.read()
 
-    if expected != generated:
+    # This only does each transform, however it may be necessary to do all
+    # combinations of transforms.
+    # Force to be a list, and insert identity
+    if transforms:
+        transforms = [lambda x: x] + list(transforms)
+    else:
+        transforms = [lambda x: x]
+
+    results = []
+    for result in (transformer(generated) for transformer in transforms):
+        if result not in results:
+            results.append(result)
+            if result == expected:
+                break
+    else:
         dmp = diff_match_patch()
         diff = dmp.diff_main(expected, generated)
         dmp.diff_cleanupSemantic(diff)
         patch = dmp.patch_toText(dmp.patch_make(diff))
         assert patch, f'Failed to generate patch from "{expected}" to "{generated}"'
         msg = f"Patch from {reference_filename} to {generated_filename}: {patch}"
+        if len(transforms) and len(results) != len(transforms):
+            msg = f'{len(transforms) - 1} transformers ineffective: {msg}'
         print(msg, file=sys.stderr)
         assert expected == generated, msg
 
