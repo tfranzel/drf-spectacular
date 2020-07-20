@@ -18,6 +18,7 @@
           SwaggerUIBundle.SwaggerUIStandalonePreset
         ],
         layout: "BaseLayout",
+        deepLinking:true,
         requestInterceptor: (request) => {
           request.headers['X-CSRFToken'] = "{{ csrf_token }}"
           return request;
