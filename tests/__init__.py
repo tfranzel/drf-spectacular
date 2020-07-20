@@ -1,18 +1,46 @@
+import os
+import sys
+
+from diff_match_patch import diff_match_patch
+
 from drf_spectacular.validation import validate_schema
 
 
-def assert_schema(schema, reference_file):
+def assert_schema(schema, reference_filename):
     from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
     # render also a json and provoke serialization issues
     OpenApiJsonRenderer().render(schema, renderer_context={})
 
-    with open(reference_file.replace('.yml', '_out.yml'), 'wb') as fh:
+    if not os.path.exists(reference_filename):
+        generated_filename = reference_filename
+    else:
+        generated_filename = reference_filename.replace('.yml', '_out.yml')
+
+    with open(generated_filename, 'wb') as fh:
         fh.write(schema_yml)
 
-    with open(reference_file) as fh:
-        assert schema_yml.decode() == fh.read()
+    if generated_filename == reference_filename:
+        raise RuntimeError(
+            f'{reference_filename} was not found. '
+            f'It has been created with the generated schema. '
+            f'Review carefully, as it is the baseline for subsequent checks.')
+
+    generated = schema_yml.decode()
+
+    with open(reference_filename) as fh:
+        expected = fh.read()
+
+    if expected != generated:
+        dmp = diff_match_patch()
+        diff = dmp.diff_main(expected, generated)
+        dmp.diff_cleanupSemantic(diff)
+        patch = dmp.patch_toText(dmp.patch_make(diff))
+        assert patch, f'Failed to generate patch from "{expected}" to "{generated}"'
+        msg = f"Patch from {reference_filename} to {generated_filename}: {patch}"
+        print(msg, file=sys.stderr)
+        assert expected == generated, msg
 
     # this is more a less a sanity check as checked-in schemas should be valid anyhow
     validate_schema(schema)
