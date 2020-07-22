@@ -1,6 +1,29 @@
 Changelog
 =========
 
+
+0.9.12 (2020-07-22)
+-------------------
+
+- Temporarily pin the swagger-ui unpkg URL to 3.30.0 [Mohamed Abdulaziz]
+- Add `deepLinking` parameter [p.alekseev]
+- added preprocessing hooks for operation list modification/filtering `#93 <https://github.com/tfranzel/drf-spectacular/issues/93>`_
+- Document effective DRF settings [John Vandenberg]
+- add format query parameter `#110 <https://github.com/tfranzel/drf-spectacular/issues/110>`_
+- improve assert messages `#126 <https://github.com/tfranzel/drf-spectacular/issues/126>`_
+- more graceful handling of magic fields `#126 <https://github.com/tfranzel/drf-spectacular/issues/126>`_
+- allow for field child on ListSerializer. `#120 <https://github.com/tfranzel/drf-spectacular/issues/120>`_
+- Fix sorting of endpoints with params [John Vandenberg]
+- Emit enum of possible format suffixes [John Vandenberg]
+- i18n `#109 <https://github.com/tfranzel/drf-spectacular/issues/109>`_
+- bugfix INSTALLED_APP retrieval `#114 <https://github.com/tfranzel/drf-spectacular/issues/114>`_
+- emit import warning for extensions with installed apps `#114 <https://github.com/tfranzel/drf-spectacular/issues/114>`_
+
+Breaking changes:
+
+- ``drf_spectacular.hooks.postprocess_schema_enums`` moved from ``blumbing`` to ``hooks`` for consistency. Only relevant if ``POSTPROCESSING_HOOKS`` is explicitly set by user.
+- preprocessing hooks are currently experimental and may change on the next release.
+
 0.9.11 (2020-07-08)
 -------------------
 
