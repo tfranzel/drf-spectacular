@@ -374,6 +374,9 @@ class AutoSchema(ViewInspector):
             return self._map_serializer_field(field, direction)
         elif isinstance(model_field, models.ForeignKey):
             return self._map_model_field(model_field.target_field, direction)
+        elif hasattr(models, 'JSONField') and isinstance(model_field, models.JSONField):
+            # fix for DRF==3.11 with django>=3.1 as it is not yet represented in the field_mapping
+            return build_basic_type(OpenApiTypes.OBJECT)
         elif hasattr(models, model_field.get_internal_type()):
             # be graceful when the model field is not explicitly mapped to a serializer
             internal_type = getattr(models, model_field.get_internal_type())
@@ -553,8 +556,14 @@ class AutoSchema(ViewInspector):
         if anyisinstance(field, [serializers.BooleanField, serializers.NullBooleanField]):
             return append_meta(build_basic_type(OpenApiTypes.BOOL), meta)
 
-        if anyisinstance(field, [serializers.JSONField, serializers.DictField, serializers.HStoreField]):
+        if isinstance(field, serializers.JSONField):
             return append_meta(build_basic_type(OpenApiTypes.OBJECT), meta)
+
+        if anyisinstance(field, [serializers.DictField, serializers.HStoreField]):
+            content = build_basic_type(OpenApiTypes.OBJECT)
+            if not isinstance(field.child, _UnvalidatedField):
+                content['additionalProperties'] = self._map_serializer_field(field.child, direction)
+            return append_meta(content, meta)
 
         if isinstance(field, serializers.CharField):
             return append_meta(build_basic_type(OpenApiTypes.STR), meta)

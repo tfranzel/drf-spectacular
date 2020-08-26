@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
+from django import __version__ as DJANGO_VERSION
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.db import models
@@ -60,6 +61,13 @@ class AllFields(models.Model):
     # overrides
     field_regex = models.CharField(max_length=50)
     field_bool_override = models.BooleanField()
+
+    if DJANGO_VERSION >= '3.1':
+        field_json = models.JSONField()
+    else:
+        @property
+        def field_json(self):
+            return {'A': 1, 'B': 2}
 
     @property
     def field_model_property_float(self) -> float:
@@ -127,6 +135,15 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     field_bool_override = serializers.ReadOnlyField()
 
     field_model_property_float = serializers.ReadOnlyField()
+
+    field_dict_int = serializers.DictField(
+        child=serializers.IntegerField(),
+        source='field_json',
+    )
+
+    # there is a JSON model field for django>=3.1 that would be placed automatically. for <=3.1 we
+    # need to set the field explicitly. defined here for both cases to have consistent ordering.
+    field_json = serializers.JSONField()
 
     class Meta:
         fields = '__all__'
@@ -213,6 +230,8 @@ def test_model_setup_is_valid():
         field_regex='12345asdfg-a',
         field_bool_override=True,
     )
+    if DJANGO_VERSION >= '3.1':
+        m.field_json = {'A': 1, 'B': 2}
     m.field_file.save('hello.txt', ContentFile("hello world"), save=True)
     m.save()
     m.field_m2m.add(aux)

@@ -158,6 +158,13 @@ components:
           type: number
           format: float
           readOnly: true
+        field_dict_int:
+          type: object
+          additionalProperties:
+            type: integer
+        field_json:
+          type: object
+          additionalProperties: {}
         field_int:
           type: integer
         field_float:
@@ -246,6 +253,7 @@ components:
       - field_datetime
       - field_decimal
       - field_decimal_uncoerced
+      - field_dict_int
       - field_duration
       - field_email
       - field_file
@@ -256,6 +264,7 @@ components:
       - field_int
       - field_ip
       - field_ip_generic
+      - field_json
       - field_list
       - field_m2m
       - field_method_float
