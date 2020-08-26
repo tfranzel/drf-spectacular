@@ -269,3 +269,16 @@ def extend_schema_serializer(many=None, exclude_fields=None):
         return klass
 
     return decorator
+
+
+def inline_serializer(name: str, fields: Dict[str, object], **kwargs) -> SerializerType:
+    """
+    A helper function to create an inline serializer. Primary use is with `@extend_schema`,
+    where one needs an implicit one-off serializer that is not reflected in an actual class.
+
+    :param name: name of the
+    :param fields: dict with field names as keys and serializer fields as values
+    :param kwargs: optional kwargs for serializer initialization
+    """
+    serializer_class = type(name, (Serializer,), fields)
+    return serializer_class(**kwargs)

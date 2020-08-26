@@ -17,6 +17,7 @@ from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
+    inline_serializer,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema, get_request_schema, get_response_schema
@@ -869,3 +870,42 @@ def test_list_serializer_with_field_child_on_extend_schema():
     for s in [req_schema, res_schema]:
         assert s['type'] == 'array'
         assert s['items']['type'] == 'integer'
+
+
+def test_inline_serializer(no_warnings):
+    @extend_schema(
+        responses=inline_serializer(
+            name='InlineOneOffSerializer',
+            fields={
+                'char': serializers.CharField(),
+                'choice': serializers.ChoiceField(choices=(('A', 'A'), ('B', 'B'))),
+                'nested_inline': inline_serializer(
+                    name='NestedInlineOneOffSerializer',
+                    fields={
+                        'char': serializers.CharField(),
+                        'int': serializers.IntegerField(),
+                    },
+                    allow_null=True,
+                )
+            }
+        )
+    )
+    @api_view(['GET'])
+    def one_off(request, foo):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=one_off)
+    assert get_response_schema(schema['paths']['/x']['get'])['$ref'] == (
+        '#/components/schemas/InlineOneOff'
+    )
+    assert len(schema['components']['schemas']) == 3
+
+    one_off = schema['components']['schemas']['InlineOneOff']
+    one_off_nested = schema['components']['schemas']['NestedInlineOneOff']
+
+    assert len(one_off['properties']) == 3
+    assert one_off['properties']['nested_inline']['nullable'] is True
+    assert one_off['properties']['nested_inline']['allOf'][0]['$ref'] == (
+        '#/components/schemas/NestedInlineOneOff'
+    )
+    assert len(one_off_nested['properties']) == 2
