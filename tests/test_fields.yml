@@ -101,7 +101,6 @@ components:
         field_decimal_uncoerced:
           type: number
           format: double
-          multipleOf: 0.001
           maximum: 1000
           minimum: -1000
         field_method_float:
@@ -194,7 +193,6 @@ components:
         field_decimal:
           type: string
           format: decimal
-          multipleOf: 0.001
           maximum: 1000
           minimum: -1000
         field_file:

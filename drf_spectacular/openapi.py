@@ -519,8 +519,6 @@ class AutoSchema(ViewInspector):
             else:
                 content = build_basic_type(OpenApiTypes.DECIMAL)
 
-            if field.decimal_places:
-                content['multipleOf'] = float('.' + (field.decimal_places - 1) * '0' + '1')
             if field.max_whole_digits:
                 content['maximum'] = int(field.max_whole_digits * '9') + 1
                 content['minimum'] = -content['maximum']
@@ -714,8 +712,6 @@ class AutoSchema(ViewInspector):
             elif isinstance(v, validators.MinValueValidator):
                 schema['minimum'] = v.limit_value
             elif isinstance(v, validators.DecimalValidator):
-                if v.decimal_places:
-                    schema['multipleOf'] = float('.' + (v.decimal_places - 1) * '0' + '1')
                 if v.max_digits:
                     digits = v.max_digits
                     if v.decimal_places is not None and v.decimal_places > 0:
