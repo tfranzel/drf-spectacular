@@ -593,10 +593,11 @@ def resolve_regex_path_parameter(path_regex, variable, available_formats):
 
 
 def is_versioning_supported(versioning_class):
-    return bool(
-        issubclass(versioning_class, versioning.URLPathVersioning)
-        or issubclass(versioning_class, versioning.NamespaceVersioning)
-    )
+    return issubclass(versioning_class, (
+        versioning.URLPathVersioning,
+        versioning.NamespaceVersioning,
+        versioning.AcceptHeaderVersioning
+    ))
 
 
 def operation_matches_version(view, requested_version):
@@ -612,10 +613,19 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
     assert view.versioning_class
 
     from rest_framework.test import APIRequestFactory
-    mocked_request = getattr(APIRequestFactory(), method.lower())(path=path)
-    view.request = mocked_request
 
-    mocked_request.version = requested_version
+    params = {'path': path}
+    if issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
+        renderer = view.get_renderers()[0]
+        params['HTTP_ACCEPT'] = f'{renderer.media_type}; version={requested_version}'
+
+    request = getattr(APIRequestFactory(), method.lower())(**params)
+    view.request = request
+
+    # wrap request in DRF's Request, necessary for content negotiation
+    view.request = view.initialize_request(view.request)
+
+    request.version = requested_version
 
     if issubclass(view.versioning_class, versioning.URLPathVersioning):
         version_param = view.versioning_class.version_param
@@ -626,7 +636,10 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         # emulate router behaviour by injecting substituted variable into view
         view.kwargs[version_param] = requested_version
     elif issubclass(view.versioning_class, versioning.NamespaceVersioning):
-        mocked_request.resolver_match = get_resolver(tuple(patterns)).resolve(path)
+        request.resolver_match = get_resolver(tuple(patterns)).resolve(path)
+    elif issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
+        neg = view.perform_content_negotiation(view.request)
+        view.request.accepted_renderer, view.request.accepted_media_type = neg
 
     return path
 
