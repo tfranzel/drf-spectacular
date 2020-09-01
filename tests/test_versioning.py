@@ -5,7 +5,7 @@ from django.db import models
 from django.urls import path, re_path
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient
-from rest_framework.versioning import NamespaceVersioning, URLPathVersioning
+from rest_framework.versioning import AcceptHeaderVersioning, NamespaceVersioning, URLPathVersioning
 
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.utils import extend_schema
@@ -45,6 +45,10 @@ class NamespaceVersioningViewset(PathVersioningViewset):
     versioning_class = NamespaceVersioning
 
 
+class AcceptHeaderVersioningViewset(PathVersioningViewset):
+    versioning_class = AcceptHeaderVersioning
+
+
 class PathVersioningViewset2(mixins.ListModelMixin, viewsets.GenericViewSet):
     versioning_class = URLPathVersioning
     queryset = VersioningModel.objects.all()
@@ -63,6 +67,10 @@ class PathVersioningViewset2(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 class NamespaceVersioningViewset2(PathVersioningViewset2):
     versioning_class = NamespaceVersioning
+
+
+class AcceptHeaderVersioningViewset2(PathVersioningViewset2):
+    versioning_class = AcceptHeaderVersioning
 
 
 @pytest.mark.parametrize('viewset_cls', [PathVersioningViewset, PathVersioningViewset2])
@@ -94,6 +102,21 @@ def test_namespace_versioning(no_warnings, viewset_cls, version):
     assert_schema(schema, f'tests/test_versioning_{version}.yml')
 
 
+@pytest.mark.parametrize('viewset_cls', [AcceptHeaderVersioningViewset, AcceptHeaderVersioningViewset2])
+@pytest.mark.parametrize('version', ['v1', 'v2'])
+def test_accept_header_versioning(no_warnings, viewset_cls, version):
+    router = routers.SimpleRouter()
+    router.register('x', viewset_cls, basename='x')
+    generator = SchemaGenerator(
+        patterns=[
+            path('', include((router.urls, 'x'))),
+        ],
+        api_version=version,
+    )
+    schema = generator.get_schema(request=None, public=True)
+    assert_schema(schema, f'tests/test_versioning_accept_{version}.yml')
+
+
 urlpatterns_namespace = [
     path('x/', NamespaceVersioningViewset.as_view({'get': 'list'})),
     path('schema/', SpectacularAPIView.as_view(
@@ -112,12 +135,23 @@ urlpatterns_path = [
         versioning_class=URLPathVersioning, url_name='schema-pv-versioned'
     )),
 ]
+urlpatterns_accept_header = [
+    path('x/', AcceptHeaderVersioningViewset2.as_view({'get': 'list'})),
+    path('schema/', SpectacularAPIView.as_view(
+        versioning_class=AcceptHeaderVersioning
+    ), name='schema-ahv-versioned'),
+    path('schema/ui', SpectacularSwaggerView.as_view(
+        versioning_class=AcceptHeaderVersioning, url_name='schema-ahv-versioned'
+    )),
+]
 urlpatterns = [
     # path versioning
     re_path(r'^api/pv/(?P<version>[v1|v2]+)/', include(urlpatterns_path)),
     # namespace versioning
     path('api/nv/v1/', include((urlpatterns_namespace, 'v1'))),
     path('api/nv/v2/', include((urlpatterns_namespace, 'v2'))),
+    # accept header versioning
+    path('api/ahv/', include((urlpatterns_accept_header, 'x'))),
     # all unversioned
     path('api/schema/', SpectacularAPIView.as_view()),
     # manually versioned schema view that is in itself unversioned
@@ -126,9 +160,9 @@ urlpatterns = [
 
 
 @pytest.mark.parametrize(['url', 'path_count'], [
-    ('/api/nv/v2/schema/', 6),  # v2 nv + v2 pv + unversioned
-    ('/api/pv/v1/schema/', 6),  # v1 nv + v1 pv + unversioned
-    ('/api/schema-v2/', 6),  # v2 nv + v2 pv + unversioned
+    ('/api/nv/v2/schema/', 8),  # v2 nv + v2 pv + v2 ahv + unversioned
+    ('/api/pv/v1/schema/', 8),  # v1 nv + v1 pv + v1 ahv + unversioned
+    ('/api/schema-v2/', 8),  # v2 nv + v2 pv + v2 ahv + unversioned
     ('/api/schema/', 2),  # unversioned schema
 ])
 @pytest.mark.urls(__name__)
@@ -138,6 +172,16 @@ def test_spectacular_view_versioning(no_warnings, url, path_count):
     schema = yaml.load(response.content, Loader=yaml.SafeLoader)
     validate_schema(schema)
     assert len(schema['paths']) == path_count
+
+
+@pytest.mark.parametrize('version', ['v1', 'v2'])
+@pytest.mark.urls(__name__)
+def test_spectacular_view_accept_header_versioning(no_warnings, version):
+    response = APIClient().get('/api/ahv/schema/', HTTP_ACCEPT='application/json; version={version}')
+    assert response.status_code == 200
+    schema = yaml.load(response.content, Loader=yaml.SafeLoader)
+    validate_schema(schema)
+    assert len(schema['paths']) == 6
 
 
 @pytest.mark.parametrize(['url', 'schema_url'], [

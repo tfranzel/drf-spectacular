@@ -1,0 +1,66 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /x/:
+    get:
+      operationId: x_list
+      description: ''
+      tags:
+      - x
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Xv2'
+          description: ''
+  /x/{id}/:
+    get:
+      operationId: x_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this versioning model.
+        required: true
+      tags:
+      - x
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Xv2'
+          description: ''
+components:
+  schemas:
+    Xv2:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+      required:
+      - id
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
