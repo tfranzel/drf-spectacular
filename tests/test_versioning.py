@@ -3,7 +3,7 @@ import yaml
 from django.conf.urls import include
 from django.db import models
 from django.urls import path, re_path
-from rest_framework import mixins, routers, serializers, viewsets
+from rest_framework import generics, mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient
 from rest_framework.versioning import AcceptHeaderVersioning, NamespaceVersioning, URLPathVersioning
 
@@ -43,6 +43,12 @@ class PathVersioningViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 class NamespaceVersioningViewset(PathVersioningViewset):
     versioning_class = NamespaceVersioning
+
+
+class NamespaceVersioningAPIView(generics.RetrieveUpdateDestroyAPIView):
+    versioning_class = NamespaceVersioning
+    serializer_class = Xv1Serializer
+    queryset = VersioningModel.objects.all()
 
 
 class AcceptHeaderVersioningViewset(PathVersioningViewset):
@@ -119,6 +125,7 @@ def test_accept_header_versioning(no_warnings, viewset_cls, version):
 
 urlpatterns_namespace = [
     path('x/', NamespaceVersioningViewset.as_view({'get': 'list'})),
+    path('y/<int:pk>/', NamespaceVersioningAPIView.as_view()),
     path('schema/', SpectacularAPIView.as_view(
         versioning_class=NamespaceVersioning
     ), name='schema-nv-versioned'),
