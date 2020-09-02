@@ -167,10 +167,10 @@ urlpatterns = [
 
 
 @pytest.mark.parametrize(['url', 'path_count'], [
-    ('/api/nv/v2/schema/', 8),  # v2 nv + v2 pv + v2 ahv + unversioned
-    ('/api/pv/v1/schema/', 8),  # v1 nv + v1 pv + v1 ahv + unversioned
-    ('/api/schema-v2/', 8),  # v2 nv + v2 pv + v2 ahv + unversioned
-    ('/api/schema/', 2),  # unversioned schema
+    ('/api/nv/v2/schema/', 10),  # v2 nv + v2 pv + v2 ahv + unversioned
+    ('/api/pv/v1/schema/', 10),  # v1 nv + v1 pv + v1 ahv + unversioned
+    ('/api/schema-v2/', 10),  # v2 nv + v2 pv + v2 ahv + unversioned
+    ('/api/schema/', 4),  # unversioned schema
 ])
 @pytest.mark.urls(__name__)
 def test_spectacular_view_versioning(no_warnings, url, path_count):
@@ -188,7 +188,7 @@ def test_spectacular_view_accept_header_versioning(no_warnings, version):
     assert response.status_code == 200
     schema = yaml.load(response.content, Loader=yaml.SafeLoader)
     validate_schema(schema)
-    assert len(schema['paths']) == 6
+    assert len(schema['paths']) == 8
 
 
 @pytest.mark.parametrize(['url', 'schema_url'], [
