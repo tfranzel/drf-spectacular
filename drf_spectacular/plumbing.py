@@ -12,6 +12,7 @@ from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 import uritemplate
 from django import __version__ as DJANGO_VERSION
 from django.apps import apps
+from django.urls import Resolver404
 from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver  # type: ignore
 from django.utils.functional import Promise
 from django.utils.module_loading import import_string
@@ -636,7 +637,11 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         # emulate router behaviour by injecting substituted variable into view
         view.kwargs[version_param] = requested_version
     elif issubclass(view.versioning_class, versioning.NamespaceVersioning):
-        request.resolver_match = get_resolver(tuple(patterns)).resolve(path)
+        try:
+            request.resolver_match = get_resolver(tuple(patterns)).resolve(path)
+        except Resolver404 as e:
+            error(f"Can't resolve {path}")
+            error(e)
     elif issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
         neg = view.perform_content_negotiation(view.request)
         view.request.accepted_renderer, view.request.accepted_media_type = neg
