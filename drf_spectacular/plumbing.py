@@ -1,6 +1,7 @@
 import hashlib
 import inspect
 import json
+import re
 import sys
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
@@ -12,7 +13,10 @@ from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 import uritemplate
 from django import __version__ as DJANGO_VERSION
 from django.apps import apps
-from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver  # type: ignore
+from django.urls.resolvers import (  # type: ignore
+    _PATH_PARAMETER_COMPONENT_RE, RegexPattern, Resolver404, RoutePattern, URLPattern, URLResolver,
+    get_resolver,
+)
 from django.utils.functional import Promise
 from django.utils.module_loading import import_string
 from rest_framework import exceptions, fields, mixins, serializers, versioning
@@ -636,12 +640,55 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         # emulate router behaviour by injecting substituted variable into view
         view.kwargs[version_param] = requested_version
     elif issubclass(view.versioning_class, versioning.NamespaceVersioning):
-        request.resolver_match = get_resolver(tuple(patterns)).resolve(path)
+        try:
+            request.resolver_match = get_resolver(
+                urlconf=tuple(detype_pattern(p) for p in patterns)
+            ).resolve(path)
+        except Resolver404:
+            error(f"namespace versioning path resolution failed for {path}. path will be ignored.")
     elif issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
         neg = view.perform_content_negotiation(view.request)
         view.request.accepted_renderer, view.request.accepted_media_type = neg
 
     return path
+
+
+def detype_pattern(pattern):
+    """
+    return an equivalent pattern that accepts arbitrary values for path parameters.
+    de-typing the path will ease determining a matching route without having properly
+    formatted dummy values for all path parameters.
+    """
+    if isinstance(pattern, URLResolver):
+        return URLResolver(
+            pattern=detype_pattern(pattern.pattern),
+            urlconf_name=[detype_pattern(p) for p in pattern.urlconf_name],
+            default_kwargs=pattern.default_kwargs,
+            app_name=pattern.app_name,
+            namespace=pattern.namespace,
+        )
+    elif isinstance(pattern, URLPattern):
+        return URLPattern(
+            pattern=detype_pattern(pattern.pattern),
+            callback=pattern.callback,
+            default_args=pattern.default_args,
+            name=pattern.name,
+        )
+    elif isinstance(pattern, RoutePattern):
+        return RoutePattern(
+            route=re.sub(r'<\w+:(\w+)>', r'<\1>', pattern._route),
+            name=pattern.name,
+            is_endpoint=pattern._is_endpoint
+        )
+    elif isinstance(pattern, RegexPattern):
+        return RegexPattern(
+            regex=re.sub(r'\(\?P<(\w+)>.*\)', r'(?P<\1>[^/]+)', pattern._regex),
+            name=pattern.name,
+            is_endpoint=pattern._is_endpoint
+        )
+    else:
+        warn(f'unexpected pattern "{pattern}" encountered while simplifying urlpatterns.')
+        return pattern
 
 
 def normalize_result_object(result):

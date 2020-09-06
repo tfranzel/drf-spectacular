@@ -3,7 +3,7 @@ import yaml
 from django.conf.urls import include
 from django.db import models
 from django.urls import path, re_path
-from rest_framework import mixins, routers, serializers, viewsets
+from rest_framework import generics, mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient
 from rest_framework.versioning import AcceptHeaderVersioning, NamespaceVersioning, URLPathVersioning
 
@@ -100,6 +100,30 @@ def test_namespace_versioning(no_warnings, viewset_cls, version):
     )
     schema = generator.get_schema(request=None, public=True)
     assert_schema(schema, f'tests/test_versioning_{version}.yml')
+
+
+def test_namespace_versioning_urlpatterns_simplification(no_warnings):
+    class NamespaceVersioningAPIView(generics.RetrieveUpdateDestroyAPIView):
+        versioning_class = NamespaceVersioning
+        serializer_class = Xv1Serializer
+        queryset = VersioningModel.objects.all()
+
+    urls = (
+        path('x/<int:pk>/', NamespaceVersioningAPIView.as_view()),
+        path('y/<pk>/', NamespaceVersioningAPIView.as_view()),
+        re_path('z/(?P<pk>[0-9A-Fa-f-]+)/', NamespaceVersioningAPIView.as_view()),
+    )
+    generator = SchemaGenerator(
+        patterns=[path('v1/<int:some_param>/', include((urls, 'v1'))), ],
+        api_version='v1',
+    )
+    schema = generator.get_schema(request=None, public=True)
+
+    for s in ['x', 'y', 'z']:
+        parameters = schema['paths'][f'/v1/{{some_param}}/{s}/{{id}}/']['get']['parameters']
+        parameters = {p['name']: p for p in parameters}
+        assert parameters['id']['schema']['type'] == 'integer'
+        assert parameters['some_param']['schema']['type'] == 'integer'
 
 
 @pytest.mark.parametrize('viewset_cls', [AcceptHeaderVersioningViewset, AcceptHeaderVersioningViewset2])
