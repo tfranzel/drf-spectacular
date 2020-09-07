@@ -18,7 +18,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Split components into request and response parts where appropriate
     'COMPONENT_SPLIT_REQUEST': False,
     # Aid client generator targets that have trouble with read-only properties.
-    "COMPONENT_NO_READ_ONLY_REQUIRED": False,
+    'COMPONENT_NO_READ_ONLY_REQUIRED': False,
 
     # Configuration for serving the schema with SpectacularAPIView
     'SERVE_URLCONF': None,
@@ -49,6 +49,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # function that returns a list of all classes that should be excluded from doc string extraction
     'GET_LIB_DOC_EXCLUDES': 'drf_spectacular.plumbing.get_lib_doc_excludes',
+
+    # Camelize names like operationId and path parameter names
+    'CAMELIZE_NAMES': False,
 
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object

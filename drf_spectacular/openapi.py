@@ -292,9 +292,10 @@ class AutoSchema(ViewInspector):
                 schema = resolved_parameter['schema']
             elif not model:
                 warn(
-                    f'could not derive type of path parameter "{variable}" because '
-                    f'{self.view.__class__} has no queryset. consider annotating the '
-                    f'parameter type with @extend_schema. defaulting to "string".'
+                    f'could not derive type of path parameter "{variable}" because because it '
+                    f'is untyped and {self.view.__class__} has no queryset. consider adding a '
+                    f'type to the path (e.g. <int:{variable}>) or annotating the parameter '
+                    f'type with @extend_schema. defaulting to "string".'
                 )
             else:
                 try:

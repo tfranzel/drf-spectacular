@@ -909,3 +909,16 @@ def test_inline_serializer(no_warnings):
         '#/components/schemas/NestedInlineOneOff'
     )
     assert len(one_off_nested['properties']) == 2
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.CAMELIZE_NAMES', True)
+def test_camelize_names(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/multi/step/path/<str:some_name>/', view_function=view_func)
+    operation = schema['paths']['/multi/step/path/{someName}/']['get']
+    assert operation['parameters'][0]['name'] == 'someName'
+    assert operation['operationId'] == 'multiStepPathRetrieve'

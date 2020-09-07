@@ -10,6 +10,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 
+import inflection
 import uritemplate
 from django import __version__ as DJANGO_VERSION
 from django.apps import apps
@@ -700,3 +701,19 @@ def normalize_result_object(result):
     if isinstance(result, Promise):
         return str(result)
     return result
+
+
+def camelize_operation(path, operation):
+    for path_variable in re.findall(r'\{(\w+)\}', path):
+        path = path.replace(
+            f'{{{path_variable}}}',
+            f'{{{inflection.camelize(path_variable, False)}}}'
+        )
+
+    for parameter in operation.get('parameters', []):
+        if parameter['in'] == OpenApiParameter.PATH:
+            parameter['name'] = inflection.camelize(parameter['name'], False)
+
+    operation['operationId'] = inflection.camelize(operation['operationId'], False)
+
+    return path, operation

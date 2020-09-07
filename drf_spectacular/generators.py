@@ -8,9 +8,9 @@ from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpoint
 
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.plumbing import (
-    ComponentRegistry, alpha_operation_sorter, build_root_object, error, is_versioning_supported,
-    modify_for_versioning, normalize_result_object, operation_matches_version,
-    reset_generator_stats, warn,
+    ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, error,
+    is_versioning_supported, modify_for_versioning, normalize_result_object,
+    operation_matches_version, reset_generator_stats, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -153,6 +153,9 @@ class SchemaGenerator(BaseSchemaGenerator):
             if path.startswith('/'):
                 path = path[1:]
             path = urljoin(self.url or '/', path)
+
+            if spectacular_settings.CAMELIZE_NAMES:
+                path, operation = camelize_operation(path, operation)
 
             result.setdefault(path, {})
             result[path][method.lower()] = operation
