@@ -257,6 +257,9 @@ class AutoSchema(ViewInspector):
         else:
             action = self.method_mapping[self.method.lower()]
 
+        if re.search(r'<drf_format_suffix\w*:\w+>', self.path_regex):
+            tokenized_path.append('formatted')
+
         return '_'.join(tokenized_path + [action])
 
     def is_deprecated(self):
@@ -271,10 +274,11 @@ class AutoSchema(ViewInspector):
             string=self.path,
             flags=re.IGNORECASE
         )
+        # remove path variables
+        path = re.sub(pattern=r'\{[\w\-]+\}', repl='', string=path)
         # cleanup and tokenize remaining parts.
         path = path.rstrip('/').lstrip('/').split('/')
-        # remove path variables and empty tokens
-        return [t for t in path if t and not t.startswith('{')]
+        return [t for t in path if t]
 
     def _resolve_path_parameters(self, variables):
         model = getattr(getattr(self.view, 'queryset', None), 'model', None)
