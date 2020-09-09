@@ -329,7 +329,6 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
         pass  # pragma: no cover
 
     urlpatterns = [
-        path('pi', view_func),
         path('pi/', view_func),
         path('pi/subpath', view_func),
         path('pick', view_func),
@@ -343,7 +342,6 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
     # Only seven alternatives are created, as /pi/{format} would be
     # /pi/.json which is not supported.
     assert list(schema['paths'].keys()) == [
-        '/pi',
         '/pi/',
         '/pi{format}',
         '/pi/subpath',
@@ -351,6 +349,8 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
         '/pick',
         '/pick{format}',
     ]
+    assert schema['paths']['/pi/']['get']['operationId'] == 'pi_retrieve'
+    assert schema['paths']['/pi{format}']['get']['operationId'] == 'pi_formatted_retrieve'
 
     format_parameter = schema['paths']['/pi{format}']['get']['parameters'][0]
     assert format_parameter['name'] == 'format'

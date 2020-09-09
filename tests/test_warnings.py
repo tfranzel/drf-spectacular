@@ -1,9 +1,12 @@
 from django.db import models
+from django.urls import path
 from rest_framework import mixins, serializers, views, viewsets
 from rest_framework.authentication import BaseAuthentication
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
+from drf_spectacular.generators import SchemaGenerator
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from tests import generate_schema
 
@@ -165,3 +168,21 @@ def test_unable_to_follow_field_source_through_intermediate_property_warning(war
             pass  # pragma: no cover
 
     generate_schema('x', view=XAPIView)
+
+
+def test_operation_id_collision_resolution(capsys):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    urlpatterns = [
+        path('pi/<int:foo>', view_func),
+        path('pi/', view_func),
+    ]
+    generator = SchemaGenerator(patterns=urlpatterns)
+    schema = generator.get_schema(request=None, public=True)
+
+    assert schema['paths']['/pi/']['get']['operationId'] == 'pi_retrieve'
+    assert schema['paths']['/pi/{foo}']['get']['operationId'] == 'pi_retrieve_2'
+    assert 'operationId "pi_retrieve" has collisions' in capsys.readouterr().err

@@ -10,7 +10,7 @@ from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.plumbing import (
     ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, error,
     is_versioning_supported, modify_for_versioning, normalize_result_object,
-    operation_matches_version, reset_generator_stats, warn,
+    operation_matches_version, reset_generator_stats, sanitize_result_object, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -171,4 +171,5 @@ class SchemaGenerator(BaseSchemaGenerator):
         )
         for hook in spectacular_settings.POSTPROCESSING_HOOKS:
             result = hook(result=result, generator=self, request=request, public=public)
-        return normalize_result_object(result)
+
+        return sanitize_result_object(normalize_result_object(result))

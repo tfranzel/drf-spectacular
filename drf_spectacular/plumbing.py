@@ -703,6 +703,23 @@ def normalize_result_object(result):
     return result
 
 
+def sanitize_result_object(result):
+    # warn about and resolve operationId collisions with suffixes
+    operations = defaultdict(list)
+    for path, methods in result['paths'].items():
+        for method, operation in methods.items():
+            operations[operation['operationId']].append((path, method))
+    for operation_id, paths in operations.items():
+        if len(paths) == 1:
+            continue
+        warn(f'operationId "{operation_id}" has collisions {paths}. resolving with numeral suffixes.')
+        for idx, (path, method) in enumerate(sorted(paths)[1:], start=2):
+            suffix = str(idx) if spectacular_settings.CAMELIZE_NAMES else f'_{idx}'
+            result['paths'][path][method]['operationId'] += suffix
+
+    return result
+
+
 def camelize_operation(path, operation):
     for path_variable in re.findall(r'\{(\w+)\}', path):
         path = path.replace(
