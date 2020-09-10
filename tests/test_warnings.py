@@ -149,7 +149,7 @@ def test_no_serializer_class_on_apiview(capsys):
     assert 'Unable to guess serializer for' in capsys.readouterr().err
 
 
-def test_unable_to_follow_field_source_through_intermediate_property_warning(warnings):
+def test_unable_to_follow_field_source_through_intermediate_property_warning(capsys):
     class FailingFieldSourceTraversalModel1(models.Model):
         @property
         def x(self):  # missing type hint emits warning
@@ -168,6 +168,37 @@ def test_unable_to_follow_field_source_through_intermediate_property_warning(war
             pass  # pragma: no cover
 
     generate_schema('x', view=XAPIView)
+    assert (
+        'could not follow field source through intermediate property'
+    ) in capsys.readouterr().err
+
+
+def test_unable_to_derive_function_type_warning(capsys):
+    class FailingFieldSourceTraversalModel1(models.Model):
+        @property
+        def x(self):  # missing type hint emits warning
+            return  # pragma: no cover
+
+    class XSerializer(serializers.ModelSerializer):
+        x = serializers.ReadOnlyField()
+        y = serializers.SerializerMethodField()
+
+        def get_y(self):
+            return  # pragma: no cover
+
+        class Meta:
+            model = FailingFieldSourceTraversalModel1
+            fields = '__all__'
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('x', view=XAPIView)
+    stderr = capsys.readouterr().err
+    assert 'type hint for function "x" is unknown.' in stderr
+    assert 'type hint for function "get_y" is unknown.' in stderr
 
 
 def test_operation_id_collision_resolution(capsys):

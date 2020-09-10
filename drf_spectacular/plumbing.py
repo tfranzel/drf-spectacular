@@ -117,8 +117,10 @@ def is_field(obj):
     return isinstance(force_instance(obj), fields.Field) and not is_serializer(obj)
 
 
-def is_basic_type(obj):
+def is_basic_type(obj, allow_none=True):
     if not isinstance(obj, Hashable):
+        return False
+    if not allow_none and (obj is None or obj is OpenApiTypes.NONE):
         return False
     return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
 
@@ -347,7 +349,7 @@ def _follow_field_source(model, path):
             if not target_model:
                 raise UnableToProceedError(
                     f'could not follow field source through intermediate property "{path[0]}" '
-                    f'on model {model}. please add a type hint on the model\'s property/function'
+                    f'on model {model}. please add a type hint on the model\'s property/function '
                     f'to enable traversal of the source path "{".".join(path)}".'
                 )
             return _follow_field_source(target_model, path[1:])

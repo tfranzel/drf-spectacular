@@ -583,7 +583,6 @@ class AutoSchema(ViewInspector):
             elif isinstance(target, models.Field):
                 schema = self._map_model_field(target, direction)
             else:
-
                 assert False, f'ReadOnlyField target "{field}" must be property or model field'
             return append_meta(schema, meta)
 
@@ -738,7 +737,7 @@ class AutoSchema(ViewInspector):
 
         if is_serializer(hint) or is_field(hint):
             return self._map_serializer_field(force_instance(hint), 'response')
-        elif is_basic_type(hint):
+        elif is_basic_type(hint, allow_none=False):
             return build_basic_type(hint)
         elif getattr(hint, '__origin__', None) is typing.Union:
             if type(None) == hint.__args__[1] and len(hint.__args__) == 2:
@@ -749,7 +748,10 @@ class AutoSchema(ViewInspector):
                 warn(f'type hint {hint} not supported yet. defaulting to "string"')
                 return build_basic_type(OpenApiTypes.STR)
         else:
-            warn(f'type hint for function "{method.__name__}" is unknown. defaulting to string.')
+            warn(
+                f'type hint for function "{method.__name__}" is unknown. consider using '
+                f'a type hint or @extend_schema_field. defaulting to string.'
+            )
             return build_basic_type(OpenApiTypes.STR)
 
     def _get_paginator(self):
