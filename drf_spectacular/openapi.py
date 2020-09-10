@@ -257,6 +257,9 @@ class AutoSchema(ViewInspector):
         else:
             action = self.method_mapping[self.method.lower()]
 
+        if not tokenized_path:
+            tokenized_path.append('root')
+
         if re.search(r'<drf_format_suffix\w*:\w+>', self.path_regex):
             tokenized_path.append('formatted')
 
