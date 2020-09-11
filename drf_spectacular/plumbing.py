@@ -567,7 +567,7 @@ def load_enum_name_overrides():
 
 
 def list_hash(lst):
-    return hashlib.blake2b(json.dumps(list(lst), sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json.dumps(list(lst), sort_keys=True).encode()).hexdigest()
 
 
 def resolve_regex_path_parameter(path_regex, variable, available_formats):
