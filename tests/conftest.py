@@ -16,6 +16,7 @@ def pytest_configure(config):
     contrib_apps = [
         'rest_framework_jwt',
         'oauth2_provider',
+        'django_filters',
         # this is not strictly required and when added django-polymorphic
         # currently breaks the whole Django/DRF upstream testing.
         # 'polymorphic',

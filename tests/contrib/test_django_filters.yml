@@ -1,0 +1,83 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /products:
+    get:
+      operationId: products_list
+      description: ''
+      parameters:
+      - in: query
+        name: category
+        schema:
+          enum:
+          - A
+          - B
+          type: string
+        description: category
+      - in: query
+        name: in_stock
+        schema:
+          type: boolean
+        description: in_stock
+      - in: query
+        name: max_price
+        schema:
+          type: number
+          format: float
+        description: max_price
+      - in: query
+        name: min_price
+        schema:
+          type: number
+          format: float
+        description: min_price
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
+components:
+  schemas:
+    CategoryEnum:
+      enum:
+      - A
+      - B
+      type: string
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+        in_stock:
+          type: boolean
+        price:
+          type: number
+          format: float
+      required:
+      - category
+      - id
+      - in_stock
+      - price
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
