@@ -153,6 +153,27 @@ def get_lib_doc_excludes():
     ]
 
 
+def get_view_model(view):
+    """
+    obtain model from view via view's queryset. try safer view attribute first
+    before going through get_queryset(), which may perform arbitrary operations.
+    """
+    model = getattr(getattr(view, 'queryset', None), 'model', None)
+
+    if model is not None:
+        return model
+
+    try:
+        return view.get_queryset().model
+    except Exception as exc:
+        warn(
+            f'failed to obtain model through view\'s queryset due to raised exception. '
+            f'prevent this either by setting "queryset = Model.objects.none()" on the view, '
+            f'having an empty fallback in get_queryset() or by using @extend_schema. '
+            f'(Exception: {exc})'
+        )
+
+
 def get_doc(obj):
     """ get doc string with fallback on obj's base classes (ignoring DRF documentation). """
     if not inspect.isclass(obj):
@@ -617,22 +638,9 @@ def operation_matches_version(view, requested_version):
 
 
 def modify_for_versioning(patterns, method, path, view, requested_version):
-    assert view.versioning_class
+    assert view.versioning_class and view.request
 
-    from rest_framework.test import APIRequestFactory
-
-    params = {'path': path}
-    if issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
-        renderer = view.get_renderers()[0]
-        params['HTTP_ACCEPT'] = f'{renderer.media_type}; version={requested_version}'
-
-    request = getattr(APIRequestFactory(), method.lower())(**params)
-    view.request = request
-
-    # wrap request in DRF's Request, necessary for content negotiation
-    view.request = view.initialize_request(view.request)
-
-    request.version = requested_version
+    view.request.version = requested_version
 
     if issubclass(view.versioning_class, versioning.URLPathVersioning):
         version_param = view.versioning_class.version_param
@@ -644,14 +652,17 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         view.kwargs[version_param] = requested_version
     elif issubclass(view.versioning_class, versioning.NamespaceVersioning):
         try:
-            request.resolver_match = get_resolver(
+            view.request.resolver_match = get_resolver(
                 urlconf=tuple(detype_pattern(p) for p in patterns)
             ).resolve(path)
         except Resolver404:
             error(f"namespace versioning path resolution failed for {path}. path will be ignored.")
     elif issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
-        neg = view.perform_content_negotiation(view.request)
-        view.request.accepted_renderer, view.request.accepted_media_type = neg
+        renderer = view.get_renderers()[0]
+        view.request.META['HTTP_ACCEPT'] = f'{renderer.media_type}; version={requested_version}'
+
+        negotiated = view.perform_content_negotiation(view.request)
+        view.request.accepted_renderer, view.request.accepted_media_type = negotiated
 
     return path
 

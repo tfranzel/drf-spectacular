@@ -69,7 +69,9 @@ def test_no_queryset_warn(capsys):
         serializer_class = X1Serializer
 
     generate_schema('x1', X1Viewset)
-    assert 'no queryset' in capsys.readouterr().err
+    stderr = capsys.readouterr().err
+    assert 'obtaining queryset from' in stderr  # warning 1
+    assert 'failed to obtain model through view\'s queryset' in stderr  # warning 2
 
 
 def test_path_param_not_in_model(capsys):

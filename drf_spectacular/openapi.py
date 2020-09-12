@@ -23,8 +23,8 @@ from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerial
 from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, anyisinstance, append_meta, build_array_type,
     build_basic_type, build_choice_field, build_object_type, build_parameter_type, error,
-    follow_field_source, force_instance, get_doc, get_override, has_override, is_basic_type,
-    is_field, is_serializer, resolve_regex_path_parameter, safe_ref, warn,
+    follow_field_source, force_instance, get_doc, get_override, get_view_model, has_override,
+    is_basic_type, is_field, is_serializer, resolve_regex_path_parameter, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -284,9 +284,7 @@ class AutoSchema(ViewInspector):
         return [t for t in path if t]
 
     def _resolve_path_parameters(self, variables):
-        model = getattr(getattr(self.view, 'queryset', None), 'model', None)
         parameters = []
-
         for variable in variables:
             schema = build_basic_type(OpenApiTypes.STR)
             description = ''
@@ -297,15 +295,16 @@ class AutoSchema(ViewInspector):
 
             if resolved_parameter:
                 schema = resolved_parameter['schema']
-            elif not model:
+            elif get_view_model(self.view) is None:
                 warn(
                     f'could not derive type of path parameter "{variable}" because because it '
-                    f'is untyped and {self.view.__class__} has no queryset. consider adding a '
-                    f'type to the path (e.g. <int:{variable}>) or annotating the parameter '
-                    f'type with @extend_schema. defaulting to "string".'
+                    f'is untyped and obtaining queryset from {self.view.__class__} failed. '
+                    f'consider adding a type to the path (e.g. <int:{variable}>) or annotating '
+                    f'the parameter type with @extend_schema. defaulting to "string".'
                 )
             else:
                 try:
+                    model = get_view_model(self.view)
                     model_field = model._meta.get_field(variable)
                     schema = self._map_model_field(model_field, direction=None)
                     # strip irrelevant meta data

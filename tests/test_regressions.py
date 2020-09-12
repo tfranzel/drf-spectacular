@@ -922,3 +922,27 @@ def test_camelize_names(no_warnings):
     operation = schema['paths']['/multi/step/path/{someName}/']['get']
     assert operation['parameters'][0]['name'] == 'someName'
     assert operation['operationId'] == 'multiStepPathRetrieve'
+
+
+def test_mocked_request_with_get_queryset_get_serializer_class(no_warnings):
+    class M4(models.Model):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M4
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        def get_serializer_class(self):
+            assert not self.request.user.is_authenticated
+            assert self.action in ['retrieve', 'list']
+            return XSerializer
+
+        def get_queryset(self):
+            assert not self.request.user.is_authenticated
+            assert self.request.method == 'GET'
+            return M4.objects.none()
+
+    schema = generate_schema('x', XViewset)
+    validate_schema(schema)

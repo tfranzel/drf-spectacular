@@ -5,6 +5,7 @@ from django.urls import URLPattern, URLResolver
 from rest_framework import views, viewsets
 from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignore
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
+from rest_framework.test import APIRequestFactory
 
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.plumbing import (
@@ -126,6 +127,14 @@ class SchemaGenerator(BaseSchemaGenerator):
         for path, path_regex, method, view in self._get_paths_and_endpoints(None if public else request):
             if not self.has_view_permissions(path, method, view):
                 continue
+
+            # mocked request to allow certain operations in get_queryset and get_serializer[_class]
+            # without exceptions being raised due to no request.
+            if not request:
+                request = getattr(APIRequestFactory(), method.lower())(path=path)
+                request = view.initialize_request(request)
+
+            view.request = request
 
             if view.versioning_class and not is_versioning_supported(view.versioning_class):
                 warn(
