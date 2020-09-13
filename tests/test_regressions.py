@@ -6,7 +6,9 @@ from django.conf.urls import url
 from django.db import models
 from django.db.models import fields
 from django.urls import path, re_path
-from rest_framework import filters, generics, mixins, parsers, routers, serializers, views, viewsets
+from rest_framework import (
+    filters, generics, mixins, pagination, parsers, routers, serializers, views, viewsets,
+)
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
@@ -736,7 +738,6 @@ def test_extend_schema_no_req_no_res(no_warnings):
             pass  # pragma: no cover
 
     schema = generate_schema('/x', view=XAPIView)
-    validate_schema(schema)
     operation = schema['paths']['/x']['post']
     assert 'requestBody' not in operation
     assert len(operation['responses']['200']) == 1
@@ -944,8 +945,7 @@ def test_mocked_request_with_get_queryset_get_serializer_class(no_warnings):
             assert self.request.method == 'GET'
             return M4.objects.none()
 
-    schema = generate_schema('x', XViewset)
-    validate_schema(schema)
+    generate_schema('x', XViewset)
 
 
 def test_queryset_filter_and_ordering_only_on_list(no_warnings):
@@ -968,6 +968,32 @@ def test_queryset_filter_and_ordering_only_on_list(no_warnings):
     assert len(retrieve_parameters) == 2
     assert retrieve_parameters[0]['name'] == 'ordering'
     assert retrieve_parameters[1]['name'] == 'search'
+
+    list_parameters = schema['paths']['/x/{id}/']['get']['parameters']
+    assert len(list_parameters) == 1
+    assert list_parameters[0]['name'] == 'id'
+
+
+def test_pagination_only_on_list(no_warnings):
+    class M6(models.Model):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M6
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = M6.objects.all()
+        serializer_class = XSerializer
+        pagination_class = pagination.LimitOffsetPagination
+
+    schema = generate_schema('x', XViewset)
+
+    retrieve_parameters = schema['paths']['/x/']['get']['parameters']
+    assert len(retrieve_parameters) == 2
+    assert retrieve_parameters[0]['name'] == 'limit'
+    assert retrieve_parameters[1]['name'] == 'offset'
 
     list_parameters = schema['paths']['/x/{id}/']['get']['parameters']
     assert len(list_parameters) == 1
