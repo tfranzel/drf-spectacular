@@ -1,7 +1,7 @@
 import pytest
 from django.db import models
-from django.urls import path
-from rest_framework import generics, serializers
+from django.urls import include, path
+from rest_framework import routers, serializers, viewsets
 from rest_framework.test import APIClient
 
 from drf_spectacular.contrib.django_filters import DjangoFilterBackend
@@ -38,7 +38,7 @@ class ProductFilter(FilterSet):
         fields = ['category', 'in_stock', 'min_price', 'max_price']
 
 
-class ProductList(generics.ListAPIView):
+class ProductViewset(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -48,13 +48,15 @@ class ProductList(generics.ListAPIView):
 @pytest.mark.contrib('django_filter')
 def test_django_filters(no_warnings):
     assert_schema(
-        generate_schema('products', view=ProductList),
+        generate_schema('products', ProductViewset),
         'tests/contrib/test_django_filters.yml'
     )
 
 
+router = routers.SimpleRouter()
+router.register('products', ProductViewset)
 urlpatterns = [
-    path('api/products/', ProductList.as_view()),
+    path('api/', include(router.urls)),
 ]
 
 

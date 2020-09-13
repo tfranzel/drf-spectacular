@@ -3,7 +3,7 @@ info:
   title: ''
   version: 0.0.0
 paths:
-  /products:
+  /products/:
     get:
       operationId: products_list
       description: ''
@@ -47,6 +47,30 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
+          description: ''
+  /products/{id}/:
+    get:
+      operationId: products_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this product.
+        required: true
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
           description: ''
 components:
   schemas:

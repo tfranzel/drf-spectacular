@@ -6,7 +6,7 @@ from django.conf.urls import url
 from django.db import models
 from django.db.models import fields
 from django.urls import path, re_path
-from rest_framework import generics, mixins, parsers, routers, serializers, views, viewsets
+from rest_framework import filters, generics, mixins, parsers, routers, serializers, views, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
@@ -946,3 +946,29 @@ def test_mocked_request_with_get_queryset_get_serializer_class(no_warnings):
 
     schema = generate_schema('x', XViewset)
     validate_schema(schema)
+
+
+def test_queryset_filter_and_ordering_only_on_list(no_warnings):
+    class M5(models.Model):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M5
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = M5.objects.all()
+        serializer_class = XSerializer
+        filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    schema = generate_schema('x', XViewset)
+
+    retrieve_parameters = schema['paths']['/x/']['get']['parameters']
+    assert len(retrieve_parameters) == 2
+    assert retrieve_parameters[0]['name'] == 'ordering'
+    assert retrieve_parameters[1]['name'] == 'search'
+
+    list_parameters = schema['paths']['/x/{id}/']['get']['parameters']
+    assert len(list_parameters) == 1
+    assert list_parameters[0]['name'] == 'id'

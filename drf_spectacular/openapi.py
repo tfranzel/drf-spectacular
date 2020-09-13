@@ -329,29 +329,17 @@ class AutoSchema(ViewInspector):
         return parameters
 
     def _get_filter_parameters(self):
-        if not self._allows_filters():
+        if not self._is_list_view():
             return []
+        if getattr(self.view, 'filter_backends', None) is None:
+            return []
+
         parameters = []
         for filter_backend in self.view.filter_backends:
             parameters += filter_backend().get_schema_operation_parameters(self.view)
         return parameters
 
-    def _allows_filters(self):
-        """
-        Determine whether to include filter Fields in schema.
-
-        Default implementation looks for ModelViewSet or GenericAPIView
-        actions/methods that cause filtering on the default implementation.
-        """
-        if getattr(self.view, 'filter_backends', None) is None:
-            return False
-        if hasattr(self.view, 'action'):
-            return self.view.action in ["list", "retrieve", "update", "partial_update", "destroy"]
-        return self.method.lower() in ["get", "put", "patch", "delete"]
-
     def _get_pagination_parameters(self):
-        view = self.view
-
         if not self._is_list_view():
             return []
 
@@ -359,7 +347,7 @@ class AutoSchema(ViewInspector):
         if not paginator:
             return []
 
-        return paginator.get_schema_operation_parameters(view)
+        return paginator.get_schema_operation_parameters(self.view)
 
     def _map_model_field(self, model_field, direction):
         assert isinstance(model_field, models.Field)
