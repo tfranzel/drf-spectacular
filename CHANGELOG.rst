@@ -1,6 +1,28 @@
 Changelog
 =========
 
+0.9.13 (2020-09-13)
+------------------
+
+- bugfix filter parameter application on non-list views `#147 <https://github.com/tfranzel/drf-spectacular/issues/147>`_
+- improved support for django-filter
+- add mocked request for view processing. `#81 <https://github.com/tfranzel/drf-spectacular/issues/81>`_ `#141 <https://github.com/tfranzel/drf-spectacular/issues/141>`_
+- Use sha256 to hash lists [David Davis]
+- change empty operation name on API prefix-cut to "root"
+- bugfix lost "missing hint" warning and incorrect empty fallback
+- add operationId collision resolution `#137 <https://github.com/tfranzel/drf-spectacular/issues/137>`_
+- bugfix leaking path var names in operationId `#137 <https://github.com/tfranzel/drf-spectacular/issues/137>`_
+- add config for camelizing names `#138 <https://github.com/tfranzel/drf-spectacular/issues/138>`_
+- bugfix parameterized patterns for namespace versioning `#145 <https://github.com/tfranzel/drf-spectacular/issues/145>`_
+- Add support for Accept header versioning [Krzysztof Socha]
+- support for DictField child type (`#142 <https://github.com/tfranzel/drf-spectacular/issues/142>`_) and models.JSONField (Django>=3.1)
+- add convenience inline_serializer for extend_schema `#139 <https://github.com/tfranzel/drf-spectacular/issues/139>`_
+- remove multipleOf due to schema violation `#131 <https://github.com/tfranzel/drf-spectacular/issues/131>`_
+
+Breaking changes:
+
+- `operationId` changed for endpoints using the DRF's `FORMAT` path feature.
+- `operationId` changed where there were path variables leaking into the name.
 
 0.9.12 (2020-07-22)
 -------------------
