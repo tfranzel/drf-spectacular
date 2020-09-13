@@ -2,7 +2,7 @@ Changelog
 =========
 
 0.9.13 (2020-09-13)
-------------------
+-------------------
 
 - bugfix filter parameter application on non-list views `#147 <https://github.com/tfranzel/drf-spectacular/issues/147>`_
 - improved support for django-filter
@@ -21,8 +21,8 @@ Changelog
 
 Breaking changes:
 
-- `operationId` changed for endpoints using the DRF's `FORMAT` path feature.
-- `operationId` changed where there were path variables leaking into the name.
+- ``operationId`` changed for endpoints using the DRF's ``FORMAT`` path feature.
+- ``operationId`` changed where there were path variables leaking into the name.
 
 0.9.12 (2020-07-22)
 -------------------
