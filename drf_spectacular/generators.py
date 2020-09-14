@@ -5,7 +5,6 @@ from django.urls import URLPattern, URLResolver
 from rest_framework import views, viewsets
 from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignore
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
-from rest_framework.test import APIRequestFactory
 
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.plumbing import (
@@ -131,8 +130,7 @@ class SchemaGenerator(BaseSchemaGenerator):
             # mocked request to allow certain operations in get_queryset and get_serializer[_class]
             # without exceptions being raised due to no request.
             if not request:
-                request = getattr(APIRequestFactory(), method.lower())(path=path)
-                request = view.initialize_request(request)
+                request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, request)
 
             view.request = request
 

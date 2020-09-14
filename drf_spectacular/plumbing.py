@@ -21,6 +21,7 @@ from django.urls.resolvers import (  # type: ignore
 from django.utils.functional import Promise
 from django.utils.module_loading import import_string
 from rest_framework import exceptions, fields, mixins, serializers, versioning
+from rest_framework.test import APIRequestFactory
 from uritemplate import URITemplate
 
 from drf_spectacular.settings import spectacular_settings
@@ -747,3 +748,9 @@ def camelize_operation(path, operation):
     operation['operationId'] = inflection.camelize(operation['operationId'], False)
 
     return path, operation
+
+
+def build_mock_request(method, path, view, original_request, **kwargs):
+    request = getattr(APIRequestFactory(), method.lower())(path=path)
+    request = view.initialize_request(request)
+    return request

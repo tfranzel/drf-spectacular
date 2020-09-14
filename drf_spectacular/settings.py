@@ -50,6 +50,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # function that returns a list of all classes that should be excluded from doc string extraction
     'GET_LIB_DOC_EXCLUDES': 'drf_spectacular.plumbing.get_lib_doc_excludes',
 
+    # Function that returns a mocked request for view processing. For CLI usage
+    # original_request will be None.
+    # interface: request = build_mock_request(method, path, view, original_request, **kwargs)
+    'GET_MOCK_REQUEST': 'drf_spectacular.plumbing.build_mock_request',
+
     # Camelize names like operationId and path parameter names
     'CAMELIZE_NAMES': False,
 
@@ -88,6 +93,7 @@ IMPORT_STRINGS = [
     'POSTPROCESSING_HOOKS',
     'PREPROCESSING_HOOKS',
     'GET_LIB_DOC_EXCLUDES',
+    'GET_MOCK_REQUEST',
 ]
 
 spectacular_settings = APISettings(
