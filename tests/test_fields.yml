@@ -165,6 +165,10 @@ components:
         field_json:
           type: object
           additionalProperties: {}
+        field_serializer:
+          type: array
+          items:
+            $ref: '#/components/schemas/Aux'
         field_int:
           type: integer
         field_float:
@@ -281,6 +285,7 @@ components:
       - field_related_hyperlink
       - field_related_slug
       - field_related_string
+      - field_serializer
       - field_slug
       - field_smallint
       - field_text

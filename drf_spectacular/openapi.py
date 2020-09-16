@@ -468,13 +468,17 @@ class AutoSchema(ViewInspector):
             schema = build_array_type({})
             # TODO check this
             if not isinstance(field.child, _UnvalidatedField):
-                map_field = self._map_serializer_field(field.child, direction)
-                items = {
-                    "type": map_field.get('type')
-                }
-                if 'format' in map_field:
-                    items['format'] = map_field.get('format')
-                schema['items'] = items
+                if is_serializer(field.child):
+                    component = self.resolve_serializer(field.child, direction)
+                    return append_meta(build_array_type(component.ref), meta) if component else None
+                else:
+                    map_field = self._map_serializer_field(field.child, direction)
+                    items = {
+                        "type": map_field.get('type')
+                    }
+                    if 'format' in map_field:
+                        items['format'] = map_field.get('format')
+                    schema['items'] = items
             return append_meta(schema, meta)
 
         # DateField and DateTimeField type is string

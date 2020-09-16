@@ -24,6 +24,13 @@ class Aux(models.Model):
     field_foreign = models.ForeignKey('Aux', null=True, on_delete=models.CASCADE)
 
 
+class AuxSerializer(serializers.ModelSerializer):
+    """ description for aux object """
+    class Meta:
+        fields = '__all__'
+        model = Aux
+
+
 class AllFields(models.Model):
     # basics
     field_int = models.IntegerField()
@@ -61,6 +68,8 @@ class AllFields(models.Model):
     # overrides
     field_regex = models.CharField(max_length=50)
     field_bool_override = models.BooleanField()
+
+    field_serializer = AuxSerializer()
 
     if DJANGO_VERSION >= '3.1':
         field_json = models.JSONField()
@@ -145,16 +154,14 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     # need to set the field explicitly. defined here for both cases to have consistent ordering.
     field_json = serializers.JSONField()
 
+    # list field with serializer
+    field_serializer = serializers.ListField(
+        child=AuxSerializer()
+    )
+
     class Meta:
         fields = '__all__'
         model = AllFields
-
-
-class AuxSerializer(serializers.ModelSerializer):
-    """ description for aux object """
-    class Meta:
-        fields = '__all__'
-        model = Aux
 
 
 class AllFieldsModelViewset(viewsets.ReadOnlyModelViewSet):
