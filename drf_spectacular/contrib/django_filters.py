@@ -20,7 +20,18 @@ class SpectacularDjangoFilterBackendMixin:
 
         parameters = []
         for field_name, field in filterset_class.base_filters.items():
-            model_field = model._meta.get_field(field.field_name)
+            if '__' in field.field_name:
+                fn = field.field_name.split('__')
+                c = 0
+                model_field = model
+                while c < len(fn):
+                    model_field = getattr(model_field, '_meta').get_field(fn[c])
+                    if hasattr(model_field, 'related_model') and c+1 < len(fn):
+                        if getattr(model_field, 'related_model')() is not None:
+                            model_field = getattr(model_field, 'related_model')()
+                    c += 1
+            else:
+                model_field = model._meta.get_field(field.field_name)
 
             parameters.append(build_parameter_type(
                 name=field_name,
