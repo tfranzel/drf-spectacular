@@ -69,8 +69,6 @@ class AllFields(models.Model):
     field_regex = models.CharField(max_length=50)
     field_bool_override = models.BooleanField()
 
-    field_serializer = AuxSerializer()
-
     if DJANGO_VERSION >= '3.1':
         field_json = models.JSONField()
     else:
@@ -85,6 +83,10 @@ class AllFields(models.Model):
     @property
     def field_list(self):
         return [1.1, 2.2, 3.3]
+
+    @property
+    def field_list_object(self):
+        return self.field_m2m.all()
 
     def model_function_basic(self) -> bool:
         return True
@@ -115,6 +117,10 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     # composite fields
     field_list = serializers.ListField(
         child=serializers.FloatField(), min_length=3, max_length=100,
+    )
+    field_list_serializer = serializers.ListField(
+        child=AuxSerializer(),
+        source='field_list_object',
     )
 
     # extra related fields
@@ -153,11 +159,6 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     # there is a JSON model field for django>=3.1 that would be placed automatically. for <=3.1 we
     # need to set the field explicitly. defined here for both cases to have consistent ordering.
     field_json = serializers.JSONField()
-
-    # list field with serializer
-    field_serializer = serializers.ListField(
-        child=AuxSerializer()
-    )
 
     class Meta:
         fields = '__all__'

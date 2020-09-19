@@ -465,21 +465,14 @@ class AutoSchema(ViewInspector):
             return append_meta(build_choice_field(field.choices), meta)
 
         if isinstance(field, serializers.ListField):
-            schema = build_array_type({})
-            # TODO check this
-            if not isinstance(field.child, _UnvalidatedField):
-                if is_serializer(field.child):
-                    component = self.resolve_serializer(field.child, direction)
-                    return append_meta(build_array_type(component.ref), meta) if component else None
-                else:
-                    map_field = self._map_serializer_field(field.child, direction)
-                    items = {
-                        "type": map_field.get('type')
-                    }
-                    if 'format' in map_field:
-                        items['format'] = map_field.get('format')
-                    schema['items'] = items
-            return append_meta(schema, meta)
+            if isinstance(field.child, _UnvalidatedField):
+                return append_meta(build_array_type({}), meta)
+            elif is_serializer(field.child):
+                component = self.resolve_serializer(field.child, direction)
+                return append_meta(build_array_type(component.ref), meta) if component else None
+            else:
+                schema = self._map_serializer_field(field.child, direction)
+                return append_meta(build_array_type(schema), meta)
 
         # DateField and DateTimeField type is string
         if isinstance(field, serializers.DateField):

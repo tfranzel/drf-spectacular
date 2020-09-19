@@ -121,6 +121,10 @@ components:
             format: float
           maxItems: 100
           minItems: 3
+        field_list_serializer:
+          type: array
+          items:
+            $ref: '#/components/schemas/Aux'
         field_related_slug:
           type: string
           readOnly: true
@@ -165,10 +169,6 @@ components:
         field_json:
           type: object
           additionalProperties: {}
-        field_serializer:
-          type: array
-          items:
-            $ref: '#/components/schemas/Aux'
         field_int:
           type: integer
         field_float:
@@ -270,6 +270,7 @@ components:
       - field_ip_generic
       - field_json
       - field_list
+      - field_list_serializer
       - field_m2m
       - field_method_float
       - field_method_object
@@ -285,7 +286,6 @@ components:
       - field_related_hyperlink
       - field_related_slug
       - field_related_string
-      - field_serializer
       - field_slug
       - field_smallint
       - field_text
