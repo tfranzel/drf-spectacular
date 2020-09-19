@@ -247,10 +247,11 @@ def build_parameter_type(
         explode=None,
         style=None
 ):
+    irrelevant_field_meta = ['readOnly', 'writeOnly', 'nullable', 'default']
     schema = {
         'in': location,
         'name': name,
-        'schema': schema,
+        'schema': {k: v for k, v in schema.items() if k not in irrelevant_field_meta},
     }
     if description:
         schema['description'] = description

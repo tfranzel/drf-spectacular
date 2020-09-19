@@ -307,9 +307,6 @@ class AutoSchema(ViewInspector):
                     model = get_view_model(self.view)
                     model_field = model._meta.get_field(variable)
                     schema = self._map_model_field(model_field, direction=None)
-                    # strip irrelevant meta data
-                    irrelevant_field_meta = ['readOnly', 'writeOnly', 'nullable', 'default']
-                    schema = {k: v for k, v in schema.items() if k not in irrelevant_field_meta}
                     if 'description' not in schema and model_field.primary_key:
                         description = get_pk_description(model, model_field)
                 except django_exceptions.FieldDoesNotExist:
