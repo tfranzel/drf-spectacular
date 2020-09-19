@@ -24,6 +24,13 @@ class Aux(models.Model):
     field_foreign = models.ForeignKey('Aux', null=True, on_delete=models.CASCADE)
 
 
+class AuxSerializer(serializers.ModelSerializer):
+    """ description for aux object """
+    class Meta:
+        fields = '__all__'
+        model = Aux
+
+
 class AllFields(models.Model):
     # basics
     field_int = models.IntegerField()
@@ -77,6 +84,10 @@ class AllFields(models.Model):
     def field_list(self):
         return [1.1, 2.2, 3.3]
 
+    @property
+    def field_list_object(self):
+        return self.field_m2m.all()
+
     def model_function_basic(self) -> bool:
         return True
 
@@ -106,6 +117,10 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     # composite fields
     field_list = serializers.ListField(
         child=serializers.FloatField(), min_length=3, max_length=100,
+    )
+    field_list_serializer = serializers.ListField(
+        child=AuxSerializer(),
+        source='field_list_object',
     )
 
     # extra related fields
@@ -148,13 +163,6 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = AllFields
-
-
-class AuxSerializer(serializers.ModelSerializer):
-    """ description for aux object """
-    class Meta:
-        fields = '__all__'
-        model = Aux
 
 
 class AllFieldsModelViewset(viewsets.ReadOnlyModelViewSet):
