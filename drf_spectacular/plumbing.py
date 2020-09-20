@@ -267,8 +267,9 @@ def build_parameter_type(
     return schema
 
 
-def build_choice_field(choices):
-    choices = list(OrderedDict.fromkeys(choices))  # preserve order and remove duplicates
+def build_choice_field(field):
+    choices = list(OrderedDict.fromkeys(field.choices))  # preserve order and remove duplicates
+
     if all(isinstance(choice, bool) for choice in choices):
         type = 'boolean'
     elif all(isinstance(choice, int) for choice in choices):
@@ -280,6 +281,11 @@ def build_choice_field(choices):
         type = 'string'
     else:
         type = None
+
+    if field.allow_blank:
+        choices.append('')
+    if field.allow_null:
+        choices.append(None)
 
     schema = {
         # The value of `enum` keyword MUST be an array and SHOULD be unique.
@@ -457,6 +463,10 @@ class ComponentRegistry:
                 f'a incorrect schema. Look out for reused names'
             )
         self._components[component.key] = component
+
+    def register_on_missing(self, component: ResolvedComponent):
+        if component.key not in self._components:
+            self._components[component.key] = component
 
     def __contains__(self, component):
         if component.key not in self._components:
