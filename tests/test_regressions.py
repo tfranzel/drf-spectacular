@@ -811,7 +811,7 @@ def test_auto_schema_and_extend_parameters(no_warnings):
         def get_override_parameters(self):
             return [
                 OpenApiParameter("id", str, OpenApiParameter.PATH),
-                OpenApiParameter("foo", str),
+                OpenApiParameter("foo", str, deprecated=True),
                 OpenApiParameter("bar", str),
             ]
 
@@ -831,6 +831,7 @@ def test_auto_schema_and_extend_parameters(no_warnings):
     parameters = schema['paths']['/x/']['get']['parameters']
     assert parameters[0]['name'] == 'bar' and parameters[0]['schema']['type'] == 'integer'
     assert parameters[1]['name'] == 'foo' and parameters[1]['schema']['type'] == 'string'
+    assert parameters[1]['deprecated'] is True
     assert parameters[2]['name'] == 'id'
 
 
