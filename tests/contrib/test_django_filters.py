@@ -23,6 +23,11 @@ class Product(models.Model):
     price = models.FloatField()
 
 
+class SubProduct(models.Model):
+    sub_price = models.FloatField()
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+
+
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -30,12 +35,13 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class ProductFilter(FilterSet):
-    min_price = NumberFilter(field_name="price", lookup_expr='gte')
     max_price = NumberFilter(field_name="price", lookup_expr='lte')
+    max_sub_price = NumberFilter(field_name="subproduct__sub_price", lookup_expr='lte')
+    sub = NumberFilter(field_name="subproduct", lookup_expr='exact')
 
     class Meta:
         model = Product
-        fields = ['category', 'in_stock', 'min_price', 'max_price']
+        fields = ['category', 'in_stock', 'max_price']
 
 
 class ProductViewset(viewsets.ReadOnlyModelViewSet):
@@ -63,11 +69,24 @@ urlpatterns = [
 @pytest.mark.urls(__name__)
 @pytest.mark.django_db
 def test_django_filters_requests(no_warnings):
-    Product.objects.create(category='X', price=4, in_stock=True)
+    product = Product.objects.create(category='X', price=4, in_stock=True)
+    SubProduct.objects.create(sub_price=5, product=product)
 
-    response = APIClient().get('/api/products/?min_price=3')
+    response = APIClient().get('/api/products/?max_price=1')
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+    response = APIClient().get('/api/products/?max_price=5')
     assert response.status_code == 200
     assert len(response.json()) == 1
-    response = APIClient().get('/api/products/?min_price=5')
+    response = APIClient().get('/api/products/?max_sub_price=1')
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+    response = APIClient().get('/api/products/?max_sub_price=6')
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    response = APIClient().get('/api/products/?sub=1')
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    response = APIClient().get('/api/products/?sub=2')
     assert response.status_code == 200
     assert len(response.json()) == 0

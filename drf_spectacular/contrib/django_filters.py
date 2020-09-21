@@ -1,4 +1,4 @@
-from drf_spectacular.plumbing import build_parameter_type, get_view_model
+from drf_spectacular.plumbing import build_parameter_type, follow_field_source, get_view_model
 from drf_spectacular.utils import OpenApiParameter
 
 try:
@@ -20,7 +20,8 @@ class SpectacularDjangoFilterBackendMixin:
 
         parameters = []
         for field_name, field in filterset_class.base_filters.items():
-            model_field = model._meta.get_field(field.field_name)
+            path = field.field_name.split('__')
+            model_field = follow_field_source(model, path)
 
             parameters.append(build_parameter_type(
                 name=field_name,

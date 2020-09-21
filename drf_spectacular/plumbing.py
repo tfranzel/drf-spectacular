@@ -12,8 +12,8 @@ from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 
 import inflection
 import uritemplate
-from django import __version__ as DJANGO_VERSION
 from django.apps import apps
+from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.urls.resolvers import (  # type: ignore
     _PATH_PARAMETER_COMPONENT_RE, RegexPattern, Resolver404, RoutePattern, URLPattern, URLResolver,
     get_resolver,
@@ -247,10 +247,11 @@ def build_parameter_type(
         explode=None,
         style=None
 ):
+    irrelevant_field_meta = ['readOnly', 'writeOnly', 'nullable', 'default']
     schema = {
         'in': location,
         'name': name,
-        'schema': schema,
+        'schema': {k: v for k, v in schema.items() if k not in irrelevant_field_meta},
     }
     if description:
         schema['description'] = description
@@ -340,19 +341,11 @@ def append_meta(schema, meta):
     return safe_ref({**schema, **meta})
 
 
-def get_field_from_model(model, field):
+def _follow_field_source(model, path: List[str]):
     """
-    this is a Django 2.2 compatibility function to access a field through a Deferred Attribute
+        navigate through root model via given navigation path. supports forward/reverse relations.
     """
-    if DJANGO_VERSION.startswith('2'):
-        # field.field will in effect return self, i.e. a DeferredAttribute again (loop)
-        return model._meta.get_field(field.field_name)
-    else:
-        return field.field
-
-
-def _follow_field_source(model, path):
-    field_or_property = getattr(model, path[0])
+    field_or_property = getattr(model, path[0], None)
 
     if len(path) == 1:
         # end of traversal
@@ -361,7 +354,12 @@ def _follow_field_source(model, path):
         elif callable(field_or_property):
             return field_or_property
         else:
-            return get_field_from_model(model, field_or_property)
+            field = model._meta.get_field(path[0])
+            if isinstance(field, ForeignObjectRel):
+                # resolve DRF internal object to PK field as approximation
+                return field.get_related_field()  # type: ignore
+            else:
+                return field
     else:
         if isinstance(field_or_property, property) or callable(field_or_property):
             if isinstance(field_or_property, property):
@@ -376,7 +374,7 @@ def _follow_field_source(model, path):
                 )
             return _follow_field_source(target_model, path[1:])
         else:
-            target_model = field_or_property.field.related_model
+            target_model = model._meta.get_field(path[0]).related_model
             return _follow_field_source(target_model, path[1:])
 
 

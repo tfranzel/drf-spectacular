@@ -28,11 +28,16 @@ paths:
           format: float
         description: max_price
       - in: query
-        name: min_price
+        name: max_sub_price
         schema:
           type: number
           format: float
-        description: min_price
+        description: max_sub_price
+      - in: query
+        name: sub
+        schema:
+          type: integer
+        description: sub
       tags:
       - products
       security:
