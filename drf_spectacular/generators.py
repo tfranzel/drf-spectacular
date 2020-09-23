@@ -7,6 +7,7 @@ from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignor
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 
 from drf_spectacular.extensions import OpenApiViewExtension
+from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, error,
     is_versioning_supported, modify_for_versioning, normalize_result_object,
@@ -149,7 +150,11 @@ class SchemaGenerator(BaseSchemaGenerator):
                 if not version or not operation_matches_version(view, version):
                     continue
 
-            # beware that every access to schema yields a fresh object (descriptor pattern)
+            assert isinstance(view.schema, AutoSchema), (
+                f'Incompatible AutoSchema used on View. Is DRF\'s DEFAULT_SCHEMA_CLASS '
+                f'pointing to "drf_spectacular.openapi.AutoSchema" or any other drf-spectacular '
+                f'compatible AutoSchema?'
+            )
             operation = view.schema.get_operation(path, path_regex, method, self.registry)
 
             # operation was manually removed via @extend_schema

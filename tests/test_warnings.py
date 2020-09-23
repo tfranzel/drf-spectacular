@@ -1,8 +1,12 @@
+from unittest import mock
+
+import pytest
 from django.db import models
 from django.urls import path
 from rest_framework import mixins, serializers, views, viewsets
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.decorators import action, api_view
+from rest_framework.schemas import AutoSchema as DRFAutoSchema
 from rest_framework.views import APIView
 
 from drf_spectacular.generators import SchemaGenerator
@@ -219,3 +223,15 @@ def test_operation_id_collision_resolution(capsys):
     assert schema['paths']['/pi/']['get']['operationId'] == 'pi_retrieve'
     assert schema['paths']['/pi/{foo}']['get']['operationId'] == 'pi_retrieve_2'
     assert 'operationId "pi_retrieve" has collisions' in capsys.readouterr().err
+
+
+@mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', DRFAutoSchema)
+def test_compatible_auto_schema_class_on_view(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def view_func(request):
+        pass  # pragma: no cover
+
+    with pytest.raises(AssertionError) as excinfo:
+        generate_schema('/x/', view_function=view_func)
+    assert "Incompatible AutoSchema" in str(excinfo.value)
