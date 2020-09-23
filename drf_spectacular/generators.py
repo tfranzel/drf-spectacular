@@ -151,9 +151,9 @@ class SchemaGenerator(BaseSchemaGenerator):
                     continue
 
             assert isinstance(view.schema, AutoSchema), (
-                f'Incompatible AutoSchema used on View. Is DRF\'s DEFAULT_SCHEMA_CLASS '
-                f'pointing to "drf_spectacular.openapi.AutoSchema" or any other drf-spectacular '
-                f'compatible AutoSchema?'
+                'Incompatible AutoSchema used on View. Is DRF\'s DEFAULT_SCHEMA_CLASS '
+                'pointing to "drf_spectacular.openapi.AutoSchema" or any other drf-spectacular '
+                'compatible AutoSchema?'
             )
             operation = view.schema.get_operation(path, path_regex, method, self.registry)
 
