@@ -675,7 +675,7 @@ def detype_pattern(pattern):
     if isinstance(pattern, URLResolver):
         return URLResolver(
             pattern=detype_pattern(pattern.pattern),
-            urlconf_name=[detype_pattern(p) for p in pattern.urlconf_name],
+            urlconf_name=[detype_pattern(p) for p in pattern.url_patterns],
             default_kwargs=pattern.default_kwargs,
             app_name=pattern.app_name,
             namespace=pattern.namespace,
