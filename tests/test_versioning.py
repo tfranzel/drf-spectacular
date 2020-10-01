@@ -4,7 +4,7 @@ from django.conf.urls import include
 from django.db import models
 from django.urls import path, re_path
 from rest_framework import generics, mixins, routers, serializers, viewsets
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APIRequestFactory
 from rest_framework.versioning import AcceptHeaderVersioning, NamespaceVersioning, URLPathVersioning
 
 from drf_spectacular.generators import SchemaGenerator
@@ -128,7 +128,8 @@ def test_namespace_versioning_urlpatterns_simplification(no_warnings):
 
 @pytest.mark.parametrize('viewset_cls', [AcceptHeaderVersioningViewset, AcceptHeaderVersioningViewset2])
 @pytest.mark.parametrize('version', ['v1', 'v2'])
-def test_accept_header_versioning(no_warnings, viewset_cls, version):
+@pytest.mark.parametrize('with_request', [True, False])
+def test_accept_header_versioning(no_warnings, viewset_cls, version, with_request):
     router = routers.SimpleRouter()
     router.register('x', viewset_cls, basename='x')
     generator = SchemaGenerator(
@@ -137,7 +138,16 @@ def test_accept_header_versioning(no_warnings, viewset_cls, version):
         ],
         api_version=version,
     )
-    schema = generator.get_schema(request=None, public=True)
+    if with_request:
+        view = SpectacularAPIView(
+            versioning_class=AcceptHeaderVersioning,
+        )
+        factory = APIRequestFactory()
+        request = factory.get('x', content_type='application/vnd.oai.openapi+json')
+        request = view.initialize_request(request)
+    else:
+        request = None
+    schema = generator.get_schema(request=request, public=True)
     assert_schema(schema, f'tests/test_versioning_accept_{version}.yml')
 
 
