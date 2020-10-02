@@ -22,6 +22,7 @@ from django.utils.functional import Promise
 from django.utils.module_loading import import_string
 from rest_framework import exceptions, fields, mixins, serializers, versioning
 from rest_framework.test import APIRequestFactory
+from rest_framework.utils.mediatypes import _MediaType
 from uritemplate import URITemplate
 
 from drf_spectacular.settings import spectacular_settings
@@ -638,6 +639,7 @@ def operation_matches_version(view, requested_version):
 
 def modify_for_versioning(patterns, method, path, view, requested_version):
     assert view.versioning_class and view.request
+    assert requested_version
 
     view.request.version = requested_version
 
@@ -657,11 +659,17 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         except Resolver404:
             error(f"namespace versioning path resolution failed for {path}. path will be ignored.")
     elif issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
-        renderer = view.get_renderers()[0]
-        view.request.META['HTTP_ACCEPT'] = f'{renderer.media_type}; version={requested_version}'
-
-        negotiated = view.perform_content_negotiation(view.request)
-        view.request.accepted_renderer, view.request.accepted_media_type = negotiated
+        # Append the version into request accepted_media_type.
+        # e.g "application/json; version=1.0"
+        # To allow the AcceptHeaderVersioning negotiator going through.
+        if not hasattr(view.request, 'accepted_renderer'):
+            # Probably a mock request, content negotation was not performed, so, we do it now.
+            negotiated = view.perform_content_negotiation(view.request)
+            view.request.accepted_renderer, view.request.accepted_media_type = negotiated
+        media_type = _MediaType(view.request.accepted_media_type)
+        view.request.accepted_media_type = (
+            f'{media_type.full_type}; {view.versioning_class.version_param}={requested_version}'
+        )
 
     return path
 

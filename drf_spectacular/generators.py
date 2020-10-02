@@ -146,8 +146,10 @@ class SchemaGenerator(BaseSchemaGenerator):
                     or getattr(request, 'version', None)  # incoming request was versioned
                     or view.versioning_class.default_version  # fallback
                 )
+                if not version:
+                    continue
                 path = modify_for_versioning(self.inspector.patterns, method, path, view, version)
-                if not version or not operation_matches_version(view, version):
+                if not operation_matches_version(view, version):
                     continue
 
             assert isinstance(view.schema, AutoSchema), (
