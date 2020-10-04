@@ -975,7 +975,7 @@ def test_queryset_filter_and_ordering_only_on_list(no_warnings):
     assert list_parameters[0]['name'] == 'id'
 
 
-def test_pagination_only_on_list(no_warnings):
+def test_pagination(no_warnings):
     class M6(models.Model):
         pass
 
@@ -991,11 +991,20 @@ def test_pagination_only_on_list(no_warnings):
 
     schema = generate_schema('x', XViewset)
 
+    # query params only on list
     retrieve_parameters = schema['paths']['/x/']['get']['parameters']
     assert len(retrieve_parameters) == 2
     assert retrieve_parameters[0]['name'] == 'limit'
     assert retrieve_parameters[1]['name'] == 'offset'
 
+    # no query params on retrieve
     list_parameters = schema['paths']['/x/{id}/']['get']['parameters']
     assert len(list_parameters) == 1
     assert list_parameters[0]['name'] == 'id'
+
+    # substituted component on list
+    assert 'X' in schema['components']['schemas']
+    assert 'PaginatedXList' in schema['components']['schemas']
+    substitution = schema['components']['schemas']['PaginatedXList']
+    assert substitution['type'] == 'object'
+    assert substitution['properties']['results']['items']['$ref'] == '#/components/schemas/X'

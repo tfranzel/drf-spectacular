@@ -893,7 +893,18 @@ class AutoSchema(ViewInspector):
         if self._is_list_view(serializer) and not get_override(serializer, 'many') is False:
             schema = build_array_type(schema)
             paginator = self._get_paginator()
-            if paginator:
+
+            if paginator and is_serializer(serializer):
+                paginated_name = f'Paginated{self._get_serializer_name(serializer, "response")}List'
+                component = ResolvedComponent(
+                    name=paginated_name,
+                    type=ResolvedComponent.SCHEMA,
+                    schema=paginator.get_paginated_response_schema(schema),
+                    object=paginated_name,
+                )
+                self.registry.register(component)
+                schema = component.ref
+            elif paginator:
                 schema = paginator.get_paginated_response_schema(schema)
 
         return {
