@@ -1,6 +1,23 @@
 Changelog
 =========
 
+0.9.14 (2020-10-04)
+-------------------
+
+- improve client generation for paginated listings
+- update pinned swagger-ui version `#160 <https://github.com/tfranzel/drf-spectacular/issues/160>`_
+- Hot fix for AcceptVersioningHeader support [Nicolas Delaby]
+- bugfix module string includes with urlpatterns `#157 <https://github.com/tfranzel/drf-spectacular/issues/157>`_
+- add expressive error in case of misconfiguration `#156 <https://github.com/tfranzel/drf-spectacular/issues/156>`_
+- fix django-filter related resolution. improve test `#150 <https://github.com/tfranzel/drf-spectacular/issues/150>`_ `#151 <https://github.com/tfranzel/drf-spectacular/issues/151>`_
+- improve follow_field_source for reverse resolution and model leafs `#150 <https://github.com/tfranzel/drf-spectacular/issues/150>`_
+- add ref if list field child is serializer [Matt Shirley]
+- add customization option for mock request generation `#135 <https://github.com/tfranzel/drf-spectacular/issues/135>`_
+
+Breaking changes:
+
+- paginated list response is now wrapped in its own component
+
 0.9.13 (2020-09-13)
 -------------------
 
