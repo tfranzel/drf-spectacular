@@ -10,6 +10,32 @@ You can override any setting, otherwise the defaults below are used.
    :start-after: APISettings
    :end-before: IMPORT_STRINGS
 
+
+Django Rest Framework settings
+------------------------------
+
+Some of the `Django Rest Framework settings <https://www.django-rest-framework.org/api-guide/settings/>`_
+also impact the schema generation.  Refer to the documentation for the version that you are using.
+
+Settings which effect the processing of requests and data types of responses will usually be effective.
+
+There is explicit use of these settings:
+
+- ``DEFAULT_SCHEMA_CLASS``
+- ``COERCE_DECIMAL_TO_STRING``
+- ``UPLOADED_FILES_USE_URL``
+- ``URL_FORMAT_OVERRIDE``
+- ``FORMAT_SUFFIX_KWARG``
+
+The following settings are ignored:
+
+- ``SCHEMA_COERCE_METHOD_NAMES``
+
+The following are known to be effective:
+
+- ``SCHEMA_COERCE_PATH_PK``
+
+
 Example: API Key securitySchemes & security setting
 ---------------------------------------------------------------------
 
@@ -35,26 +61,3 @@ This can be done in the following way:
         },
         "SECURITY": [{"ApiKeyAuth": [], }],
     }
-
-Django Rest Framework settings
-------------------------------
-
-Some of the `Django Rest Framework settings <https://www.django-rest-framework.org/api-guide/settings/>`_
-also impact the schema generation.  Refer to the documentation for the version that you are using.
-
-Settings which effect the processing of requests and data types of responses will usually be effective.
-
-There is explicit use of these settings:
-
-- `COERCE_DECIMAL_TO_STRING`
-- `UPLOADED_FILES_USE_URL`
-
-The following settings are ignored:
-
-- `SCHEMA_COERCE_METHOD_NAMES`
-
-The following are known to be effective:
-
-- `SCHEMA_COERCE_PATH_PK`
-- `FORMAT_SUFFIX_KWARG`
-- `URL_FORMAT_OVERRIDE`
