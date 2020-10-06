@@ -34,10 +34,22 @@ paths:
           format: float
         description: max_sub_price
       - in: query
+        name: other_sub_product__uuid
+        schema:
+          type: string
+          format: uuid
+        description: other_sub_product__uuid
+      - in: query
         name: sub
         schema:
           type: integer
         description: sub
+      - in: query
+        name: subproduct__sub_price
+        schema:
+          type: number
+          format: float
+        description: subproduct__sub_price
       tags:
       - products
       security:
@@ -97,10 +109,13 @@ components:
         price:
           type: number
           format: float
+        other_sub_product:
+          type: integer
       required:
       - category
       - id
       - in_stock
+      - other_sub_product
       - price
   securitySchemes:
     basicAuth:

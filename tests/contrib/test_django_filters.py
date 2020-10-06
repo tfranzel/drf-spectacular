@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from django.db import models
 from django.urls import include, path
@@ -8,7 +10,7 @@ from drf_spectacular.contrib.django_filters import DjangoFilterBackend
 from tests import assert_schema, generate_schema
 
 try:
-    from django_filters.rest_framework import FilterSet, NumberFilter
+    from django_filters.rest_framework import CharFilter, FilterSet, NumberFilter
 except ImportError:
     class FilterSet:
         pass
@@ -16,11 +18,19 @@ except ImportError:
     class NumberFilter:
         pass
 
+    class CharFilter:
+        pass
+
+
+class OtherSubProduct(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
 
 class Product(models.Model):
     category = models.CharField(max_length=10, choices=(('A', 'aaa'), ('B', 'b')))
     in_stock = models.BooleanField()
     price = models.FloatField()
+    other_sub_product = models.ForeignKey(OtherSubProduct, on_delete=models.CASCADE)
 
 
 class SubProduct(models.Model):
@@ -35,13 +45,20 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class ProductFilter(FilterSet):
+    # explicit filter declaration
     max_price = NumberFilter(field_name="price", lookup_expr='lte')
     max_sub_price = NumberFilter(field_name="subproduct__sub_price", lookup_expr='lte')
     sub = NumberFilter(field_name="subproduct", lookup_expr='exact')
+    # implicit filter declaration
+    subproduct__sub_price = NumberFilter()  # reverse relation
+    other_sub_product__uuid = CharFilter()  # forward relation
 
     class Meta:
         model = Product
-        fields = ['category', 'in_stock', 'max_price']
+        fields = [
+            'category', 'in_stock', 'max_price', 'max_sub_price', 'sub',
+            'subproduct__sub_price', 'other_sub_product__uuid'
+        ]
 
 
 class ProductViewset(viewsets.ReadOnlyModelViewSet):
@@ -69,7 +86,10 @@ urlpatterns = [
 @pytest.mark.urls(__name__)
 @pytest.mark.django_db
 def test_django_filters_requests(no_warnings):
-    product = Product.objects.create(category='X', price=4, in_stock=True)
+    other_sub_product = OtherSubProduct.objects.create(uuid=uuid.uuid4())
+    product = Product.objects.create(
+        category='X', price=4, in_stock=True, other_sub_product=other_sub_product
+    )
     SubProduct.objects.create(sub_price=5, product=product)
 
     response = APIClient().get('/api/products/?max_price=1')
