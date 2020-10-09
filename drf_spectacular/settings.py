@@ -11,7 +11,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',
     'FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.35.1/favicon-32x32.png',
-    # configuration param should correspond to the documents below.
+    # Dictionary of configurations to pass to the SwaggerUI({ ... })
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
     'SWAGGER_UI_SETTINGS': {
         'dom_id': '#swagger-ui',
