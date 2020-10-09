@@ -84,6 +84,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'OAUTH2_TOKEN_URL': None,
     'OAUTH2_REFRESH_URL': None,
     'OAUTH2_SCOPES': None,
+    
+    # Dictionary of configurations to pass to the SwaggerUI({ ... }) 
+    # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+    'SWAGGER_SETTINGS': {}
 }
 
 IMPORT_STRINGS = [

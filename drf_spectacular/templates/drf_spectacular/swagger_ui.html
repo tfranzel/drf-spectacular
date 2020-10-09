@@ -10,7 +10,9 @@
     <div id="swagger-ui"></div>
     <script src="//unpkg.com/swagger-ui-dist@3.35.0/swagger-ui-bundle.js"></script>
     <script>
+    var swagger_settings  = {{ settings|safe }}
     const ui = SwaggerUIBundle({
+        ...swagger_settings,
         url: "{{ schema_url }}",
         dom_id: '#swagger-ui',
         presets: [
