@@ -28,6 +28,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SERVE_INCLUDE_SCHEMA': True,
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
 
+    # Dictionary of configurations to pass to the SwaggerUI({ ... })
+    # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+    'SWAGGER_UI_SETTINGS': {},
+
     # Append OpenAPI objects to path and components in addition to the generated objects
     'APPEND_PATHS': {},
     'APPEND_COMPONENTS': {},
