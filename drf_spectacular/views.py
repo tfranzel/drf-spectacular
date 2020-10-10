@@ -1,5 +1,4 @@
 import json
-
 from collections import namedtuple
 from typing import Any, Dict
 
@@ -85,7 +84,7 @@ class SpectacularSwaggerView(APIView):
         schema_url = self.url or reverse(self.url_name, request=request)
         if request.GET.get('lang'):
             schema_url += f'{"&" if "?" in schema_url else "?"}lang={request.GET.get("lang")}'
-        settings = json.dumps(spectacular_settings.SWAGGER_SETTINGS)
+        settings = json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS)
         return Response(
             {'schema_url': schema_url, 'settings': settings},
             template_name=self.template_name

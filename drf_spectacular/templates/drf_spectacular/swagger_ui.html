@@ -12,7 +12,6 @@
     <script>
     var swagger_settings  = {{ settings|safe }}
     const ui = SwaggerUIBundle({
-        ...swagger_settings,
         url: "{{ schema_url }}",
         dom_id: '#swagger-ui',
         presets: [
@@ -24,7 +23,8 @@
         requestInterceptor: (request) => {
           request.headers['X-CSRFToken'] = "{{ csrf_token }}"
           return request;
-        }
+        },
+        ...swagger_settings
       })
     </script>
   </body>
