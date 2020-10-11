@@ -23,8 +23,8 @@ from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerial
 from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, anyisinstance, append_meta, build_array_type,
     build_basic_type, build_choice_field, build_object_type, build_parameter_type, error,
-    follow_field_source, force_instance, get_doc, get_override, has_override, is_basic_type,
-    is_field, is_serializer, resolve_regex_path_parameter, safe_ref, warn,
+    follow_field_source, force_instance, get_doc, get_override, get_view_model, has_override,
+    is_basic_type, is_field, is_serializer, resolve_regex_path_parameter, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -222,8 +222,7 @@ class AutoSchema(ViewInspector):
                 object=authenticator.__class__,
                 schema=scheme.get_security_definition(self)
             )
-            if component not in self.registry:
-                self.registry.register(component)
+            self.registry.register_on_missing(component)
 
         perms = [p.__class__ for p in self.view.get_permissions()]
         if permissions.AllowAny in perms:
@@ -257,6 +256,12 @@ class AutoSchema(ViewInspector):
         else:
             action = self.method_mapping[self.method.lower()]
 
+        if not tokenized_path:
+            tokenized_path.append('root')
+
+        if re.search(r'<drf_format_suffix\w*:\w+>', self.path_regex):
+            tokenized_path.append('formatted')
+
         return '_'.join(tokenized_path + [action])
 
     def is_deprecated(self):
@@ -271,15 +276,14 @@ class AutoSchema(ViewInspector):
             string=self.path,
             flags=re.IGNORECASE
         )
+        # remove path variables
+        path = re.sub(pattern=r'\{[\w\-]+\}', repl='', string=path)
         # cleanup and tokenize remaining parts.
         path = path.rstrip('/').lstrip('/').split('/')
-        # remove path variables and empty tokens
-        return [t for t in path if t and not t.startswith('{')]
+        return [t for t in path if t]
 
     def _resolve_path_parameters(self, variables):
-        model = getattr(getattr(self.view, 'queryset', None), 'model', None)
         parameters = []
-
         for variable in variables:
             schema = build_basic_type(OpenApiTypes.STR)
             description = ''
@@ -290,19 +294,18 @@ class AutoSchema(ViewInspector):
 
             if resolved_parameter:
                 schema = resolved_parameter['schema']
-            elif not model:
+            elif get_view_model(self.view) is None:
                 warn(
-                    f'could not derive type of path parameter "{variable}" because '
-                    f'{self.view.__class__} has no queryset. consider annotating the '
-                    f'parameter type with @extend_schema. defaulting to "string".'
+                    f'could not derive type of path parameter "{variable}" because because it '
+                    f'is untyped and obtaining queryset from {self.view.__class__} failed. '
+                    f'consider adding a type to the path (e.g. <int:{variable}>) or annotating '
+                    f'the parameter type with @extend_schema. defaulting to "string".'
                 )
             else:
                 try:
+                    model = get_view_model(self.view)
                     model_field = model._meta.get_field(variable)
                     schema = self._map_model_field(model_field, direction=None)
-                    # strip irrelevant meta data
-                    irrelevant_field_meta = ['readOnly', 'writeOnly', 'nullable', 'default']
-                    schema = {k: v for k, v in schema.items() if k not in irrelevant_field_meta}
                     if 'description' not in schema and model_field.primary_key:
                         description = get_pk_description(model, model_field)
                 except django_exceptions.FieldDoesNotExist:
@@ -322,29 +325,17 @@ class AutoSchema(ViewInspector):
         return parameters
 
     def _get_filter_parameters(self):
-        if not self._allows_filters():
+        if not self._is_list_view():
             return []
+        if getattr(self.view, 'filter_backends', None) is None:
+            return []
+
         parameters = []
         for filter_backend in self.view.filter_backends:
             parameters += filter_backend().get_schema_operation_parameters(self.view)
         return parameters
 
-    def _allows_filters(self):
-        """
-        Determine whether to include filter Fields in schema.
-
-        Default implementation looks for ModelViewSet or GenericAPIView
-        actions/methods that cause filtering on the default implementation.
-        """
-        if getattr(self.view, 'filter_backends', None) is None:
-            return False
-        if hasattr(self.view, 'action'):
-            return self.view.action in ["list", "retrieve", "update", "partial_update", "destroy"]
-        return self.method.lower() in ["get", "put", "patch", "delete"]
-
     def _get_pagination_parameters(self):
-        view = self.view
-
         if not self._is_list_view():
             return []
 
@@ -352,7 +343,7 @@ class AutoSchema(ViewInspector):
         if not paginator:
             return []
 
-        return paginator.get_schema_operation_parameters(view)
+        return paginator.get_schema_operation_parameters(self.view)
 
     def _map_model_field(self, model_field, direction):
         assert isinstance(model_field, models.Field)
@@ -374,6 +365,9 @@ class AutoSchema(ViewInspector):
             return self._map_serializer_field(field, direction)
         elif isinstance(model_field, models.ForeignKey):
             return self._map_model_field(model_field.target_field, direction)
+        elif hasattr(models, 'JSONField') and isinstance(model_field, models.JSONField):
+            # fix for DRF==3.11 with django>=3.1 as it is not yet represented in the field_mapping
+            return build_basic_type(OpenApiTypes.OBJECT)
         elif hasattr(models, model_field.get_internal_type()):
             # be graceful when the model field is not explicitly mapped to a serializer
             internal_type = getattr(models, model_field.get_internal_type())
@@ -461,23 +455,20 @@ class AutoSchema(ViewInspector):
             return append_meta(build_basic_type(OpenApiTypes.URI), meta)
 
         if isinstance(field, serializers.MultipleChoiceField):
-            return append_meta(build_array_type(build_choice_field(field.choices)), meta)
+            return append_meta(build_array_type(build_choice_field(field)), meta)
 
         if isinstance(field, serializers.ChoiceField):
-            return append_meta(build_choice_field(field.choices), meta)
+            return append_meta(build_choice_field(field), meta)
 
         if isinstance(field, serializers.ListField):
-            schema = build_array_type({})
-            # TODO check this
-            if not isinstance(field.child, _UnvalidatedField):
-                map_field = self._map_serializer_field(field.child, direction)
-                items = {
-                    "type": map_field.get('type')
-                }
-                if 'format' in map_field:
-                    items['format'] = map_field.get('format')
-                schema['items'] = items
-            return append_meta(schema, meta)
+            if isinstance(field.child, _UnvalidatedField):
+                return append_meta(build_array_type({}), meta)
+            elif is_serializer(field.child):
+                component = self.resolve_serializer(field.child, direction)
+                return append_meta(build_array_type(component.ref), meta) if component else None
+            else:
+                schema = self._map_serializer_field(field.child, direction)
+                return append_meta(build_array_type(schema), meta)
 
         # DateField and DateTimeField type is string
         if isinstance(field, serializers.DateField):
@@ -519,8 +510,6 @@ class AutoSchema(ViewInspector):
             else:
                 content = build_basic_type(OpenApiTypes.DECIMAL)
 
-            if field.decimal_places:
-                content['multipleOf'] = float('.' + (field.decimal_places - 1) * '0' + '1')
             if field.max_whole_digits:
                 content['maximum'] = int(field.max_whole_digits * '9') + 1
                 content['minimum'] = -content['maximum']
@@ -555,8 +544,14 @@ class AutoSchema(ViewInspector):
         if anyisinstance(field, [serializers.BooleanField, serializers.NullBooleanField]):
             return append_meta(build_basic_type(OpenApiTypes.BOOL), meta)
 
-        if anyisinstance(field, [serializers.JSONField, serializers.DictField, serializers.HStoreField]):
+        if isinstance(field, serializers.JSONField):
             return append_meta(build_basic_type(OpenApiTypes.OBJECT), meta)
+
+        if anyisinstance(field, [serializers.DictField, serializers.HStoreField]):
+            content = build_basic_type(OpenApiTypes.OBJECT)
+            if not isinstance(field.child, _UnvalidatedField):
+                content['additionalProperties'] = self._map_serializer_field(field.child, direction)
+            return append_meta(content, meta)
 
         if isinstance(field, serializers.CharField):
             return append_meta(build_basic_type(OpenApiTypes.STR), meta)
@@ -571,7 +566,6 @@ class AutoSchema(ViewInspector):
             elif isinstance(target, models.Field):
                 schema = self._map_model_field(target, direction)
             else:
-
                 assert False, f'ReadOnlyField target "{field}" must be property or model field'
             return append_meta(schema, meta)
 
@@ -714,8 +708,6 @@ class AutoSchema(ViewInspector):
             elif isinstance(v, validators.MinValueValidator):
                 schema['minimum'] = v.limit_value
             elif isinstance(v, validators.DecimalValidator):
-                if v.decimal_places:
-                    schema['multipleOf'] = float('.' + (v.decimal_places - 1) * '0' + '1')
                 if v.max_digits:
                     digits = v.max_digits
                     if v.decimal_places is not None and v.decimal_places > 0:
@@ -728,7 +720,7 @@ class AutoSchema(ViewInspector):
 
         if is_serializer(hint) or is_field(hint):
             return self._map_serializer_field(force_instance(hint), 'response')
-        elif is_basic_type(hint):
+        elif is_basic_type(hint, allow_none=False):
             return build_basic_type(hint)
         elif getattr(hint, '__origin__', None) is typing.Union:
             if type(None) == hint.__args__[1] and len(hint.__args__) == 2:
@@ -739,7 +731,10 @@ class AutoSchema(ViewInspector):
                 warn(f'type hint {hint} not supported yet. defaulting to "string"')
                 return build_basic_type(OpenApiTypes.STR)
         else:
-            warn(f'type hint for function "{method.__name__}" is unknown. defaulting to string.')
+            warn(
+                f'type hint for function "{method.__name__}" is unknown. consider using '
+                f'a type hint or @extend_schema_field. defaulting to string.'
+            )
             return build_basic_type(OpenApiTypes.STR)
 
     def _get_paginator(self):
@@ -897,7 +892,18 @@ class AutoSchema(ViewInspector):
         if self._is_list_view(serializer) and not get_override(serializer, 'many') is False:
             schema = build_array_type(schema)
             paginator = self._get_paginator()
-            if paginator:
+
+            if paginator and is_serializer(serializer):
+                paginated_name = f'Paginated{self._get_serializer_name(serializer, "response")}List'
+                component = ResolvedComponent(
+                    name=paginated_name,
+                    type=ResolvedComponent.SCHEMA,
+                    schema=paginator.get_paginated_response_schema(schema),
+                    object=paginated_name,
+                )
+                self.registry.register(component)
+                schema = component.ref
+            elif paginator:
                 schema = paginator.get_paginated_response_schema(schema)
 
         return {

@@ -1,0 +1,127 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /products/:
+    get:
+      operationId: products_list
+      description: ''
+      parameters:
+      - in: query
+        name: category
+        schema:
+          enum:
+          - A
+          - B
+          type: string
+        description: category
+      - in: query
+        name: in_stock
+        schema:
+          type: boolean
+        description: in_stock
+      - in: query
+        name: max_price
+        schema:
+          type: number
+          format: float
+        description: max_price
+      - in: query
+        name: max_sub_price
+        schema:
+          type: number
+          format: float
+        description: max_sub_price
+      - in: query
+        name: other_sub_product__uuid
+        schema:
+          type: string
+          format: uuid
+        description: other_sub_product__uuid
+      - in: query
+        name: sub
+        schema:
+          type: integer
+        description: sub
+      - in: query
+        name: subproduct__sub_price
+        schema:
+          type: number
+          format: float
+        description: subproduct__sub_price
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
+  /products/{id}/:
+    get:
+      operationId: products_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this product.
+        required: true
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+components:
+  schemas:
+    CategoryEnum:
+      enum:
+      - A
+      - B
+      type: string
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+        in_stock:
+          type: boolean
+        price:
+          type: number
+          format: float
+        other_sub_product:
+          type: integer
+      required:
+      - category
+      - id
+      - in_stock
+      - other_sub_product
+      - price
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

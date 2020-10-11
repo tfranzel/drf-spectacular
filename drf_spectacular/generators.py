@@ -7,10 +7,11 @@ from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignor
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 
 from drf_spectacular.extensions import OpenApiViewExtension
+from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
-    ComponentRegistry, alpha_operation_sorter, build_root_object, error, is_versioning_supported,
-    modify_for_versioning, normalize_result_object, operation_matches_version,
-    reset_generator_stats, warn,
+    ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, error,
+    is_versioning_supported, modify_for_versioning, normalize_result_object,
+    operation_matches_version, reset_generator_stats, sanitize_result_object, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -127,6 +128,13 @@ class SchemaGenerator(BaseSchemaGenerator):
             if not self.has_view_permissions(path, method, view):
                 continue
 
+            # mocked request to allow certain operations in get_queryset and get_serializer[_class]
+            # without exceptions being raised due to no request.
+            if not request:
+                request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, request)
+
+            view.request = request
+
             if view.versioning_class and not is_versioning_supported(view.versioning_class):
                 warn(
                     f'using unsupported versioning class "{view.versioning_class}". view will be '
@@ -138,11 +146,17 @@ class SchemaGenerator(BaseSchemaGenerator):
                     or getattr(request, 'version', None)  # incoming request was versioned
                     or view.versioning_class.default_version  # fallback
                 )
+                if not version:
+                    continue
                 path = modify_for_versioning(self.inspector.patterns, method, path, view, version)
-                if not version or not operation_matches_version(view, version):
+                if not operation_matches_version(view, version):
                     continue
 
-            # beware that every access to schema yields a fresh object (descriptor pattern)
+            assert isinstance(view.schema, AutoSchema), (
+                'Incompatible AutoSchema used on View. Is DRF\'s DEFAULT_SCHEMA_CLASS '
+                'pointing to "drf_spectacular.openapi.AutoSchema" or any other drf-spectacular '
+                'compatible AutoSchema?'
+            )
             operation = view.schema.get_operation(path, path_regex, method, self.registry)
 
             # operation was manually removed via @extend_schema
@@ -153,6 +167,9 @@ class SchemaGenerator(BaseSchemaGenerator):
             if path.startswith('/'):
                 path = path[1:]
             path = urljoin(self.url or '/', path)
+
+            if spectacular_settings.CAMELIZE_NAMES:
+                path, operation = camelize_operation(path, operation)
 
             result.setdefault(path, {})
             result[path][method.lower()] = operation
@@ -168,4 +185,5 @@ class SchemaGenerator(BaseSchemaGenerator):
         )
         for hook in spectacular_settings.POSTPROCESSING_HOOKS:
             result = hook(result=result, generator=self, request=request, public=public)
-        return normalize_result_object(result)
+
+        return sanitize_result_object(normalize_result_object(result))

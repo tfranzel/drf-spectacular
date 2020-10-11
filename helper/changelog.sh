@@ -5,7 +5,7 @@ next_ver=$(cat drf_spectacular/__init__.py | sed "s/__version__ = '\\(.*\\)'/\\1
 
 echo
 echo "$next_ver ($(date "+%Y-%m-%d"))"
-echo "------------------"
+echo "-------------------"
 echo
 
 git log ${last_ver}..origin/master --pretty=format:"- %s [%an]" --no-merges  \

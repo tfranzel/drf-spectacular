@@ -1,6 +1,7 @@
 import hashlib
 import inspect
 import json
+import re
 import sys
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
@@ -9,13 +10,19 @@ from decimal import Decimal
 from enum import Enum
 from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 
+import inflection
 import uritemplate
-from django import __version__ as DJANGO_VERSION
 from django.apps import apps
-from django.urls.resolvers import _PATH_PARAMETER_COMPONENT_RE, get_resolver  # type: ignore
+from django.db.models.fields.reverse_related import ForeignObjectRel
+from django.urls.resolvers import (  # type: ignore
+    _PATH_PARAMETER_COMPONENT_RE, RegexPattern, Resolver404, RoutePattern, URLPattern, URLResolver,
+    get_resolver,
+)
 from django.utils.functional import Promise
 from django.utils.module_loading import import_string
 from rest_framework import exceptions, fields, mixins, serializers, versioning
+from rest_framework.test import APIRequestFactory
+from rest_framework.utils.mediatypes import _MediaType
 from uritemplate import URITemplate
 
 from drf_spectacular.settings import spectacular_settings
@@ -112,8 +119,10 @@ def is_field(obj):
     return isinstance(force_instance(obj), fields.Field) and not is_serializer(obj)
 
 
-def is_basic_type(obj):
+def is_basic_type(obj, allow_none=True):
     if not isinstance(obj, Hashable):
+        return False
+    if not allow_none and (obj is None or obj is OpenApiTypes.NONE):
         return False
     return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
 
@@ -144,6 +153,27 @@ def get_lib_doc_excludes():
         *[getattr(generics, c) for c in dir(generics) if c.endswith('APIView')],
         *[getattr(mixins, c) for c in dir(mixins) if c.endswith('Mixin')],
     ]
+
+
+def get_view_model(view):
+    """
+    obtain model from view via view's queryset. try safer view attribute first
+    before going through get_queryset(), which may perform arbitrary operations.
+    """
+    model = getattr(getattr(view, 'queryset', None), 'model', None)
+
+    if model is not None:
+        return model
+
+    try:
+        return view.get_queryset().model
+    except Exception as exc:
+        warn(
+            f'failed to obtain model through view\'s queryset due to raised exception. '
+            f'prevent this either by setting "queryset = Model.objects.none()" on the view, '
+            f'having an empty fallback in get_queryset() or by using @extend_schema. '
+            f'(Exception: {exc})'
+        )
 
 
 def get_doc(obj):
@@ -218,10 +248,11 @@ def build_parameter_type(
         explode=None,
         style=None
 ):
+    irrelevant_field_meta = ['readOnly', 'writeOnly', 'nullable', 'default']
     schema = {
         'in': location,
         'name': name,
-        'schema': schema,
+        'schema': {k: v for k, v in schema.items() if k not in irrelevant_field_meta},
     }
     if description:
         schema['description'] = description
@@ -238,8 +269,9 @@ def build_parameter_type(
     return schema
 
 
-def build_choice_field(choices):
-    choices = list(OrderedDict.fromkeys(choices))  # preserve order and remove duplicates
+def build_choice_field(field):
+    choices = list(OrderedDict.fromkeys(field.choices))  # preserve order and remove duplicates
+
     if all(isinstance(choice, bool) for choice in choices):
         type = 'boolean'
     elif all(isinstance(choice, int) for choice in choices):
@@ -251,6 +283,11 @@ def build_choice_field(choices):
         type = 'string'
     else:
         type = None
+
+    if field.allow_blank:
+        choices.append('')
+    if field.allow_null:
+        choices.append(None)
 
     schema = {
         # The value of `enum` keyword MUST be an array and SHOULD be unique.
@@ -311,19 +348,11 @@ def append_meta(schema, meta):
     return safe_ref({**schema, **meta})
 
 
-def get_field_from_model(model, field):
+def _follow_field_source(model, path: List[str]):
     """
-    this is a Django 2.2 compatibility function to access a field through a Deferred Attribute
+        navigate through root model via given navigation path. supports forward/reverse relations.
     """
-    if DJANGO_VERSION.startswith('2'):
-        # field.field will in effect return self, i.e. a DeferredAttribute again (loop)
-        return model._meta.get_field(field.field_name)
-    else:
-        return field.field
-
-
-def _follow_field_source(model, path):
-    field_or_property = getattr(model, path[0])
+    field_or_property = getattr(model, path[0], None)
 
     if len(path) == 1:
         # end of traversal
@@ -332,7 +361,12 @@ def _follow_field_source(model, path):
         elif callable(field_or_property):
             return field_or_property
         else:
-            return get_field_from_model(model, field_or_property)
+            field = model._meta.get_field(path[0])
+            if isinstance(field, ForeignObjectRel):
+                # resolve DRF internal object to PK field as approximation
+                return field.get_related_field()  # type: ignore
+            else:
+                return field
     else:
         if isinstance(field_or_property, property) or callable(field_or_property):
             if isinstance(field_or_property, property):
@@ -342,12 +376,12 @@ def _follow_field_source(model, path):
             if not target_model:
                 raise UnableToProceedError(
                     f'could not follow field source through intermediate property "{path[0]}" '
-                    f'on model {model}. please add a type hint on the model\'s property/function'
+                    f'on model {model}. please add a type hint on the model\'s property/function '
                     f'to enable traversal of the source path "{".".join(path)}".'
                 )
             return _follow_field_source(target_model, path[1:])
         else:
-            target_model = field_or_property.field.related_model
+            target_model = model._meta.get_field(path[0]).related_model
             return _follow_field_source(target_model, path[1:])
 
 
@@ -428,6 +462,10 @@ class ComponentRegistry:
                 f'a incorrect schema. Look out for reused names'
             )
         self._components[component.key] = component
+
+    def register_on_missing(self, component: ResolvedComponent):
+        if component.key not in self._components:
+            self._components[component.key] = component
 
     def __contains__(self, component):
         if component.key not in self._components:
@@ -560,7 +598,7 @@ def load_enum_name_overrides():
 
 
 def list_hash(lst):
-    return hashlib.blake2b(json.dumps(list(lst), sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json.dumps(list(lst), sort_keys=True).encode()).hexdigest()
 
 
 def resolve_regex_path_parameter(path_regex, variable, available_formats):
@@ -593,10 +631,11 @@ def resolve_regex_path_parameter(path_regex, variable, available_formats):
 
 
 def is_versioning_supported(versioning_class):
-    return bool(
-        issubclass(versioning_class, versioning.URLPathVersioning)
-        or issubclass(versioning_class, versioning.NamespaceVersioning)
-    )
+    return issubclass(versioning_class, (
+        versioning.URLPathVersioning,
+        versioning.NamespaceVersioning,
+        versioning.AcceptHeaderVersioning
+    ))
 
 
 def operation_matches_version(view, requested_version):
@@ -609,13 +648,10 @@ def operation_matches_version(view, requested_version):
 
 
 def modify_for_versioning(patterns, method, path, view, requested_version):
-    assert view.versioning_class
+    assert view.versioning_class and view.request
+    assert requested_version
 
-    from rest_framework.test import APIRequestFactory
-    mocked_request = getattr(APIRequestFactory(), method.lower())(path=path)
-    view.request = mocked_request
-
-    mocked_request.version = requested_version
+    view.request.version = requested_version
 
     if issubclass(view.versioning_class, versioning.URLPathVersioning):
         version_param = view.versioning_class.version_param
@@ -626,9 +662,64 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         # emulate router behaviour by injecting substituted variable into view
         view.kwargs[version_param] = requested_version
     elif issubclass(view.versioning_class, versioning.NamespaceVersioning):
-        mocked_request.resolver_match = get_resolver(tuple(patterns)).resolve(path)
+        try:
+            view.request.resolver_match = get_resolver(
+                urlconf=tuple(detype_pattern(p) for p in patterns)
+            ).resolve(path)
+        except Resolver404:
+            error(f"namespace versioning path resolution failed for {path}. path will be ignored.")
+    elif issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
+        # Append the version into request accepted_media_type.
+        # e.g "application/json; version=1.0"
+        # To allow the AcceptHeaderVersioning negotiator going through.
+        if not hasattr(view.request, 'accepted_renderer'):
+            # Probably a mock request, content negotation was not performed, so, we do it now.
+            negotiated = view.perform_content_negotiation(view.request)
+            view.request.accepted_renderer, view.request.accepted_media_type = negotiated
+        media_type = _MediaType(view.request.accepted_media_type)
+        view.request.accepted_media_type = (
+            f'{media_type.full_type}; {view.versioning_class.version_param}={requested_version}'
+        )
 
     return path
+
+
+def detype_pattern(pattern):
+    """
+    return an equivalent pattern that accepts arbitrary values for path parameters.
+    de-typing the path will ease determining a matching route without having properly
+    formatted dummy values for all path parameters.
+    """
+    if isinstance(pattern, URLResolver):
+        return URLResolver(
+            pattern=detype_pattern(pattern.pattern),
+            urlconf_name=[detype_pattern(p) for p in pattern.url_patterns],
+            default_kwargs=pattern.default_kwargs,
+            app_name=pattern.app_name,
+            namespace=pattern.namespace,
+        )
+    elif isinstance(pattern, URLPattern):
+        return URLPattern(
+            pattern=detype_pattern(pattern.pattern),
+            callback=pattern.callback,
+            default_args=pattern.default_args,
+            name=pattern.name,
+        )
+    elif isinstance(pattern, RoutePattern):
+        return RoutePattern(
+            route=re.sub(r'<\w+:(\w+)>', r'<\1>', pattern._route),
+            name=pattern.name,
+            is_endpoint=pattern._is_endpoint
+        )
+    elif isinstance(pattern, RegexPattern):
+        return RegexPattern(
+            regex=re.sub(r'\(\?P<(\w+)>.*\)', r'(?P<\1>[^/]+)', pattern._regex),
+            name=pattern.name,
+            is_endpoint=pattern._is_endpoint
+        )
+    else:
+        warn(f'unexpected pattern "{pattern}" encountered while simplifying urlpatterns.')
+        return pattern
 
 
 def normalize_result_object(result):
@@ -640,3 +731,42 @@ def normalize_result_object(result):
     if isinstance(result, Promise):
         return str(result)
     return result
+
+
+def sanitize_result_object(result):
+    # warn about and resolve operationId collisions with suffixes
+    operations = defaultdict(list)
+    for path, methods in result['paths'].items():
+        for method, operation in methods.items():
+            operations[operation['operationId']].append((path, method))
+    for operation_id, paths in operations.items():
+        if len(paths) == 1:
+            continue
+        warn(f'operationId "{operation_id}" has collisions {paths}. resolving with numeral suffixes.')
+        for idx, (path, method) in enumerate(sorted(paths)[1:], start=2):
+            suffix = str(idx) if spectacular_settings.CAMELIZE_NAMES else f'_{idx}'
+            result['paths'][path][method]['operationId'] += suffix
+
+    return result
+
+
+def camelize_operation(path, operation):
+    for path_variable in re.findall(r'\{(\w+)\}', path):
+        path = path.replace(
+            f'{{{path_variable}}}',
+            f'{{{inflection.camelize(path_variable, False)}}}'
+        )
+
+    for parameter in operation.get('parameters', []):
+        if parameter['in'] == OpenApiParameter.PATH:
+            parameter['name'] = inflection.camelize(parameter['name'], False)
+
+    operation['operationId'] = inflection.camelize(operation['operationId'], False)
+
+    return path, operation
+
+
+def build_mock_request(method, path, view, original_request, **kwargs):
+    request = getattr(APIRequestFactory(), method.lower())(path=path)
+    request = view.initialize_request(request)
+    return request

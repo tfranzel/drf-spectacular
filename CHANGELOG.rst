@@ -1,6 +1,68 @@
 Changelog
 =========
 
+0.9.14 (2020-10-04)
+-------------------
+
+- improve client generation for paginated listings
+- update pinned swagger-ui version `#160 <https://github.com/tfranzel/drf-spectacular/issues/160>`_
+- Hot fix for AcceptVersioningHeader support [Nicolas Delaby]
+- bugfix module string includes with urlpatterns `#157 <https://github.com/tfranzel/drf-spectacular/issues/157>`_
+- add expressive error in case of misconfiguration `#156 <https://github.com/tfranzel/drf-spectacular/issues/156>`_
+- fix django-filter related resolution. improve test `#150 <https://github.com/tfranzel/drf-spectacular/issues/150>`_ `#151 <https://github.com/tfranzel/drf-spectacular/issues/151>`_
+- improve follow_field_source for reverse resolution and model leafs `#150 <https://github.com/tfranzel/drf-spectacular/issues/150>`_
+- add ref if list field child is serializer [Matt Shirley]
+- add customization option for mock request generation `#135 <https://github.com/tfranzel/drf-spectacular/issues/135>`_
+
+Breaking changes:
+
+- paginated list response is now wrapped in its own component
+
+0.9.13 (2020-09-13)
+-------------------
+
+- bugfix filter parameter application on non-list views `#147 <https://github.com/tfranzel/drf-spectacular/issues/147>`_
+- improved support for django-filter
+- add mocked request for view processing. `#81 <https://github.com/tfranzel/drf-spectacular/issues/81>`_ `#141 <https://github.com/tfranzel/drf-spectacular/issues/141>`_
+- Use sha256 to hash lists [David Davis]
+- change empty operation name on API prefix-cut to "root"
+- bugfix lost "missing hint" warning and incorrect empty fallback
+- add operationId collision resolution `#137 <https://github.com/tfranzel/drf-spectacular/issues/137>`_
+- bugfix leaking path var names in operationId `#137 <https://github.com/tfranzel/drf-spectacular/issues/137>`_
+- add config for camelizing names `#138 <https://github.com/tfranzel/drf-spectacular/issues/138>`_
+- bugfix parameterized patterns for namespace versioning `#145 <https://github.com/tfranzel/drf-spectacular/issues/145>`_
+- Add support for Accept header versioning [Krzysztof Socha]
+- support for DictField child type (`#142 <https://github.com/tfranzel/drf-spectacular/issues/142>`_) and models.JSONField (Django>=3.1)
+- add convenience inline_serializer for extend_schema `#139 <https://github.com/tfranzel/drf-spectacular/issues/139>`_
+- remove multipleOf due to schema violation `#131 <https://github.com/tfranzel/drf-spectacular/issues/131>`_
+
+Breaking changes:
+
+- ``operationId`` changed for endpoints using the DRF's ``FORMAT`` path feature.
+- ``operationId`` changed where there were path variables leaking into the name.
+
+0.9.12 (2020-07-22)
+-------------------
+
+- Temporarily pin the swagger-ui unpkg URL to 3.30.0 [Mohamed Abdulaziz]
+- Add `deepLinking` parameter [p.alekseev]
+- added preprocessing hooks for operation list modification/filtering `#93 <https://github.com/tfranzel/drf-spectacular/issues/93>`_
+- Document effective DRF settings [John Vandenberg]
+- add format query parameter `#110 <https://github.com/tfranzel/drf-spectacular/issues/110>`_
+- improve assert messages `#126 <https://github.com/tfranzel/drf-spectacular/issues/126>`_
+- more graceful handling of magic fields `#126 <https://github.com/tfranzel/drf-spectacular/issues/126>`_
+- allow for field child on ListSerializer. `#120 <https://github.com/tfranzel/drf-spectacular/issues/120>`_
+- Fix sorting of endpoints with params [John Vandenberg]
+- Emit enum of possible format suffixes [John Vandenberg]
+- i18n `#109 <https://github.com/tfranzel/drf-spectacular/issues/109>`_
+- bugfix INSTALLED_APP retrieval `#114 <https://github.com/tfranzel/drf-spectacular/issues/114>`_
+- emit import warning for extensions with installed apps `#114 <https://github.com/tfranzel/drf-spectacular/issues/114>`_
+
+Breaking changes:
+
+- ``drf_spectacular.hooks.postprocess_schema_enums`` moved from ``blumbing`` to ``hooks`` for consistency. Only relevant if ``POSTPROCESSING_HOOKS`` is explicitly set by user.
+- preprocessing hooks are currently experimental and may change on the next release.
+
 0.9.11 (2020-07-08)
 -------------------
 

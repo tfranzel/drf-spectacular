@@ -3,12 +3,12 @@ info:
   title: ''
   version: 0.0.0
 paths:
-  /a/:
+  /x/:
     get:
-      operationId: a_list
+      operationId: x_list
       description: ''
       tags:
-      - a
+      - x
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -20,14 +20,21 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/A'
+                  $ref: '#/components/schemas/Xv1'
           description: ''
-  /a/selection/:
+  /x/{id}/:
     get:
-      operationId: a_selection_retrieve
+      operationId: x_retrieve
       description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this versioning model.
+        required: true
       tags:
-      - a
+      - x
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -37,41 +44,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/B'
+                $ref: '#/components/schemas/Xv1'
           description: ''
 components:
   schemas:
-    A:
+    Xv1:
       type: object
       properties:
-        language:
-          $ref: '#/components/schemas/LanguageEnum'
+        id:
+          type: integer
       required:
-      - language
-    B:
-      type: object
-      properties:
-        language:
-          nullable: true
-          oneOf:
-          - $ref: '#/components/schemas/LanguageEnum'
-          - $ref: '#/components/schemas/BlankEnum'
-          - $ref: '#/components/schemas/NullEnum'
-      required:
-      - language
-    BlankEnum:
-      enum:
-      - ''
-    LanguageEnum:
-      enum:
-      - en
-      - es
-      - ru
-      - cn
-      type: string
-    NullEnum:
-      enum:
-      - null
+      - id
   securitySchemes:
     basicAuth:
       type: http

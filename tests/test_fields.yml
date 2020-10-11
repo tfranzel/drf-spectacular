@@ -101,7 +101,6 @@ components:
         field_decimal_uncoerced:
           type: number
           format: double
-          multipleOf: 0.001
           maximum: 1000
           minimum: -1000
         field_method_float:
@@ -122,6 +121,10 @@ components:
             format: float
           maxItems: 100
           minItems: 3
+        field_list_serializer:
+          type: array
+          items:
+            $ref: '#/components/schemas/Aux'
         field_related_slug:
           type: string
           readOnly: true
@@ -159,6 +162,13 @@ components:
           type: number
           format: float
           readOnly: true
+        field_dict_int:
+          type: object
+          additionalProperties:
+            type: integer
+        field_json:
+          type: object
+          additionalProperties: {}
         field_int:
           type: integer
         field_float:
@@ -194,7 +204,6 @@ components:
         field_decimal:
           type: string
           format: decimal
-          multipleOf: 0.001
           maximum: 1000
           minimum: -1000
         field_file:
@@ -248,6 +257,7 @@ components:
       - field_datetime
       - field_decimal
       - field_decimal_uncoerced
+      - field_dict_int
       - field_duration
       - field_email
       - field_file
@@ -258,7 +268,9 @@ components:
       - field_int
       - field_ip
       - field_ip_generic
+      - field_json
       - field_list
+      - field_list_serializer
       - field_m2m
       - field_method_float
       - field_method_object

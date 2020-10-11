@@ -18,7 +18,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Split components into request and response parts where appropriate
     'COMPONENT_SPLIT_REQUEST': False,
     # Aid client generator targets that have trouble with read-only properties.
-    "COMPONENT_NO_READ_ONLY_REQUIRED": False,
+    'COMPONENT_NO_READ_ONLY_REQUIRED': False,
 
     # Configuration for serving the schema with SpectacularAPIView
     'SERVE_URLCONF': None,
@@ -27,6 +27,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # is the
     'SERVE_INCLUDE_SCHEMA': True,
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+
+    # Dictionary of configurations to pass to the SwaggerUI({ ... })
+    # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+    'SWAGGER_UI_SETTINGS': {},
 
     # Append OpenAPI objects to path and components in addition to the generated objects
     'APPEND_PATHS': {},
@@ -49,6 +53,14 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # function that returns a list of all classes that should be excluded from doc string extraction
     'GET_LIB_DOC_EXCLUDES': 'drf_spectacular.plumbing.get_lib_doc_excludes',
+
+    # Function that returns a mocked request for view processing. For CLI usage
+    # original_request will be None.
+    # interface: request = build_mock_request(method, path, view, original_request, **kwargs)
+    'GET_MOCK_REQUEST': 'drf_spectacular.plumbing.build_mock_request',
+
+    # Camelize names like operationId and path parameter names
+    'CAMELIZE_NAMES': False,
 
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
@@ -85,6 +97,7 @@ IMPORT_STRINGS = [
     'POSTPROCESSING_HOOKS',
     'PREPROCESSING_HOOKS',
     'GET_LIB_DOC_EXCLUDES',
+    'GET_MOCK_REQUEST',
 ]
 
 spectacular_settings = APISettings(

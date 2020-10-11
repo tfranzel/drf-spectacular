@@ -6,7 +6,9 @@ from django.conf.urls import url
 from django.db import models
 from django.db.models import fields
 from django.urls import path, re_path
-from rest_framework import generics, mixins, parsers, routers, serializers, views, viewsets
+from rest_framework import (
+    filters, generics, mixins, pagination, parsers, routers, serializers, views, viewsets,
+)
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
@@ -17,6 +19,7 @@ from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
+    inline_serializer,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema, get_request_schema, get_response_schema
@@ -328,7 +331,6 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
         pass  # pragma: no cover
 
     urlpatterns = [
-        path('pi', view_func),
         path('pi/', view_func),
         path('pi/subpath', view_func),
         path('pick', view_func),
@@ -342,7 +344,6 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
     # Only seven alternatives are created, as /pi/{format} would be
     # /pi/.json which is not supported.
     assert list(schema['paths'].keys()) == [
-        '/pi',
         '/pi/',
         '/pi{format}',
         '/pi/subpath',
@@ -350,6 +351,8 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
         '/pick',
         '/pick{format}',
     ]
+    assert schema['paths']['/pi/']['get']['operationId'] == 'pi_retrieve'
+    assert schema['paths']['/pi{format}']['get']['operationId'] == 'pi_formatted_retrieve'
 
     format_parameter = schema['paths']['/pi{format}']['get']['parameters'][0]
     assert format_parameter['name'] == 'format'
@@ -735,7 +738,6 @@ def test_extend_schema_no_req_no_res(no_warnings):
             pass  # pragma: no cover
 
     schema = generate_schema('/x', view=XAPIView)
-    validate_schema(schema)
     operation = schema['paths']['/x']['post']
     assert 'requestBody' not in operation
     assert len(operation['responses']['200']) == 1
@@ -809,7 +811,7 @@ def test_auto_schema_and_extend_parameters(no_warnings):
         def get_override_parameters(self):
             return [
                 OpenApiParameter("id", str, OpenApiParameter.PATH),
-                OpenApiParameter("foo", str),
+                OpenApiParameter("foo", str, deprecated=True),
                 OpenApiParameter("bar", str),
             ]
 
@@ -829,6 +831,7 @@ def test_auto_schema_and_extend_parameters(no_warnings):
     parameters = schema['paths']['/x/']['get']['parameters']
     assert parameters[0]['name'] == 'bar' and parameters[0]['schema']['type'] == 'integer'
     assert parameters[1]['name'] == 'foo' and parameters[1]['schema']['type'] == 'string'
+    assert parameters[1]['deprecated'] is True
     assert parameters[2]['name'] == 'id'
 
 
@@ -869,3 +872,139 @@ def test_list_serializer_with_field_child_on_extend_schema():
     for s in [req_schema, res_schema]:
         assert s['type'] == 'array'
         assert s['items']['type'] == 'integer'
+
+
+def test_inline_serializer(no_warnings):
+    @extend_schema(
+        responses=inline_serializer(
+            name='InlineOneOffSerializer',
+            fields={
+                'char': serializers.CharField(),
+                'choice': serializers.ChoiceField(choices=(('A', 'A'), ('B', 'B'))),
+                'nested_inline': inline_serializer(
+                    name='NestedInlineOneOffSerializer',
+                    fields={
+                        'char': serializers.CharField(),
+                        'int': serializers.IntegerField(),
+                    },
+                    allow_null=True,
+                )
+            }
+        )
+    )
+    @api_view(['GET'])
+    def one_off(request, foo):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=one_off)
+    assert get_response_schema(schema['paths']['/x']['get'])['$ref'] == (
+        '#/components/schemas/InlineOneOff'
+    )
+    assert len(schema['components']['schemas']) == 3
+
+    one_off = schema['components']['schemas']['InlineOneOff']
+    one_off_nested = schema['components']['schemas']['NestedInlineOneOff']
+
+    assert len(one_off['properties']) == 3
+    assert one_off['properties']['nested_inline']['nullable'] is True
+    assert one_off['properties']['nested_inline']['allOf'][0]['$ref'] == (
+        '#/components/schemas/NestedInlineOneOff'
+    )
+    assert len(one_off_nested['properties']) == 2
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.CAMELIZE_NAMES', True)
+def test_camelize_names(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/multi/step/path/<str:some_name>/', view_function=view_func)
+    operation = schema['paths']['/multi/step/path/{someName}/']['get']
+    assert operation['parameters'][0]['name'] == 'someName'
+    assert operation['operationId'] == 'multiStepPathRetrieve'
+
+
+def test_mocked_request_with_get_queryset_get_serializer_class(no_warnings):
+    class M4(models.Model):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M4
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        def get_serializer_class(self):
+            assert not self.request.user.is_authenticated
+            assert self.action in ['retrieve', 'list']
+            return XSerializer
+
+        def get_queryset(self):
+            assert not self.request.user.is_authenticated
+            assert self.request.method == 'GET'
+            return M4.objects.none()
+
+    generate_schema('x', XViewset)
+
+
+def test_queryset_filter_and_ordering_only_on_list(no_warnings):
+    class M5(models.Model):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M5
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = M5.objects.all()
+        serializer_class = XSerializer
+        filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    schema = generate_schema('x', XViewset)
+
+    retrieve_parameters = schema['paths']['/x/']['get']['parameters']
+    assert len(retrieve_parameters) == 2
+    assert retrieve_parameters[0]['name'] == 'ordering'
+    assert retrieve_parameters[1]['name'] == 'search'
+
+    list_parameters = schema['paths']['/x/{id}/']['get']['parameters']
+    assert len(list_parameters) == 1
+    assert list_parameters[0]['name'] == 'id'
+
+
+def test_pagination(no_warnings):
+    class M6(models.Model):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M6
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = M6.objects.all()
+        serializer_class = XSerializer
+        pagination_class = pagination.LimitOffsetPagination
+
+    schema = generate_schema('x', XViewset)
+
+    # query params only on list
+    retrieve_parameters = schema['paths']['/x/']['get']['parameters']
+    assert len(retrieve_parameters) == 2
+    assert retrieve_parameters[0]['name'] == 'limit'
+    assert retrieve_parameters[1]['name'] == 'offset'
+
+    # no query params on retrieve
+    list_parameters = schema['paths']['/x/{id}/']['get']['parameters']
+    assert len(list_parameters) == 1
+    assert list_parameters[0]['name'] == 'id'
+
+    # substituted component on list
+    assert 'X' in schema['components']['schemas']
+    assert 'PaginatedXList' in schema['components']['schemas']
+    substitution = schema['components']['schemas']['PaginatedXList']
+    assert substitution['type'] == 'object'
+    assert substitution['properties']['results']['items']['$ref'] == '#/components/schemas/X'

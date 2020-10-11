@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
+from django import __version__ as DJANGO_VERSION
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.db import models
@@ -21,6 +22,13 @@ fs = FileSystemStorage(location=tempfile.gettempdir())
 class Aux(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     field_foreign = models.ForeignKey('Aux', null=True, on_delete=models.CASCADE)
+
+
+class AuxSerializer(serializers.ModelSerializer):
+    """ description for aux object """
+    class Meta:
+        fields = '__all__'
+        model = Aux
 
 
 class AllFields(models.Model):
@@ -61,6 +69,13 @@ class AllFields(models.Model):
     field_regex = models.CharField(max_length=50)
     field_bool_override = models.BooleanField()
 
+    if DJANGO_VERSION >= '3.1':
+        field_json = models.JSONField()
+    else:
+        @property
+        def field_json(self):
+            return {'A': 1, 'B': 2}
+
     @property
     def field_model_property_float(self) -> float:
         return 1.337
@@ -68,6 +83,10 @@ class AllFields(models.Model):
     @property
     def field_list(self):
         return [1.1, 2.2, 3.3]
+
+    @property
+    def field_list_object(self):
+        return self.field_m2m.all()
 
     def model_function_basic(self) -> bool:
         return True
@@ -99,6 +118,10 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     field_list = serializers.ListField(
         child=serializers.FloatField(), min_length=3, max_length=100,
     )
+    field_list_serializer = serializers.ListField(
+        child=AuxSerializer(),
+        source='field_list_object',
+    )
 
     # extra related fields
     field_related_slug = serializers.SlugRelatedField(
@@ -128,16 +151,18 @@ class AllFieldsSerializer(serializers.ModelSerializer):
 
     field_model_property_float = serializers.ReadOnlyField()
 
+    field_dict_int = serializers.DictField(
+        child=serializers.IntegerField(),
+        source='field_json',
+    )
+
+    # there is a JSON model field for django>=3.1 that would be placed automatically. for <=3.1 we
+    # need to set the field explicitly. defined here for both cases to have consistent ordering.
+    field_json = serializers.JSONField()
+
     class Meta:
         fields = '__all__'
         model = AllFields
-
-
-class AuxSerializer(serializers.ModelSerializer):
-    """ description for aux object """
-    class Meta:
-        fields = '__all__'
-        model = Aux
 
 
 class AllFieldsModelViewset(viewsets.ReadOnlyModelViewSet):
@@ -213,6 +238,8 @@ def test_model_setup_is_valid():
         field_regex='12345asdfg-a',
         field_bool_override=True,
     )
+    if DJANGO_VERSION >= '3.1':
+        m.field_json = {'A': 1, 'B': 2}
     m.field_file.save('hello.txt', ContentFile("hello world"), save=True)
     m.save()
     m.field_m2m.add(aux)

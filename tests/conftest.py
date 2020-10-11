@@ -18,6 +18,7 @@ def pytest_configure(config):
         'rest_auth.registration',
         'rest_framework_jwt',
         'oauth2_provider',
+        'django_filters',
         # this is not strictly required and when added django-polymorphic
         # currently breaks the whole Django/DRF upstream testing.
         # 'polymorphic',
@@ -87,6 +88,7 @@ def pytest_configure(config):
         ),
         REST_FRAMEWORK={
             'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+            'PAGE_SIZE': 10,
         }
     )
 

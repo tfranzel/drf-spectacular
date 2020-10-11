@@ -6,3 +6,4 @@ django-polymorphic>=2.1
 django-rest-polymorphic>=0.1.8
 django-oauth-toolkit>=1.2.0
 djangorestframework-camel-case>=1.1.2
+django-filter>=2.3.0
