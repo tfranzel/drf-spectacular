@@ -222,8 +222,7 @@ class AutoSchema(ViewInspector):
                 object=authenticator.__class__,
                 schema=scheme.get_security_definition(self)
             )
-            if component not in self.registry:
-                self.registry.register(component)
+            self.registry.register_on_missing(component)
 
         perms = [p.__class__ for p in self.view.get_permissions()]
         if permissions.AllowAny in perms:
@@ -456,10 +455,10 @@ class AutoSchema(ViewInspector):
             return append_meta(build_basic_type(OpenApiTypes.URI), meta)
 
         if isinstance(field, serializers.MultipleChoiceField):
-            return append_meta(build_array_type(build_choice_field(field.choices)), meta)
+            return append_meta(build_array_type(build_choice_field(field)), meta)
 
         if isinstance(field, serializers.ChoiceField):
-            return append_meta(build_choice_field(field.choices), meta)
+            return append_meta(build_choice_field(field), meta)
 
         if isinstance(field, serializers.ListField):
             if isinstance(field.child, _UnvalidatedField):

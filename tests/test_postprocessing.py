@@ -38,7 +38,7 @@ class ASerializer(serializers.Serializer):
 
 
 class BSerializer(serializers.Serializer):
-    language = serializers.ChoiceField(choices=language_choices)
+    language = serializers.ChoiceField(choices=language_choices, allow_blank=True, allow_null=True)
 
 
 class AViewset(mixins.ListModelMixin, viewsets.GenericViewSet):

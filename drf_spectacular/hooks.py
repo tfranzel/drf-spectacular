@@ -26,6 +26,16 @@ def postprocess_schema_enums(result, generator, **kwargs):
             yield from iter_prop_containers(schema.get('oneOf', []))
             yield from iter_prop_containers(schema.get('allOf', []))
 
+    def create_enum_component(name, schema):
+        component = ResolvedComponent(
+            name=name,
+            type=ResolvedComponent.SCHEMA,
+            schema=schema,
+            object=name,
+        )
+        generator.registry.register_on_missing(component)
+        return component
+
     schemas = result.get('components', {}).get('schemas', {})
 
     overrides = load_enum_name_overrides()
@@ -36,7 +46,9 @@ def postprocess_schema_enums(result, generator, **kwargs):
         for prop_name, prop_schema in props.items():
             if 'enum' not in prop_schema:
                 continue
-            hash_mapping[prop_name].add(list_hash(prop_schema['enum']))
+            # remove blank/null entry for hashing. will be reconstructed in the last step
+            prop_enum_cleaned_list = [i for i in prop_schema['enum'] if i]
+            hash_mapping[prop_name].add(list_hash(prop_enum_cleaned_list))
 
     # traverse all enum properties and generate a name for the choice set. naming collisions
     # are resolved and a warning is emitted. giving a choice set multiple names is technically
@@ -73,23 +85,30 @@ def postprocess_schema_enums(result, generator, **kwargs):
             if 'enum' not in prop_schema:
                 continue
 
+            prop_enum_original_list = prop_schema['enum']
+            prop_schema['enum'] = [i for i in prop_schema['enum'] if i]
             prop_hash = list_hash(prop_schema['enum'])
             # when choice sets are reused under multiple names, the generated name cannot be
             # resolved from the hash alone. fall back to prop_name and hash for resolution.
             enum_name = enum_name_mapping.get(prop_hash) or enum_name_mapping[prop_hash, prop_name]
 
+            # split property into remaining property and enum component parts
             enum_schema = {k: v for k, v in prop_schema.items() if k in ['type', 'enum']}
             prop_schema = {k: v for k, v in prop_schema.items() if k not in ['type', 'enum']}
 
-            component = ResolvedComponent(
-                name=enum_name,
-                type=ResolvedComponent.SCHEMA,
-                schema=enum_schema,
-                object=enum_name,
-            )
-            if component not in generator.registry:
-                generator.registry.register(component)
-            prop_schema.update(component.ref)
+            components = [
+                create_enum_component(enum_name, schema=enum_schema)
+            ]
+            if '' in prop_enum_original_list:
+                components.append(create_enum_component('BlankEnum', schema={'enum': ['']}))
+            if None in prop_enum_original_list:
+                components.append(create_enum_component('NullEnum', schema={'enum': [None]}))
+
+            if len(components) == 1:
+                prop_schema.update(components[0].ref)
+            else:
+                prop_schema.update({'oneOf': [c.ref for c in components]})
+
             props[prop_name] = safe_ref(prop_schema)
 
     # sort again with additional components
