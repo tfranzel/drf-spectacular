@@ -1,7 +1,5 @@
+import difflib
 import os
-import sys
-
-from diff_match_patch import diff_match_patch
 
 from drf_spectacular.validation import validate_schema
 
@@ -13,50 +11,32 @@ def assert_schema(schema, reference_filename, transforms=None):
     # render also a json and provoke serialization issues
     OpenApiJsonRenderer().render(schema, renderer_context={})
 
-    if not os.path.exists(reference_filename):
-        generated_filename = reference_filename
-    else:
-        generated_filename = reference_filename.replace('.yml', '_out.yml')
-
-    with open(generated_filename, 'wb') as fh:
+    with open(reference_filename.replace('.yml', '_out.yml'), 'wb') as fh:
         fh.write(schema_yml)
 
-    if generated_filename == reference_filename:
+    if not os.path.exists(reference_filename):
         raise RuntimeError(
-            f'{reference_filename} was not found. '
-            f'It has been created with the generated schema. '
-            f'Review carefully, as it is the baseline for subsequent checks.')
+            f'{reference_filename} was not found for comparison. carefully inspect '
+            f'the generated {reference_filename.replace(".yml", "_out.yml")} and '
+            f'copy it to {reference_filename} to serve as new ground truth.'
+        )
 
     generated = schema_yml.decode()
 
     with open(reference_filename) as fh:
         expected = fh.read()
 
-    # This only does each transform, however it may be necessary to do all
-    # combinations of transforms.
-    # Force to be a list, and insert identity
-    if transforms:
-        transforms = [lambda x: x] + list(transforms)
-    else:
-        transforms = [lambda x: x]
+    # apply optional transformations to generated result. this mainly serves to unify
+    # discrepancies between Django, DRF and library versions.
+    for t in transforms or []:
+        generated = t(generated)
 
-    results = []
-    for result in (transformer(generated) for transformer in transforms):
-        if result not in results:
-            results.append(result)
-            if result == expected:
-                break
-    else:
-        dmp = diff_match_patch()
-        diff = dmp.diff_main(expected, generated)
-        dmp.diff_cleanupSemantic(diff)
-        patch = dmp.patch_toText(dmp.patch_make(diff))
-        assert patch, f'Failed to generate patch from "{expected}" to "{generated}"'
-        msg = f"Patch from {reference_filename} to {generated_filename}: {patch}"
-        if len(transforms) and len(results) != len(transforms):
-            msg = f'{len(transforms) - 1} transformers ineffective: {msg}'
-        print(msg, file=sys.stderr)
-        assert expected == generated, msg
+    diff = difflib.unified_diff(
+        expected.splitlines(True),
+        generated.splitlines(True),
+    )
+    diff = ''.join(diff)
+    assert expected == generated and not diff, diff
 
     # this is more a less a sanity check as checked-in schemas should be valid anyhow
     validate_schema(schema)

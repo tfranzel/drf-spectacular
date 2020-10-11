@@ -14,8 +14,10 @@ def pytest_configure(config):
     )
 
     contrib_apps = [
-        'rest_auth',
-        'rest_auth.registration',
+        'dj_rest_auth',
+        'dj_rest_auth.registration',
+        'allauth',
+        'allauth.account',
         'rest_framework_jwt',
         'oauth2_provider',
         'django_filters',
@@ -72,8 +74,6 @@ def pytest_configure(config):
             'django.contrib.staticfiles',
             'rest_framework',
             'rest_framework.authtoken',
-            'allauth',
-            'allauth.account',
             *[app for app in contrib_apps if module_available(app)],
             'drf_spectacular',
             'tests',
@@ -126,23 +126,10 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(allow_contrib_fail)
 
 
-@pytest.hookimpl(hookwrapper=True, tryfirst=True)
-def pytest_runtest_makereport(item, call):
-    """ store outcome result in request """
-    outcome = yield
-    rep = outcome.get_result()
-    setattr(item, "rep_" + rep.when, rep)
-    return rep
-
-
 @pytest.fixture()
-def no_warnings(capsys, request):
-    """ make sure successful test emits no warnings """
+def no_warnings(capsys):
+    """ make sure test emits no warnings """
     yield capsys
-
-    if request.node.rep_call.failed:
-        return
-
     captured = capsys.readouterr()
     assert not captured.out
     assert not captured.err

@@ -33,11 +33,11 @@ Features
     - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)
     - Optional input/output serializer component split
     - Included support for:
-        - `django-rest-auth <https://github.com/Tivix/django-rest-auth>`_
         - `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_
         - `SimpleJWT <https://github.com/SimpleJWT/django-rest-framework-simplejwt>`_
         - `DjangoOAuthToolkit <https://github.com/jazzband/django-oauth-toolkit>`_
         - `djangorestframework-jwt <https://github.com/jpadilla/django-rest-framework-jwt>`_ (tested fork `drf-jwt <https://github.com/Styria-Digital/django-rest-framework-jwt>`_)
+        - `dj-rest-auth <https://github.com/jazzband/dj-rest-auth>`_ (maintained fork of `django-rest-auth <https://github.com/Tivix/django-rest-auth>`_)
         - `djangorestframework-camel-case <https://github.com/vbabiy/djangorestframework-camel-case>`_ (via postprocessing hook ``camelize_serializer_fields``)
         - `django-filter <https://github.com/carltongibson/django-filter>`_ (basic support out-of-the-box; improved types either with ``SpectacularDjangoFilterBackendMixin`` or drf-spectacular's ``DjangoFilterBackend``)
 

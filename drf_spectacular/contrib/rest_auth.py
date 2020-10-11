@@ -1,50 +1,27 @@
-from django.conf import settings as global_settings
+from django.conf import settings
 from rest_framework import serializers
 
-try:
-    from allauth.account.app_settings import EMAIL_VERIFICATION, EmailVerificationMethod
-except ImportError:
-    EMAIL_VERIFICATION, EmailVerificationMethod = None, None
-
-try:
-    from rest_auth.app_settings import JWTSerializer, TokenSerializer, UserDetailsSerializer
-    from rest_auth.registration.app_settings import RegisterSerializer
-except ImportError:
-    JWTSerializer, UserDetailsSerializer, TokenSerializer, RegisterSerializer = (None, ) * 4
-
-from drf_spectacular.extensions import OpenApiViewExtension
+from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiViewExtension
 from drf_spectacular.utils import extend_schema
 
-if getattr(global_settings, 'REST_USE_JWT', False):
-    AuthTokenSerializer = JWTSerializer
-else:
-    AuthTokenSerializer = TokenSerializer
+
+def get_token_serializer_class():
+    from dj_rest_auth.app_settings import JWTSerializer, TokenSerializer
+
+    if getattr(settings, 'REST_USE_JWT', False):
+        return JWTSerializer
+    else:
+        return TokenSerializer
 
 
-class DRFDefaultDetailResponseSerializer(serializers.Serializer):
+class RestAuthDetailSerializer(serializers.Serializer):
     detail = serializers.CharField(read_only=True, required=False)
 
 
-if EmailVerificationMethod and EMAIL_VERIFICATION == EmailVerificationMethod.MANDATORY:
-    class RegisterResponseSerializer(DRFDefaultDetailResponseSerializer):  # type: ignore
-        pass
-
-elif AuthTokenSerializer:
-    class RegisterResponseSerializer(serializers.Serializer):  # type: ignore
-        user = UserDetailsSerializer(read_only=True)
-        token = AuthTokenSerializer(read_only=True)
-else:
-    class RegisterResponseSerializer:  # type: ignore
-        pass
-
-
 class RestAuthDefaultResponseView(OpenApiViewExtension):
-
     def view_replacement(self):
-
         class Fixed(self.target_class):
-
-            @extend_schema(responses=DRFDefaultDetailResponseSerializer)
+            @extend_schema(responses=RestAuthDetailSerializer)
             def post(self, request, *args, **kwargs):
                 pass
 
@@ -52,13 +29,11 @@ class RestAuthDefaultResponseView(OpenApiViewExtension):
 
 
 class RestAuthLoginView(OpenApiViewExtension):
-    target_class = 'rest_auth.views.LoginView'
+    target_class = 'dj_rest_auth.views.LoginView'
 
     def view_replacement(self):
-
         class Fixed(self.target_class):
-
-            @extend_schema(responses=AuthTokenSerializer)
+            @extend_schema(responses=get_token_serializer_class())
             def post(self, request, *args, **kwargs):
                 pass
 
@@ -66,22 +41,20 @@ class RestAuthLoginView(OpenApiViewExtension):
 
 
 class RestAuthLogoutView(OpenApiViewExtension):
-    target_class = 'rest_auth.views.LogoutView'
+    target_class = 'dj_rest_auth.views.LogoutView'
 
     def view_replacement(self):
+        if getattr(settings, 'ACCOUNT_LOGOUT_ON_GET', None):
+            get_schema_params = {'responses': RestAuthDetailSerializer}
+        else:
+            get_schema_params = {'exclude': True}
 
         class Fixed(self.target_class):
+            @extend_schema(**get_schema_params)
+            def get(self, request, *args, **kwargs):
+                pass
 
-            if getattr(global_settings, 'ACCOUNT_LOGOUT_ON_GET', None):
-                @extend_schema(request=None, responses=DRFDefaultDetailResponseSerializer)
-                def get(self, request, *args, **kwargs):
-                    pass
-            else:
-                @extend_schema(exclude=True)
-                def get(self, request, *args, **kwargs):
-                    pass
-
-            @extend_schema(request=None, responses=DRFDefaultDetailResponseSerializer)
+            @extend_schema(request=None, responses=RestAuthDetailSerializer)
             def post(self, request, *args, **kwargs):
                 pass
 
@@ -89,33 +62,47 @@ class RestAuthLogoutView(OpenApiViewExtension):
 
 
 class RestAuthPasswordChangeView(RestAuthDefaultResponseView):
-    target_class = 'rest_auth.views.PasswordChangeView'
+    target_class = 'dj_rest_auth.views.PasswordChangeView'
 
 
 class RestAuthPasswordResetView(RestAuthDefaultResponseView):
-    target_class = 'rest_auth.views.PasswordResetView'
+    target_class = 'dj_rest_auth.views.PasswordResetView'
 
 
 class RestAuthPasswordResetConfirmView(RestAuthDefaultResponseView):
-    target_class = 'rest_auth.views.PasswordResetConfirmView'
+    target_class = 'dj_rest_auth.views.PasswordResetConfirmView'
+
+
+class RestAuthVerifyEmailView(RestAuthDefaultResponseView):
+    target_class = 'dj_rest_auth.registration.views.VerifyEmailView'
+
+
+class RestAuthJWTSerializer(OpenApiSerializerExtension):
+    target_class = 'dj_rest_auth.serializers.JWTSerializer'
+
+    def map_serializer(self, auto_schema, direction):
+        from dj_rest_auth.app_settings import UserDetailsSerializer
+
+        class Fixed(self.target_class):
+            user = UserDetailsSerializer()
+
+        return auto_schema._map_serializer(Fixed, direction)
 
 
 class RestAuthRegisterView(OpenApiViewExtension):
-    target_class = 'rest_auth.registration.views.RegisterView'
+    target_class = 'dj_rest_auth.registration.views.RegisterView'
 
     def view_replacement(self):
+        from allauth.account.app_settings import EMAIL_VERIFICATION, EmailVerificationMethod
+
+        if EMAIL_VERIFICATION == EmailVerificationMethod.MANDATORY:
+            response_serializer = RestAuthDetailSerializer
+        else:
+            response_serializer = get_token_serializer_class()
 
         class Fixed(self.target_class):
-
-            @extend_schema(
-                request=RegisterSerializer,
-                responses=RegisterResponseSerializer,
-            )
+            @extend_schema(responses=response_serializer)
             def post(self, request, *args, **kwargs):
                 pass
 
         return Fixed
-
-
-class RestAuthVerifyEmailView(RestAuthDefaultResponseView):
-    target_class = 'rest_auth.registration.views.VerifyEmailView'
