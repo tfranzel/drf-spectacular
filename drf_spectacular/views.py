@@ -81,12 +81,18 @@ class SpectacularSwaggerView(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
+
         schema_url = self.url or reverse(self.url_name, request=request)
         if request.GET.get('lang'):
             schema_url += f'{"&" if "?" in schema_url else "?"}lang={request.GET.get("lang")}'
-        settings = json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS)
+
         return Response(
-            {'schema_url': schema_url, 'settings': settings},
+            {
+                'schema_url': schema_url,
+                'settings': json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS),
+                'dist': spectacular_settings.SWAGGER_UI_DIST,
+                'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
+            },
             template_name=self.template_name
         )
 

@@ -9,6 +9,15 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SCHEMA_PATH_PREFIX': r'',
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
+    # Dictionary of configurations to pass to the SwaggerUI({ ... })
+    # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+    'SWAGGER_UI_SETTINGS': {
+        'layout': "BaseLayout",
+        'deepLinking': True,
+    },
+    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',
+    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.35.1/favicon-32x32.png',
+
     # Schema generation parameters to influence how components are constructed.
     # Some schema features might not translate well to your target.
     # Demultiplexing/modifying components might help alleviate those issues.
@@ -27,10 +36,6 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # is the
     'SERVE_INCLUDE_SCHEMA': True,
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
-
-    # Dictionary of configurations to pass to the SwaggerUI({ ... })
-    # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
-    'SWAGGER_UI_SETTINGS': {},
 
     # Append OpenAPI objects to path and components in addition to the generated objects
     'APPEND_PATHS': {},

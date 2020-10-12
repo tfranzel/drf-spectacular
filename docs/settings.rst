@@ -37,7 +37,7 @@ The following are known to be effective:
 
 
 Example: API Key securitySchemes & security setting
----------------------------------------------------------------------
+----------------------------------------------------
 
 When using djangorestframework-api-key_ for example, the `specs
 <https://swagger.io/docs/specification/authentication/>`_  tell you you need to add an entry to the securitySchemes component and set it to the global security section.
@@ -60,4 +60,36 @@ This can be done in the following way:
             }
         },
         "SECURITY": [{"ApiKeyAuth": [], }],
+         ...
     }
+
+
+
+Example: SwaggerUI settings
+----------------------------
+
+We does not support SwaggerUI Config Param at the settings.py which is based JS Function
+
+If you want, override swagger_ui.html & SpectacularSwaggerView.
+
+.. code:: python
+
+    SPECTACULAR_SETTINGS = {
+        ...
+        # configuration param should correspond to the documents below.
+        # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+        "SWAGGER_UI_SETTINGS": {
+            "dom_id": "#swagger-ui", # default
+            "layout": "BaseLayout",  # requried(default)
+            "deepLinking": True,
+            "persistAuthorization": True,
+            "displayOperationId": True,
+            # ...
+        },
+
+        # check SwaggerUI Version what you want, https://github.com/swagger-api/swagger-ui/releases
+        "SWAGGER_UI_DIST": "//unpkg.com/swagger-ui-dist@3.35.1", # default
+        "FAVICON_HREF": settings.STATIC_URL + "your_company_favicon.png", # default is swagger favicon
+        ...
+    }
+
