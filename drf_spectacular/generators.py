@@ -83,7 +83,7 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         view = super().create_view(callback, method, request)
 
-        if isinstance(view, viewsets.GenericViewSet) or isinstance(view, viewsets.ViewSet):
+        if isinstance(view, viewsets.ViewSetMixin):
             action = getattr(view, view.action)
         elif isinstance(view, views.APIView):
             action = getattr(view, method.lower())
