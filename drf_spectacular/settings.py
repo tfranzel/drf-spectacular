@@ -9,15 +9,14 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SCHEMA_PATH_PREFIX': r'',
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
-    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',
-    'FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.35.1/favicon-32x32.png',
     # Dictionary of configurations to pass to the SwaggerUI({ ... })
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
     'SWAGGER_UI_SETTINGS': {
-        'dom_id': '#swagger-ui',
         'layout': "BaseLayout",
         'deepLinking': True,
     },
+    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',
+    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.35.1/favicon-32x32.png',
 
     # Schema generation parameters to influence how components are constructed.
     # Some schema features might not translate well to your target.

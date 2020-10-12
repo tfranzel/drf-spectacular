@@ -4,7 +4,6 @@ from typing import Any, Dict
 
 from django.conf import settings
 from django.utils import translation
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
@@ -82,22 +81,17 @@ class SpectacularSwaggerView(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
-        swagger_bundle_js_href = "{}/swagger-ui-bundle.js".format(spectacular_settings.SWAGGER_UI_DIST)
-        swagger_bundle_css_href = "{}/swagger-ui.css".format(spectacular_settings.SWAGGER_UI_DIST)
-        swagger_bundle_favicon_href = "{}".format(spectacular_settings.FAVICON_HREF)
 
         schema_url = self.url or reverse(self.url_name, request=request)
-        swagger_ui_settings = {'url': schema_url}
-        swagger_ui_settings.update(spectacular_settings.SWAGGER_UI_SETTINGS)
-
         if request.GET.get('lang'):
             schema_url += f'{"&" if "?" in schema_url else "?"}lang={request.GET.get("lang")}'
+
         return Response(
             {
-                'swagger_ui_settings': mark_safe(json.dumps(swagger_ui_settings)),
-                'swagger_bundle_js_href': swagger_bundle_js_href,
-                'swagger_bundle_css_href': swagger_bundle_css_href,
-                'swagger_bundle_favicon_href': swagger_bundle_favicon_href,
+                'schema_url': schema_url,
+                'settings': json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS),
+                'dist': spectacular_settings.SWAGGER_UI_DIST,
+                'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
             },
             template_name=self.template_name
         )

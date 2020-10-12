@@ -4,26 +4,33 @@
     <title>Swagger</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="{{swagger_bundle_favicon_href}}"/>
-    <link rel="stylesheet" type="text/css" href="{{swagger_bundle_css_href}}" />
+    {% if favicon_href %}
+    <link rel="icon" type="image/png" href="{{favicon_href}}"/>
+    {% endif %}
+    <link rel="stylesheet" type="text/css" href="{{dist}}/swagger-ui.css" />
   </head>
   <body>
     <div id="swagger-ui"></div>
-    <script src="{{swagger_bundle_js_href}}"></script>
+    <script src="{{dist}}/swagger-ui-bundle.js"></script>
     <script>
-    const swagger_settings  = {{ swagger_ui_settings|safe }}
+    const swagger_settings  = {{ settings|safe }}
+
     const ui = SwaggerUIBundle({
+      url: "{{ schema_url }}",
+      dom_id: '#swagger-ui',
       presets: [
         SwaggerUIBundle.presets.apis,
       ],
       plugin: [
         SwaggerUIBundle.plugins.DownloadUrl
       ],
+      layout: "BaseLayout",
       requestInterceptor: (request) => {
         request.headers['X-CSRFToken'] = "{{ csrf_token }}"
         return request;
       },
-      ...swagger_settings
+      ...swagger_settings,
+
     })
     </script>
   </body>
