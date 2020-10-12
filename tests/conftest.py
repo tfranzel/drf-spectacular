@@ -14,6 +14,10 @@ def pytest_configure(config):
     )
 
     contrib_apps = [
+        'dj_rest_auth',
+        'dj_rest_auth.registration',
+        'allauth',
+        'allauth.account',
         'rest_framework_jwt',
         'oauth2_provider',
         'django_filters',

@@ -1,18 +1,42 @@
+import difflib
+import os
+
 from drf_spectacular.validation import validate_schema
 
 
-def assert_schema(schema, reference_file):
+def assert_schema(schema, reference_filename, transforms=None):
     from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
     # render also a json and provoke serialization issues
     OpenApiJsonRenderer().render(schema, renderer_context={})
 
-    with open(reference_file.replace('.yml', '_out.yml'), 'wb') as fh:
+    with open(reference_filename.replace('.yml', '_out.yml'), 'wb') as fh:
         fh.write(schema_yml)
 
-    with open(reference_file) as fh:
-        assert schema_yml.decode() == fh.read()
+    if not os.path.exists(reference_filename):
+        raise RuntimeError(
+            f'{reference_filename} was not found for comparison. carefully inspect '
+            f'the generated {reference_filename.replace(".yml", "_out.yml")} and '
+            f'copy it to {reference_filename} to serve as new ground truth.'
+        )
+
+    generated = schema_yml.decode()
+
+    with open(reference_filename) as fh:
+        expected = fh.read()
+
+    # apply optional transformations to generated result. this mainly serves to unify
+    # discrepancies between Django, DRF and library versions.
+    for t in transforms or []:
+        generated = t(generated)
+
+    diff = difflib.unified_diff(
+        expected.splitlines(True),
+        generated.splitlines(True),
+    )
+    diff = ''.join(diff)
+    assert expected == generated and not diff, diff
 
     # this is more a less a sanity check as checked-in schemas should be valid anyhow
     validate_schema(schema)
