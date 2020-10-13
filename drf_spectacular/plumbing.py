@@ -325,8 +325,6 @@ def build_root_object(paths, components):
         root['info']['license'] = settings.LICENSE
     if settings.SERVERS:
         root['servers'] = settings.SERVERS
-    if settings.SECURITY:
-        root['security'] = settings.SECURITY
     if settings.TAGS:
         root['tags'] = settings.TAGS
     if settings.EXTERNAL_DOCS:

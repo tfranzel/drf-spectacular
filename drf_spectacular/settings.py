@@ -38,12 +38,13 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # Append OpenAPI objects to path and components in addition to the generated objects
     'APPEND_PATHS': {},
+    'APPEND_COMPONENTS': {},
 
-    # DEPRECATED - please don't use this anymore as it has tricky implications that
+    # DISCOURAGED - please don't use this anymore as it has tricky implications that
     # are hard to get right. For authentication, OpenApiAuthenticationExtension are
     # strongly preferred because they are more robust and easy to write.
-    'APPEND_COMPONENTS': {},
-    'SECURITY': None,
+    # However if used, the list of methods is appended to every endpoint in the schema!
+    'SECURITY': [],
 
     # Postprocessing functions that run at the end of schema generation.
     # must satisfy interface result = hook(generator, request, public, result)

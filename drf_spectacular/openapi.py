@@ -224,6 +224,9 @@ class AutoSchema(ViewInspector):
             )
             self.registry.register_on_missing(component)
 
+        if spectacular_settings.SECURITY:
+            auths.extend(spectacular_settings.SECURITY)
+
         perms = [p.__class__ for p in self.view.get_permissions()]
         if permissions.AllowAny in perms:
             auths.append({})

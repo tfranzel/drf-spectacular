@@ -1007,3 +1007,24 @@ def test_pagination(no_warnings):
     substitution = schema['components']['schemas']['PaginatedXList']
     assert substitution['type'] == 'object'
     assert substitution['properties']['results']['items']['$ref'] == '#/components/schemas/X'
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.SECURITY',
+    [{'apiKeyAuth': []}]
+)
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.APPEND_COMPONENTS',
+    {"securitySchemes": {"apiKeyAuth": {"type": "apiKey", "in": "header", "name": "Authorization"}}}
+)
+def test_manual_security_method_addition(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    operation_security = schema['paths']['/x/']['get']['security']
+    schema_security = schema['components']['securitySchemes']
+    assert len(operation_security) == 4 and any(['apiKeyAuth' in os for os in operation_security])
+    assert len(schema_security) == 3 and 'apiKeyAuth' in schema_security

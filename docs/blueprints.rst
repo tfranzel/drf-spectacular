@@ -38,12 +38,12 @@ djangorestframework-api-key
 ---------------------------
 
 Since `djangorestframework-api-key <https://github.com/florimondmanca/djangorestframework-api-key>`_ has
-not entry in ``authentication_classes``, `drf-spectacular` does not pick up this library. To alleviate
+no entry in ``authentication_classes``, `drf-spectacular` cannot pick up this library. To alleviate
 this shortcoming, you can manually add the appropriate security scheme.
 
-.. note:: The usage of ``APPEND_COMPONENTS`` and ``SECURITY`` is discouraged, unless there are special
-  circumstances like here for example. They apply globally and additional local ``security`` sections
-  silently override the global ``security`` section.
+.. note:: Usage of the ``SECURITY`` setting is discouraged, unless there are special circumstances
+  like here for example. For almost all cases ``OpenApiAuthenticationExtension`` is strongly preferred,
+  because ``SECURITY`` will get appended to every endpoint in the schema regardless of effectiveness.
 
 .. code:: python
 
