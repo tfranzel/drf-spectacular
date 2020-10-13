@@ -180,7 +180,7 @@ def test_unable_to_follow_field_source_through_intermediate_property_warning(cap
 
 
 def test_unable_to_derive_function_type_warning(capsys):
-    class FailingFieldSourceTraversalModel1(models.Model):
+    class FailingFieldSourceTraversalModel2(models.Model):
         @property
         def x(self):  # missing type hint emits warning
             return  # pragma: no cover
@@ -193,7 +193,7 @@ def test_unable_to_derive_function_type_warning(capsys):
             return  # pragma: no cover
 
         class Meta:
-            model = FailingFieldSourceTraversalModel1
+            model = FailingFieldSourceTraversalModel2
             fields = '__all__'
 
     class XAPIView(APIView):

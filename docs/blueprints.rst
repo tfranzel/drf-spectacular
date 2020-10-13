@@ -32,3 +32,31 @@ django-oscar-api
 RESTful API for django-oscar: `django-oscar-api <https://github.com/django-oscar/django-oscar-api>`_
 
 .. literalinclude:: blueprints/oscarapi.py
+
+
+djangorestframework-api-key
+---------------------------
+
+Since `djangorestframework-api-key <https://github.com/florimondmanca/djangorestframework-api-key>`_ has
+not entry in ``authentication_classes``, `drf-spectacular` does not pick up this library. To alleviate
+this shortcoming, you can manually add the appropriate security scheme.
+
+.. note:: The usage of ``APPEND_COMPONENTS`` and ``SECURITY`` is discouraged, unless there are special
+  circumstances like here for example. They apply globally and additional local ``security`` sections
+  silently override the global ``security`` section.
+
+.. code:: python
+
+    SPECTACULAR_SETTINGS = {
+        "APPEND_COMPONENTS": {
+            "securitySchemes": {
+                "ApiKeyAuth": {
+                    "type": "apiKey",
+                    "in": "header",
+                    "name": "Authorization"
+                }
+            }
+        },
+        "SECURITY": [{"ApiKeyAuth": [], }],
+         ...
+    }

@@ -2,7 +2,6 @@ import uuid
 from unittest import mock
 
 import pytest
-from django.conf.urls import url
 from django.db import models
 from django.db.models import fields
 from django.urls import path, re_path
@@ -78,8 +77,8 @@ def test_free_form_responses(no_warnings):
             pass  # pragma: no cover
 
     generator = SchemaGenerator(patterns=[
-        url(r'^x$', XAPIView.as_view(), name='x'),
-        url(r'^y$', YAPIView.as_view(), name='y'),
+        re_path(r'^x$', XAPIView.as_view(), name='x'),
+        re_path(r'^y$', YAPIView.as_view(), name='y'),
     ])
     schema = generator.get_schema(request=None, public=True)
     validate_schema(schema)
@@ -99,7 +98,7 @@ def test_append_extra_components(no_warnings):
             pass  # pragma: no cover
 
     generator = SchemaGenerator(patterns=[
-        url(r'^x$', XAPIView.as_view(), name='x'),
+        re_path(r'^x$', XAPIView.as_view(), name='x'),
     ])
     schema = generator.get_schema(request=None, public=True)
     assert len(schema['components']['schemas']) == 2

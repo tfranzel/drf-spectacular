@@ -36,60 +36,28 @@ The following are known to be effective:
 - ``SCHEMA_COERCE_PATH_PK``
 
 
-Example: API Key securitySchemes & security setting
-----------------------------------------------------
-
-When using djangorestframework-api-key_ for example, the `specs
-<https://swagger.io/docs/specification/authentication/>`_  tell you you need to add an entry to the securitySchemes component and set it to the global security section.
-
-This can be done in the following way:
-
-
-.. _djangorestframework-api-key: https://github.com/florimondmanca/djangorestframework-api-key/
-
-.. code:: python
-
-    SPECTACULAR_SETTINGS = {
-        "APPEND_COMPONENTS": {
-            "securitySchemes": {
-                "ApiKeyAuth": {
-                    "type": "apiKey",
-                    "in": "header",
-                    "name": "Authorization"
-                }
-            }
-        },
-        "SECURITY": [{"ApiKeyAuth": [], }],
-         ...
-    }
-
-
-
 Example: SwaggerUI settings
 ----------------------------
 
-We does not support SwaggerUI Config Param at the settings.py which is based JS Function
-
-If you want, override swagger_ui.html & SpectacularSwaggerView.
+We currently support passing through all basic SwaggerUI `configuration parameters <https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/>`_.
+For more customization options (e.g. JS functions), you can modify and override the
+`SwaggerUI template <https://github.com/tfranzel/drf-spectacular/blob/master/drf_spectacular/templates/drf_spectacular/swagger_ui.html>`_
+in your project files.
 
 .. code:: python
 
     SPECTACULAR_SETTINGS = {
         ...
-        # configuration param should correspond to the documents below.
+        # available SwaggerUI configuration parameters
         # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
         "SWAGGER_UI_SETTINGS": {
-            "dom_id": "#swagger-ui", # default
-            "layout": "BaseLayout",  # requried(default)
             "deepLinking": True,
             "persistAuthorization": True,
             "displayOperationId": True,
-            # ...
+            ...
         },
-
-        # check SwaggerUI Version what you want, https://github.com/swagger-api/swagger-ui/releases
+        # available SwaggerUI versions: https://github.com/swagger-api/swagger-ui/releases
         "SWAGGER_UI_DIST": "//unpkg.com/swagger-ui-dist@3.35.1", # default
         "FAVICON_HREF": settings.STATIC_URL + "your_company_favicon.png", # default is swagger favicon
         ...
     }
-

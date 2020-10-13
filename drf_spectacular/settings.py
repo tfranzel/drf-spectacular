@@ -9,15 +9,6 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SCHEMA_PATH_PREFIX': r'',
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
-    # Dictionary of configurations to pass to the SwaggerUI({ ... })
-    # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
-    'SWAGGER_UI_SETTINGS': {
-        'layout': "BaseLayout",
-        'deepLinking': True,
-    },
-    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',
-    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.35.1/favicon-32x32.png',
-
     # Schema generation parameters to influence how components are constructed.
     # Some schema features might not translate well to your target.
     # Demultiplexing/modifying components might help alleviate those issues.
@@ -37,9 +28,22 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SERVE_INCLUDE_SCHEMA': True,
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
 
+    # Dictionary of configurations to pass to the SwaggerUI({ ... })
+    # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+    },
+    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',
+    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.35.1/favicon-32x32.png',
+
     # Append OpenAPI objects to path and components in addition to the generated objects
     'APPEND_PATHS': {},
+
+    # DEPRECATED - please don't use this anymore as it has tricky implications that
+    # are hard to get right. For authentication, OpenApiAuthenticationExtension are
+    # strongly preferred because they are more robust and easy to write.
     'APPEND_COMPONENTS': {},
+    'SECURITY': None,
 
     # Postprocessing functions that run at the end of schema generation.
     # must satisfy interface result = hook(generator, request, public, result)
@@ -80,7 +84,6 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Optional list of servers.
     # Each entry MUST contain "url", MAY contain "description", "variables"
     'SERVERS': [],
-    'SECURITY': None,
     # Tags defined in the global scope
     'TAGS': [],
     # Optional: MUST contain 'url', may contain "description"

@@ -1,5 +1,6 @@
-from django.conf.urls import include, url
+from django.conf.urls import include
 from django.db import models
+from django.urls import re_path
 from rest_framework import serializers
 
 from drf_spectacular.openapi import AutoSchema
@@ -66,5 +67,5 @@ def test_follow_field_source_forward_reverse(no_warnings):
 
 def test_detype_patterns_with_module_includes(no_warnings):
     detype_pattern(
-        pattern=url(r'^', include('tests.test_fields'))
+        pattern=re_path(r'^', include('tests.test_fields'))
     )
