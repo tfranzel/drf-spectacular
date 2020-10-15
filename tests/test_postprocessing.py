@@ -87,18 +87,42 @@ def test_enum_name_reuse_warning(capsys):
 
 def test_enum_collision_without_override(capsys):
     class XSerializer(serializers.Serializer):
-        foo = serializers.ChoiceField(choices=[('A', 'A'), ('B', 'B')])
+        foo = serializers.ChoiceField(choices=[('A', 'A')])
 
     class YSerializer(serializers.Serializer):
-        foo = serializers.ChoiceField(choices=[('A', 'A'), ('B', 'B'), ('C', 'C')])
+        foo = serializers.ChoiceField(choices=[('A', 'A'), ('B', 'B')])
+
+    class ZSerializer(serializers.Serializer):
+        foo = serializers.ChoiceField(choices=[('A', 'A'), ('B', 'B')])
+
+    class XAPIView(APIView):
+        @extend_schema(responses=ZSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+        @extend_schema(request=XSerializer, responses=YSerializer)
+        def post(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('x', view=XAPIView)
+    assert 'enum naming encountered a non-optimally resolvable' in capsys.readouterr().err
+
+
+def test_resolvable_enum_collision(no_warnings):
+    class XSerializer(serializers.Serializer):
+        foo = serializers.ChoiceField(choices=[('A', 'A')])
+
+    class YSerializer(serializers.Serializer):
+        foo = serializers.ChoiceField(choices=[('A', 'A'), ('B', 'B')])
 
     class XAPIView(APIView):
         @extend_schema(request=XSerializer, responses=YSerializer)
         def post(self, request):
             pass  # pragma: no cover
 
-    generate_schema('x', view=XAPIView)
-    assert 'enum naming encountered a collision for field "foo"' in capsys.readouterr().err
+    schema = generate_schema('x', view=XAPIView)
+    assert 'XFooEnum' in schema['components']['schemas']
+    assert 'YFooEnum' in schema['components']['schemas']
 
 
 def test_enum_override_variations(no_warnings):
@@ -117,6 +141,6 @@ def test_enum_override_variations(no_warnings):
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
     'LanguageEnum': 'tests.test_postprocessing.NOTEXISTING'
 })
-def test_enum_override_fail(capsys):
+def test_enum_override_loading_fail(capsys):
     load_enum_name_overrides()
     assert 'unable to load choice override for LanguageEnum' in capsys.readouterr().err

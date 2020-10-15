@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-import inflection
+from inflection import camelize
 from rest_framework.settings import api_settings
 
 from drf_spectacular.plumbing import (
@@ -16,15 +16,18 @@ def postprocess_schema_enums(result, generator, **kwargs):
     every occurrence. only takes effect when replacement is guaranteed to be correct.
     """
 
-    def iter_prop_containers(schema):
-        if isinstance(schema, list):
+    def iter_prop_containers(schema, component_name=None):
+        if not component_name:
+            for component_name, schema in schema.items():
+                yield from iter_prop_containers(schema, component_name)
+        elif isinstance(schema, list):
             for item in schema:
-                yield from iter_prop_containers(item)
+                yield from iter_prop_containers(item, component_name)
         elif isinstance(schema, dict):
             if schema.get('properties'):
-                yield schema['properties']
-            yield from iter_prop_containers(schema.get('oneOf', []))
-            yield from iter_prop_containers(schema.get('allOf', []))
+                yield component_name, schema['properties']
+            yield from iter_prop_containers(schema.get('oneOf', []), component_name)
+            yield from iter_prop_containers(schema.get('allOf', []), component_name)
 
     def create_enum_component(name, schema):
         component = ResolvedComponent(
@@ -40,32 +43,40 @@ def postprocess_schema_enums(result, generator, **kwargs):
 
     overrides = load_enum_name_overrides()
 
-    hash_mapping = defaultdict(set)
+    prop_hash_mapping = defaultdict(set)
+    hash_name_mapping = defaultdict(list)
     # collect all enums, their names and choice sets
-    for props in iter_prop_containers(list(schemas.values())):
+    for component_name, props in iter_prop_containers(schemas):
         for prop_name, prop_schema in props.items():
             if 'enum' not in prop_schema:
                 continue
             # remove blank/null entry for hashing. will be reconstructed in the last step
-            prop_enum_cleaned_list = [i for i in prop_schema['enum'] if i]
-            hash_mapping[prop_name].add(list_hash(prop_enum_cleaned_list))
+            prop_enum_cleaned_hash = list_hash([i for i in prop_schema['enum'] if i])
+            prop_hash_mapping[prop_name].add(prop_enum_cleaned_hash)
+            hash_name_mapping[prop_enum_cleaned_hash].append((component_name, prop_name))
 
     # traverse all enum properties and generate a name for the choice set. naming collisions
     # are resolved and a warning is emitted. giving a choice set multiple names is technically
     # correct but potentially unwanted. also emit a warning there to make the user aware.
     enum_name_mapping = {}
-    for prop_name, prop_hash_set in hash_mapping.items():
+    for prop_name, prop_hash_set in prop_hash_mapping.items():
         for prop_hash in prop_hash_set:
             if prop_hash in overrides:
                 enum_name = overrides[prop_hash]
             elif len(prop_hash_set) == 1:
-                enum_name = f'{inflection.camelize(prop_name)}Enum'
+                # prop_name has been used exclusively for one choice set (best case)
+                enum_name = f'{camelize(prop_name)}Enum'
+            elif len(hash_name_mapping[prop_hash]) == 1:
+                # prop_name has multiple choice sets, but each one limited to one component only
+                component_name, _ = hash_name_mapping[prop_hash][0]
+                enum_name = f'{camelize(component_name)}{camelize(prop_name)}Enum'
             else:
-                enum_name = f'{inflection.camelize(prop_name)}{prop_hash[:3].capitalize()}Enum'
+                enum_name = f'{camelize(prop_name)}{prop_hash[:3].capitalize()}Enum'
                 warn(
-                    f'automatic enum naming encountered a collision for field "{prop_name}". the '
-                    f'same name has been used for multiple choice sets. the collision was resolved '
-                    f'with {enum_name}. add an entry to ENUM_NAME_OVERRIDES to fix the naming.'
+                    f'enum naming encountered a non-optimally resolvable collision for fields '
+                    f'named "{prop_name}". the same name has been used for multiple choice sets '
+                    f'in multiple components. the collision was resolved with "{enum_name}". '
+                    f'add an entry to ENUM_NAME_OVERRIDES to fix the naming.'
                 )
             if enum_name_mapping.get(prop_hash, enum_name) != enum_name:
                 warn(
@@ -80,7 +91,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
 
     # replace all enum occurrences with a enum schema component. cut out the
     # enum, replace it with a reference and add a corresponding component.
-    for props in iter_prop_containers(list(schemas.values())):
+    for _, props in iter_prop_containers(schemas):
         for prop_name, prop_schema in props.items():
             if 'enum' not in prop_schema:
                 continue
