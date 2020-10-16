@@ -711,7 +711,7 @@ def detype_pattern(pattern):
         )
     elif isinstance(pattern, RegexPattern):
         return RegexPattern(
-            regex=re.sub(r'\(\?P<(\w+)>.*\)', r'(?P<\1>[^/]+)', pattern._regex),
+            regex=re.sub(r'\(\?P<(\w+)>.+?\)', r'(?P<\1>[^/]+)', pattern._regex),
             name=pattern.name,
             is_endpoint=pattern._is_endpoint
         )
