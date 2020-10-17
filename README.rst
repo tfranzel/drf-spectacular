@@ -99,7 +99,7 @@ from your API. We also provide convenience wrappers for `swagger-ui` or `redoc`.
 
 .. code:: python
 
-    from drf_spectacular.views import SpectacularAPIView
+    from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
     urlpatterns = [
         # YOUR PATTERNS
         path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
