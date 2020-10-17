@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 
 from inflection import camelize
@@ -19,6 +20,10 @@ def postprocess_schema_enums(result, generator, **kwargs):
     def iter_prop_containers(schema, component_name=None):
         if not component_name:
             for component_name, schema in schema.items():
+                if spectacular_settings.COMPONENT_SPLIT_PATCH:
+                    component_name = re.sub('^Patched(.+)', r'\1', component_name)
+                if spectacular_settings.COMPONENT_SPLIT_REQUEST:
+                    component_name = re.sub('(.+)Request$', r'\1', component_name)
                 yield from iter_prop_containers(schema, component_name)
         elif isinstance(schema, list):
             for item in schema:
@@ -44,7 +49,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
     overrides = load_enum_name_overrides()
 
     prop_hash_mapping = defaultdict(set)
-    hash_name_mapping = defaultdict(list)
+    hash_name_mapping = defaultdict(set)
     # collect all enums, their names and choice sets
     for component_name, props in iter_prop_containers(schemas):
         for prop_name, prop_schema in props.items():
@@ -53,7 +58,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
             # remove blank/null entry for hashing. will be reconstructed in the last step
             prop_enum_cleaned_hash = list_hash([i for i in prop_schema['enum'] if i])
             prop_hash_mapping[prop_name].add(prop_enum_cleaned_hash)
-            hash_name_mapping[prop_enum_cleaned_hash].append((component_name, prop_name))
+            hash_name_mapping[prop_enum_cleaned_hash].add((component_name, prop_name))
 
     # traverse all enum properties and generate a name for the choice set. naming collisions
     # are resolved and a warning is emitted. giving a choice set multiple names is technically
@@ -68,7 +73,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
                 enum_name = f'{camelize(prop_name)}Enum'
             elif len(hash_name_mapping[prop_hash]) == 1:
                 # prop_name has multiple choice sets, but each one limited to one component only
-                component_name, _ = hash_name_mapping[prop_hash][0]
+                component_name, _ = next(iter(hash_name_mapping[prop_hash]))
                 enum_name = f'{camelize(component_name)}{camelize(prop_name)}Enum'
             else:
                 enum_name = f'{camelize(prop_name)}{prop_hash[:3].capitalize()}Enum'

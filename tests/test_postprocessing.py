@@ -12,7 +12,7 @@ except ImportError:
     Choices = object  # django < 3.0 handling
 
 from drf_spectacular.plumbing import list_hash, load_enum_name_overrides
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from tests import assert_schema, generate_schema
 
 language_choices = (
@@ -123,6 +123,35 @@ def test_resolvable_enum_collision(no_warnings):
     schema = generate_schema('x', view=XAPIView)
     assert 'XFooEnum' in schema['components']['schemas']
     assert 'YFooEnum' in schema['components']['schemas']
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_PATCH', True)
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_enum_resolvable_collision_with_patched_and_request_splits():
+    class XSerializer(serializers.Serializer):
+        foo = serializers.ChoiceField(choices=[('A', 'A')])
+
+    class YSerializer(serializers.Serializer):
+        foo = serializers.ChoiceField(choices=[('A', 'A'), ('B', 'B')])
+
+    class XViewset(viewsets.GenericViewSet):
+        @extend_schema(request=XSerializer, responses=YSerializer)
+        def create(self, request):
+            pass  # pragma: no cover
+
+        @extend_schema(
+            request=XSerializer,
+            responses=YSerializer,
+            parameters=[OpenApiParameter('id', int, OpenApiParameter.PATH)]
+        )
+        def partial_update(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', XViewset)
+    components = schema['components']['schemas']
+    assert 'XFooEnum' in components and 'YFooEnum' in components
+    assert '/XFooEnum' in components['XRequest']['properties']['foo']['$ref']
+    assert '/XFooEnum' in components['PatchedXRequest']['properties']['foo']['$ref']
 
 
 def test_enum_override_variations(no_warnings):
