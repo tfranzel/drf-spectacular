@@ -1,0 +1,149 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /x/:
+    get:
+      operationId: x_list
+      tags:
+      - x
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/X'
+          description: ''
+components:
+  schemas:
+    GisFeature:
+      type: object
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/GisFeatureEnum'
+          description: The type of the geos instance
+        id:
+          type: integer
+        geometry:
+          $ref: '#/components/schemas/GisGeometryCollection'
+        properties:
+          type: object
+      required:
+      - id
+      - type
+      - geometry
+    GisFeatureCollection:
+      type: object
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/GisFeatureEnum'
+          description: The type of the geos instance
+        id:
+          type: integer
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/GisFeature'
+      required:
+      - id
+      - type
+      - features
+    GisFeatureEnum:
+      type: string
+      enum:
+      - Feature
+    GisGeometry:
+      type: object
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/GisGeometryTypeEnum'
+          description: The type of the geos instance
+        coordinates:
+          oneOf:
+          - $ref: '#/components/schemas/GisPoint'
+          - type: array
+            items:
+              $ref: '#/components/schemas/GisPoint'
+          - type: array
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/GisPoint'
+          - type: array
+            items:
+              type: array
+              items:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GisPoint'
+      required:
+      - type
+      - coordinates
+    GisGeometryCollection:
+      type: object
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/GisGeometryCollectionTypeEnum'
+          description: The type of the geos instance
+        geometries:
+          type: array
+          items:
+            $ref: '#/components/schemas/GisGeometry'
+      required:
+      - type
+      - geometries
+    GisGeometryCollectionTypeEnum:
+      type: string
+      enum:
+      - GeometryCollection
+    GisGeometryTypeEnum:
+      type: string
+      enum:
+      - Point
+      - LineString
+      - LinearRing
+      - Polygon
+      - MultiPoint
+      - MultiLineString
+      - MultiPolygon
+    GisPoint:
+      type: array
+      items:
+        type: number
+        format: float
+      minItems: 2
+      maxItems: 3
+    X:
+      type: object
+      properties:
+        location_method_field:
+          oneOf:
+          - $ref: '#/components/schemas/GisFeature'
+          - $ref: '#/components/schemas/GisFeatureCollection'
+          readOnly: true
+        location_field:
+          oneOf:
+          - $ref: '#/components/schemas/GisGeometry'
+          - $ref: '#/components/schemas/GisGeometryCollection'
+      required:
+      - location_field
+      - location_method_field
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
