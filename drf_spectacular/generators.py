@@ -79,9 +79,13 @@ class SchemaGenerator(BaseSchemaGenerator):
         """
         override_view = OpenApiViewExtension.get_match(callback.cls)
         if override_view:
+            original_cls = callback.cls
             callback.cls = override_view.view_replacement()
 
         view = super().create_view(callback, method, request)
+
+        if override_view:
+            callback.cls = original_cls
 
         if isinstance(view, viewsets.ViewSetMixin):
             action = getattr(view, view.action)
