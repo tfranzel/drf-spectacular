@@ -23,7 +23,7 @@ class RestAuthDefaultResponseView(OpenApiViewExtension):
         class Fixed(self.target_class):
             @extend_schema(responses=RestAuthDetailSerializer)
             def post(self, request, *args, **kwargs):
-                pass
+                pass  # pragma: no cover
 
         return Fixed
 
@@ -35,7 +35,7 @@ class RestAuthLoginView(OpenApiViewExtension):
         class Fixed(self.target_class):
             @extend_schema(responses=get_token_serializer_class())
             def post(self, request, *args, **kwargs):
-                pass
+                pass  # pragma: no cover
 
         return Fixed
 
@@ -52,11 +52,11 @@ class RestAuthLogoutView(OpenApiViewExtension):
         class Fixed(self.target_class):
             @extend_schema(**get_schema_params)
             def get(self, request, *args, **kwargs):
-                pass
+                pass  # pragma: no cover
 
             @extend_schema(request=None, responses=RestAuthDetailSerializer)
             def post(self, request, *args, **kwargs):
-                pass
+                pass  # pragma: no cover
 
         return Fixed
 
@@ -103,6 +103,6 @@ class RestAuthRegisterView(OpenApiViewExtension):
         class Fixed(self.target_class):
             @extend_schema(responses=response_serializer)
             def post(self, request, *args, **kwargs):
-                pass
+                pass  # pragma: no cover
 
         return Fixed
