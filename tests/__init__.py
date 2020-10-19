@@ -11,6 +11,10 @@ def assert_schema(schema, reference_filename, transforms=None):
     # render also a json and provoke serialization issues
     OpenApiJsonRenderer().render(schema, renderer_context={})
 
+    reference_filename = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.realpath(__file__))), reference_filename
+    )
+
     with open(reference_filename.replace('.yml', '_out.yml'), 'wb') as fh:
         fh.write(schema_yml)
 
