@@ -1,6 +1,34 @@
 Changelog
 =========
 
+0.10.0 (2020-10-20)
+-------------------
+
+- bugfix non-effective multi-usage of view extension.
+- improve resolvable enum collisions with split components
+- Update README.rst [Jose Luis da Cruz Junior]
+- fix regular expression in detype_pattern [Ruslan Ibragimov]
+- improve enum naming with resolvable collisions
+- improve handling of discouraged SECURITY setting (fixes `#48 <https://github.com/tfranzel/drf-spectacular/issues/48>`_ fixes `#136 <https://github.com/tfranzel/drf-spectacular/issues/136>`_)
+- instance check with ViewSetMixin instead of GenericViewSet [SoungRyoul Kim]
+- support swagger-ui-settings [SoungRyoul Kim]
+- Change Settings variable, allow override of default swagger settings and remove unnecessary line [Nix]
+- Fix whitspace issues in code [Nix]
+- Allow Swagger-UI configuration through settings Closes `#162 <https://github.com/tfranzel/drf-spectacular/issues/162>`_ [Nix]
+- extend django_filters test case `#155 <https://github.com/tfranzel/drf-spectacular/issues/155>`_
+- add enum postprocessing handling of blank and null `#135 <https://github.com/tfranzel/drf-spectacular/issues/135>`_
+- rest-auth improvements
+- test_rest_auth: Add test schema transforms [John Vandenberg]
+- tests: Allow transformers on expected schemas [John Vandenberg]
+- Improve schema difference test harness [John Vandenberg]
+- Add rest-auth tests [John Vandenberg]
+- contrib: Add rest-auth support [John Vandenberg]
+
+Breaking changes:
+
+- enum naming collision resolution changed in cleanly resolvable situations.
+- enums gained ``null`` and ``blank`` cases, which are modeled through ``oneOf`` for deduplication
+
 0.9.14 (2020-10-04)
 -------------------
 
