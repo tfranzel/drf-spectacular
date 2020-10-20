@@ -28,6 +28,7 @@ Breaking changes:
 
 - enum naming collision resolution changed in cleanly resolvable situations.
 - enums gained ``null`` and ``blank`` cases, which are modeled through ``oneOf`` for deduplication
+- SECURITY setting is now additive instead of being the mostly overridden default
 
 0.9.14 (2020-10-04)
 -------------------
