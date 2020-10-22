@@ -41,7 +41,7 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.BOOL: {'type': 'boolean'},
     OpenApiTypes.STR: {'type': 'string'},
     OpenApiTypes.BYTE: {'type': 'string', 'format': 'byte'},
-    OpenApiTypes.BINARY: {'type': 'string', 'format': 'binary'}.
+    OpenApiTypes.BINARY: {'type': 'string', 'format': 'binary'},
     OpenApiTypes.PASSWORD: {'type': 'string', 'format': 'password'},
     OpenApiTypes.INT: {'type': 'integer'},
     OpenApiTypes.UUID: {'type': 'string', 'format': 'uuid'},
