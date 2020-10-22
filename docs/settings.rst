@@ -58,6 +58,6 @@ in your project files.
         },
         # available SwaggerUI versions: https://github.com/swagger-api/swagger-ui/releases
         "SWAGGER_UI_DIST": "//unpkg.com/swagger-ui-dist@3.35.1", # default
-        "FAVICON_HREF": settings.STATIC_URL + "your_company_favicon.png", # default is swagger favicon
+        "SWAGGER_UI_FAVICON_HREF": settings.STATIC_URL + "your_company_favicon.png", # default is swagger favicon
         ...
     }
