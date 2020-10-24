@@ -3,6 +3,7 @@ import inspect
 import json
 import re
 import sys
+import urllib.parse
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
 from collections.abc import Hashable, Iterable
@@ -768,3 +769,11 @@ def build_mock_request(method, path, view, original_request, **kwargs):
     request = getattr(APIRequestFactory(), method.lower())(path=path)
     request = view.initialize_request(request)
     return request
+
+
+def set_query_parameters(url, **kwargs) -> str:
+    """ deconstruct url, safely attach query parameters in kwargs, and serialize again """
+    scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
+    query = {k: v for k, v in kwargs.items() if v is not None}
+    query = urllib.parse.urlencode(query, doseq=True)
+    return urllib.parse.urlunparse((scheme, netloc, path, params, query, fragment))

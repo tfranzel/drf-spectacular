@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
+from drf_spectacular.plumbing import set_query_parameters
 from drf_spectacular.renderers import (
     OpenApiJsonRenderer, OpenApiJsonRenderer2, OpenApiYamlRenderer, OpenApiYamlRenderer2,
 )
@@ -78,23 +79,37 @@ class SpectacularSwaggerView(APIView):
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/swagger_ui.html'
+    template_name_js = 'drf_spectacular/swagger_ui.js'
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
-
-        schema_url = self.url or reverse(self.url_name, request=request)
-        if request.GET.get('lang'):
-            schema_url += f'{"&" if "?" in schema_url else "?"}lang={request.GET.get("lang")}'
-
-        return Response(
-            {
-                'schema_url': schema_url,
-                'settings': json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS),
-                'dist': spectacular_settings.SWAGGER_UI_DIST,
-                'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
-            },
-            template_name=self.template_name
-        )
+        if request.GET.get('script') is not None:
+            schema_url = self.url or reverse(self.url_name, request=request)
+            return Response(
+                data={
+                    'schema_url': set_query_parameters(
+                        url=schema_url,
+                        lang=request.GET.get('lang')
+                    ),
+                    'settings': json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS),
+                },
+                template_name=self.template_name_js,
+                content_type='application/javascript',
+            )
+        else:
+            script_url = request.get_full_path()
+            return Response(
+                data={
+                    'dist': spectacular_settings.SWAGGER_UI_DIST,
+                    'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
+                    'script_url': set_query_parameters(
+                        url=script_url,
+                        lang=request.GET.get('lang'),
+                        script=''  # signal to deliver init script
+                    )
+                },
+                template_name=self.template_name,
+            )
 
 
 class SpectacularRedocView(APIView):
@@ -107,8 +122,7 @@ class SpectacularRedocView(APIView):
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
         schema_url = self.url or reverse(self.url_name, request=request)
-        if request.GET.get('lang'):
-            schema_url += f'{"&" if "?" in schema_url else "?"}lang={request.GET.get("lang")}'
+        schema_url = set_query_parameters(schema_url, lang=request.GET.get('lang'))
         return Response(
             {'schema_url': schema_url},
             template_name=self.template_name
