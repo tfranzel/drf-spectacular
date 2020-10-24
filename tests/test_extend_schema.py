@@ -1,7 +1,7 @@
 from unittest import mock
 
 from django.utils.http import urlsafe_base64_encode
-from rest_framework import serializers, viewsets
+from rest_framework import mixins, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -178,3 +178,23 @@ def test_extend_schema(no_warnings):
         generate_schema('doesitall', DoesItAllViewset),
         'tests/test_extend_schema.yml'
     )
+
+
+def test_layered_extend_schema_on_view_and_method(no_warnings):
+    # this only works because list() and extra_action() are not decorated with extend_schema
+    @extend_schema(tags=['outer-tag-override'])
+    class XViewset(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+        serializer_class = AlphaSerializer
+
+        @extend_schema(tags=['inner-tag-override'])
+        def create(self, request, *args, **kwargs):
+            super().create(request, *args, **kwargs)
+
+        @action(detail=False, methods=['GET'])
+        def extra_action(self, request):
+            return Response()  # pragma: no cover
+
+    schema = generate_schema('x', XViewset)
+    assert schema['paths']['/x/']['get']['tags'][0] == 'outer-tag-override'
+    assert schema['paths']['/x/extra_action/']['get']['tags'][0] == 'outer-tag-override'
+    assert schema['paths']['/x/']['post']['tags'][0] == 'inner-tag-override'
