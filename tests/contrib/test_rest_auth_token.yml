@@ -444,7 +444,7 @@ components:
           type: string
           description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
             only.
-          pattern: ^[\w.@+-]+\Z
+          pattern: ^[\w.@+-]+$
           maxLength: 150
         email:
           type: string
@@ -509,7 +509,7 @@ components:
           type: string
           description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
             only.
-          pattern: ^[\w.@+-]+\Z
+          pattern: ^[\w.@+-]+$
           maxLength: 150
         email:
           type: string

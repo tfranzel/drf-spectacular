@@ -10,8 +10,6 @@ from tests import assert_schema
 transforms = [
     # User model first_name differences
     lambda x: re.sub(r'(first_name:\n *type: string\n *maxLength:) 30', r'\g<1> 150', x, re.M),
-    # User model username validator tail
-    lambda x: x.replace(r'+$', r'+\Z'),
 ]
 
 

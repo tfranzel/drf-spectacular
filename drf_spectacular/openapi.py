@@ -689,13 +689,15 @@ class AutoSchema(ViewInspector):
 
     def _map_field_validators(self, field, schema):
         for v in field.validators:
-            # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#data-types
             if isinstance(v, validators.EmailValidator):
                 schema['format'] = 'email'
-            if isinstance(v, validators.URLValidator):
+            elif isinstance(v, validators.URLValidator):
                 schema['format'] = 'uri'
-            if isinstance(v, validators.RegexValidator):
-                schema['pattern'] = v.regex.pattern
+            elif isinstance(v, validators.RegexValidator):
+                pattern = v.regex.pattern.encode('ascii', 'backslashreplace').decode()
+                pattern = pattern.replace(r'\x', r'\u00')  # unify escaping
+                pattern = pattern.replace(r'\Z', '$').replace(r'\A', '^')  # ECMA anchors
+                schema['pattern'] = pattern
             elif isinstance(v, validators.MaxLengthValidator):
                 attr_name = 'maxLength'
                 if isinstance(field, serializers.ListField):

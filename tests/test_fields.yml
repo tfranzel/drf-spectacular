@@ -196,7 +196,6 @@ components:
           type: string
           format: uri
           maxLength: 200
-          pattern: URL_REGEX_PATTERN
         field_ip:
           type: string
         field_ip_generic:
