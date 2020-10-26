@@ -6,20 +6,26 @@ from django.urls import include, path
 from rest_framework import routers, serializers, viewsets
 from rest_framework.test import APIClient
 
-from drf_spectacular.contrib.django_filters import DjangoFilterBackend
 from tests import assert_schema, generate_schema
 
 try:
-    from django_filters.rest_framework import CharFilter, FilterSet, NumberFilter
+    from django_filters.rest_framework import (
+        CharFilter, DjangoFilterBackend, FilterSet, NumberFilter,
+    )
 except ImportError:
+    class DjangoFilterBackend:
+        pass
+
     class FilterSet:
         pass
 
     class NumberFilter:
-        pass
+        def init(self, **kwargs):
+            pass
 
     class CharFilter:
-        pass
+        def init(self, **kwargs):
+            pass
 
 
 class OtherSubProduct(models.Model):

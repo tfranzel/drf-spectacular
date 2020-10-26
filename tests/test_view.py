@@ -107,7 +107,7 @@ def test_spectacular_swagger_ui_alternate(no_warnings):
     response = APIClient().get('/api/v2/schema/swagger-ui-alt/')
     assert response.status_code == 200
     assert response.content.startswith(b'<!DOCTYPE html>')
-    # assert b'"/api/v2/schema/swagger-ui-alt/?script="' in response.content
+    assert b'"/api/v2/schema/swagger-ui-alt/?script="' in response.content
     # second request to obtain js swagger config (CSP self)
     response = APIClient().get('/api/v2/schema/swagger-ui-alt/?script=')
     assert response.status_code == 200

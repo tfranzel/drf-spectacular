@@ -20,7 +20,9 @@ from rest_framework.views import APIView
 from drf_spectacular.authentication import OpenApiAuthenticationExtension
 from drf_spectacular.contrib import *  # noqa: F403, F401
 from drf_spectacular.drainage import get_override, has_override
-from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerializerFieldExtension
+from drf_spectacular.extensions import (
+    OpenApiFilterExtension, OpenApiSerializerExtension, OpenApiSerializerFieldExtension,
+)
 from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, anyisinstance, append_meta,
     build_array_type, build_basic_type, build_choice_field, build_examples_list,
@@ -338,7 +340,11 @@ class AutoSchema(ViewInspector):
 
         parameters = []
         for filter_backend in self.view.filter_backends:
-            parameters += filter_backend().get_schema_operation_parameters(self.view)
+            filter_extension = OpenApiFilterExtension.get_match(filter_backend())
+            if filter_extension:
+                parameters += filter_extension.get_schema_operation_parameters(self)
+            else:
+                parameters += filter_backend().get_schema_operation_parameters(self.view)
         return parameters
 
     def _get_pagination_parameters(self):
@@ -349,7 +355,11 @@ class AutoSchema(ViewInspector):
         if not paginator:
             return []
 
-        return paginator.get_schema_operation_parameters(self.view)
+        filter_extension = OpenApiFilterExtension.get_match(paginator)
+        if filter_extension:
+            return filter_extension.get_schema_operation_parameters(self)
+        else:
+            return paginator.get_schema_operation_parameters(self.view)
 
     def _map_model_field(self, model_field, direction):
         assert isinstance(model_field, models.Field)

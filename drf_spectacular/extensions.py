@@ -63,3 +63,14 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
     @abstractmethod
     def view_replacement(self):
         pass  # pragma: no cover
+
+
+class OpenApiFilterExtension(OpenApiGeneratorExtension['OpenApiFilterExtension']):
+    """
+
+    """
+    _registry: List['OpenApiFilterExtension'] = []
+
+    @abstractmethod
+    def get_schema_operation_parameters(self, auto_schema, *args, **kwargs):
+        pass  # pragma: no cover

@@ -217,6 +217,13 @@ This is one of the more involved extension mechanisms. `drf-spectacular` uses th
 The usage of this extension is rarely necessary because most custom ``Serializer`` classes stay very
 close to the default behaviour.
 
+Declare custom/library filters with :py:class:`OpenApiFilterExtension <drf_spectacular.extensions.OpenApiFilterExtension>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This extension only applies to filter and pagination classes and is rarely used. Built-in support for
+`django-filters` is realized with this extension. :py:class:`OpenApiFilterExtension <drf_spectacular.extensions.OpenApiFilterExtension>`
+replaces the filter's native ``get_schema_operation_parameters`` with your customized version, where you
+have full access to `drf-spectacular's` more advanced introspection features.
+
 
 Step 6: Postprocessing hooks
 ----------------------------
