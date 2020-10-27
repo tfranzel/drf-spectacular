@@ -193,7 +193,10 @@ def get_doc(obj):
     )
     for cls in obj.__mro__[:lib_barrier]:
         if cls.__doc__:
-            return inspect.cleandoc(cls.__doc__)
+            # dedent and cleanup of trailing white space on each line
+            doc = inspect.cleandoc(cls.__doc__)
+            doc = '\n'.join(line.rstrip() for line in doc.rstrip().split('\n'))
+            return doc
     return ''
 
 
