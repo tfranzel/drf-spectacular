@@ -856,7 +856,7 @@ def test_list_serializer_with_field_child():
     assert properties['field']['items']['type'] == 'integer'
 
 
-def test_list_serializer_with_field_child_on_extend_schema():
+def test_list_serializer_with_field_child_on_extend_schema(no_warnings):
     class XAPIView(APIView):
         @extend_schema(
             request=serializers.ListSerializer(child=serializers.IntegerField()),
@@ -871,6 +871,25 @@ def test_list_serializer_with_field_child_on_extend_schema():
     for s in [req_schema, res_schema]:
         assert s['type'] == 'array'
         assert s['items']['type'] == 'integer'
+
+
+def test_list_serializer_with_pagination(no_warnings):
+    class GenreSerializer(serializers.Serializer):
+        genre = serializers.CharField()
+
+    class XViewSet(viewsets.GenericViewSet):
+        pagination_class = pagination.LimitOffsetPagination
+
+        @extend_schema(responses=GenreSerializer(many=True))
+        @action(methods=["GET"], detail=False)
+        def genre(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', XViewSet)
+    response = get_response_schema(schema['paths']['/x/genre/']['get'])
+    assert response['$ref'] == '#/components/schemas/PaginatedGenreList'
+    assert 'PaginatedGenreList' in schema['components']['schemas']
+    assert 'Genre' in schema['components']['schemas']
 
 
 def test_inline_serializer(no_warnings):

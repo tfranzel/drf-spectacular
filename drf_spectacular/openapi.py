@@ -931,6 +931,8 @@ class AutoSchema(ViewInspector):
             # though we do not support the serializer inlining feature.
             # https://drf-yasg.readthedocs.io/en/stable/custom_spec.html#serializer-meta-nested-class
             name = serializer.Meta.ref_name
+        elif isinstance(serializer, serializers.ListSerializer):
+            return self._get_serializer_name(serializer.child, direction)
         else:
             name = serializer.__class__.__name__
 
