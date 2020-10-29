@@ -5,6 +5,8 @@ from rest_framework.fields import empty
 from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
+from drf_spectacular.drainage import set_override
+
 SerializerType = Union[Serializer, Type[Serializer]]
 
 
@@ -241,9 +243,7 @@ def extend_schema_field(field):
     """
 
     def decorator(f):
-        if not hasattr(f, '_spectacular_annotation'):
-            f._spectacular_annotation = {}
-        f._spectacular_annotation['field'] = field
+        set_override(f, 'field', field)
         return f
 
     return decorator
@@ -260,12 +260,10 @@ def extend_schema_serializer(many=None, exclude_fields=None):
         schema. fields will still be exposed through the API.
     """
     def decorator(klass):
-        if not hasattr(klass, '_spectacular_annotation'):
-            klass._spectacular_annotation = {}
         if many is not None:
-            klass._spectacular_annotation['many'] = many
+            set_override(klass, 'many', many)
         if exclude_fields:
-            klass._spectacular_annotation['exclude_fields'] = exclude_fields
+            set_override(klass, 'exclude_fields', exclude_fields)
         return klass
 
     return decorator

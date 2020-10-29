@@ -2,7 +2,6 @@ import hashlib
 import inspect
 import json
 import re
-import sys
 import urllib.parse
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
@@ -26,6 +25,7 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
 from uritemplate import URITemplate
 
+from drf_spectacular.drainage import error, warn
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
     DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,
@@ -43,50 +43,6 @@ T = TypeVar('T')
 
 class UnableToProceedError(Exception):
     pass
-
-
-class GeneratorStats:
-    _warn_cache: DefaultDict[str, int] = defaultdict(int)
-    _error_cache: DefaultDict[str, int] = defaultdict(int)
-
-    def __bool__(self):
-        return bool(self._warn_cache or self._error_cache)
-
-    def reset(self):
-        self._warn_cache.clear()
-        self._error_cache.clear()
-
-    def emit(self, msg, severity):
-        assert severity in ['warning', 'error']
-        msg = str(msg)
-        cache = self._warn_cache if severity == 'warning' else self._error_cache
-        if msg not in cache:
-            print(f'{severity.capitalize()} #{len(cache)}: {msg}', file=sys.stderr)
-        cache[msg] += 1
-
-    def emit_summary(self):
-        if self._warn_cache or self._error_cache:
-            print(
-                f'\nSchema generation summary:\n'
-                f'Warnings: {sum(self._warn_cache.values())} ({len(self._warn_cache)} unique)\n'
-                f'Errors:   {sum(self._error_cache.values())} ({len(self._error_cache)} unique)\n',
-                file=sys.stderr
-            )
-
-
-GENERATOR_STATS = GeneratorStats()
-
-
-def warn(msg):
-    GENERATOR_STATS.emit(msg, 'warning')
-
-
-def error(msg):
-    GENERATOR_STATS.emit(msg, 'error')
-
-
-def reset_generator_stats():
-    GENERATOR_STATS.reset()
 
 
 def anyisinstance(obj, type_list):
@@ -126,20 +82,6 @@ def is_basic_type(obj, allow_none=True):
     if not allow_none and (obj is None or obj is OpenApiTypes.NONE):
         return False
     return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
-
-
-def has_override(obj, prop):
-    if not hasattr(obj, '_spectacular_annotation'):
-        return False
-    if prop not in obj._spectacular_annotation:
-        return False
-    return True
-
-
-def get_override(obj, prop, default=None):
-    if not has_override(obj, prop):
-        return default
-    return obj._spectacular_annotation[prop]
 
 
 def get_lib_doc_excludes():

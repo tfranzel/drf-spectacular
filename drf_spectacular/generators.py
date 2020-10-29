@@ -6,12 +6,13 @@ from rest_framework import views, viewsets
 from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignore
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 
+from drf_spectacular.drainage import reset_generator_stats
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, error,
     is_versioning_supported, modify_for_versioning, normalize_result_object,
-    operation_matches_version, reset_generator_stats, sanitize_result_object, warn,
+    operation_matches_version, sanitize_result_object, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 

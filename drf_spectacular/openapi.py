@@ -19,12 +19,13 @@ from rest_framework.views import APIView
 
 from drf_spectacular.authentication import OpenApiAuthenticationExtension
 from drf_spectacular.contrib import *  # noqa: F403, F401
+from drf_spectacular.drainage import get_override, has_override
 from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerializerFieldExtension
 from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, anyisinstance, append_meta, build_array_type,
     build_basic_type, build_choice_field, build_object_type, build_parameter_type, error,
-    follow_field_source, force_instance, get_doc, get_override, get_view_model, has_override,
-    is_basic_type, is_field, is_serializer, resolve_regex_path_parameter, safe_ref, warn,
+    follow_field_source, force_instance, get_doc, get_view_model, is_basic_type, is_field,
+    is_serializer, resolve_regex_path_parameter, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
