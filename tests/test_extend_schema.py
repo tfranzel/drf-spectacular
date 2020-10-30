@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field
-from tests import assert_schema, generate_schema
+from tests import assert_schema, generate_schema, get_response_schema
 
 
 class AlphaSerializer(serializers.Serializer):
@@ -180,21 +180,87 @@ def test_extend_schema(no_warnings):
     )
 
 
-def test_layered_extend_schema_on_view_and_method(no_warnings):
-    # this only works because list() and extra_action() are not decorated with extend_schema
-    @extend_schema(tags=['outer-tag-override'])
-    class XViewset(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
-        serializer_class = AlphaSerializer
+def test_layered_extend_schema_on_view_and_method_with_meta(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.IntegerField()
 
-        @extend_schema(tags=['inner-tag-override'])
+    @extend_schema(tags=['view_tag2'])
+    @extend_schema(tags=['view_tag'], description='view_desc', summary='view_sum')
+    class XViewset(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+        serializer_class = XSerializer
+
+        @extend_schema(tags=['create_tag2'])
+        @extend_schema(tags=['create_tag'], description='create_desc')
         def create(self, request, *args, **kwargs):
-            super().create(request, *args, **kwargs)
+            super().create(request, *args, **kwargs)  # pragma: no cover
+
+        @extend_schema(tags=['extended_action_tag2'])
+        @extend_schema(tags=['extended_action_tag'], description='extended_action_desc')
+        @action(detail=False, methods=['GET'])
+        def extended_action(self, request):
+            return Response()  # pragma: no cover
 
         @action(detail=False, methods=['GET'])
-        def extra_action(self, request):
+        def raw_action(self, request):
             return Response()  # pragma: no cover
 
     schema = generate_schema('x', XViewset)
-    assert schema['paths']['/x/']['get']['tags'][0] == 'outer-tag-override'
-    assert schema['paths']['/x/extra_action/']['get']['tags'][0] == 'outer-tag-override'
-    assert schema['paths']['/x/']['post']['tags'][0] == 'inner-tag-override'
+    create_op = schema['paths']['/x/']['post']
+    list_op = schema['paths']['/x/']['get']
+    raw_action_op = schema['paths']['/x/raw_action/']['get']
+    extended_action_op = schema['paths']['/x/extended_action/']['get']
+
+    assert create_op['tags'][0] == 'create_tag2'
+    assert create_op['description'] == 'create_desc'
+    assert create_op['summary'] == 'view_sum'
+
+    assert list_op['tags'][0] == 'view_tag2'
+    assert list_op['description'] == 'view_desc'
+    assert list_op['summary'] == 'view_sum'
+
+    assert raw_action_op['tags'][0] == 'view_tag2'
+    assert raw_action_op['description'] == 'view_desc'
+    assert raw_action_op['summary'] == 'view_sum'
+
+    assert extended_action_op['tags'][0] == 'extended_action_tag2'
+    assert extended_action_op['description'] == 'extended_action_desc'
+    assert extended_action_op['summary'] == 'view_sum'
+
+
+def test_layered_extend_schema_on_view_and_method_with_serializer(no_warnings):
+    class ASerializer(serializers.Serializer):
+        field = serializers.IntegerField()
+
+    class BSerializer(serializers.Serializer):
+        field = serializers.IntegerField()
+
+    class CSerializer(serializers.Serializer):
+        field = serializers.IntegerField()
+
+    @extend_schema(responses=BSerializer)
+    class XViewset(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+        serializer_class = ASerializer
+
+        @extend_schema(responses=CSerializer)
+        def create(self, request, *args, **kwargs):
+            super().create(request, *args, **kwargs)  # pragma: no cover
+
+        @extend_schema(responses=CSerializer)
+        @action(detail=False, methods=['GET'])
+        def extended_action(self, request):
+            return Response()  # pragma: no cover
+
+        @action(detail=False, methods=['GET'])
+        def raw_action(self, request):
+            return Response()  # pragma: no cover
+
+    schema = generate_schema('x', XViewset)
+    create_op = get_response_schema(schema['paths']['/x/']['post'])
+    list_op = get_response_schema(schema['paths']['/x/']['get'])
+    raw_action_op = get_response_schema(schema['paths']['/x/raw_action/']['get'])
+    extended_action_op = get_response_schema(schema['paths']['/x/extended_action/']['get'])
+
+    assert create_op['$ref'].endswith('C')
+    assert extended_action_op['$ref'].endswith('C')
+    assert list_op['items']['$ref'].endswith('B')
+    assert raw_action_op['$ref'].endswith('B')

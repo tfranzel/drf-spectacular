@@ -65,3 +65,14 @@ def set_override(obj, prop, value):
     if not hasattr(obj, '_spectacular_annotation'):
         obj._spectacular_annotation = {}
     obj._spectacular_annotation[prop] = value
+
+
+def get_view_methods(view, schema=None):
+    return [
+        getattr(view, item) for item in dir(view) if callable(getattr(view, item)) and (
+            item in view.http_method_names
+            or item in (schema or view.schema).method_mapping.values()
+            or item == 'list'
+            or hasattr(getattr(view, item), 'mapping')
+        )
+    ]
