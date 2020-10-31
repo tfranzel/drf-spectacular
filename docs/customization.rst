@@ -42,6 +42,27 @@ discovered in the introspection.
   :py:func:`inline_serializer <drf_spectacular.utils.inline_serializer>`.
   This lets you conveniently define the endpoint's schema inline without actually writing a serializer class.
 
+.. note:: If you want to annotate methods that are provided by the base classes of a view, you have nothing to
+  attach :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` to. In those instances you can use
+  :py:func:`@extend_schema_view <drf_spectacular.utils.extend_schema_view>` to conveniently annotate the
+  default implementations.
+
+  .. code-block:: python
+
+        class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+            @extend_schema(description='text')
+            def list(self, request, *args, **kwargs)
+                return super().list(request, *args, **kwargs)
+
+  is equivalent to
+
+  .. code-block:: python
+
+        @extend_schema_view(
+            list=extend_schema(description='text')
+        )
+        class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+            ...
 
 Step 3: :py:class:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` and type hints
 ---------------------------------------------------------------------------------------------------

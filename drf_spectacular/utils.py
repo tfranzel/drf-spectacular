@@ -1,3 +1,4 @@
+import functools
 import inspect
 from typing import Dict, List, Type, Union
 
@@ -5,7 +6,7 @@ from rest_framework.fields import empty
 from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
-from drf_spectacular.drainage import error, set_override, warn
+from drf_spectacular.drainage import error, get_view_methods, set_override, warn
 
 SerializerType = Union[Serializer, Type[Serializer]]
 
@@ -279,6 +280,47 @@ def extend_schema_serializer(many=None, exclude_fields=None):
         if exclude_fields:
             set_override(klass, 'exclude_fields', exclude_fields)
         return klass
+
+    return decorator
+
+
+def extend_schema_view(**kwargs):
+    """
+    Convenience decorator for the "view" kind. Intended for annotating derived view methods that
+    are are not directly present in the view (usually methods like ``list`` or ``retrieve``).
+    Spares you from overriding methods like ``list``, only to perform a super call in the body
+    so that you have have something to attach ``@extend_schema`` to.
+
+    :param kwargs: method names as argument names and ``extend_schema()`` calls as values
+    """
+    def wrapping_decorator(method_decorator, method):
+        @method_decorator
+        @functools.wraps(method)
+        def wrapped_method(self, request, *args, **kwargs):
+            return method(self, request, *args, **kwargs)
+
+        return wrapped_method
+
+    def decorator(view):
+        view_methods = {m.__name__: m for m in get_view_methods(view)}
+
+        for method_name, method_decorator in kwargs.items():
+            if method_name not in view_methods:
+                warn(
+                    f'@extend_schema_view argument "{method_name}" was not found on view '
+                    f'{view.__name__}. method override for "{method_name}" will be ignored.'
+                )
+                continue
+
+            method = view_methods[method_name]
+            # the context of derived methods must not be altered, as it belongs to the other
+            # class. create a new context via the wrapping_decorator so the schema can be safely
+            # stored in the wrapped_method. methods belonging to the view can be safely altered.
+            if method_name in view.__dict__:
+                method_decorator(method)
+            else:
+                setattr(view, method_name, wrapping_decorator(method_decorator, method))
+        return view
 
     return decorator
 

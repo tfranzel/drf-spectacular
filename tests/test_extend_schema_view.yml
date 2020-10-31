@@ -1,0 +1,264 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /x/:
+    get:
+      operationId: x_list
+      description: view list description
+      tags:
+      - global-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ESV'
+          description: ''
+  /x/{id}/:
+    get:
+      operationId: x_retrieve
+      description: view retrieve description
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this esv model.
+        required: true
+      tags:
+      - custom-retrieve-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+  /x/extended_action/:
+    get:
+      operationId: x_extended_action_retrieve
+      description: view extended action description
+      tags:
+      - global-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: date
+          description: ''
+  /x/raw_action/:
+    get:
+      operationId: x_raw_action_retrieve
+      description: view raw action description
+      tags:
+      - global-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+  /y/:
+    get:
+      operationId: y_list
+      description: ''
+      tags:
+      - y
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ESV'
+          description: ''
+    post:
+      operationId: y_create
+      description: ''
+      tags:
+      - y
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ESV'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ESV'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ESV'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+  /y/{id}/:
+    get:
+      operationId: y_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this esv model.
+        required: true
+      tags:
+      - y
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+    put:
+      operationId: y_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this esv model.
+        required: true
+      tags:
+      - y
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ESV'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ESV'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ESV'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+    patch:
+      operationId: y_partial_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this esv model.
+        required: true
+      tags:
+      - y
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedESV'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedESV'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedESV'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+    delete:
+      operationId: y_destroy
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this esv model.
+        required: true
+      tags:
+      - y
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    ESV:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+      required:
+      - id
+    PatchedESV:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
