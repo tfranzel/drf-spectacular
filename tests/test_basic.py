@@ -5,7 +5,7 @@ from django.db import models
 from rest_framework import serializers, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from tests import assert_schema, generate_schema
@@ -61,7 +61,7 @@ class AlbumModelViewset(viewsets.ModelViewSet):
     serializer_class = AlbumSerializer
     queryset = Album.objects.none()
 
-    @action(detail=True, methods=['POST'], serializer_class=LikeSerializer, permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['POST'], serializer_class=LikeSerializer)
     def like(self, request):
         return Response(self.get_serializer().data)  # pragma: no cover
 
