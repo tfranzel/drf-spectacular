@@ -2,6 +2,7 @@ import uuid
 from unittest import mock
 
 import pytest
+from django.core import validators
 from django.db import models
 from django.db.models import fields
 from django.urls import path, re_path
@@ -23,6 +24,7 @@ from drf_spectacular.utils import (
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema, get_request_schema, get_response_schema
+from tests.models import SimpleModel, SimpleSerializer
 
 
 def test_primary_key_read_only_queryset_not_found(no_warnings):
@@ -946,40 +948,24 @@ def test_camelize_names(no_warnings):
 
 
 def test_mocked_request_with_get_queryset_get_serializer_class(no_warnings):
-    class M4(models.Model):
-        pass
-
-    class XSerializer(serializers.ModelSerializer):
-        class Meta:
-            fields = '__all__'
-            model = M4
-
     class XViewset(viewsets.ReadOnlyModelViewSet):
         def get_serializer_class(self):
             assert not self.request.user.is_authenticated
             assert self.action in ['retrieve', 'list']
-            return XSerializer
+            return SimpleSerializer
 
         def get_queryset(self):
             assert not self.request.user.is_authenticated
             assert self.request.method == 'GET'
-            return M4.objects.none()
+            return SimpleModel.objects.none()
 
     generate_schema('x', XViewset)
 
 
 def test_queryset_filter_and_ordering_only_on_list(no_warnings):
-    class M5(models.Model):
-        pass
-
-    class XSerializer(serializers.ModelSerializer):
-        class Meta:
-            fields = '__all__'
-            model = M5
-
     class XViewset(viewsets.ReadOnlyModelViewSet):
-        queryset = M5.objects.all()
-        serializer_class = XSerializer
+        queryset = SimpleModel.objects.none()
+        serializer_class = SimpleSerializer
         filter_backends = (filters.SearchFilter, filters.OrderingFilter)
 
     schema = generate_schema('x', XViewset)
@@ -995,17 +981,9 @@ def test_queryset_filter_and_ordering_only_on_list(no_warnings):
 
 
 def test_pagination(no_warnings):
-    class M6(models.Model):
-        pass
-
-    class XSerializer(serializers.ModelSerializer):
-        class Meta:
-            fields = '__all__'
-            model = M6
-
     class XViewset(viewsets.ReadOnlyModelViewSet):
-        queryset = M6.objects.all()
-        serializer_class = XSerializer
+        queryset = SimpleModel.objects.none()
+        serializer_class = SimpleSerializer
         pagination_class = pagination.LimitOffsetPagination
 
     schema = generate_schema('x', XViewset)
@@ -1022,34 +1000,27 @@ def test_pagination(no_warnings):
     assert list_parameters[0]['name'] == 'id'
 
     # substituted component on list
-    assert 'X' in schema['components']['schemas']
-    assert 'PaginatedXList' in schema['components']['schemas']
-    substitution = schema['components']['schemas']['PaginatedXList']
+    assert 'Simple' in schema['components']['schemas']
+    assert 'PaginatedSimpleList' in schema['components']['schemas']
+    substitution = schema['components']['schemas']['PaginatedSimpleList']
     assert substitution['type'] == 'object'
-    assert substitution['properties']['results']['items']['$ref'] == '#/components/schemas/X'
+    assert substitution['properties']['results']['items']['$ref'] == '#/components/schemas/Simple'
 
 
 def test_pagination_reusage(no_warnings):
-    class M7(models.Model):
-        pass
-
-    class XSerializer(serializers.ModelSerializer):
-        class Meta:
-            fields = '__all__'
-            model = M7
 
     class XViewset(viewsets.ReadOnlyModelViewSet):
-        queryset = M7.objects.all()
-        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
         pagination_class = pagination.LimitOffsetPagination
 
-        @extend_schema(responses={'200': XSerializer(many=True)})
+        @extend_schema(responses={'200': SimpleSerializer(many=True)})
         @action(methods=['GET'], detail=False)
         def custom_action(self):
             pass  # pragma: no cover
 
     class YViewset(XViewset):
-        serializer_class = XSerializer
+        serializer_class = SimpleSerializer
 
     router = routers.SimpleRouter()
     router.register('x', XViewset, basename='x')
@@ -1147,22 +1118,14 @@ def test_string_response_variations(no_warnings, responses):
 
 
 def test_exclude_discovered_parameter(no_warnings):
-    class M8(models.Model):
-        pass
-
-    class XSerializer(serializers.ModelSerializer):
-        class Meta:
-            fields = '__all__'
-            model = M8
-
     @extend_schema_view(list=extend_schema(parameters=[
         # keep 'offset', remove 'limit', and add 'random'
         OpenApiParameter('limit', exclude=True),
         OpenApiParameter('random', bool),
     ]))
     class XViewset(viewsets.ReadOnlyModelViewSet):
-        queryset = M8.objects.all()
-        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
         pagination_class = pagination.LimitOffsetPagination
 
     schema = generate_schema('x', XViewset)
@@ -1170,3 +1133,21 @@ def test_exclude_discovered_parameter(no_warnings):
     assert len(parameters) == 2
     assert parameters[0]['name'] == 'offset'
     assert parameters[1]['name'] == 'random'
+
+
+def test_manual_decimal_validator():
+    # manually test this validator as it is not part of the default workflow
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField(
+            validators=[validators.DecimalValidator(max_digits=4, decimal_places=2)]
+        )
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    field = schema['components']['schemas']['X']['properties']['field']
+    assert field['maximum'] == 100
+    assert field['minimum'] == -100

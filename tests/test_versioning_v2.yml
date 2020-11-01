@@ -31,7 +31,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this versioning model.
+        description: A unique integer value identifying this simple model.
         required: true
       tags:
       - v2

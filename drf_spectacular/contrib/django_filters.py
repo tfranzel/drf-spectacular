@@ -14,7 +14,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
     match_subclasses = True
 
     def get_schema_operation_parameters(self, auto_schema, *args, **kwargs):
-        if isinstance(self.target_class, SpectacularDjangoFilterBackendMixin):
+        if issubclass(self.target_class, SpectacularDjangoFilterBackendMixin):
             warn(
                 'DEPRECATED - Spectacular\'s DjangoFilterBackend is superseded by extension. you '
                 'can simply restore this to the original class, extensions will take care of the '

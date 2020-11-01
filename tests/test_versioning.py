@@ -1,7 +1,6 @@
 import pytest
 import yaml
 from django.conf.urls import include
-from django.db import models
 from django.urls import path, re_path
 from rest_framework import generics, mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient, APIRequestFactory
@@ -12,10 +11,7 @@ from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from tests import assert_schema
-
-
-class VersioningModel(models.Model):
-    pass
+from tests.models import SimpleModel
 
 
 class Xv1Serializer(serializers.Serializer):
@@ -28,7 +24,7 @@ class Xv2Serializer(serializers.Serializer):
 
 class PathVersioningViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     versioning_class = URLPathVersioning
-    queryset = VersioningModel.objects.all()
+    queryset = SimpleModel.objects.all()
 
     @extend_schema(responses=Xv1Serializer, versions=['v1'])
     @extend_schema(responses=Xv2Serializer, versions=['v2'])
@@ -51,7 +47,7 @@ class AcceptHeaderVersioningViewset(PathVersioningViewset):
 
 class PathVersioningViewset2(mixins.ListModelMixin, viewsets.GenericViewSet):
     versioning_class = URLPathVersioning
-    queryset = VersioningModel.objects.all()
+    queryset = SimpleModel.objects.all()
 
     def list(self, request, *args, **kwargs):
         pass  # pragma: no cover
@@ -106,7 +102,7 @@ def test_namespace_versioning_urlpatterns_simplification(no_warnings):
     class NamespaceVersioningAPIView(generics.RetrieveUpdateDestroyAPIView):
         versioning_class = NamespaceVersioning
         serializer_class = Xv1Serializer
-        queryset = VersioningModel.objects.all()
+        queryset = SimpleModel.objects.all()
 
     urls = (
         path('x/<int:pk>/', NamespaceVersioningAPIView.as_view()),

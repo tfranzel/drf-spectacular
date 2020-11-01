@@ -13,6 +13,7 @@ from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema, extend_schema_view
 from tests import generate_schema
+from tests.models import SimpleModel, SimpleSerializer
 
 
 def test_serializer_name_reuse(capsys):
@@ -82,15 +83,9 @@ def test_no_queryset_warn(capsys):
 
 
 def test_path_param_not_in_model(capsys):
-    class M3(models.Model):
-        pass  # pragma: no cover
-
-    class XSerializer(serializers.Serializer):
-        uuid = serializers.UUIDField()
-
     class XViewset(viewsets.ReadOnlyModelViewSet):
-        serializer_class = XSerializer
-        queryset = M3.objects.none()
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
 
         @action(detail=True, url_path='meta/(?P<ephemeral>[^/.]+)', methods=['POST'])
         def meta_param(self, request, ephemeral, pk):
@@ -282,3 +277,17 @@ def test_warning_operation_id_on_extend_schema_view(capsys):
     generate_schema('x', view=XAPIView)
     stderr = capsys.readouterr().err
     assert 'using @extend_schema on viewset class XAPIView with parameters' in stderr
+
+
+def test_warning_request_body_not_resolvable(capsys):
+    class Dummy:
+        pass
+
+    @extend_schema(request=Dummy)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('x', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'could not resolve request body for POST /x' in stderr
