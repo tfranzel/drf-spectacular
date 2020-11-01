@@ -231,7 +231,7 @@ class AutoSchema(ViewInspector):
         perms = [p.__class__ for p in self.view.get_permissions()]
         if permissions.AllowAny in perms:
             auths.append({})
-        elif permissions.IsAuthenticatedOrReadOnly in perms and self.method not in ('PUT', 'PATCH', 'POST'):
+        elif permissions.IsAuthenticatedOrReadOnly in perms and self.method in permissions.SAFE_METHODS:
             auths.append({})
         return auths
 

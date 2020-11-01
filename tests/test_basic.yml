@@ -43,7 +43,6 @@ paths:
         required: true
       security:
       - tokenAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -102,7 +101,6 @@ paths:
         required: true
       security:
       - tokenAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -136,7 +134,6 @@ paths:
               $ref: '#/components/schemas/PatchedAlbum'
       security:
       - tokenAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -159,7 +156,6 @@ paths:
       - albums
       security:
       - tokenAuth: []
-      - {}
       responses:
         '204':
           description: No response body
@@ -179,7 +175,6 @@ paths:
       - albums
       security:
       - tokenAuth: []
-      - {}
       responses:
         '200':
           description: No response body
