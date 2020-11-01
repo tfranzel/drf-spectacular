@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from tests import generate_schema
 
 
@@ -235,3 +235,16 @@ def test_compatible_auto_schema_class_on_view(no_warnings):
     with pytest.raises(AssertionError) as excinfo:
         generate_schema('/x/', view_function=view_func)
     assert "Incompatible AutoSchema" in str(excinfo.value)
+
+
+def test_extend_schema_view_on_missing_view_method(capsys):
+    @extend_schema_view(
+        post=extend_schema(tags=['tag'])
+    )
+    class XAPIView(APIView):
+        def get(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('x', view=XAPIView)
+    stderr = capsys.readouterr().err
+    assert '@extend_schema_view argument "post" was not found on view' in stderr

@@ -28,7 +28,7 @@ class ESVSerializer(serializers.ModelSerializer):
     extended_action=extend_schema(description='view extended action description'),
     raw_action=extend_schema(description='view raw action description'),
 )
-class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+class XViewset(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = ESVModel.objects.all()
     serializer_class = ESVSerializer
 
@@ -74,6 +74,9 @@ def test_extend_schema_view_call_transparency(no_warnings):
     response = APIClient().get('/x/')
     assert response.status_code == 200
     assert response.content == b'[{"id":1}]'
+    response = APIClient().get('/x/1/')
+    assert response.status_code == 200
+    assert response.content == b'{"id":1}'
     response = APIClient().get('/x/extended_action/')
     assert response.status_code == 200
     assert response.content == b'"2020-10-31"'
