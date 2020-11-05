@@ -68,8 +68,8 @@ def test_global_enum_naming_override(no_warnings):
         serializer_class = XSerializer
 
     schema = generate_schema('/x', view=XView)
-    assert 'LanguageEnum' in schema['components']['schemas']['X']['properties']['foo']['$ref']
-    assert 'LanguageEnum' in schema['components']['schemas']['X']['properties']['bar']['$ref']
+    assert 'LanguageEnum' in schema['components']['schemas']['X']['properties']['foo']['allOf'][0]['$ref']
+    assert 'LanguageEnum' in schema['components']['schemas']['X']['properties']['bar']['allOf'][0]['$ref']
     assert len(schema['components']['schemas']) == 2
 
 
@@ -150,8 +150,8 @@ def test_enum_resolvable_collision_with_patched_and_request_splits():
     schema = generate_schema('/x', XViewset)
     components = schema['components']['schemas']
     assert 'XFooEnum' in components and 'YFooEnum' in components
-    assert '/XFooEnum' in components['XRequest']['properties']['foo']['$ref']
-    assert '/XFooEnum' in components['PatchedXRequest']['properties']['foo']['$ref']
+    assert '/XFooEnum' in components['XRequest']['properties']['foo']['allOf'][0]['$ref']
+    assert '/XFooEnum' in components['PatchedXRequest']['properties']['foo']['allOf'][0]['$ref']
 
 
 def test_enum_override_variations(no_warnings):
