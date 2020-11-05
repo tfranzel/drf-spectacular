@@ -43,6 +43,7 @@ paths:
         name: sub
         schema:
           type: integer
+          title: ID
         description: sub
       - in: query
         name: subproduct__sub_price
@@ -74,6 +75,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this product.
         required: true
       tags:
@@ -102,15 +104,21 @@ components:
         id:
           type: integer
           readOnly: true
+          title: ID
         category:
-          $ref: '#/components/schemas/CategoryEnum'
+          allOf:
+          - $ref: '#/components/schemas/CategoryEnum'
+          title: Category
         in_stock:
           type: boolean
+          title: In stock
         price:
           type: number
           format: float
+          title: Price
         other_sub_product:
           type: integer
+          title: Other sub product
       required:
       - category
       - id
