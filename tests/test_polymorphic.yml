@@ -39,12 +39,15 @@ components:
         id:
           type: integer
           readOnly: true
+          title: ID
         company_name:
           type: string
+          title: Company name
           maxLength: 30
         type:
           type: string
           readOnly: true
+          title: Type
       required:
       - company_name
       - id
@@ -64,15 +67,19 @@ components:
         id:
           type: integer
           readOnly: true
+          title: ID
         first_name:
           type: string
+          title: First name
           maxLength: 30
         last_name:
           type: string
+          title: Last name
           maxLength: 30
         type:
           type: string
           readOnly: true
+          title: Type
       required:
       - first_name
       - id

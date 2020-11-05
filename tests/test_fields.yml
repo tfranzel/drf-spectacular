@@ -31,6 +31,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this all fields.
         required: true
       tags:
@@ -98,155 +99,200 @@ components:
         id:
           type: integer
           readOnly: true
+          title: ID
         field_decimal_uncoerced:
           type: number
           format: double
           maximum: 1000
           minimum: -1000
+          title: Field decimal uncoerced
         field_method_float:
           type: number
           format: float
           readOnly: true
+          title: Field method float
         field_method_object:
           type: object
           additionalProperties: {}
           readOnly: true
+          title: Field method object
         field_regex:
           type: string
+          title: Field regex
           pattern: ^[a-zA-z0-9]{10}\-[a-z]
         field_list:
           type: array
           items:
             type: number
             format: float
+          title: Field list
           maxItems: 100
           minItems: 3
         field_list_serializer:
           type: array
           items:
             $ref: '#/components/schemas/Aux'
+          title: Field list serializer
         field_related_slug:
           type: string
           readOnly: true
+          title: Field related slug
         field_related_string:
           type: string
           readOnly: true
+          title: Field related string
         field_related_hyperlink:
           type: string
           format: uri
           readOnly: true
+          title: Field related hyperlink
         field_identity_hyperlink:
           type: string
           format: uri
           readOnly: true
+          title: Field identity hyperlink
         field_read_only_nav_uuid:
           type: string
           format: uuid
           readOnly: true
+          title: Field read only nav uuid
         field_read_only_nav_uuid_3steps:
           type: string
           format: uuid
           readOnly: true
           nullable: true
+          title: Field read only nav uuid 3steps
         field_read_only_model_function_basic:
           type: boolean
           readOnly: true
+          title: Field read only model function basic
         field_read_only_model_function_model:
           type: string
           format: uuid
           readOnly: true
+          title: Field read only model function model
         field_bool_override:
           type: boolean
           readOnly: true
+          title: Field bool override
         field_model_property_float:
           type: number
           format: float
           readOnly: true
+          title: Field model property float
         field_dict_int:
           type: object
           additionalProperties:
             type: integer
+          title: Field dict int
         field_json:
           type: object
           additionalProperties: {}
+          title: Field json
         field_int:
           type: integer
+          title: Field int
         field_float:
           type: number
           format: float
+          title: Field float
         field_bool:
           type: boolean
+          title: Field bool
         field_char:
           type: string
+          title: Field char
           maxLength: 100
         field_text:
           type: string
+          title: Field text
         field_slug:
           type: string
+          title: Field slug
           maxLength: 50
           pattern: ^[-a-zA-Z0-9_]+$
         field_email:
           type: string
           format: email
+          title: Field email
           maxLength: 254
         field_uuid:
           type: string
           format: uuid
+          title: Field uuid
         field_url:
           type: string
           format: uri
+          title: Field url
           maxLength: 200
         field_ip:
           type: string
+          title: Field ip
         field_ip_generic:
           type: string
+          title: Field ip generic
         field_decimal:
           type: string
           format: decimal
           maximum: 1000
           minimum: -1000
+          title: Field decimal
         field_file:
           type: string
           format: uri
+          title: Field file
         field_img:
           type: string
           format: uri
+          title: Field img
         field_date:
           type: string
           format: date
+          title: Field date
         field_datetime:
           type: string
           format: date-time
+          title: Field datetime
         field_bigint:
           type: integer
+          title: Field bigint
         field_smallint:
           type: integer
+          title: Field smallint
         field_posint:
           type: integer
+          title: Field posint
         field_possmallint:
           type: integer
+          title: Field possmallint
         field_nullbool:
           type: boolean
           nullable: true
+          title: Field nullbool
         field_time:
           type: string
           format: time
+          title: Field time
         field_duration:
           type: string
+          title: Field duration
         field_foreign:
           type: string
           format: uuid
           description: main aux object
+          title: Field foreign
         field_o2o:
           type: string
           format: uuid
           description: bound aux object
+          title: Field o2o
         field_m2m:
           type: array
           items:
             type: string
             format: uuid
           description: set of related aux objects
+          title: Field m2m
       required:
       - field_bigint
       - field_bool
@@ -300,10 +346,12 @@ components:
           type: string
           format: uuid
           readOnly: true
+          title: Id
         field_foreign:
           type: string
           format: uuid
           nullable: true
+          title: Field foreign
       required:
       - id
   securitySchemes:

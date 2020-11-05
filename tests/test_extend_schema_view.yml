@@ -31,6 +31,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this esv model.
         required: true
       tags:
@@ -136,6 +137,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this esv model.
         required: true
       tags:
@@ -159,6 +161,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this esv model.
         required: true
       tags:
@@ -193,6 +196,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this esv model.
         required: true
       tags:
@@ -227,6 +231,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this esv model.
         required: true
       tags:
@@ -246,6 +251,7 @@ components:
         id:
           type: integer
           readOnly: true
+          title: ID
       required:
       - id
     PatchedESV:
@@ -254,6 +260,7 @@ components:
         id:
           type: integer
           readOnly: true
+          title: ID
   securitySchemes:
     basicAuth:
       type: http

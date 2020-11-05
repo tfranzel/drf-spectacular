@@ -45,7 +45,9 @@ components:
       type: object
       properties:
         language:
-          $ref: '#/components/schemas/LanguageEnum'
+          allOf:
+          - $ref: '#/components/schemas/LanguageEnum'
+          title: Language
       required:
       - language
     B:
@@ -53,6 +55,7 @@ components:
       properties:
         language:
           nullable: true
+          title: Language
           oneOf:
           - $ref: '#/components/schemas/LanguageEnum'
           - $ref: '#/components/schemas/BlankEnum'

@@ -106,6 +106,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this Internätiönalisierung.
         required: true
       tags:
@@ -129,8 +130,10 @@ components:
         id:
           type: integer
           readOnly: true
+          title: ID
         field_str:
           type: string
+          title: Field str
       required:
       - field_str
       - id

@@ -63,12 +63,15 @@ components:
         password:
           type: string
           writeOnly: true
+          title: Password
         token:
           type: string
           readOnly: true
+          title: Token
         username:
           type: string
           writeOnly: true
+          title: Username
       required:
       - password
       - token
@@ -79,6 +82,7 @@ components:
         uuid:
           type: string
           format: uuid
+          title: Uuid
       required:
       - uuid
   securitySchemes:

@@ -189,6 +189,7 @@ def build_parameter_type(
         location,
         required=False,
         description=None,
+        title=None,
         enum=None,
         deprecated=False,
         explode=None,
@@ -202,6 +203,8 @@ def build_parameter_type(
     }
     if description:
         schema['description'] = description
+    if title:
+        schema['title'] = title
     if required or location == 'path':
         schema['required'] = True
     if deprecated:

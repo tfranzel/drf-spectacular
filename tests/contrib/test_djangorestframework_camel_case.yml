@@ -46,8 +46,10 @@ components:
       properties:
         fieldOne:
           type: string
+          title: Field one
         fieldTwo:
           type: string
+          title: Field two
       required:
       - fieldOne
       - fieldTwo

@@ -58,6 +58,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this person.
         required: true
       tags:
@@ -81,6 +82,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this person.
         required: true
       tags:
@@ -115,6 +117,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this person.
         required: true
       tags:
@@ -149,6 +152,7 @@ paths:
         name: id
         schema:
           type: integer
+          title: ID
         description: A unique integer value identifying this person.
         required: true
       tags:
@@ -168,17 +172,21 @@ components:
         id:
           type: integer
           readOnly: true
+          title: ID
         company_name:
           type: string
+          title: Company name
           maxLength: 30
         address:
           type: string
+          title: Address
           maxLength: 30
         board:
           type: array
           items:
             $ref: '#/components/schemas/Person'
           readOnly: true
+          title: Board
       required:
       - address
       - board
@@ -190,17 +198,22 @@ components:
         id:
           type: integer
           readOnly: true
+          title: ID
         first_name:
           type: string
+          title: First name
           maxLength: 30
         last_name:
           type: string
+          title: Last name
           maxLength: 30
         address:
           type: string
+          title: Address
           maxLength: 30
         supervisor_id:
           type: integer
+          title: Supervisor id
           nullable: true
       required:
       - address
@@ -214,34 +227,43 @@ components:
         id:
           type: integer
           readOnly: true
+          title: ID
         company_name:
           type: string
+          title: Company name
           maxLength: 30
         address:
           type: string
+          title: Address
           maxLength: 30
         board:
           type: array
           items:
             $ref: '#/components/schemas/Person'
           readOnly: true
+          title: Board
     PatchedNaturalPerson:
       type: object
       properties:
         id:
           type: integer
           readOnly: true
+          title: ID
         first_name:
           type: string
+          title: First name
           maxLength: 30
         last_name:
           type: string
+          title: Last name
           maxLength: 30
         address:
           type: string
+          title: Address
           maxLength: 30
         supervisor_id:
           type: integer
+          title: Supervisor id
           nullable: true
     PatchedPerson:
       oneOf:

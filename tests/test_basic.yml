@@ -187,24 +187,32 @@ components:
           type: string
           format: uuid
           readOnly: true
+          title: Id
         songs:
           type: array
           items:
             $ref: '#/components/schemas/Song'
           readOnly: true
+          title: Songs
         single:
           allOf:
           - $ref: '#/components/schemas/Song'
           readOnly: true
+          title: Single
         title:
           type: string
+          title: Title
           maxLength: 100
         genre:
-          $ref: '#/components/schemas/GenreEnum'
+          allOf:
+          - $ref: '#/components/schemas/GenreEnum'
+          title: Genre
         year:
           type: integer
+          title: Year
         released:
           type: boolean
+          title: Released
       required:
       - genre
       - id
@@ -225,24 +233,32 @@ components:
           type: string
           format: uuid
           readOnly: true
+          title: Id
         songs:
           type: array
           items:
             $ref: '#/components/schemas/Song'
           readOnly: true
+          title: Songs
         single:
           allOf:
           - $ref: '#/components/schemas/Song'
           readOnly: true
+          title: Single
         title:
           type: string
+          title: Title
           maxLength: 100
         genre:
-          $ref: '#/components/schemas/GenreEnum'
+          allOf:
+          - $ref: '#/components/schemas/GenreEnum'
+          title: Genre
         year:
           type: integer
+          title: Year
         released:
           type: boolean
+          title: Released
     Song:
       type: object
       properties:
@@ -250,15 +266,19 @@ components:
           type: string
           format: uuid
           readOnly: true
+          title: Id
         title:
           type: string
+          title: Title
           maxLength: 100
         length:
           type: integer
+          title: Length
         top10:
           type: boolean
           nullable: true
           readOnly: true
+          title: Top10
       required:
       - id
       - length

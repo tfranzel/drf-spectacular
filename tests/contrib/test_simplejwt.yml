@@ -82,9 +82,11 @@ components:
       properties:
         username:
           type: string
+          title: Username
         password:
           type: string
           writeOnly: true
+          title: Password
       required:
       - password
       - username
@@ -93,6 +95,7 @@ components:
       properties:
         refresh:
           type: string
+          title: Refresh
       required:
       - refresh
     X:
@@ -101,6 +104,7 @@ components:
         uuid:
           type: string
           format: uuid
+          title: Uuid
       required:
       - uuid
   securitySchemes:

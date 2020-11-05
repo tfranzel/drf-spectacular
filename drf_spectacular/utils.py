@@ -68,12 +68,14 @@ class OpenApiParameter(OpenApiSchemaBase):
     HEADER = 'header'
     COOKIE = 'cookie'
 
-    def __init__(self, name, type=str, location=QUERY, required=False, description='', enum=None, deprecated=False):
+    def __init__(self, name, type=str, location=QUERY, required=False,
+                 description='', title='', enum=None, deprecated=False):
         self.name = name
         self.type = type
         self.location = location
         self.required = required
         self.description = description
+        self.title = title
         self.enum = enum
         self.deprecated = deprecated
 

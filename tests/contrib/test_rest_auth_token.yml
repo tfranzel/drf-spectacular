@@ -386,11 +386,14 @@ components:
       properties:
         username:
           type: string
+          title: Username
         email:
           type: string
           format: email
+          title: Email
         password:
           type: string
+          title: Password
       required:
       - password
     PasswordChange:

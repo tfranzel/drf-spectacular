@@ -649,6 +649,8 @@ class AutoSchema(ViewInspector):
             meta['default'] = default
         if field.help_text:
             meta['description'] = str(field.help_text)
+        if field.label:
+            meta['title'] = str(field.label)
         return meta
 
     def _map_basic_serializer(self, serializer, direction):

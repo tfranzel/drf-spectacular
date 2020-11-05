@@ -198,6 +198,7 @@ paths:
         schema:
           type: string
           description: filter by containing string
+          title: Contains
           maxLength: 10
           minLength: 3
       - in: query
@@ -213,6 +214,7 @@ paths:
             - a
             - b
             type: string
+          title: Order by
       - in: query
         name: stars
         schema:
@@ -220,6 +222,7 @@ paths:
           maximum: 5
           minimum: 1
           description: filter by rating stars
+          title: Stars
         required: true
       tags:
       - doesitall
@@ -241,8 +244,10 @@ components:
       properties:
         field_a:
           type: string
+          title: Field a
         field_b:
           type: integer
+          title: Field b
       required:
       - field_a
       - field_b
@@ -251,11 +256,14 @@ components:
       properties:
         field_a:
           type: string
+          title: Field a
         field_b:
           type: integer
+          title: Field b
         field_c:
           type: object
           additionalProperties: {}
+          title: Field c
       required:
       - field_a
       - field_b
@@ -265,8 +273,10 @@ components:
       properties:
         field_a:
           type: string
+          title: Field a
         field_b:
           type: integer
+          title: Field b
     ErrorDetail:
       type: object
       properties:
@@ -274,20 +284,24 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Field i
         field_j:
           allOf:
           - $ref: '#/components/schemas/Inline'
           nullable: true
           readOnly: true
+          title: Field j
         field_k:
           type: array
           items:
             $ref: '#/components/schemas/Inline'
           readOnly: true
+          title: Field k
         field_l:
           allOf:
           - $ref: '#/components/schemas/FieldLEnum'
           readOnly: true
+          title: Field l
       required:
       - field_i
       - field_j
@@ -303,6 +317,7 @@ components:
       properties:
         encoding:
           type: string
+          title: Encoding
         image_data:
           type: string
           format: byte
@@ -314,8 +329,10 @@ components:
       properties:
         inline_b:
           type: boolean
+          title: Inline b
         inline_i:
           type: integer
+          title: Inline i
       required:
       - inline_b
       - inline_i
@@ -327,9 +344,11 @@ components:
           maximum: 5
           minimum: 1
           description: filter by rating stars
+          title: Stars
         contains:
           type: string
           description: filter by containing string
+          title: Contains
           maxLength: 10
           minLength: 3
         order_by:
@@ -341,6 +360,7 @@ components:
             type: string
           default:
           - a
+          title: Order by
       required:
       - stars
   securitySchemes:

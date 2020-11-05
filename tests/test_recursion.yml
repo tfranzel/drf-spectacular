@@ -37,16 +37,20 @@ components:
           type: string
           format: uuid
           readOnly: true
+          title: Id
         label:
           type: string
+          title: Label
         parent:
           type: string
           format: uuid
           nullable: true
+          title: Parent
         children:
           type: array
           items:
             $ref: '#/components/schemas/TreeNode'
+          title: Children
       required:
       - children
       - id

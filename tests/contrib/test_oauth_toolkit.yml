@@ -66,6 +66,7 @@ components:
         uuid:
           type: string
           format: uuid
+          title: Uuid
       required:
       - uuid
   securitySchemes:
