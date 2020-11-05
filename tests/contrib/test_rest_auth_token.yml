@@ -373,10 +373,14 @@ components:
       properties:
         access_token:
           type: string
+          title: Access token
         refresh_token:
           type: string
+          title: Refresh token
         user:
-          $ref: '#/components/schemas/UserDetails'
+          allOf:
+          - $ref: '#/components/schemas/UserDetails'
+          title: User
       required:
       - access_token
       - refresh_token
@@ -401,9 +405,11 @@ components:
       properties:
         new_password1:
           type: string
+          title: New password1
           maxLength: 128
         new_password2:
           type: string
+          title: New password2
           maxLength: 128
       required:
       - new_password1
@@ -415,6 +421,7 @@ components:
         email:
           type: string
           format: email
+          title: Email
       required:
       - email
     PasswordResetConfirm:
@@ -423,14 +430,18 @@ components:
       properties:
         new_password1:
           type: string
+          title: New password1
           maxLength: 128
         new_password2:
           type: string
+          title: New password2
           maxLength: 128
         uid:
           type: string
+          title: Uid
         token:
           type: string
+          title: Token
       required:
       - new_password1
       - new_password2
@@ -443,38 +454,47 @@ components:
         pk:
           type: integer
           readOnly: true
+          title: ID
         username:
           type: string
           description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
             only.
+          title: Username
           pattern: ^[\w.@+-]+$
           maxLength: 150
         email:
           type: string
           format: email
           readOnly: true
+          title: Email address
         first_name:
           type: string
+          title: First name
           maxLength: 150
         last_name:
           type: string
+          title: Last name
           maxLength: 150
     Register:
       type: object
       properties:
         username:
           type: string
+          title: Username
           maxLength: 150
           minLength: 1
         email:
           type: string
           format: email
+          title: Email
         password1:
           type: string
           writeOnly: true
+          title: Password1
         password2:
           type: string
           writeOnly: true
+          title: Password2
       required:
       - password1
       - password2
@@ -485,6 +505,7 @@ components:
         detail:
           type: string
           readOnly: true
+          title: Detail
       required:
       - detail
     TokenRefresh:
@@ -492,6 +513,7 @@ components:
       properties:
         refresh:
           type: string
+          title: Refresh
       required:
       - refresh
     TokenVerify:
@@ -499,6 +521,7 @@ components:
       properties:
         token:
           type: string
+          title: Token
       required:
       - token
     UserDetails:
@@ -508,21 +531,26 @@ components:
         pk:
           type: integer
           readOnly: true
+          title: ID
         username:
           type: string
           description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
             only.
+          title: Username
           pattern: ^[\w.@+-]+$
           maxLength: 150
         email:
           type: string
           format: email
           readOnly: true
+          title: Email address
         first_name:
           type: string
+          title: First name
           maxLength: 150
         last_name:
           type: string
+          title: Last name
           maxLength: 150
       required:
       - email
@@ -533,6 +561,7 @@ components:
       properties:
         key:
           type: string
+          title: Key
       required:
       - key
   securitySchemes:
