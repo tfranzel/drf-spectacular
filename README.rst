@@ -84,6 +84,19 @@ and finally register our spectacular AutoSchema with DRF
         'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     }
 
+.. note:: `drf-spectacular` deliberately stays below version ``1.x.x`` to signal that every
+  new version may potentially break you. For production we strongly recommend pinning the
+  version and inspecting a schema diff on update.
+
+  With that said, we aim to be extremely defensive w.r.t. breaking API changes. However,
+  we also acknowledge the fact that even slight schema changes may break your toolchain,
+  as any existing bug may somehow also be used as a feature.
+
+  We define version increments with the following semantics. y-stream increments may contain
+  potentially breaking changes to both API and schema. z-stream increments will never break the
+  API and may only contain schema changes that should have a low chance of breaking you.
+
+
 Take it for a spin
 ------------------
 

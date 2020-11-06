@@ -64,6 +64,10 @@ discovered in the introspection.
         class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             ...
 
+.. note:: You may also use :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` on views
+  to attach annotations to all methods in that view (e.g. tags). Method annotations will take precedence
+  over view annotation.
+
 Step 3: :py:class:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` and type hints
 ---------------------------------------------------------------------------------------------------
 A custom ``SerializerField`` might not get picked up properly. You can inform `drf-spectacular`

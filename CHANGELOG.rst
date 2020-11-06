@@ -1,6 +1,28 @@
 Changelog
 =========
 
+
+0.11.0 (2020-11-06)
+-------------------
+
+- Remove unnecessary view permission from action [Vikas]
+- Fix security definition for IsAuthenticatedOrReadOnly permission [Vikas]
+- introduce convenience decorator @schema_extend_view `#182 <https://github.com/tfranzel/drf-spectacular/issues/182>`
+- bugfix override behaviour of extend_schema with methods and views
+- move some plumbing to drainage to make importable without cirular import issues
+- bugfix naming for ListSerializer with pagination `#183 <https://github.com/tfranzel/drf-spectacular/issues/183>`_
+- cleanup trailing whitespace in docstrings
+- normalize regex in pattern, remove ECMA-incompatible URL pattern `#175 <https://github.com/tfranzel/drf-spectacular/issues/175>`_
+- remove Swagger UI inline script for stricter CSP `#173 <https://github.com/tfranzel/drf-spectacular/issues/173>`_
+- fixed typo [Sebastian Pabst]
+- add the PASSWORD format to types.py [Sebastian Pabst]
+- docs(settings): fix favicon example [Max Wittig]
+
+Breaking changes:
+
+- ``@extend_schema`` override mechanics are now consistent. may affect schema only if used on both view and view method
+- otherwise mainly small improvement/fixes that should have minimal impact on the schema.
+
 0.10.0 (2020-10-20)
 -------------------
 
