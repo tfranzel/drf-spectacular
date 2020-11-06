@@ -28,7 +28,6 @@ class SpectacularDjangoFilterBackendMixin:
                 required=field.extra['required'],
                 location=OpenApiParameter.QUERY,
                 description=field.label if field.label is not None else field_name,
-                title=field.label if field.label is not None else field_name,
                 schema=view.schema._map_model_field(model_field, direction=None),
                 enum=[c for c, _ in field.extra.get('choices', [])],
             ))
