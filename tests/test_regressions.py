@@ -1047,3 +1047,24 @@ def test_manual_security_method_addition(no_warnings):
     schema_security = schema['components']['securitySchemes']
     assert len(operation_security) == 4 and any(['apiKeyAuth' in os for os in operation_security])
     assert len(schema_security) == 3 and 'apiKeyAuth' in schema_security
+
+
+def test_basic_viewset_without_queryset_with_explicit_pk_typing(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = fields.IntegerField()
+
+    class XViewset(viewsets.ViewSet):
+        serializer_class = XSerializer
+
+        def retrieve(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    urlpatterns = [
+        path("api/<path:some_var>/<uuid:pk>/", XViewset.as_view({"get": "retrieve"}))
+    ]
+    generator = SchemaGenerator(patterns=urlpatterns)
+    schema = generator.get_schema(request=None, public=True)
+    validate_schema(schema)
+    operation = schema['paths']['/api/{some_var}/{id}/']['get']
+    assert operation['parameters'][0]['name'] == 'id'
+    assert operation['parameters'][0]['schema']['format'] == 'uuid'

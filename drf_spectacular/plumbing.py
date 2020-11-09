@@ -21,6 +21,7 @@ from django.urls.resolvers import (  # type: ignore
 from django.utils.functional import Promise
 from django.utils.module_loading import import_string
 from rest_framework import exceptions, fields, mixins, serializers, versioning
+from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
 from uritemplate import URITemplate
@@ -562,6 +563,9 @@ def resolve_regex_path_parameter(path_regex, variable, available_formats):
             converter = 'drf_format_suffix'
         elif converter == 'drf_format_suffix':
             enum_values = [f'.{suffix}' for suffix in available_formats]
+
+        if api_settings.SCHEMA_COERCE_PATH_PK and parameter == 'pk':
+            parameter = 'id'
 
         if parameter == variable and converter in DJANGO_PATH_CONVERTER_MAPPING:
             return build_parameter_type(
