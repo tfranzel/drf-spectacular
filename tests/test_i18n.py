@@ -93,4 +93,4 @@ def test_i18n_schema_ui(no_warnings):
     response = APIClient().get('/api/schema/swagger-ui/?lang=de')
     assert b'/api/schema/swagger-ui/?lang=de&script=' in response.content
     response = APIClient().get('/api/schema/swagger-ui/?lang=de&script=')
-    assert b'http://testserver/api/schema/?lang=de' in response.content
+    assert b'/api/schema/?lang=de' in response.content

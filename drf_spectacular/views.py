@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
-from drf_spectacular.plumbing import set_query_parameters
+from drf_spectacular.plumbing import get_relative_url, set_query_parameters
 from drf_spectacular.renderers import (
     OpenApiJsonRenderer, OpenApiJsonRenderer2, OpenApiYamlRenderer, OpenApiYamlRenderer2,
 )
@@ -84,7 +84,7 @@ class SpectacularSwaggerView(APIView):
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
         if request.GET.get('script') is not None:
-            schema_url = self.url or reverse(self.url_name, request=request)
+            schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
             return Response(
                 data={
                     'schema_url': set_query_parameters(
@@ -121,7 +121,7 @@ class SpectacularRedocView(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
-        schema_url = self.url or reverse(self.url_name, request=request)
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
         schema_url = set_query_parameters(schema_url, lang=request.GET.get('lang'))
         return Response(
             {'schema_url': schema_url},

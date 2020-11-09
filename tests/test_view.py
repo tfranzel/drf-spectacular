@@ -95,4 +95,12 @@ def test_spectacular_ui_view(no_warnings, ui):
     response = APIClient().get(f'/api/v2/schema/{ui}/')
     assert response.status_code == 200
     assert response.content.startswith(b'<!DOCTYPE html>')
-    assert b'/api/v2/schema' in response.content
+
+    if ui == 'redoc':
+        assert b'"/api/v2/schema/"' in response.content
+    else:
+        assert b'"/api/v2/schema/swagger-ui/?script="' in response.content
+        # second request to obtain swagger config (CSP self)
+        response = APIClient().get('/api/v2/schema/swagger-ui/?script=')
+        assert response.status_code == 200
+        assert b'"/api/v2/schema/"' in response.content

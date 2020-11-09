@@ -722,3 +722,8 @@ def set_query_parameters(url, **kwargs) -> str:
     query = {k: v for k, v in kwargs.items() if v is not None}
     query = urllib.parse.urlencode(query, doseq=True)
     return urllib.parse.urlunparse((scheme, netloc, path, params, query, fragment))
+
+
+def get_relative_url(url: str) -> str:
+    scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
+    return urllib.parse.urlunparse(('', '', path, params, query, fragment))
