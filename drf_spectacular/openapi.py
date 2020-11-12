@@ -849,6 +849,8 @@ class AutoSchema(ViewInspector):
         if is_serializer(response_serializers) or is_basic_type(response_serializers):
             if self.method == 'DELETE':
                 return {'204': {'description': _('No response body')}}
+            if self.method == 'POST' and getattr(self.view, 'action', None) == 'create':
+                return {'201': self._get_response_for_code(response_serializers)}
             return {'200': self._get_response_for_code(response_serializers)}
         elif isinstance(response_serializers, dict):
             # custom handling for overriding default return codes with @extend_schema

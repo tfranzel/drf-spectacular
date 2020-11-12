@@ -81,11 +81,11 @@ def test_i18n_schema(no_warnings, url, header, translated):
     if translated:
         assert 'Eine laengere Erklaerung' in operation['description']
         assert 'Hauptendpunkt fuer' in operation['summary']
-        assert 'Kein Inhalt' in operation['responses']['200']['description']
+        assert 'Kein Inhalt' in operation['responses']['201']['description']
     else:
         assert 'More lengthy explanation' in operation['description']
         assert 'Main endpoint' in operation['summary']
-        assert 'No response body' in operation['responses']['200']['description']
+        assert 'No response body' in operation['responses']['201']['description']
 
 
 @pytest.mark.urls(__name__)

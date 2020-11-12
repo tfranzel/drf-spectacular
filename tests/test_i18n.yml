@@ -95,7 +95,7 @@ paths:
       - basicAuth: []
       - {}
       responses:
-        '200':
+        '201':
           description: Kein Inhalt
   /api/x/{id}/:
     get:

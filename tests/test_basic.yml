@@ -44,7 +44,7 @@ paths:
       security:
       - tokenAuth: []
       responses:
-        '200':
+        '201':
           content:
             application/json:
               schema:

@@ -70,7 +70,16 @@ def generate_schema(route, viewset=None, view=None, view_function=None):
     return schema
 
 
-def get_response_schema(operation, status='200', content_type='application/json'):
+def get_response_schema(operation, status=None, content_type='application/json'):
+    if (
+        not status
+        and operation['operationId'].endswith('_create')
+        and '201' in operation['responses']
+        and '200' not in operation['responses']
+    ):
+        status = '201'
+    elif not status:
+        status = '200'
     return operation['responses'][status]['content'][content_type]['schema']
 
 
