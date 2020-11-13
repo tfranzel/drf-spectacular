@@ -55,6 +55,16 @@ def test_postprocessing(no_warnings):
     assert_schema(schema, 'tests/test_postprocessing.yml')
 
 
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE', False
+)
+def test_no_blank_and_null_in_enum_choices(no_warnings):
+    schema = generate_schema('a', AViewset)
+    assert 'NullEnum' not in schema['components']['schemas']
+    assert 'BlankEnum' not in schema['components']['schemas']
+    assert 'oneOf' not in schema['components']['schemas']['B']['properties']['language']
+
+
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
     'LanguageEnum': 'tests.test_postprocessing.language_choices'
 })

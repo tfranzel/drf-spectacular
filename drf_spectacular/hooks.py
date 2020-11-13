@@ -115,10 +115,11 @@ def postprocess_schema_enums(result, generator, **kwargs):
             components = [
                 create_enum_component(enum_name, schema=enum_schema)
             ]
-            if '' in prop_enum_original_list:
-                components.append(create_enum_component('BlankEnum', schema={'enum': ['']}))
-            if None in prop_enum_original_list:
-                components.append(create_enum_component('NullEnum', schema={'enum': [None]}))
+            if spectacular_settings.ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE:
+                if '' in prop_enum_original_list:
+                    components.append(create_enum_component('BlankEnum', schema={'enum': ['']}))
+                if None in prop_enum_original_list:
+                    components.append(create_enum_component('NullEnum', schema={'enum': [None]}))
 
             if len(components) == 1:
                 prop_schema.update(components[0].ref)
