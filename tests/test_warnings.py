@@ -203,8 +203,8 @@ def test_unable_to_derive_function_type_warning(capsys):
 
     generate_schema('x', view=XAPIView)
     stderr = capsys.readouterr().err
-    assert 'type hint for function "x" is unknown.' in stderr
-    assert 'type hint for function "get_y" is unknown.' in stderr
+    assert 'unable to resolve type hint for function "x"' in stderr
+    assert 'unable to resolve type hint for function "get_y"' in stderr
 
 
 def test_operation_id_collision_resolution(capsys):

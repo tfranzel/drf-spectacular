@@ -22,10 +22,10 @@ from drf_spectacular.contrib import *  # noqa: F403, F401
 from drf_spectacular.drainage import get_override, has_override
 from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerializerFieldExtension
 from drf_spectacular.plumbing import (
-    ComponentRegistry, ResolvedComponent, anyisinstance, append_meta, build_array_type,
-    build_basic_type, build_choice_field, build_object_type, build_parameter_type, error,
-    follow_field_source, force_instance, get_doc, get_view_model, is_basic_type, is_field,
-    is_serializer, resolve_regex_path_parameter, safe_ref, warn,
+    ComponentRegistry, ResolvedComponent, UnableToProceedError, anyisinstance, append_meta,
+    build_array_type, build_basic_type, build_choice_field, build_object_type, build_parameter_type,
+    error, follow_field_source, force_instance, get_doc, get_view_model, is_basic_type, is_field,
+    is_serializer, resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -726,20 +726,13 @@ class AutoSchema(ViewInspector):
 
         if is_serializer(hint) or is_field(hint):
             return self._map_serializer_field(force_instance(hint), 'response')
-        elif is_basic_type(hint, allow_none=False):
-            return build_basic_type(hint)
-        elif getattr(hint, '__origin__', None) is typing.Union:
-            if type(None) == hint.__args__[1] and len(hint.__args__) == 2:
-                schema = build_basic_type(hint.__args__[0])
-                schema['nullable'] = True
-                return schema
-            else:
-                warn(f'type hint {hint} not supported yet. defaulting to "string"')
-                return build_basic_type(OpenApiTypes.STR)
-        else:
+
+        try:
+            return resolve_type_hint(hint)
+        except UnableToProceedError:
             warn(
-                f'type hint for function "{method.__name__}" is unknown. consider using '
-                f'a type hint or @extend_schema_field. defaulting to string.'
+                f'unable to resolve type hint for function "{method.__name__}". consider '
+                f'using a type hint or @extend_schema_field. defaulting to string.'
             )
             return build_basic_type(OpenApiTypes.STR)
 

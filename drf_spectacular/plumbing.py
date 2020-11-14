@@ -2,6 +2,8 @@ import hashlib
 import inspect
 import json
 import re
+import sys
+import typing
 import urllib.parse
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
@@ -158,11 +160,13 @@ def build_basic_type(obj):
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])
 
 
-def build_array_type(schema):
-    return {
-        'type': 'array',
-        'items': schema,
-    }
+def build_array_type(schema, min_length=None, max_length=None):
+    schema = {'type': 'array', 'items': schema}
+    if min_length is not None:
+        schema['minLength'] = min_length
+    if max_length is not None:
+        schema['maxLength'] = max_length
+    return schema
 
 
 def build_object_type(
@@ -731,3 +735,60 @@ def set_query_parameters(url, **kwargs) -> str:
 def get_relative_url(url: str) -> str:
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
     return urllib.parse.urlunparse(('', '', path, params, query, fragment))
+
+
+def _get_type_hint_origin(hint):
+    """ graceful fallback for py 3.8 typing functionality """
+    if sys.version_info >= (3, 8):
+        return typing.get_origin(hint), typing.get_args(hint)
+    else:
+        origin = getattr(hint, '__origin__', None)
+        args = getattr(hint, '__args__', None)
+        origin = {
+            typing.List: list,
+            typing.Dict: dict,
+            typing.Tuple: tuple,
+            typing.Set: set,
+            typing.FrozenSet: frozenset
+        }.get(origin, origin)
+        return origin, args
+
+
+def resolve_type_hint(hint):
+    """ resolve return value type hints to schema """
+    origin, args = _get_type_hint_origin(hint)
+
+    if origin is None and is_basic_type(hint, allow_none=False):
+        return build_basic_type(hint)
+    elif origin is list or hint is list:
+        return build_array_type(build_basic_type(args[0] if args else OpenApiTypes.OBJECT))
+    elif origin is tuple:
+        return build_array_type(
+            schema=build_basic_type(args[0]),
+            max_length=len(args),
+            min_length=len(args),
+        )
+    elif origin is dict or origin is defaultdict or origin is OrderedDict:
+        schema = build_basic_type(OpenApiTypes.OBJECT)
+        if args[1] is not typing.Any:
+            schema['additionalProperties'] = resolve_type_hint(args[1])
+        return schema
+    elif origin is set:
+        return build_array_type(resolve_type_hint(args[0]))
+    elif origin is frozenset:
+        return build_array_type(resolve_type_hint(args[0]))
+    elif hasattr(typing, 'Literal') and origin is typing.Literal:
+        # python >= 3.8
+        schema = {'enum': list(args)}
+        if all(type(args[0]) is type(choice) for choice in args):
+            schema.update(build_basic_type(type(args[0])))
+        return schema
+    elif origin is typing.Union and len(args) == 2 and isinstance(None, args[1]):
+        # Optional[*] is resolved to Union[*, None]
+        schema = resolve_type_hint(args[0])
+        schema['nullable'] = True
+        return schema
+    elif origin is typing.Union:
+        return {'oneOf': [resolve_type_hint(arg) for arg in args]}
+    else:
+        raise UnableToProceedError()
