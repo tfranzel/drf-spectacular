@@ -132,6 +132,12 @@ if sys.version_info >= (3, 8):
         }
     ))
 
+if sys.version_info >= (3, 9):
+    TYPE_HINT_TEST_PARAMS.append((
+        dict[str, int],
+        {'type': 'object', 'additionalProperties': {'type': 'integer'}}
+    ))
+
 
 @pytest.mark.parametrize(['type_hint', 'ref_schema'], TYPE_HINT_TEST_PARAMS)
 def test_type_hint_extraction(no_warnings, type_hint, ref_schema):

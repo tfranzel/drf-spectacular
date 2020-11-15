@@ -47,6 +47,9 @@ jobs:
     - python: 3.8
       env: TOXENV=py38-django3.1-drf3.11
 
+    - python: 3.9
+      env: TOXENV=py39-django3.1-drf3.11
+
     - python: 3.8
       env: TOXENV=py38-django3.1-drfmaster
     - python: 3.8
