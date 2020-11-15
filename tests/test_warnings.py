@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema, extend_schema_view
 from tests import generate_schema
 
 
@@ -248,3 +248,34 @@ def test_extend_schema_view_on_missing_view_method(capsys):
     generate_schema('x', view=XAPIView)
     stderr = capsys.readouterr().err
     assert '@extend_schema_view argument "post" was not found on view' in stderr
+
+
+def test_polymorphic_proxy_subserializer_missing_type_field(capsys):
+    class IncompleteSerializer(serializers.Serializer):
+        field = serializers.IntegerField()  # missing field named type
+
+    class XAPIView(APIView):
+        @extend_schema(
+            responses=PolymorphicProxySerializer(
+                component_name='Broken',
+                serializers=[IncompleteSerializer],
+                resource_type_field_name='type',
+            )
+        )
+        def get(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('x', view=XAPIView)
+    stderr = capsys.readouterr().err
+    assert 'sub-serializer Incomplete of Broken must contain' in stderr
+
+
+def test_warning_operation_id_on_extend_schema_view(capsys):
+    @extend_schema(operation_id='Invalid', responses=int)
+    class XAPIView(APIView):
+        def get(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('x', view=XAPIView)
+    stderr = capsys.readouterr().err
+    assert 'using @extend_schema on viewset class XAPIView with parameters' in stderr
