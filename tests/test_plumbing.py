@@ -121,6 +121,16 @@ if sys.version_info >= (3, 8):
         typing.Literal['x', 'y'],
         {'enum': ['x', 'y'], 'type': 'string'}
     ))
+    TYPE_HINT_TEST_PARAMS.append((
+        typing.TypedDict('TD', foo=int, bar=typing.List[str]),
+        {
+            'type': 'object',
+            'properties': {
+                'foo': {'type': 'integer'},
+                'bar': {'type': 'array', 'items': {'type': 'string'}}
+            }
+        }
+    ))
 
 
 @pytest.mark.parametrize(['type_hint', 'ref_schema'], TYPE_HINT_TEST_PARAMS)

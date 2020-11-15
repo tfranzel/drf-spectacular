@@ -783,6 +783,12 @@ def resolve_type_hint(hint):
         if all(type(args[0]) is type(choice) for choice in args):
             schema.update(build_basic_type(type(args[0])))
         return schema
+    elif hasattr(typing, 'TypedDict') and isinstance(hint, typing._TypedDictMeta):
+        return build_object_type(
+            properties={
+                k: resolve_type_hint(v) for k, v in typing.get_type_hints(hint).items()
+            }
+        )
     elif origin is typing.Union and len(args) == 2 and isinstance(None, args[1]):
         # Optional[*] is resolved to Union[*, None]
         schema = resolve_type_hint(args[0])
