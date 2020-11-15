@@ -1,13 +1,27 @@
 Changelog
 =========
 
+0.11.1 (2020-11-15)
+-------------------
+
+- bugfix hint extraction on @cached_property `#198 <https://github.com/tfranzel/drf-spectacular/issues/198>`_
+- add support for basic TypedDict hints `#184 <https://github.com/tfranzel/drf-spectacular/issues/184>`_
+- improve type hint resolution `#199 <https://github.com/tfranzel/drf-spectacular/issues/199>`_
+- add option to disable Null/Blank enum choice feature `#185 <https://github.com/tfranzel/drf-spectacular/issues/185>`_
+- bugfix return code for Viewset create methods `#196 <https://github.com/tfranzel/drf-spectacular/issues/196>`_
+- honor SCHEMA_COERCE_PATH_PK on path param type resolution `#194 <https://github.com/tfranzel/drf-spectacular/issues/194>`_
+- bugfix absolute schema URL to relative in UI `#193 <https://github.com/tfranzel/drf-spectacular/issues/193>`_
+
+Breaking changes:
+
+- return code for ``create`` on ``ViewSet`` changed from ``200`` to ``201``. Some generator targets are picky, others don't care.
 
 0.11.0 (2020-11-06)
 -------------------
 
 - Remove unnecessary view permission from action [Vikas]
 - Fix security definition for IsAuthenticatedOrReadOnly permission [Vikas]
-- introduce convenience decorator @schema_extend_view `#182 <https://github.com/tfranzel/drf-spectacular/issues/182>`
+- introduce convenience decorator @schema_extend_view `#182 <https://github.com/tfranzel/drf-spectacular/issues/182>`_
 - bugfix override behaviour of extend_schema with methods and views
 - move some plumbing to drainage to make importable without cirular import issues
 - bugfix naming for ListSerializer with pagination `#183 <https://github.com/tfranzel/drf-spectacular/issues/183>`_
