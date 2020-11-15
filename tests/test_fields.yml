@@ -162,6 +162,10 @@ components:
           type: number
           format: float
           readOnly: true
+        field_model_cached_property_float:
+          type: number
+          format: float
+          readOnly: true
         field_dict_int:
           type: object
           additionalProperties:
@@ -273,6 +277,7 @@ components:
       - field_m2m
       - field_method_float
       - field_method_object
+      - field_model_cached_property_float
       - field_model_property_float
       - field_o2o
       - field_posint

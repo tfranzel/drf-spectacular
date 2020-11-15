@@ -9,6 +9,7 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.urls import reverse
+from django.utils.functional import cached_property
 from rest_framework import serializers, viewsets
 from rest_framework.routers import SimpleRouter
 from rest_framework.test import APIClient
@@ -78,6 +79,10 @@ class AllFields(models.Model):
 
     @property
     def field_model_property_float(self) -> float:
+        return 1.337
+
+    @cached_property
+    def field_model_cached_property_float(self) -> float:
         return 1.337
 
     @property
@@ -150,6 +155,8 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     field_bool_override = serializers.ReadOnlyField()
 
     field_model_property_float = serializers.ReadOnlyField()
+
+    field_model_cached_property_float = serializers.ReadOnlyField()
 
     field_dict_int = serializers.DictField(
         child=serializers.IntegerField(),

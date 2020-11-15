@@ -20,7 +20,7 @@ from django.urls.resolvers import (  # type: ignore
     _PATH_PARAMETER_COMPONENT_RE, RegexPattern, Resolver404, RoutePattern, URLPattern, URLResolver,
     get_resolver,
 )
-from django.utils.functional import Promise
+from django.utils.functional import Promise, cached_property
 from django.utils.module_loading import import_string
 from rest_framework import exceptions, fields, mixins, serializers, versioning
 from rest_framework.settings import api_settings
@@ -307,6 +307,8 @@ def _follow_field_source(model, path: List[str]):
         # end of traversal
         if isinstance(field_or_property, property):
             return field_or_property.fget
+        elif isinstance(field_or_property, cached_property):
+            return field_or_property.func
         elif callable(field_or_property):
             return field_or_property
         else:
