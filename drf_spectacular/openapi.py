@@ -703,16 +703,16 @@ class AutoSchema(ViewInspector):
                 attr_name = 'maxLength'
                 if isinstance(field, serializers.ListField):
                     attr_name = 'maxItems'
-                schema[attr_name] = v.limit_value
+                schema[attr_name] = v.limit_value() if callable(v.limit_value) else v.limit_value
             elif isinstance(v, validators.MinLengthValidator):
                 attr_name = 'minLength'
                 if isinstance(field, serializers.ListField):
                     attr_name = 'minItems'
-                schema[attr_name] = v.limit_value
+                schema[attr_name] = v.limit_value() if callable(v.limit_value) else v.limit_value
             elif isinstance(v, validators.MaxValueValidator):
-                schema['maximum'] = v.limit_value
+                schema['maximum'] = v.limit_value() if callable(v.limit_value) else v.limit_value
             elif isinstance(v, validators.MinValueValidator):
-                schema['minimum'] = v.limit_value
+                schema['minimum'] = v.limit_value() if callable(v.limit_value) else v.limit_value
             elif isinstance(v, validators.DecimalValidator):
                 if v.max_digits:
                     digits = v.max_digits
