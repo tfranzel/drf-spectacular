@@ -763,7 +763,9 @@ def resolve_type_hint(hint):
     if origin is None and is_basic_type(hint, allow_none=False):
         return build_basic_type(hint)
     elif origin is list or hint is list:
-        return build_array_type(build_basic_type(args[0] if args else OpenApiTypes.OBJECT))
+        return build_array_type(
+            resolve_type_hint(args[0]) if args else build_basic_type(OpenApiTypes.OBJECT)
+        )
     elif origin is tuple:
         return build_array_type(
             schema=build_basic_type(args[0]),
@@ -772,7 +774,7 @@ def resolve_type_hint(hint):
         )
     elif origin is dict or origin is defaultdict or origin is OrderedDict:
         schema = build_basic_type(OpenApiTypes.OBJECT)
-        if args[1] is not typing.Any:
+        if args and args[1] is not typing.Any:
             schema['additionalProperties'] = resolve_type_hint(args[1])
         return schema
     elif origin is set:

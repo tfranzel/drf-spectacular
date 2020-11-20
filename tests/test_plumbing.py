@@ -87,6 +87,9 @@ TYPE_HINT_TEST_PARAMS = [
         typing.List[int],
         {'type': 'array', 'items': {'type': 'integer'}}
     ), (
+        typing.List[typing.Dict[str, int]],
+        {'type': 'array', 'items': {'type': 'object', 'additionalProperties': {'type': 'integer'}}}
+    ), (
         list,
         {'type': 'array', 'items': {'type': 'object', 'additionalProperties': {}}}
     ), (
@@ -131,6 +134,20 @@ if sys.version_info >= (3, 8):
             }
         }
     ))
+    TYPE_HINT_TEST_PARAMS.append((
+        typing.List[typing.TypedDict('TD', foo=str, bar=typing.Dict[str, int])],  # noqa: F821
+        {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'foo': {'type': 'string'},
+                    'bar': {'type': 'object', 'additionalProperties': {'type': 'integer'}}
+                }
+            }
+        }
+    ))
+
 
 if sys.version_info >= (3, 9):
     TYPE_HINT_TEST_PARAMS.append((
