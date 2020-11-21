@@ -847,10 +847,18 @@ class AutoSchema(ViewInspector):
             return {'200': self._get_response_for_code(response_serializers)}
         elif isinstance(response_serializers, dict):
             # custom handling for overriding default return codes with @extend_schema
-            return {
-                str(code): self._get_response_for_code(serializer)
-                for code, serializer in response_serializers.items()
-            }
+            responses = {}
+            for code, serializer in response_serializers.items():
+                if isinstance(code, tuple):
+                    code, media_types = code[0], code[1:]
+                else:
+                    media_types = None
+                content_response = self._get_response_for_code(serializer, media_types)
+                if str(code) in responses:
+                    responses[str(code)]['content'].update(content_response['content'])
+                else:
+                    responses[str(code)] = content_response
+            return responses
         else:
             warn(
                 f'could not resolve "{response_serializers}" for {self.method} {self.path}. '
@@ -861,7 +869,7 @@ class AutoSchema(ViewInspector):
             schema['description'] = _('Unspecified response body')
             return {'200': self._get_response_for_code(schema)}
 
-    def _get_response_for_code(self, serializer):
+    def _get_response_for_code(self, serializer, media_types=None):
         serializer = force_instance(serializer)
 
         if not serializer:
@@ -907,10 +915,11 @@ class AutoSchema(ViewInspector):
             elif paginator:
                 schema = paginator.get_paginated_response_schema(schema)
 
+        if not media_types:
+            media_types = self.map_renderers('media_type')
+
         return {
-            'content': {
-                mt: {'schema': schema} for mt in self.map_renderers('media_type')
-            },
+            'content': {mt: {'schema': schema} for mt in media_types},
             # Description is required by spec, but descriptions for each response code don't really
             # fit into our model. Description is therefore put into the higher level slots.
             # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#responseObject

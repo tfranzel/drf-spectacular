@@ -1068,3 +1068,18 @@ def test_basic_viewset_without_queryset_with_explicit_pk_typing(no_warnings):
     operation = schema['paths']['/api/{some_var}/{id}/']['get']
     assert operation['parameters'][0]['name'] == 'id'
     assert operation['parameters'][0]['schema']['format'] == 'uuid'
+
+
+def test_multiple_media_types(no_warnings):
+    @extend_schema(responses={
+        (200, 'application/json'): OpenApiTypes.OBJECT,
+        (200, 'application/pdf'): OpenApiTypes.BINARY,
+    })
+    class XAPIView(APIView):
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XAPIView)
+    content = schema['paths']['/x']['get']['responses']['200']['content']
+    assert content['application/pdf']['schema']['format'] == 'binary'
+    assert content['application/json']['schema']['type'] == 'object'

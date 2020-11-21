@@ -37,6 +37,9 @@ discovered in the introspection.
         def retrieve(self, request, *args, **kwargs)
             # your code
 
+.. note:: ``responses`` can be detailed further by providing a dictionary instead. This could be for example
+  ``{201: YourRequestSerializer, ...}`` or ``{(200, 'application/pdf'): OpenApiTypes.BINARY, ...}``.
+
 .. note:: For simple responses, you might not go through the hassle of writing an explicit serializer class.
   In those cases, you can simply specify the request/response with a call to
   :py:func:`inline_serializer <drf_spectacular.utils.inline_serializer>`.

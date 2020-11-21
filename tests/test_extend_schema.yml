@@ -116,6 +116,24 @@ paths:
       responses:
         '201':
           description: No response body
+  /doesitall/document/:
+    get:
+      operationId: doesitall_document_retrieve
+      description: ''
+      tags:
+      - doesitall
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /doesitall/manual/:
     post:
       operationId: manual_endpoint

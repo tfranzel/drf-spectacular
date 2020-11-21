@@ -172,6 +172,13 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         def non_required_body(self, request):
             return Response([])  # pragma: no cover
 
+        @extend_schema(responses={
+            (200, 'application/pdf'): bytes
+        })
+        @action(detail=False, methods=['GET'])
+        def document(self, request):
+            return Response(b'deadbeef', status=200)  # pragma: no cover
+
 
 def test_extend_schema(no_warnings):
     assert_schema(

@@ -107,6 +107,7 @@ def extend_schema(
         - ``Serializer`` class
         - ``Serializer`` instance (e.g. ``Serializer(many=True)`` for listings)
         - ``dict`` with status codes as keys and `Serializers` as values.
+        - ``dict`` with tuple (status_code, media_type) as keys and `Serializers` as values.
         - :class:`.PolymorphicProxySerializer` for signaling that
           the operation may yield data from different serializers depending
           on the circumstances.
