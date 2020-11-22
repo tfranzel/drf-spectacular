@@ -135,6 +135,7 @@ class AutoSchema(ViewInspector):
                     description=parameter.description,
                     enum=parameter.enum,
                     deprecated=parameter.deprecated,
+                    examples=parameter.examples,
                 ))
             elif is_serializer(parameter):
                 # explode serializer into separate parameters. defaults to QUERY location
@@ -144,7 +145,8 @@ class AutoSchema(ViewInspector):
                         name=property_name,
                         schema=property_schema,
                         location=OpenApiParameter.QUERY,
-                        required=property_name in mapped.get('required', [])
+                        required=property_name in mapped.get('required', []),
+                        examples=parameter.examples if hasattr(parameter, "examples") else None,
                     ))
             else:
                 warn(f'could not resolve parameter annotation {parameter}. skipping.')
@@ -825,12 +827,21 @@ class AutoSchema(ViewInspector):
                 additionalProperties={},
                 description='Unspecified request body',
             )
-
         request_body = {
             'content': {
-                request_media_types: {'schema': schema} for request_media_types in self.map_parsers()
+                request_media_types: {
+                    'schema': schema,
+                    'examples': {
+                        example_obj.name: example_obj.asdict()
+                        for example_obj in get_override(serializer, 'examples')
+                        if example_obj.response_only is not True
+                    }
+                } if has_override(serializer, 'examples')
+                else {'schema': schema}
+                for request_media_types in self.map_parsers()
             }
         }
+
         if request_body_required:
             request_body['required'] = request_body_required
 
@@ -918,8 +929,25 @@ class AutoSchema(ViewInspector):
         if not media_types:
             media_types = self.map_renderers('media_type')
 
+        content = {}
+        for mt in media_types:
+            examples = get_override(serializer, 'examples')
+            if examples:
+                content[mt] = {
+                    'schema': schema,
+                    'examples': {
+                        example_obj.name: example_obj.asdict()
+                        for example_obj in examples
+                        if example_obj.request_only is not True
+                    }
+                }
+            else:
+                content[mt] = {
+                    'schema': schema,
+                }
+
         return {
-            'content': {mt: {'schema': schema} for mt in media_types},
+            'content': content,
             # Description is required by spec, but descriptions for each response code don't really
             # fit into our model. Description is therefore put into the higher level slots.
             # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#responseObject

@@ -165,6 +165,16 @@ the sky is the limit.
                     type=OpenApiTypes.DATE,
                     location=OpenApiParameter.QUERY,
                     description='Filter by release date',
+                    examples=[
+                        OpenApiExample(
+                            'ex1',
+                            summary='i_am_summary',
+                            description='long description...'
+                            value='1993-08-23'
+                        ),
+                        OpenApiExample('ex2', ....
+                        ),
+                    ],
                 ),
             ],
             # override default docstring extraction
@@ -175,6 +185,17 @@ the sky is the limit.
             operation_id=None,
             # or even completely override what AutoSchema would generate. Provide raw Open API spec as Dict.
             operation=None,
+            # examples, if you define this param, it use requestBody & status200's response & status201's response
+            examples={
+                'ex1': OpenApiExample(
+                    summary='i_am_summary',
+                    description='long description...'
+                    value={...} # requestBody data
+                ),
+                'ex2': OpenApiExample(
+                    ....
+                ),
+            },
         )
         def list(self, request):
             # your non-standard behaviour
@@ -187,7 +208,6 @@ the sky is the limit.
         @action(detail=True, methods=['post'])
         def set_password(self, request, pk=None):
             # your action behaviour
-
 
 More customization
 ^^^^^^^^^^^^^^^^^^

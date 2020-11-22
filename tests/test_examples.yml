@@ -1,0 +1,246 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /schema/:
+    get:
+      operationId: schema_list
+      description: ''
+      parameters:
+      - in: query
+        name: artist
+        schema:
+          type: string
+        description: Filter by artist
+        examples:
+          ex1:
+            summary: i_am_query_param_ex
+            description: i am description
+            value: aaa
+          ex2:
+            summary: i_am_query_param_ex2
+            description: qqqqqqq
+            value: bbbb
+      tags:
+      - schema
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/C'
+              examples:
+                ex_c:
+                  summary: i_am_summary
+                  description: ''
+                  value:
+                    field: 232323
+          description: ''
+    post:
+      operationId: schema_create
+      description: ''
+      tags:
+      - schema
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/A'
+            examples:
+              example2:
+                summary: i_am_ex2
+                description: ''
+                value:
+                  field: 12
+              example3:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 13
+              example4:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 14
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/A'
+            examples:
+              example2:
+                summary: i_am_ex2
+                description: ''
+                value:
+                  field: 12
+              example3:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 13
+              example4:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 14
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/A'
+            examples:
+              example2:
+                summary: i_am_ex2
+                description: ''
+                value:
+                  field: 12
+              example3:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 13
+              example4:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 14
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B'
+          description: ''
+  /schema/override_extend_schema_action/:
+    post:
+      operationId: schema_override_extend_schema_action_create
+      description: ''
+      tags:
+      - schema
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/A'
+            examples:
+              example2:
+                summary: i_am_ex2
+                description: ''
+                value:
+                  field: 12
+              example3:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 13
+              example4:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 14
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/A'
+            examples:
+              example2:
+                summary: i_am_ex2
+                description: ''
+                value:
+                  field: 12
+              example3:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 13
+              example4:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 14
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/A'
+            examples:
+              example2:
+                summary: i_am_ex2
+                description: ''
+                value:
+                  field: 12
+              example3:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 13
+              example4:
+                summary: i_am_ex3
+                description: ''
+                value:
+                  field: 14
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B'
+          description: ''
+  /schema/raw_action/:
+    get:
+      operationId: schema_raw_action_retrieve
+      description: ''
+      tags:
+      - schema
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B'
+          description: ''
+components:
+  schemas:
+    A:
+      type: object
+      properties:
+        field:
+          type: integer
+      required:
+      - field
+    B:
+      type: object
+      properties:
+        field:
+          type: integer
+      required:
+      - field
+    C:
+      type: object
+      properties:
+        field:
+          type: integer
+      required:
+      - field
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

@@ -71,7 +71,45 @@ discovered in the introspection.
   to attach annotations to all methods in that view (e.g. tags). Method annotations will take precedence
   over view annotation.
 
-Step 3: :py:class:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` and type hints
+
+
+
+Step 3: :py:class:`@extend_schema_serializer <drf_spectacular.utils.extend_schema_serializer>`
+-----------------------------------------------------------------------------------------------
+
+    .. code:: python
+
+            @extend_schema_serializer(
+                exclude_fields= ('single',) # schema ignore these fields
+                examples = [
+                     OpenApiExample(
+                        'example_valid1',
+                        summary='i_am_summary',
+                        description='i am description',
+                        value={
+                            'songs':{
+                                'top10':True
+                            }
+                            'single'" {
+                                'top10':True
+                            }
+                        },
+                        response_only=True, # default is False if True, this Example ignore when this serializer used with requestBody
+                        request_only=True, # default is False if True, this Example ignore when this serializer used with response and status 200 or 201
+                    ),
+                ]
+            )
+            class AlbumSerializer(serializers.ModelSerializer):
+                songs = SongSerializer(many=True)
+                single = SongSerializer(read_only=True)
+
+                class Meta:
+                    fields = '__all__'
+                    model = Album
+
+
+
+Step 4: :py:class:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` and type hints
 ---------------------------------------------------------------------------------------------------
 A custom ``SerializerField`` might not get picked up properly. You can inform `drf-spectacular`
 on what is to be expected with the :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>`
@@ -97,7 +135,7 @@ You can apply it also to the method of a `SerializerMethodField`.
         def get_field_custom(self, object):
             return '2020-03-06 20:54:00.104248'
 
-Step 4: Extensions
+Step 5: Extensions
 ------------------
 The core purpose of extensions is to make the above customization mechanisms also available for library code.
 Usually, you cannot easily decorate or modify ``View``, ``Serializer`` or ``Field`` from libraries.
@@ -177,7 +215,7 @@ The usage of this extension is rarely necessary because most custom ``Serializer
 close to the default behaviour.
 
 
-Step 5: Postprocessing hooks
+Step 6: Postprocessing hooks
 ----------------------------
 
 The generated schema is still not to your liking? You are no easy customer, but there is one
@@ -192,7 +230,7 @@ the choice ``Enum`` are consolidated into component objects. You can register ad
         return result
 
 
-Step 6: Preprocessing hooks
+Step 7: Preprocessing hooks
 ---------------------------
 .. _customization_preprocessing_hooks:
 

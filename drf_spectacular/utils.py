@@ -1,6 +1,6 @@
 import functools
 import inspect
-from typing import Dict, List, Type, Union
+from typing import Any, Dict, List, Type, Union
 
 from rest_framework.fields import empty
 from rest_framework.serializers import Serializer
@@ -62,13 +62,63 @@ class OpenApiSchemaBase:
     pass
 
 
+class OpenApiExample(OpenApiSchemaBase):
+    """
+    https://swagger.io/specification/
+     * Specification
+        * Schema
+           * ExampleObject
+    """
+    name: str
+    summary: str
+    description: str
+    value: Any
+
+    # below attributes is not openapiSpec Object, only for drf-spectacular
+    request_only: bool
+    response_only: bool
+
+    def __init__(
+            self,
+            name: str,
+            value: Any,
+            summary="",
+            description="",
+            request_only=False,
+            response_only=False
+    ):
+        self.name = name
+        self.summary = summary
+        self.description = description
+        self.value = value
+        self.request_only = request_only
+        self.response_only = response_only
+
+    def asdict(self) -> Dict[str, Any]:
+        return {
+            'summary': self.summary,
+            'description': self.description,
+            'value': self.value,
+        }
+
+
 class OpenApiParameter(OpenApiSchemaBase):
     QUERY = 'query'
     PATH = 'path'
     HEADER = 'header'
     COOKIE = 'cookie'
 
-    def __init__(self, name, type=str, location=QUERY, required=False, description='', enum=None, deprecated=False):
+    def __init__(
+            self,
+            name,
+            type=str,
+            location=QUERY,
+            required=False,
+            description='',
+            enum=None,
+            deprecated=False,
+            examples: List[OpenApiExample] = []
+    ):
         self.name = name
         self.type = type
         self.location = location
@@ -76,6 +126,10 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.description = description
         self.enum = enum
         self.deprecated = deprecated
+        self.examples = {
+            example.name: example.asdict()
+            for example in examples
+        }
 
 
 def extend_schema(
@@ -92,6 +146,7 @@ def extend_schema(
         operation=None,
         methods=None,
         versions=None,
+        examples: List[OpenApiExample] = None,
 ):
     """
     decorator mainly for the "view" method kind. partially or completely overrides
@@ -122,6 +177,7 @@ def extend_schema(
         provide a OpenAPI3-compliant dictionary that gets directly translated to YAML.
     :param methods: scope extend_schema to specific methods. matches all by default.
     :param versions: scope extend_schema to specific API version. matches all by default.
+    :param examples:  scope extend_schema to specific examples. see ExampleObject's docstring for detail.
     :return:
     """
     def decorator(f):
@@ -173,15 +229,40 @@ def extend_schema(
                     return auth
                 return super().get_auth()
 
+            def _get_examples(self, exclude_only):
+                if examples:
+                    return [
+                        example for example in examples
+                        if getattr(example, exclude_only, None) is False
+                    ]
+
             def get_request_serializer(self):
+                request_examples = self._get_examples(exclude_only='response_only')
                 if request is not empty and is_in_scope(self):
+                    if request_examples:
+                        set_override(request, 'examples', request_examples)
                     return request
-                return super().get_request_serializer()
+
+                serializer = super().get_request_serializer()
+                if request_examples:
+                    set_override(serializer, 'examples', request_examples)
+                return serializer
 
             def get_response_serializers(self):
+                response_examples = self._get_examples(exclude_only='request_only')
+
                 if responses is not empty and is_in_scope(self):
+                    if response_examples:
+                        for success_status in [200, 201]:
+                            response = responses.get(success_status)
+                            if response:
+                                set_override(response, 'examples', response_examples)
                     return responses
-                return super().get_response_serializers()
+
+                serializer = super().get_response_serializers()
+                if response_examples:
+                    set_override(serializer, 'examples', examples)
+                return serializer
 
             def get_description(self):
                 if description and is_in_scope(self):
@@ -265,7 +346,9 @@ def extend_schema_field(field):
     return decorator
 
 
-def extend_schema_serializer(many=None, exclude_fields=None):
+def extend_schema_serializer(
+        many=None, exclude_fields=None, examples: List[OpenApiExample] = None
+):
     """
     Decorator for the "serializer" kind. Intended for overriding default serializer behaviour that
     cannot be influenced through `.extend_schema`.
@@ -274,12 +357,15 @@ def extend_schema_serializer(many=None, exclude_fields=None):
         heuristic to acknowledge a non-list serializer.
     :param exclude_fields: fields to ignore while processing the serializer. only affects the
         schema. fields will still be exposed through the API.
+    :param examples: define example data to serializer.
     """
     def decorator(klass):
         if many is not None:
             set_override(klass, 'many', many)
         if exclude_fields:
             set_override(klass, 'exclude_fields', exclude_fields)
+        if examples:
+            set_override(klass, 'examples', examples)
         return klass
 
     return decorator
