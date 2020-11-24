@@ -1,3 +1,5 @@
+from django.utils.translation import gettext_lazy as _
+
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 
@@ -33,8 +35,17 @@ class TokenScheme(OpenApiAuthenticationExtension):
     priority = -1
 
     def get_security_definition(self, auto_schema):
-        return {
-            'type': 'http',
-            'scheme': 'bearer',
-            'bearerFormat': self.target.keyword,
-        }
+        if self.target.keyword == 'Bearer':
+            return {
+                'type': 'http',
+                'scheme': 'bearer',
+            }
+        else:
+            return {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'Authorization',
+                'description': _(
+                    'Token-based authentication with required prefix "%s"'
+                ) % self.target.keyword
+            }

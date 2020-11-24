@@ -266,6 +266,7 @@ components:
       - top10
   securitySchemes:
     tokenAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: Token
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

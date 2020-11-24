@@ -8,6 +8,7 @@ from django.urls import path, re_path
 from rest_framework import (
     filters, generics, mixins, pagination, parsers, routers, serializers, views, viewsets,
 )
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
@@ -1083,3 +1084,19 @@ def test_multiple_media_types(no_warnings):
     content = schema['paths']['/x']['get']['responses']['200']['content']
     assert content['application/pdf']['schema']['format'] == 'binary'
     assert content['application/json']['schema']['type'] == 'object'
+
+
+def test_token_auth_with_bearer_keyword(no_warnings):
+    class CustomTokenAuthentication(TokenAuthentication):
+        keyword = 'Bearer'
+
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+    view_func.cls.authentication_classes = [CustomTokenAuthentication]
+
+    schema = generate_schema('x', view_function=view_func)
+    validate_schema(schema)
+
+    assert schema['components']['securitySchemes']['tokenAuth']['scheme'] == 'bearer'
