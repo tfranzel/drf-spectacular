@@ -15,12 +15,14 @@ class OpenApiTypes(enum.Enum):
 
     """
     FLOAT = enum.auto()
+    DOUBLE = enum.auto()
     BOOL = enum.auto()
     STR = enum.auto()
     BYTE = enum.auto()  # base64 encoded
     BINARY = enum.auto()
     PASSWORD = enum.auto()
     INT = enum.auto()
+    INT32 = enum.auto()
     INT64 = enum.auto()
     UUID = enum.auto()
     URI = enum.auto()
@@ -39,12 +41,14 @@ class OpenApiTypes(enum.Enum):
 # make a copy with dict() before modifying returned dict
 OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.FLOAT: {'type': 'number', 'format': 'float'},
+    OpenApiTypes.DOUBLE: {'type': 'number', 'format': 'double'},
     OpenApiTypes.BOOL: {'type': 'boolean'},
     OpenApiTypes.STR: {'type': 'string'},
     OpenApiTypes.BYTE: {'type': 'string', 'format': 'byte'},
     OpenApiTypes.BINARY: {'type': 'string', 'format': 'binary'},
     OpenApiTypes.PASSWORD: {'type': 'string', 'format': 'password'},
     OpenApiTypes.INT: {'type': 'integer'},
+    OpenApiTypes.INT32: {'type': 'integer', 'format': 'int32'},
     OpenApiTypes.INT64: {'type': 'integer', 'format': 'int64'},
     OpenApiTypes.UUID: {'type': 'string', 'format': 'uuid'},
     OpenApiTypes.URI: {'type': 'string', 'format': 'uri'},
