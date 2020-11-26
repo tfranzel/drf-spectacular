@@ -21,6 +21,7 @@ class OpenApiTypes(enum.Enum):
     BINARY = enum.auto()
     PASSWORD = enum.auto()
     INT = enum.auto()
+    INT64 = enum.auto()
     UUID = enum.auto()
     URI = enum.auto()
     IP4 = enum.auto()
@@ -44,6 +45,7 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.BINARY: {'type': 'string', 'format': 'binary'},
     OpenApiTypes.PASSWORD: {'type': 'string', 'format': 'password'},
     OpenApiTypes.INT: {'type': 'integer'},
+    OpenApiTypes.INT64: {'type': 'integer', 'format': 'int64'},
     OpenApiTypes.UUID: {'type': 'string', 'format': 'uuid'},
     OpenApiTypes.URI: {'type': 'string', 'format': 'uri'},
     OpenApiTypes.IP4: {'type': 'string', 'format': 'ipv4'},
