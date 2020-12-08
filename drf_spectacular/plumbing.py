@@ -199,7 +199,9 @@ def build_parameter_type(
         explode=None,
         style=None
 ):
-    irrelevant_field_meta = ['readOnly', 'writeOnly', 'nullable', 'default']
+    irrelevant_field_meta = ['readOnly', 'writeOnly']
+    if location == OpenApiParameter.PATH:
+        irrelevant_field_meta += ['nullable', 'default']
     schema = {
         'in': location,
         'name': name,

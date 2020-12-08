@@ -231,6 +231,8 @@ paths:
             - a
             - b
             type: string
+          default:
+          - a
       - in: query
         name: stars
         schema:
