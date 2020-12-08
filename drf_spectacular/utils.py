@@ -108,7 +108,8 @@ class OpenApiParameter(OpenApiSchemaBase):
             description='',
             enum=None,
             deprecated=False,
-            examples: Optional[List[OpenApiExample]] = None
+            examples: Optional[List[OpenApiExample]] = None,
+            exclude=False,
     ):
         self.name = name
         self.type = type
@@ -118,6 +119,7 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.enum = enum
         self.deprecated = deprecated
         self.examples = examples or []
+        self.exclude = exclude
 
 
 def extend_schema(

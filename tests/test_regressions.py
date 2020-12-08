@@ -19,7 +19,7 @@ from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
-    inline_serializer,
+    extend_schema_view, inline_serializer,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema, get_request_schema, get_response_schema
@@ -1139,3 +1139,29 @@ def test_string_response_variations(no_warnings, responses):
 
     schema = generate_schema('x', view_function=view_func)
     assert get_response_schema(schema['paths']['/x']['get'])['type'] == 'string'
+
+
+def test_exclude_discovered_parameter(no_warnings):
+    class M8(models.Model):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M8
+
+    @extend_schema_view(list=extend_schema(parameters=[
+        # keep 'offset', remove 'limit', and add 'random'
+        OpenApiParameter('limit', exclude=True),
+        OpenApiParameter('random', bool),
+    ]))
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = M8.objects.all()
+        serializer_class = XSerializer
+        pagination_class = pagination.LimitOffsetPagination
+
+    schema = generate_schema('x', XViewset)
+    parameters = schema['paths']['/x/']['get']['parameters']
+    assert len(parameters) == 2
+    assert parameters[0]['name'] == 'offset'
+    assert parameters[1]['name'] == 'random'
