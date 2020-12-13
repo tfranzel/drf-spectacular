@@ -27,6 +27,7 @@ Features
     - ``MethodSerializerField()`` type via type hinting or ``@extend_schema_field``
     - i18n support
     - Tags extraction
+    - Request/response/parameter examples
     - Description extraction from ``docstrings``
     - Sane fallbacks
     - Sane ``operation_id`` naming (based on path)
@@ -167,13 +168,12 @@ the sky is the limit.
                     description='Filter by release date',
                     examples=[
                         OpenApiExample(
-                            'ex1',
-                            summary='i_am_summary',
-                            description='long description...'
+                            'Example 1',
+                            summary='short optional summary',
+                            description='longer description'
                             value='1993-08-23'
                         ),
-                        OpenApiExample('ex2', ....
-                        ),
+                        ...
                     ],
                 ),
             ],
@@ -185,17 +185,15 @@ the sky is the limit.
             operation_id=None,
             # or even completely override what AutoSchema would generate. Provide raw Open API spec as Dict.
             operation=None,
-            # examples, if you define this param, it use requestBody & status200's response & status201's response
-            examples={
-                'ex1': OpenApiExample(
-                    summary='i_am_summary',
-                    description='long description...'
-                    value={...} # requestBody data
+            # attach request/response examples to the operation.
+            examples=[
+                OpenApiExample(
+                    'Example 1'
+                    description='longer description'
+                    value=...
                 ),
-                'ex2': OpenApiExample(
-                    ....
-                ),
-            },
+                ...
+            ],
         )
         def list(self, request):
             # your non-standard behaviour

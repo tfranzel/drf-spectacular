@@ -14,14 +14,14 @@ paths:
           type: string
         description: Filter by artist
         examples:
-          ex1:
-            summary: i_am_query_param_ex
-            description: i am description
-            value: aaa
-          ex2:
-            summary: i_am_query_param_ex2
-            description: qqqqqqq
-            value: bbbb
+          ArtistQueryExample1:
+            value: prince
+            summary: Artist Query Example 1
+            description: description for artist query example 1
+          ArtistQueryExample2:
+            value: miles davis
+            summary: Artist Query Example 2
+            description: description for artist query example 2
       tags:
       - schema
       security:
@@ -37,11 +37,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/C'
               examples:
-                ex_c:
-                  summary: i_am_summary
-                  description: ''
+                SerializerCExampleRO:
                   value:
-                    field: 232323
+                    field: 111
+                  summary: Serializer C Example RO
           description: ''
     post:
       operationId: schema_create
@@ -54,70 +53,59 @@ paths:
             schema:
               $ref: '#/components/schemas/A'
             examples:
-              example2:
-                summary: i_am_ex2
-                description: ''
+              CreateExampleWO:
                 value:
-                  field: 12
-              example3:
-                summary: i_am_ex3
-                description: ''
+                  field: 22
+                summary: Create Example WO
+              CreateExampleRW:
                 value:
-                  field: 13
-              example4:
-                summary: i_am_ex3
-                description: ''
-                value:
-                  field: 14
+                  field: 33
+                summary: Create Example RW
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/A'
-            examples:
-              example2:
-                summary: i_am_ex2
-                description: ''
-                value:
-                  field: 12
-              example3:
-                summary: i_am_ex3
-                description: ''
-                value:
-                  field: 13
-              example4:
-                summary: i_am_ex3
-                description: ''
-                value:
-                  field: 14
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/A'
-            examples:
-              example2:
-                summary: i_am_ex2
-                description: ''
-                value:
-                  field: 12
-              example3:
-                summary: i_am_ex3
-                description: ''
-                value:
-                  field: 13
-              example4:
-                summary: i_am_ex3
-                description: ''
-                value:
-                  field: 14
         required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       - {}
       responses:
-        '200':
+        '201':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/B'
+              examples:
+                CreateExampleRO:
+                  value:
+                    field: 11
+                  summary: Create Example RO
+                CreateExampleRW:
+                  value:
+                    field: 33
+                  summary: Create Example RW
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                CreateError403Example:
+                  value:
+                    field: error
+                  summary: Create Error 403 Example
           description: ''
   /schema/override_extend_schema_action/:
     post:
@@ -131,59 +119,24 @@ paths:
             schema:
               $ref: '#/components/schemas/A'
             examples:
-              example2:
-                summary: i_am_ex2
-                description: ''
+              SerializerAExampleWO:
                 value:
-                  field: 12
-              example3:
-                summary: i_am_ex3
-                description: ''
+                  field: 2
+                summary: Serializer A Example WO
+              SerializerAExampleRW:
                 value:
-                  field: 13
-              example4:
-                summary: i_am_ex3
-                description: ''
-                value:
-                  field: 14
+                  field: 3
+                summary: Serializer A Example RW custom summary
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/A'
             examples:
-              example2:
-                summary: i_am_ex2
-                description: ''
-                value:
-                  field: 12
-              example3:
-                summary: i_am_ex3
-                description: ''
-                value:
-                  field: 13
-              example4:
-                summary: i_am_ex3
-                description: ''
-                value:
-                  field: 14
+              SerializerAExampleRWExternal:
+                externalValue: https://example.com/example_a.txt
+                summary: Serializer A Example RW External
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/A'
-            examples:
-              example2:
-                summary: i_am_ex2
-                description: ''
-                value:
-                  field: 12
-              example3:
-                summary: i_am_ex3
-                description: ''
-                value:
-                  field: 13
-              example4:
-                summary: i_am_ex3
-                description: ''
-                value:
-                  field: 14
         required: true
       security:
       - cookieAuth: []

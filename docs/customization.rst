@@ -71,45 +71,7 @@ discovered in the introspection.
   to attach annotations to all methods in that view (e.g. tags). Method annotations will take precedence
   over view annotation.
 
-
-
-
-Step 3: :py:class:`@extend_schema_serializer <drf_spectacular.utils.extend_schema_serializer>`
------------------------------------------------------------------------------------------------
-
-    .. code:: python
-
-            @extend_schema_serializer(
-                exclude_fields= ('single',) # schema ignore these fields
-                examples = [
-                     OpenApiExample(
-                        'example_valid1',
-                        summary='i_am_summary',
-                        description='i am description',
-                        value={
-                            'songs':{
-                                'top10':True
-                            }
-                            'single'" {
-                                'top10':True
-                            }
-                        },
-                        response_only=True, # default is False if True, this Example ignore when this serializer used with requestBody
-                        request_only=True, # default is False if True, this Example ignore when this serializer used with response and status 200 or 201
-                    ),
-                ]
-            )
-            class AlbumSerializer(serializers.ModelSerializer):
-                songs = SongSerializer(many=True)
-                single = SongSerializer(read_only=True)
-
-                class Meta:
-                    fields = '__all__'
-                    model = Album
-
-
-
-Step 4: :py:class:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` and type hints
+Step 3: :py:class:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` and type hints
 ---------------------------------------------------------------------------------------------------
 A custom ``SerializerField`` might not get picked up properly. You can inform `drf-spectacular`
 on what is to be expected with the :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>`
@@ -134,6 +96,41 @@ You can apply it also to the method of a `SerializerMethodField`.
         @extend_schema_field(OpenApiTypes.DATETIME)
         def get_field_custom(self, object):
             return '2020-03-06 20:54:00.104248'
+
+
+Step 4: :py:class:`@extend_schema_serializer <drf_spectacular.utils.extend_schema_serializer>`
+-----------------------------------------------------------------------------------------------
+
+You may also decorate your serializer with :py:func:`@extend_schema_serializer <drf_spectacular.utils.extend_schema_serializer>`.
+Mainly used for excluding specific fields from the schema or attaching request/response examples.
+On rare occasions (e.g. envelope serializers), overriding list detection with ``many=False`` may come in handy.
+
+.. code:: python
+
+    @extend_schema_serializer(
+        exclude_fields=('single',) # schema ignore these fields
+        examples = [
+             OpenApiExample(
+                'Valid example 1',
+                summary='short summary',
+                description='longer description',
+                value={
+                    'songs': {'top10': True}
+                    'single': {'top10': True}
+                },
+                request_only=True, # signal that example only applies to requests
+                response_only=False, # signal that example only applies to responses
+            ),
+        ]
+    )
+    class AlbumSerializer(serializers.ModelSerializer):
+        songs = SongSerializer(many=True)
+        single = SongSerializer(read_only=True)
+
+        class Meta:
+            fields = '__all__'
+            model = Album
+
 
 Step 5: Extensions
 ------------------

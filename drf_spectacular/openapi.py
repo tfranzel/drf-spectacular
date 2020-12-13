@@ -23,9 +23,10 @@ from drf_spectacular.drainage import get_override, has_override
 from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerializerFieldExtension
 from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, anyisinstance, append_meta,
-    build_array_type, build_basic_type, build_choice_field, build_object_type, build_parameter_type,
-    error, follow_field_source, force_instance, get_doc, get_view_model, is_basic_type, is_field,
-    is_serializer, resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
+    build_array_type, build_basic_type, build_choice_field, build_examples_list,
+    build_media_type_object, build_object_type, build_parameter_type, error, follow_field_source,
+    force_instance, get_doc, get_view_model, is_basic_type, is_field, is_serializer,
+    resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -135,7 +136,7 @@ class AutoSchema(ViewInspector):
                     description=parameter.description,
                     enum=parameter.enum,
                     deprecated=parameter.deprecated,
-                    examples=parameter.examples,
+                    examples=build_examples_list(parameter.examples),
                 ))
             elif is_serializer(parameter):
                 # explode serializer into separate parameters. defaults to QUERY location
@@ -146,7 +147,6 @@ class AutoSchema(ViewInspector):
                         schema=property_schema,
                         location=OpenApiParameter.QUERY,
                         required=property_name in mapped.get('required', []),
-                        examples=parameter.examples if hasattr(parameter, "examples") else None,
                     ))
             else:
                 warn(f'could not resolve parameter annotation {parameter}. skipping.')
@@ -787,6 +787,32 @@ class AutoSchema(ViewInspector):
                 f'a request? Ignoring the view for now. (Exception: {exc})'
             )
 
+    def get_examples(self):
+        return []
+
+    def _get_examples(self, serializer, direction, media_type, status_code=None):
+        examples = self.get_examples()
+
+        if not examples:
+            if isinstance(serializer, serializers.ListSerializer):
+                examples = get_override(serializer.child, 'examples', [])
+            elif is_serializer(serializer):
+                examples = get_override(serializer, 'examples', [])
+
+        filtered_examples = []
+        for example in examples:
+            if direction == 'request' and example.response_only:
+                continue
+            if direction == 'response' and example.request_only:
+                continue
+            if media_type and media_type != example.media_type:
+                continue
+            if status_code and status_code not in example.status_codes:
+                continue
+            filtered_examples.append(example)
+
+        return build_examples_list(filtered_examples)
+
     def _get_request_body(self):
         # only unsafe methods can have a body
         if self.method not in ('PUT', 'PATCH', 'POST'):
@@ -827,18 +853,14 @@ class AutoSchema(ViewInspector):
                 additionalProperties={},
                 description='Unspecified request body',
             )
+
         request_body = {
             'content': {
-                request_media_types: {
-                    'schema': schema,
-                    'examples': {
-                        example_obj.name: example_obj.asdict()
-                        for example_obj in get_override(serializer, 'examples')
-                        if example_obj.response_only is not True
-                    }
-                } if has_override(serializer, 'examples')
-                else {'schema': schema}
-                for request_media_types in self.map_parsers()
+                media_type: build_media_type_object(
+                    schema,
+                    self._get_examples(serializer, 'request', media_type)
+                )
+                for media_type in self.map_parsers()
             }
         }
 
@@ -854,21 +876,21 @@ class AutoSchema(ViewInspector):
             if self.method == 'DELETE':
                 return {'204': {'description': _('No response body')}}
             if self.method == 'POST' and getattr(self.view, 'action', None) == 'create':
-                return {'201': self._get_response_for_code(response_serializers)}
-            return {'200': self._get_response_for_code(response_serializers)}
+                return {'201': self._get_response_for_code(response_serializers, '201')}
+            return {'200': self._get_response_for_code(response_serializers, '200')}
         elif isinstance(response_serializers, dict):
             # custom handling for overriding default return codes with @extend_schema
             responses = {}
             for code, serializer in response_serializers.items():
                 if isinstance(code, tuple):
-                    code, media_types = code[0], code[1:]
+                    code, media_types = str(code[0]), code[1:]
                 else:
-                    media_types = None
-                content_response = self._get_response_for_code(serializer, media_types)
-                if str(code) in responses:
-                    responses[str(code)]['content'].update(content_response['content'])
+                    code, media_types = str(code), None
+                content_response = self._get_response_for_code(serializer, code, media_types)
+                if code in responses:
+                    responses[code]['content'].update(content_response['content'])
                 else:
-                    responses[str(code)] = content_response
+                    responses[code] = content_response
             return responses
         else:
             warn(
@@ -878,9 +900,9 @@ class AutoSchema(ViewInspector):
             )
             schema = build_basic_type(OpenApiTypes.OBJECT)
             schema['description'] = _('Unspecified response body')
-            return {'200': self._get_response_for_code(schema)}
+            return {'200': self._get_response_for_code(schema, '200')}
 
-    def _get_response_for_code(self, serializer, media_types=None):
+    def _get_response_for_code(self, serializer, status_code, media_types=None):
         serializer = force_instance(serializer)
 
         if not serializer:
@@ -929,25 +951,14 @@ class AutoSchema(ViewInspector):
         if not media_types:
             media_types = self.map_renderers('media_type')
 
-        content = {}
-        for mt in media_types:
-            examples = get_override(serializer, 'examples')
-            if examples:
-                content[mt] = {
-                    'schema': schema,
-                    'examples': {
-                        example_obj.name: example_obj.asdict()
-                        for example_obj in examples
-                        if example_obj.request_only is not True
-                    }
-                }
-            else:
-                content[mt] = {
-                    'schema': schema,
-                }
-
         return {
-            'content': content,
+            'content': {
+                media_type: build_media_type_object(
+                    schema,
+                    self._get_examples(serializer, 'response', media_type, status_code)
+                )
+                for media_type in media_types
+            },
             # Description is required by spec, but descriptions for each response code don't really
             # fit into our model. Description is therefore put into the higher level slots.
             # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#responseObject
