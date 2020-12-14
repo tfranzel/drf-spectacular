@@ -1,6 +1,6 @@
 import functools
 import inspect
-from typing import Dict, List, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 from rest_framework.fields import empty
 from rest_framework.serializers import Serializer
@@ -62,13 +62,54 @@ class OpenApiSchemaBase:
     pass
 
 
+class OpenApiExample(OpenApiSchemaBase):
+    """
+    https://swagger.io/specification/
+     * Specification
+        * Schema
+           * ExampleObject
+    """
+
+    def __init__(
+            self,
+            name: str,
+            value: Any = None,
+            external_value: str = '',
+            summary: str = '',
+            description: str = '',
+            request_only: bool = False,
+            response_only: bool = False,
+            media_type: str = 'application/json',
+            status_codes: Optional[List[str]] = None
+    ):
+        self.name = name
+        self.summary = summary
+        self.description = description
+        self.value = value
+        self.external_value = external_value
+        self.request_only = request_only
+        self.response_only = response_only
+        self.media_type = media_type
+        self.status_codes = status_codes or ['200', '201']
+
+
 class OpenApiParameter(OpenApiSchemaBase):
     QUERY = 'query'
     PATH = 'path'
     HEADER = 'header'
     COOKIE = 'cookie'
 
-    def __init__(self, name, type=str, location=QUERY, required=False, description='', enum=None, deprecated=False):
+    def __init__(
+            self,
+            name,
+            type=str,
+            location=QUERY,
+            required=False,
+            description='',
+            enum=None,
+            deprecated=False,
+            examples: Optional[List[OpenApiExample]] = None
+    ):
         self.name = name
         self.type = type
         self.location = location
@@ -76,6 +117,7 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.description = description
         self.enum = enum
         self.deprecated = deprecated
+        self.examples = examples or []
 
 
 def extend_schema(
@@ -92,6 +134,7 @@ def extend_schema(
         operation=None,
         methods=None,
         versions=None,
+        examples: Optional[List[OpenApiExample]] = None,
 ):
     """
     decorator mainly for the "view" method kind. partially or completely overrides
@@ -122,6 +165,7 @@ def extend_schema(
         provide a OpenAPI3-compliant dictionary that gets directly translated to YAML.
     :param methods: scope extend_schema to specific methods. matches all by default.
     :param versions: scope extend_schema to specific API version. matches all by default.
+    :param examples: attach request/response examples to the operation
     :return:
     """
     def decorator(f):
@@ -172,6 +216,11 @@ def extend_schema(
                 if auth and is_in_scope(self):
                     return auth
                 return super().get_auth()
+
+            def get_examples(self):
+                if examples and is_in_scope(self):
+                    return examples
+                return super().get_examples()
 
             def get_request_serializer(self):
                 if request is not empty and is_in_scope(self):
@@ -265,7 +314,11 @@ def extend_schema_field(field):
     return decorator
 
 
-def extend_schema_serializer(many=None, exclude_fields=None):
+def extend_schema_serializer(
+        many=None,
+        exclude_fields=None,
+        examples: Optional[List[OpenApiExample]] = None,
+):
     """
     Decorator for the "serializer" kind. Intended for overriding default serializer behaviour that
     cannot be influenced through `.extend_schema`.
@@ -274,12 +327,15 @@ def extend_schema_serializer(many=None, exclude_fields=None):
         heuristic to acknowledge a non-list serializer.
     :param exclude_fields: fields to ignore while processing the serializer. only affects the
         schema. fields will still be exposed through the API.
+    :param examples: define example data to serializer.
     """
     def decorator(klass):
         if many is not None:
             set_override(klass, 'many', many)
         if exclude_fields:
             set_override(klass, 'exclude_fields', exclude_fields)
+        if examples:
+            set_override(klass, 'examples', examples)
         return klass
 
     return decorator

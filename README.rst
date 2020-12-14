@@ -27,6 +27,7 @@ Features
     - ``MethodSerializerField()`` type via type hinting or ``@extend_schema_field``
     - i18n support
     - Tags extraction
+    - Request/response/parameter examples
     - Description extraction from ``docstrings``
     - Sane fallbacks
     - Sane ``operation_id`` naming (based on path)
@@ -165,6 +166,15 @@ the sky is the limit.
                     type=OpenApiTypes.DATE,
                     location=OpenApiParameter.QUERY,
                     description='Filter by release date',
+                    examples=[
+                        OpenApiExample(
+                            'Example 1',
+                            summary='short optional summary',
+                            description='longer description'
+                            value='1993-08-23'
+                        ),
+                        ...
+                    ],
                 ),
             ],
             # override default docstring extraction
@@ -175,6 +185,15 @@ the sky is the limit.
             operation_id=None,
             # or even completely override what AutoSchema would generate. Provide raw Open API spec as Dict.
             operation=None,
+            # attach request/response examples to the operation.
+            examples=[
+                OpenApiExample(
+                    'Example 1'
+                    description='longer description'
+                    value=...
+                ),
+                ...
+            ],
         )
         def list(self, request):
             # your non-standard behaviour
@@ -187,7 +206,6 @@ the sky is the limit.
         @action(detail=True, methods=['post'])
         def set_password(self, request, pk=None):
             # your action behaviour
-
 
 More customization
 ^^^^^^^^^^^^^^^^^^

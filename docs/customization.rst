@@ -103,7 +103,42 @@ You can apply it also to the method of a `SerializerMethodField`.
         def get_field_custom(self, object):
             return '2020-03-06 20:54:00.104248'
 
-Step 4: Extensions
+
+Step 4: :py:class:`@extend_schema_serializer <drf_spectacular.utils.extend_schema_serializer>`
+-----------------------------------------------------------------------------------------------
+
+You may also decorate your serializer with :py:func:`@extend_schema_serializer <drf_spectacular.utils.extend_schema_serializer>`.
+Mainly used for excluding specific fields from the schema or attaching request/response examples.
+On rare occasions (e.g. envelope serializers), overriding list detection with ``many=False`` may come in handy.
+
+.. code:: python
+
+    @extend_schema_serializer(
+        exclude_fields=('single',) # schema ignore these fields
+        examples = [
+             OpenApiExample(
+                'Valid example 1',
+                summary='short summary',
+                description='longer description',
+                value={
+                    'songs': {'top10': True}
+                    'single': {'top10': True}
+                },
+                request_only=True, # signal that example only applies to requests
+                response_only=False, # signal that example only applies to responses
+            ),
+        ]
+    )
+    class AlbumSerializer(serializers.ModelSerializer):
+        songs = SongSerializer(many=True)
+        single = SongSerializer(read_only=True)
+
+        class Meta:
+            fields = '__all__'
+            model = Album
+
+
+Step 5: Extensions
 ------------------
 The core purpose of extensions is to make the above customization mechanisms also available for library code.
 Usually, you cannot easily decorate or modify ``View``, ``Serializer`` or ``Field`` from libraries.
@@ -183,7 +218,7 @@ The usage of this extension is rarely necessary because most custom ``Serializer
 close to the default behaviour.
 
 
-Step 5: Postprocessing hooks
+Step 6: Postprocessing hooks
 ----------------------------
 
 The generated schema is still not to your liking? You are no easy customer, but there is one
@@ -198,7 +233,7 @@ the choice ``Enum`` are consolidated into component objects. You can register ad
         return result
 
 
-Step 6: Preprocessing hooks
+Step 7: Preprocessing hooks
 ---------------------------
 .. _customization_preprocessing_hooks:
 

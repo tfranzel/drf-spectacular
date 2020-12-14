@@ -1,0 +1,199 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /schema/:
+    get:
+      operationId: schema_list
+      description: ''
+      parameters:
+      - in: query
+        name: artist
+        schema:
+          type: string
+        description: Filter by artist
+        examples:
+          ArtistQueryExample1:
+            value: prince
+            summary: Artist Query Example 1
+            description: description for artist query example 1
+          ArtistQueryExample2:
+            value: miles davis
+            summary: Artist Query Example 2
+            description: description for artist query example 2
+      tags:
+      - schema
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/C'
+              examples:
+                SerializerCExampleRO:
+                  value:
+                    field: 111
+                  summary: Serializer C Example RO
+          description: ''
+    post:
+      operationId: schema_create
+      description: ''
+      tags:
+      - schema
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/A'
+            examples:
+              CreateExampleWO:
+                value:
+                  field: 22
+                summary: Create Example WO
+              CreateExampleRW:
+                value:
+                  field: 33
+                summary: Create Example RW
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/A'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/A'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B'
+              examples:
+                CreateExampleRO:
+                  value:
+                    field: 11
+                  summary: Create Example RO
+                CreateExampleRW:
+                  value:
+                    field: 33
+                  summary: Create Example RW
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                CreateError403Example:
+                  value:
+                    field: error
+                  summary: Create Error 403 Example
+          description: ''
+  /schema/override_extend_schema_action/:
+    post:
+      operationId: schema_override_extend_schema_action_create
+      description: ''
+      tags:
+      - schema
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/A'
+            examples:
+              SerializerAExampleWO:
+                value:
+                  field: 2
+                summary: Serializer A Example WO
+              SerializerAExampleRW:
+                value:
+                  field: 3
+                summary: Serializer A Example RW custom summary
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/A'
+            examples:
+              SerializerAExampleRWExternal:
+                externalValue: https://example.com/example_a.txt
+                summary: Serializer A Example RW External
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/A'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B'
+          description: ''
+  /schema/raw_action/:
+    get:
+      operationId: schema_raw_action_retrieve
+      description: ''
+      tags:
+      - schema
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B'
+          description: ''
+components:
+  schemas:
+    A:
+      type: object
+      properties:
+        field:
+          type: integer
+      required:
+      - field
+    B:
+      type: object
+      properties:
+        field:
+          type: integer
+      required:
+      - field
+    C:
+      type: object
+      properties:
+        field:
+          type: integer
+      required:
+      - field
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

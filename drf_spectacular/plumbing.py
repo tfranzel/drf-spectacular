@@ -188,6 +188,32 @@ def build_object_type(
     return schema
 
 
+def build_media_type_object(schema, examples=None):
+    media_type_object = {'schema': schema}
+    if examples:
+        media_type_object['examples'] = examples
+    return media_type_object
+
+
+def build_examples_list(examples):
+    schema = {}
+    for example in examples:
+        normalized_name = inflection.camelize(example.name.replace(' ', '_'))
+        sub_schema = {}
+        if example.value:
+            sub_schema['value'] = example.value
+        if example.external_value:
+            sub_schema['externalValue'] = example.external_value
+        if example.summary:
+            sub_schema['summary'] = example.summary
+        elif normalized_name != example.name:
+            sub_schema['summary'] = example.name
+        if example.description:
+            sub_schema['description'] = example.description
+        schema[normalized_name] = sub_schema
+    return schema
+
+
 def build_parameter_type(
         name,
         schema,
@@ -197,7 +223,8 @@ def build_parameter_type(
         enum=None,
         deprecated=False,
         explode=None,
-        style=None
+        style=None,
+        examples=None,
 ):
     irrelevant_field_meta = ['readOnly', 'writeOnly']
     if location == OpenApiParameter.PATH:
@@ -219,6 +246,8 @@ def build_parameter_type(
         schema['style'] = style
     if enum:
         schema['schema']['enum'] = sorted(enum)
+    if examples:
+        schema['examples'] = examples
     return schema
 
 
