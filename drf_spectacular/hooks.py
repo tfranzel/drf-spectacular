@@ -56,7 +56,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
             if 'enum' not in prop_schema:
                 continue
             # remove blank/null entry for hashing. will be reconstructed in the last step
-            prop_enum_cleaned_hash = list_hash([i for i in prop_schema['enum'] if i])
+            prop_enum_cleaned_hash = list_hash([i for i in prop_schema['enum'] if i not in ['', None]])
             prop_hash_mapping[prop_name].add(prop_enum_cleaned_hash)
             hash_name_mapping[prop_enum_cleaned_hash].add((component_name, prop_name))
 
@@ -102,7 +102,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
                 continue
 
             prop_enum_original_list = prop_schema['enum']
-            prop_schema['enum'] = [i for i in prop_schema['enum'] if i]
+            prop_schema['enum'] = [i for i in prop_schema['enum'] if i not in ['', None]]
             prop_hash = list_hash(prop_schema['enum'])
             # when choice sets are reused under multiple names, the generated name cannot be
             # resolved from the hash alone. fall back to prop_name and hash for resolution.

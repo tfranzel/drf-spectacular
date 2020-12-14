@@ -46,8 +46,11 @@ components:
       properties:
         language:
           $ref: '#/components/schemas/LanguageEnum'
+        vote:
+          $ref: '#/components/schemas/VoteEnum'
       required:
       - language
+      - vote
     B:
       type: object
       properties:
@@ -72,6 +75,12 @@ components:
     NullEnum:
       enum:
       - null
+    VoteEnum:
+      enum:
+      - 1
+      - 0
+      - -1
+      type: integer
   securitySchemes:
     basicAuth:
       type: http

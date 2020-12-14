@@ -22,6 +22,12 @@ language_choices = (
     ('cn', 'cn'),
 )
 
+vote_choices = (
+    (1, 'Positive'),
+    (0, 'Neutral'),
+    (-1, 'Negative'),
+)
+
 language_list = ['en']
 
 
@@ -35,6 +41,7 @@ class LanguageChoices(Choices):
 
 class ASerializer(serializers.Serializer):
     language = serializers.ChoiceField(choices=language_choices)
+    vote = serializers.ChoiceField(choices=vote_choices)
 
 
 class BSerializer(serializers.Serializer):
