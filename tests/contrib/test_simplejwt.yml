@@ -30,6 +30,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenObtainPair'
           description: ''
+  /token-sliding/:
+    post:
+      operationId: token_sliding_create
+      description: |-
+        Takes a set of user credentials and returns a sliding JSON web token to
+        prove the authentication of those credentials.
+      tags:
+      - token-sliding
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainSliding'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainSliding'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainSliding'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainSliding'
+          description: ''
   /token/refresh/:
     post:
       operationId: token_refresh_create
@@ -82,11 +109,36 @@ components:
       properties:
         username:
           type: string
+          writeOnly: true
         password:
           type: string
           writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenObtainSliding:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        token:
+          type: string
+          readOnly: true
       required:
       - password
+      - token
       - username
     TokenRefresh:
       type: object

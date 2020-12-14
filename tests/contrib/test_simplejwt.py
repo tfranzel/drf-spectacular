@@ -7,7 +7,9 @@ from tests import assert_schema
 
 try:
     from rest_framework_simplejwt.authentication import JWTAuthentication
-    from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+    from rest_framework_simplejwt.views import (
+        TokenObtainPairView, TokenObtainSlidingView, TokenRefreshView,
+    )
 except ImportError:
     JWTAuthentication = None
 
@@ -30,6 +32,7 @@ def test_simplejwt(no_warnings):
     urlpatterns = [
         *router.urls,
         path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+        path('token-sliding/', TokenObtainSlidingView.as_view(), name='token_obtain_sliding'),
         path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     ]
 

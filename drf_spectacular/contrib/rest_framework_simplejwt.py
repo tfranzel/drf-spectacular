@@ -1,5 +1,33 @@
+from rest_framework import serializers
+
 from drf_spectacular.drainage import warn
-from drf_spectacular.extensions import OpenApiAuthenticationExtension
+from drf_spectacular.extensions import OpenApiAuthenticationExtension, OpenApiSerializerExtension
+from drf_spectacular.utils import inline_serializer
+
+
+class TokenObtainPairSerializerExtension(OpenApiSerializerExtension):
+    target_class = 'rest_framework_simplejwt.serializers.TokenObtainPairSerializer'
+
+    def map_serializer(self, auto_schema, direction):
+        Fixed = inline_serializer('Fixed', fields={
+            self.target_class.username_field: serializers.CharField(write_only=True),
+            'password': serializers.CharField(write_only=True),
+            'access': serializers.CharField(read_only=True),
+            'refresh': serializers.CharField(read_only=True),
+        })
+        return auto_schema._map_serializer(Fixed, direction)
+
+
+class TokenObtainSlidingSerializerExtension(OpenApiSerializerExtension):
+    target_class = 'rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer'
+
+    def map_serializer(self, auto_schema, direction):
+        Fixed = inline_serializer('Fixed', fields={
+            self.target_class.username_field: serializers.CharField(write_only=True),
+            'password': serializers.CharField(write_only=True),
+            'token': serializers.CharField(read_only=True),
+        })
+        return auto_schema._map_serializer(Fixed, direction)
 
 
 class SimpleJWTScheme(OpenApiAuthenticationExtension):
