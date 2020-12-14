@@ -11,6 +11,20 @@
   </head>
   <body>
     <div id="swagger-ui"></div>
+    <span id="django-login-button-on-ui-complete" style="display:none;">
+      {% if request.user.is_authenticated %}
+      <span class="django-session-authorized" style="margin-right:10px">Django: {{ request.user }}</span>
+      <a class="btn authorize" href="{{logout_url}}?next={{request.path}}">
+        <span>Django Logout</span>
+        <svg width="20" height="20"><use href="#locked" xlink:href="#locked"></use></svg>
+      </a>
+      {% else %}
+      <a class="btn authorize" href="{{login_url}}?next={{request.path}}">
+        <span>Django Login</span>
+        <svg width="20" height="20"><use href="#unlocked" xlink:href="#unlocked"></use></svg>
+      </a>
+      {% endif %}
+    </span>
     <script src="{{dist}}/swagger-ui-bundle.js"></script>
     <script src="{{script_url|safe}}"></script>
   </body>

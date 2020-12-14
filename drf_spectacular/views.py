@@ -106,7 +106,9 @@ class SpectacularSwaggerView(APIView):
                         url=script_url,
                         lang=request.GET.get('lang'),
                         script=''  # signal to deliver init script
-                    )
+                    ),
+                    'login_url': settings.LOGIN_URL,
+                    'logout_url': settings.LOGOUT_URL,
                 },
                 template_name=self.template_name,
             )
