@@ -1097,6 +1097,20 @@ def test_token_auth_with_bearer_keyword(no_warnings):
     view_func.cls.authentication_classes = [CustomTokenAuthentication]
 
     schema = generate_schema('x', view_function=view_func)
-    validate_schema(schema)
-
     assert schema['components']['securitySchemes']['tokenAuth']['scheme'] == 'bearer'
+
+
+@pytest.mark.parametrize('responses', [
+    str,
+    OpenApiTypes.STR,
+    {'200': str},
+    {'200': OpenApiTypes.STR},
+])
+def test_string_response_variations(no_warnings, responses):
+    @extend_schema(responses=responses)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert get_response_schema(schema['paths']['/x']['get'])['type'] == 'string'
