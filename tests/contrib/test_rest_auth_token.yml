@@ -487,9 +487,14 @@ components:
     TokenRefresh:
       type: object
       properties:
+        access:
+          type: string
+          readOnly: true
         refresh:
           type: string
+          writeOnly: true
       required:
+      - access
       - refresh
     TokenVerify:
       type: object

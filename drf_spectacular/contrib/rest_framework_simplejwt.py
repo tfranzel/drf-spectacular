@@ -30,6 +30,24 @@ class TokenObtainSlidingSerializerExtension(OpenApiSerializerExtension):
         return auto_schema._map_serializer(Fixed, direction)
 
 
+class TokenRefreshSerializerExtension(OpenApiSerializerExtension):
+    target_class = 'rest_framework_simplejwt.serializers.TokenRefreshSerializer'
+
+    def map_serializer(self, auto_schema, direction):
+        from rest_framework_simplejwt.settings import api_settings
+
+        if api_settings.ROTATE_REFRESH_TOKENS:
+            class Fixed(serializers.Serializer):
+                access = serializers.CharField(read_only=True)
+                refresh = serializers.CharField()
+        else:
+            class Fixed(serializers.Serializer):
+                access = serializers.CharField(read_only=True)
+                refresh = serializers.CharField(write_only=True)
+
+        return auto_schema._map_serializer(Fixed, direction)
+
+
 class SimpleJWTScheme(OpenApiAuthenticationExtension):
     target_class = 'rest_framework_simplejwt.authentication.JWTAuthentication'
     name = 'jwtAuth'
