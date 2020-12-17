@@ -8,7 +8,9 @@ from rest_framework.test import APIClient
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
-from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from drf_spectacular.views import (
+    SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerSplitView, SpectacularSwaggerView,
+)
 
 
 @extend_schema(responses=OpenApiTypes.FLOAT)
@@ -25,7 +27,8 @@ urlpatterns_v1.append(
 urlpatterns_v2 = [
     path('api/v2/pi/', pi),
     path('api/v2/pi-fast/', pi),
-    path('api/v2/schema/swagger-ui/', SpectacularSwaggerView.as_view(), name='swagger-ui'),
+    path('api/v2/schema/swagger-ui/', SpectacularSwaggerView.as_view(), name='swagger'),
+    path('api/v2/schema/swagger-ui-alt/', SpectacularSwaggerSplitView.as_view(), name='swagger-alt'),
     path('api/v2/schema/redoc/', SpectacularRedocView.as_view(), name='redoc'),
 ]
 urlpatterns_v2.append(
@@ -95,12 +98,17 @@ def test_spectacular_ui_view(no_warnings, ui):
     response = APIClient().get(f'/api/v2/schema/{ui}/')
     assert response.status_code == 200
     assert response.content.startswith(b'<!DOCTYPE html>')
+    assert b'"/api/v2/schema/"' in response.content
 
-    if ui == 'redoc':
-        assert b'"/api/v2/schema/"' in response.content
-    else:
-        assert b'"/api/v2/schema/swagger-ui/?script="' in response.content
-        # second request to obtain swagger config (CSP self)
-        response = APIClient().get('/api/v2/schema/swagger-ui/?script=')
-        assert response.status_code == 200
-        assert b'"/api/v2/schema/"' in response.content
+
+@pytest.mark.urls(__name__)
+def test_spectacular_swagger_ui_alternate(no_warnings):
+    # first request for the html
+    response = APIClient().get('/api/v2/schema/swagger-ui-alt/')
+    assert response.status_code == 200
+    assert response.content.startswith(b'<!DOCTYPE html>')
+    # assert b'"/api/v2/schema/swagger-ui-alt/?script="' in response.content
+    # second request to obtain js swagger config (CSP self)
+    response = APIClient().get('/api/v2/schema/swagger-ui-alt/?script=')
+    assert response.status_code == 200
+    assert b'"/api/v2/schema/"' in response.content

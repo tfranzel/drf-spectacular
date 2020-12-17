@@ -83,6 +83,31 @@ class SpectacularSwaggerView(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
+        return Response(
+            data={
+                'dist': spectacular_settings.SWAGGER_UI_DIST,
+                'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
+                'schema_url': set_query_parameters(
+                    url=schema_url,
+                    lang=request.GET.get('lang')
+                ),
+                'settings': json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS),
+                'template_name_js': self.template_name_js
+            },
+            template_name=self.template_name,
+        )
+
+
+class SpectacularSwaggerSplitView(SpectacularSwaggerView):
+    """
+    Alternate Swagger UI implementation that separates the html request from the
+    javascript request to cater to web servers with stricter CSP policies.
+    """
+    url_self = None
+
+    @extend_schema(exclude=True)
+    def get(self, request, *args, **kwargs):
         if request.GET.get('script') is not None:
             schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
             return Response(
@@ -97,7 +122,7 @@ class SpectacularSwaggerView(APIView):
                 content_type='application/javascript',
             )
         else:
-            script_url = request.get_full_path()
+            script_url = self.url_self or request.get_full_path()
             return Response(
                 data={
                     'dist': spectacular_settings.SWAGGER_UI_DIST,

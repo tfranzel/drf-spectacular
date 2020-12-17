@@ -12,6 +12,12 @@
   <body>
     <div id="swagger-ui"></div>
     <script src="{{dist}}/swagger-ui-bundle.js"></script>
+    {% if script_url %}
     <script src="{{script_url|safe}}"></script>
+    {% else %}
+    <script>
+    {% include template_name_js %}
+    </script>
+    {% endif %}
   </body>
 </html>
