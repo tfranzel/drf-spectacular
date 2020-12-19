@@ -951,9 +951,9 @@ class AutoSchema(ViewInspector):
                     name=paginated_name,
                     type=ResolvedComponent.SCHEMA,
                     schema=paginator.get_paginated_response_schema(schema),
-                    object=paginated_name,
+                    object=serializer,
                 )
-                self.registry.register(component)
+                self.registry.register_on_missing(component)
                 schema = component.ref
             elif paginator:
                 schema = paginator.get_paginated_response_schema(schema)

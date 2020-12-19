@@ -15,7 +15,7 @@ from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema, ext
 from tests import generate_schema
 
 
-def test_serializer_name_reuse(warnings):
+def test_serializer_name_reuse(capsys):
     from rest_framework import routers
 
     from drf_spectacular.generators import SchemaGenerator
@@ -29,7 +29,7 @@ def test_serializer_name_reuse(warnings):
 
     def x2():
         class XSerializer(serializers.Serializer):
-            integer = serializers.IntegerField
+            integer = serializers.IntegerField()
 
         return XSerializer
 
@@ -45,6 +45,9 @@ def test_serializer_name_reuse(warnings):
 
     generator = SchemaGenerator(patterns=router.urls)
     generator.get_schema(request=None, public=True)
+
+    stderr = capsys.readouterr().err
+    assert 'Encountered 2 components with identical names "X" and different classes' in stderr
 
 
 def test_owned_serializer_naming_override_with_ref_name_collision(warnings):

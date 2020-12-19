@@ -1029,6 +1029,31 @@ def test_pagination(no_warnings):
     assert substitution['properties']['results']['items']['$ref'] == '#/components/schemas/X'
 
 
+def test_pagination_reusage(no_warnings):
+    class M7(models.Model):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M7
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = M7.objects.all()
+        serializer_class = XSerializer
+        pagination_class = pagination.LimitOffsetPagination
+
+    class YViewset(XViewset):
+        serializer_class = XSerializer
+
+    router = routers.SimpleRouter()
+    router.register('x', XViewset, basename='x')
+    router.register('y', YViewset, basename='y')
+    generator = SchemaGenerator(patterns=router.urls)
+    schema = generator.get_schema(request=None, public=True)
+    validate_schema(schema)
+
+
 @mock.patch(
     'drf_spectacular.settings.spectacular_settings.SECURITY',
     [{'apiKeyAuth': []}]

@@ -437,7 +437,7 @@ class ComponentRegistry:
         self._components = {}
 
     def register(self, component: ResolvedComponent):
-        if component.key in self._components:
+        if component in self:
             warn(
                 f'trying to re-register a {component.type} component with name '
                 f'{self._components[component.key].name}. this might lead to '
@@ -446,7 +446,7 @@ class ComponentRegistry:
         self._components[component.key] = component
 
     def register_on_missing(self, component: ResolvedComponent):
-        if component.key not in self._components:
+        if component not in self:
             self._components[component.key] = component
 
     def __contains__(self, component):
