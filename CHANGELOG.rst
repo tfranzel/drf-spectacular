@@ -1,6 +1,32 @@
 Changelog
 =========
 
+0.12.0 (2020-12-19)
+-------------------
+
+- add exclusion for discovered parameters `#212 <https://github.com/tfranzel/drf-spectacular/issues/212>`_
+- bugfix incorrect collision warning `#233 <https://github.com/tfranzel/drf-spectacular/issues/233>`_
+- introduce filter extensions `#234 <https://github.com/tfranzel/drf-spectacular/issues/234>`_
+- revert Swagger UI view to single request and alternative `#211 <https://github.com/tfranzel/drf-spectacular/issues/211>`_ `#173 <https://github.com/tfranzel/drf-spectacular/issues/173>`_
+- bugfix Simple JWT token refresh `#232 <https://github.com/tfranzel/drf-spectacular/issues/232>`_
+- bugfix simple JWT serializer schema `#232 <https://github.com/tfranzel/drf-spectacular/issues/232>`_
+- Fix enum postprocessor to allow 0 as possible value [Vikas]
+- bugfix/restore optional default parameter value `#226 <https://github.com/tfranzel/drf-spectacular/issues/226>`_
+- Include QuerySerializer in documentation [KimSoungRyoul]
+- support OAS3.0 ExampleObject to @extend_schema & @extend_schema_serializer `#115 <https://github.com/tfranzel/drf-spectacular/issues/115>`_ [KimSoungRyoul]
+- add explicit double and int32 types. `#214 <https://github.com/tfranzel/drf-spectacular/issues/214>`_
+- added type extension for int64 format support [Peter Dreuw]
+- fix TokenAuthentication handling of keyword `#205 <https://github.com/tfranzel/drf-spectacular/issues/205>`_
+- Allow callable limit_value in schema [Serkan Hosca]
+- @extend_schema responses param now accepts tuples with media type `#201 <https://github.com/tfranzel/drf-spectacular/issues/201>`_
+- bugfix List hint extraction with non-basic sub types `#207 <https://github.com/tfranzel/drf-spectacular/issues/207>`_
+
+Breaking changes:
+
+- reverted back to ``0.10.0`` Swagger UI behavior as default. Users relying on stricter CSP should use ``SpectacularSwaggerSplitView``
+- ``tokenAuth`` slightly changed to properly model correct ``Authorization`` header
+- a lot of minor improvements that may slightly alter the schema
+
 0.11.1 (2020-11-15)
 -------------------
 
