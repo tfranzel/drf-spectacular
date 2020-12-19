@@ -27,6 +27,7 @@ Table of Contents
    readme.rst
    settings.rst
    customization.rst
+   client_generation.rst
    faq.rst
    blueprints.rst
    drf_yasg.rst
