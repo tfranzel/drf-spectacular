@@ -1043,6 +1043,11 @@ def test_pagination_reusage(no_warnings):
         serializer_class = XSerializer
         pagination_class = pagination.LimitOffsetPagination
 
+        @extend_schema(responses={'200': XSerializer(many=True)})
+        @action(methods=['GET'], detail=False)
+        def custom_action(self):
+            pass  # pragma: no cover
+
     class YViewset(XViewset):
         serializer_class = XSerializer
 

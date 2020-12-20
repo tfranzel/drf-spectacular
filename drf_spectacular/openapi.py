@@ -27,8 +27,8 @@ from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, anyisinstance, append_meta,
     build_array_type, build_basic_type, build_choice_field, build_examples_list,
     build_media_type_object, build_object_type, build_parameter_type, error, follow_field_source,
-    force_instance, get_doc, get_view_model, is_basic_type, is_field, is_serializer,
-    resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
+    force_instance, get_doc, get_view_model, is_basic_type, is_field, is_list_serializer,
+    is_serializer, resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -97,7 +97,7 @@ class AutoSchema(ViewInspector):
             serializer = {str(code): s for code, s in serializer.items()}
             serializer = serializer[min(serializer)]
 
-        if isinstance(serializer, serializers.ListSerializer):
+        if is_list_serializer(serializer):
             return True
         if is_basic_type(serializer):
             return False
@@ -812,7 +812,7 @@ class AutoSchema(ViewInspector):
         examples = self.get_examples()
 
         if not examples:
-            if isinstance(serializer, serializers.ListSerializer):
+            if is_list_serializer(serializer):
                 examples = get_override(serializer.child, 'examples', [])
             elif is_serializer(serializer):
                 examples = get_override(serializer, 'examples', [])
@@ -839,7 +839,7 @@ class AutoSchema(ViewInspector):
         serializer = force_instance(self.get_request_serializer())
 
         request_body_required = False
-        if isinstance(serializer, serializers.ListSerializer):
+        if is_list_serializer(serializer):
             if is_serializer(serializer.child):
                 component = self.resolve_serializer(serializer.child, 'request')
                 schema = build_array_type(component.ref)
@@ -925,7 +925,7 @@ class AutoSchema(ViewInspector):
 
         if not serializer:
             return {'description': _('No response body')}
-        elif isinstance(serializer, serializers.ListSerializer):
+        elif is_list_serializer(serializer):
             if is_serializer(serializer.child):
                 schema = self.resolve_serializer(serializer.child, 'response').ref
             else:
@@ -959,7 +959,7 @@ class AutoSchema(ViewInspector):
                     name=paginated_name,
                     type=ResolvedComponent.SCHEMA,
                     schema=paginator.get_paginated_response_schema(schema),
-                    object=serializer,
+                    object=serializer.child if is_list_serializer(serializer) else serializer,
                 )
                 self.registry.register_on_missing(component)
                 schema = component.ref
@@ -993,7 +993,7 @@ class AutoSchema(ViewInspector):
             # though we do not support the serializer inlining feature.
             # https://drf-yasg.readthedocs.io/en/stable/custom_spec.html#serializer-meta-nested-class
             name = serializer.Meta.ref_name
-        elif isinstance(serializer, serializers.ListSerializer):
+        elif is_list_serializer(serializer):
             return self._get_serializer_name(serializer.child, direction)
         else:
             name = serializer.__class__.__name__

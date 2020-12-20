@@ -73,6 +73,10 @@ def is_serializer(obj) -> bool:
     )
 
 
+def is_list_serializer(obj) -> bool:
+    return isinstance(force_instance(obj), serializers.ListSerializer)
+
+
 def is_field(obj):
     # make sure obj is a serializer field and nothing else.
     # guard against serializers because BaseSerializer(Field)
