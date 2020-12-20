@@ -184,8 +184,8 @@ def build_object_type(
         schema['description'] = description.strip()
     if properties:
         schema['properties'] = properties
-    if 'additionalParameters' in kwargs:
-        schema['additionalParameters'] = kwargs.pop('additionalParameters')
+    if 'additionalProperties' in kwargs:
+        schema['additionalProperties'] = kwargs.pop('additionalProperties')
     if required:
         schema['required'] = sorted(required)
     schema.update(kwargs)
