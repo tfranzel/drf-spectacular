@@ -1,17 +1,17 @@
-import inspect
 from urllib.parse import urljoin
 
 from django.urls import URLPattern, URLResolver
 from rest_framework import views, viewsets
 from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignore
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
+from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import reset_generator_stats
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, error,
-    is_versioning_supported, modify_for_versioning, normalize_result_object,
+    get_class, is_versioning_supported, modify_for_versioning, normalize_result_object,
     operation_matches_version, sanitize_result_object, warn,
 )
 from drf_spectacular.settings import spectacular_settings
@@ -85,6 +85,8 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         view = super().create_view(callback, method, request)
 
+        # callback.cls is hosted in urlpatterns and is therefore not an ephemeral modification.
+        # restore after view creation so potential revisits have a clean state as basis.
         if override_view:
             callback.cls = original_cls
 
@@ -99,12 +101,32 @@ class SchemaGenerator(BaseSchemaGenerator):
             )
             return view
 
-        # in case of @extend_schema, manually init custom schema class here due to
-        # weakref reverse schema.view bug for multi annotations.
-        schema = getattr(action, 'kwargs', {}).get('schema', None)
-        if schema and inspect.isclass(schema):
-            view.schema = schema()
+        action_schema = getattr(action, 'kwargs', {}).get('schema', None)
+        if not action_schema:
+            # there is no method/action customized schema so we are done here.
+            return view
 
+        # action_schema is either a class or instance. when @extend_schema is used, it
+        # is always a class to prevent the weakref reverse "schema.view" bug for multi
+        # annotations. The bug is prevented by delaying the instantiation of the schema
+        # class until create_view (here) and not doing it immediately in @extend_schema.
+        action_schema_class = get_class(action_schema)
+        view_schema_class = get_class(callback.cls.schema)
+
+        if not issubclass(action_schema_class, view_schema_class):
+            # this handles the case of having a manually set custom AutoSchema on the
+            # view together with extend_schema. In most cases, the decorator mechanics
+            # prevent extend_schema from having access to the view's schema class. So
+            # extend_schema is forced to use DEFAULT_SCHEMA_CLASS as fallback base class
+            # instead of the correct base class set in view. We remedy this chicken-egg
+            # problem here by rearranging the class hierarchy.
+            mro = tuple(
+                cls for cls in action_schema_class.__mro__
+                if cls not in api_settings.DEFAULT_SCHEMA_CLASS.__mro__
+            ) + view_schema_class.__mro__
+            action_schema_class = type('ExtendedRearrangedSchema', mro, {})
+
+        view.schema = action_schema_class()
         return view
 
     def _initialise_endpoints(self):

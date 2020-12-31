@@ -837,6 +837,29 @@ def test_auto_schema_and_extend_parameters(no_warnings):
     assert parameters[2]['name'] == 'id'
 
 
+def test_manually_set_auto_schema_with_extend_schema(no_warnings):
+    class CustomSchema(AutoSchema):
+        def get_override_parameters(self):
+            if self.method.lower() == "delete":
+                return [OpenApiParameter("custom_param", str)]
+            return super().get_override_parameters()
+
+    @extend_schema_view(
+        list=extend_schema(summary="list summary"),
+        destroy=extend_schema(summary="delete summary"),
+    )
+    class XViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, viewsets.ViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+        schema = CustomSchema()
+
+    schema = generate_schema('x', XViewSet)
+    assert schema['paths']['/x/']['get']['summary'] == 'list summary'
+    assert schema['paths']['/x/{id}/']['delete']['summary'] == 'delete summary'
+    assert schema['paths']['/x/{id}/']['delete']['parameters'][0]['name'] == 'custom_param'
+    assert schema['paths']['/x/{id}/']['delete']['parameters'][1]['name'] == 'id'
+
+
 def test_list_serializer_with_field_child():
     class XSerializer(serializers.Serializer):
         field = serializers.ListSerializer(child=serializers.IntegerField())
