@@ -38,6 +38,10 @@ class Product(models.Model):
     price = models.FloatField()
     other_sub_product = models.ForeignKey(OtherSubProduct, on_delete=models.CASCADE)
 
+    @property
+    def str_id(self):
+        return str(self.id)
+
 
 class SubProduct(models.Model):
     sub_price = models.FloatField()
@@ -55,6 +59,7 @@ class ProductFilter(FilterSet):
     max_price = NumberFilter(field_name="price", lookup_expr='lte')
     max_sub_price = NumberFilter(field_name="subproduct__sub_price", lookup_expr='lte')
     sub = NumberFilter(field_name="subproduct", lookup_expr='exact')
+    str_id = CharFilter(method='filter_by_str_id')
     # implicit filter declaration
     subproduct__sub_price = NumberFilter()  # reverse relation
     other_sub_product__uuid = CharFilter()  # forward relation
@@ -63,8 +68,11 @@ class ProductFilter(FilterSet):
         model = Product
         fields = [
             'category', 'in_stock', 'max_price', 'max_sub_price', 'sub',
-            'subproduct__sub_price', 'other_sub_product__uuid'
+            'subproduct__sub_price', 'other_sub_product__uuid',
         ]
+
+    def filter_by_str_id(self, queryset, name, value):
+        return queryset.filter(id=int(value))
 
 
 class ProductViewset(viewsets.ReadOnlyModelViewSet):
@@ -114,5 +122,11 @@ def test_django_filters_requests(no_warnings):
     assert response.status_code == 200
     assert len(response.json()) == 1
     response = APIClient().get('/api/products/?sub=2')
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+    response = APIClient().get(f'/api/products/?str_id={product.id}')
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    response = APIClient().get(f'/api/products/?str_id={product.id + 1}')
     assert response.status_code == 200
     assert len(response.json()) == 0
