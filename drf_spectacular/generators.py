@@ -1,8 +1,10 @@
+import re
 from urllib.parse import urljoin
 
 from django.urls import URLPattern, URLResolver
 from rest_framework import views, viewsets
 from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignore
+from rest_framework.schemas.generators import get_pk_name  # type: ignore
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 from rest_framework.settings import api_settings
 
@@ -15,6 +17,8 @@ from drf_spectacular.plumbing import (
     operation_matches_version, sanitize_result_object, warn,
 )
 from drf_spectacular.settings import spectacular_settings
+
+NESTED_PK_PATTERN = re.compile(r'{(\w+)_pk}')
 
 
 class EndpointEnumerator(BaseEndpointEnumerator):
@@ -69,6 +73,28 @@ class SchemaGenerator(BaseSchemaGenerator):
         self.api_version = kwargs.pop('api_version', None)
         self.inspector = None
         super().__init__(*args, **kwargs)
+
+    def coerce_path(self, path, method, view):
+        """
+        Customized coerce_path which also considers the `_pk` suffix in URL paths
+        of nested routers.
+        """
+        path = super().coerce_path(path, method, view)
+        model = getattr(getattr(view, 'queryset', None), 'model', None)
+        nested_pk_match = NESTED_PK_PATTERN.search(path)
+        if not self.coerce_path_pk or not nested_pk_match:
+            return path
+        rel_field_name = nested_pk_match.group(1)
+        if model:
+            try:
+                rel_field = getattr(model, rel_field_name)
+                rel_model = rel_field.field.model
+            except AttributeError:
+                pass
+            else:
+                ref_pk_name = get_pk_name(rel_model)
+                return NESTED_PK_PATTERN.sub(f'{{{rel_field_name}_{ref_pk_name}}}', path, count=1)
+        return NESTED_PK_PATTERN.sub(f'{{{rel_field_name}_id}}', path, count=1)
 
     def create_view(self, callback, method, request=None):
         """
