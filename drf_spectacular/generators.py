@@ -157,10 +157,9 @@ class SchemaGenerator(BaseSchemaGenerator):
 
             # mocked request to allow certain operations in get_queryset and get_serializer[_class]
             # without exceptions being raised due to no request.
-            if not request:
-                request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, request)
+            mock_request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, request)
 
-            view.request = request
+            view.request = mock_request
 
             if view.versioning_class and not is_versioning_supported(view.versioning_class):
                 warn(
@@ -170,7 +169,7 @@ class SchemaGenerator(BaseSchemaGenerator):
             elif view.versioning_class:
                 version = (
                     self.api_version  # generator was explicitly versioned
-                    or getattr(request, 'version', None)  # incoming request was versioned
+                    or getattr(mock_request, 'version', None)  # incoming request was versioned
                     or view.versioning_class.default_version  # fallback
                 )
                 if not version:
