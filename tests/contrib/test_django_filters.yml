@@ -22,6 +22,11 @@ paths:
           type: boolean
         description: in_stock
       - in: query
+        name: int_id
+        schema:
+          type: integer
+        description: int_id
+      - in: query
         name: max_price
         schema:
           type: number
@@ -33,6 +38,11 @@ paths:
           type: number
           format: float
         description: max_sub_price
+      - in: query
+        name: number_id
+        schema:
+          type: number
+        description: number_id
       - in: query
         name: other_sub_product__uuid
         schema:

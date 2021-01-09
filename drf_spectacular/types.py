@@ -14,6 +14,7 @@ class OpenApiTypes(enum.Enum):
     - Use OBJECT for arbitrary free-form object (usually a dict)
 
     """
+    NUMBER = enum.auto()
     FLOAT = enum.auto()
     DOUBLE = enum.auto()
     BOOL = enum.auto()
@@ -40,6 +41,7 @@ class OpenApiTypes(enum.Enum):
 
 # make a copy with dict() before modifying returned dict
 OPENAPI_TYPE_MAPPING = {
+    OpenApiTypes.NUMBER: {'type': 'number'},
     OpenApiTypes.FLOAT: {'type': 'number', 'format': 'float'},
     OpenApiTypes.DOUBLE: {'type': 'number', 'format': 'double'},
     OpenApiTypes.BOOL: {'type': 'boolean'},
