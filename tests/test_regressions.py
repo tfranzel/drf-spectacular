@@ -1174,3 +1174,24 @@ def test_manual_decimal_validator():
     field = schema['components']['schemas']['X']['properties']['field']
     assert field['maximum'] == 100
     assert field['minimum'] == -100
+
+
+def test_non_supported_http_verbs(no_warnings):
+    HTTP_METHODS = [
+        'GET',
+        'HEAD',
+        'POST',
+        'PUT',
+        'DELETE',
+        'CONNECT',
+        'OPTIONS',
+        'TRACE',
+        'PATCH'
+    ]
+    for x in HTTP_METHODS:
+        @extend_schema(request=int, responses=int)
+        @api_view([x])
+        def view_func(request, format=None):
+            pass  # pragma: no cover
+
+        generate_schema('x', view_function=view_func)

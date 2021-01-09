@@ -60,6 +60,13 @@ class EndpointEnumerator(BaseEndpointEnumerator):
 
         return api_endpoints
 
+    def get_allowed_methods(self, callback):
+        methods = super().get_allowed_methods(callback)
+        return [
+            method for method in methods
+            if method not in ('OPTIONS', 'HEAD', 'TRACE', 'CONNECT')
+        ]
+
 
 class SchemaGenerator(BaseSchemaGenerator):
     endpoint_inspector_cls = EndpointEnumerator
