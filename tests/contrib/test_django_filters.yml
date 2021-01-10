@@ -15,51 +15,44 @@ paths:
           - A
           - B
           type: string
-        description: category
+        description: some category description
       - in: query
         name: in_stock
         schema:
           type: boolean
-        description: in_stock
       - in: query
         name: int_id
         schema:
           type: integer
-        description: int_id
       - in: query
         name: max_price
         schema:
           type: number
           format: float
-        description: max_price
+        description: highest price
       - in: query
         name: max_sub_price
         schema:
           type: number
           format: float
-        description: max_sub_price
       - in: query
         name: number_id
         schema:
           type: number
-        description: number_id
       - in: query
         name: other_sub_product__uuid
         schema:
           type: string
           format: uuid
-        description: other_sub_product__uuid
       - in: query
         name: sub
         schema:
           type: integer
-        description: sub
       - in: query
         name: subproduct__sub_price
         schema:
           type: number
           format: float
-        description: subproduct__sub_price
       tags:
       - products
       security:
@@ -113,7 +106,9 @@ components:
           type: integer
           readOnly: true
         category:
-          $ref: '#/components/schemas/CategoryEnum'
+          allOf:
+          - $ref: '#/components/schemas/CategoryEnum'
+          description: some category description
         in_stock:
           type: boolean
         price:

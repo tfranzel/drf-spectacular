@@ -39,13 +39,16 @@ class DjangoFilterExtension(OpenApiFilterExtension):
 
         parameters = []
         for field_name, field in filterset_class.base_filters.items():
+            schema, description, enum = (
+                self.resolve_filter_field(auto_schema, model, filterset_class, field)
+            )
             parameters.append(build_parameter_type(
                 name=field_name,
                 required=field.extra['required'],
                 location=OpenApiParameter.QUERY,
-                description=field.label if field.label is not None else field_name,
-                schema=self.resolve_filter_field(auto_schema, model, filterset_class, field),
-                enum=[c for c, _ in field.extra.get('choices', [])],
+                description=description,
+                schema=schema,
+                enum=enum,
             ))
 
         return parameters
@@ -56,17 +59,29 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             filter_method_hints = typing.get_type_hints(filter_method)
 
             if 'value' in filter_method_hints and is_basic_type(filter_method_hints['value']):
-                return build_basic_type(filter_method_hints['value'])
+                schema = build_basic_type(filter_method_hints['value'])
             else:
-                return self.map_filter_field(filter_field)
-
-        path = filter_field.field_name.split('__')
-        model_field = follow_field_source(model, path)
-
-        if isinstance(model_field, models.Field):
-            return auto_schema._map_model_field(model_field, direction=None)
+                schema = self.map_filter_field(filter_field)
         else:
-            return self.map_filter_field(filter_field)
+            path = filter_field.field_name.split('__')
+            model_field = follow_field_source(model, path)
+
+            if isinstance(model_field, models.Field):
+                schema = auto_schema._map_model_field(model_field, direction=None)
+            else:
+                schema = self.map_filter_field(filter_field)
+
+        if 'choices' in filter_field.extra:
+            enum = [c for c, _ in filter_field.extra['choices']]
+        else:
+            enum = schema.pop('enum', None)
+
+        if filter_field.label is not None:
+            description = filter_field.label
+        else:
+            description = schema.pop('description', None)
+
+        return schema, description, enum
 
     def map_filter_field(self, filter_field):
         from django_filters.rest_framework import filters

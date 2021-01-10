@@ -33,7 +33,11 @@ class OtherSubProduct(models.Model):
 
 
 class Product(models.Model):
-    category = models.CharField(max_length=10, choices=(('A', 'aaa'), ('B', 'b')))
+    category = models.CharField(
+        max_length=10,
+        choices=(('A', 'aaa'), ('B', 'b')),
+        help_text='some category description'
+    )
     in_stock = models.BooleanField()
     price = models.FloatField()
     other_sub_product = models.ForeignKey(OtherSubProduct, on_delete=models.CASCADE)
@@ -52,7 +56,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductFilter(FilterSet):
     # explicit filter declaration
-    max_price = NumberFilter(field_name="price", lookup_expr='lte')
+    max_price = NumberFilter(field_name="price", lookup_expr='lte', label='highest price')
     max_sub_price = NumberFilter(field_name="subproduct__sub_price", lookup_expr='lte')
     sub = NumberFilter(field_name="subproduct", lookup_expr='exact')
     int_id = NumberFilter(method='filter_method_typed')
