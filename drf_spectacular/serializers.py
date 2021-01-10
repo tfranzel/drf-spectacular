@@ -28,6 +28,7 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
         sub_components = []
         for sub_serializer in self.target.serializers:
             sub_serializer = force_instance(sub_serializer)
+            sub_serializer.partial = self.target.partial
             resolved_sub_serializer = auto_schema.resolve_serializer(sub_serializer, direction)
 
             try:
@@ -49,6 +50,7 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
         sub_components = []
         for resource_type, sub_serializer in self.target.serializers.items():
             sub_serializer = force_instance(sub_serializer)
+            sub_serializer.partial = self.target.partial
             resolved_sub_serializer = auto_schema.resolve_serializer(sub_serializer, direction)
             sub_components.append((resource_type, resolved_sub_serializer.ref))
 

@@ -1195,3 +1195,26 @@ def test_non_supported_http_verbs(no_warnings):
             pass  # pragma: no cover
 
         generate_schema('x', view_function=view_func)
+
+
+def test_nested_ro_serializer_has_required_fields_on_patch(no_warnings):
+    # issue #249 raised a disparity problem between serializer name
+    # generation and the actual serializer construction on PATCH.
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+    class YSerializer(serializers.Serializer):
+        x_field = XSerializer(read_only=True)
+
+    class YViewSet(viewsets.GenericViewSet):
+        serializer_class = YSerializer
+        queryset = SimpleModel.objects.all()
+
+        def partial_update(self, request, *args, **kwargs):
+            pass
+
+    schema = generate_schema('x', YViewSet)
+    assert len(schema['components']['schemas']) == 3
+    assert 'Y' in schema['components']['schemas']
+    assert 'PatchedY' in schema['components']['schemas']
+    assert 'required' in schema['components']['schemas']['X']

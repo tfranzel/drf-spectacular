@@ -56,6 +56,8 @@ class PolymorphicProxySerializer:
         self.component_name = component_name
         self.serializers = serializers
         self.resource_type_field_name = resource_type_field_name
+        self.partial = False
+        self.read_only = False
 
 
 class OpenApiSchemaBase:

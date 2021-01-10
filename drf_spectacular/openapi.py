@@ -698,8 +698,8 @@ class AutoSchema(ViewInspector):
 
             properties[field.field_name] = safe_ref(schema)
 
-        if spectacular_settings.COMPONENT_SPLIT_PATCH:
-            if self.method == 'PATCH' and direction == 'request':
+        if self.method == 'PATCH' and spectacular_settings.COMPONENT_SPLIT_PATCH:
+            if direction == 'request' and serializer.partial and not serializer.read_only:
                 required = []
 
         return build_object_type(
@@ -847,6 +847,8 @@ class AutoSchema(ViewInspector):
                 schema = build_array_type(self._map_serializer_field(serializer.child, 'request'))
             request_body_required = True
         elif is_serializer(serializer):
+            if self.method == 'PATCH':
+                serializer.partial = True
             component = self.resolve_serializer(serializer, 'request')
             if not component.schema:
                 # serializer is empty so skip content enumeration
@@ -1002,7 +1004,7 @@ class AutoSchema(ViewInspector):
             name = name[:-10]
 
         if self.method == 'PATCH' and spectacular_settings.COMPONENT_SPLIT_PATCH:
-            if not serializer.read_only and direction == 'request':
+            if direction == 'request' and serializer.partial and not serializer.read_only:
                 name = 'Patched' + name
 
         if direction == 'request' and spectacular_settings.COMPONENT_SPLIT_REQUEST:

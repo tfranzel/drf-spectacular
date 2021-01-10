@@ -6,7 +6,7 @@ from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
-from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema
+from drf_spectacular.utils import OpenApiParameter, PolymorphicProxySerializer, extend_schema
 from tests import assert_schema, generate_schema
 
 
@@ -53,6 +53,14 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         def create(self, request, *args, **kwargs):
             return Response({})  # pragma: no cover
 
+        @extend_schema(
+            request=implicit_poly_proxy,
+            responses=implicit_poly_proxy,
+            parameters=[OpenApiParameter('id', int, OpenApiParameter.PATH)],
+        )
+        def partial_update(self, request, *args, **kwargs):
+            return Response({})  # pragma: no cover
+
     explicit_poly_proxy = PolymorphicProxySerializer(
         component_name='MetaPerson',
         serializers={
@@ -65,6 +73,14 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
     class ExplicitPersonViewSet(viewsets.GenericViewSet):
         @extend_schema(request=explicit_poly_proxy, responses=explicit_poly_proxy)
         def create(self, request, *args, **kwargs):
+            return Response({})  # pragma: no cover
+
+        @extend_schema(
+            request=explicit_poly_proxy,
+            responses=explicit_poly_proxy,
+            parameters=[OpenApiParameter('id', int, OpenApiParameter.PATH)],
+        )
+        def partial_update(self, request, *args, **kwargs):
             return Response({})  # pragma: no cover
 
 
