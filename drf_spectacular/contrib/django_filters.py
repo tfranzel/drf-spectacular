@@ -71,15 +71,17 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             else:
                 schema = self.map_filter_field(filter_field)
 
+        enum = schema.pop('enum', None)
+
         if 'choices' in filter_field.extra:
             enum = [c for c, _ in filter_field.extra['choices']]
-        else:
-            enum = schema.pop('enum', None)
 
-        if filter_field.label is not None:
+        description = schema.pop('description', None)
+
+        if filter_field.extra.get('help_text', None):
+            description = filter_field.extra['help_text']
+        elif filter_field.label is not None:
             description = filter_field.label
-        else:
-            description = schema.pop('description', None)
 
         return schema, description, enum
 

@@ -11,10 +11,10 @@ paths:
       - in: query
         name: category
         schema:
+          type: string
           enum:
           - A
           - B
-          type: string
         description: some category description
       - in: query
         name: in_stock
@@ -39,6 +39,7 @@ paths:
         name: number_id
         schema:
           type: number
+        description: some injected help text
       - in: query
         name: other_sub_product__uuid
         schema:

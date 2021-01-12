@@ -60,7 +60,7 @@ class ProductFilter(FilterSet):
     max_sub_price = NumberFilter(field_name="subproduct__sub_price", lookup_expr='lte')
     sub = NumberFilter(field_name="subproduct", lookup_expr='exact')
     int_id = NumberFilter(method='filter_method_typed')
-    number_id = NumberFilter(method='filter_method_untyped')
+    number_id = NumberFilter(method='filter_method_untyped', help_text='some injected help text')
     # implicit filter declaration
     subproduct__sub_price = NumberFilter()  # reverse relation
     other_sub_product__uuid = CharFilter()  # forward relation
