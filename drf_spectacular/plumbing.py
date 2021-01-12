@@ -719,6 +719,9 @@ def normalize_result_object(result):
         return [normalize_result_object(v) for v in result]
     if isinstance(result, Promise):
         return str(result)
+    for base_type in [bool, int, float, str]:
+        if isinstance(result, base_type):
+            return base_type(result)  # coerce basic sub types
     return result
 
 
