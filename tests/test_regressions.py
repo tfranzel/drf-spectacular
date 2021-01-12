@@ -1211,10 +1211,36 @@ def test_nested_ro_serializer_has_required_fields_on_patch(no_warnings):
         queryset = SimpleModel.objects.all()
 
         def partial_update(self, request, *args, **kwargs):
-            pass
+            pass  # pragma: no cover
 
     schema = generate_schema('x', YViewSet)
     assert len(schema['components']['schemas']) == 3
     assert 'Y' in schema['components']['schemas']
     assert 'PatchedY' in schema['components']['schemas']
     assert 'required' in schema['components']['schemas']['X']
+
+
+@pytest.mark.parametrize('path', [
+    r'x/(?P<related_field>[0-9a-f-]{36})/',
+    r'x/<related_field>/',
+])
+def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, path):
+    class M3(models.Model):
+        related_field = models.ForeignKey(SimpleModel, on_delete=models.PROTECT, editable=False)
+        many_related = models.ManyToManyField(SimpleModel)
+
+    class M3Serializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M3
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = M3Serializer
+        queryset = M3.objects.none()
+
+    router = routers.SimpleRouter()
+    router.register(path, XViewset)
+
+    schema = SchemaGenerator(patterns=router.urls).get_schema(request=None, public=True)
+    assert '/x/{related_field}/' in schema['paths']
+    assert '/x/{related_field}/{id}/' in schema['paths']

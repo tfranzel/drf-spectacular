@@ -385,7 +385,13 @@ class AutoSchema(ViewInspector):
 
         # For some cases, the DRF init logic either breaks (custom field with internal type) or
         # the resulting field is underspecified with regards to the schema (ReadOnlyField).
-        if field and not anyisinstance(field, [serializers.ReadOnlyField, serializers.ModelField]):
+        if field and isinstance(field, serializers.PrimaryKeyRelatedField):
+            # special case handling only for _resolve_path_parameters() where neither queryset nor
+            # parent is set by build_field. patch in queryset as _map_serializer_field requires it
+            if not field.queryset:
+                field.queryset = model_field.related_model.objects.none()
+            return self._map_serializer_field(field, direction)
+        elif field and not anyisinstance(field, [serializers.ReadOnlyField, serializers.ModelField]):
             return self._map_serializer_field(field, direction)
         elif isinstance(model_field, models.ForeignKey):
             return self._map_model_field(model_field.target_field, direction)
