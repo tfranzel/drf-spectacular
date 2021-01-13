@@ -1,6 +1,27 @@
 Changelog
 =========
 
+
+0.13.0 (2021-01-13)
+-------------------
+
+- add setting for additionalProperties handling `#238 <https://github.com/tfranzel/drf-spectacular/issues/238>`_
+- bugfix path param extraction for PrimaryKeyRelatedField `#258 <https://github.com/tfranzel/drf-spectacular/issues/258>`_
+- use injected django-filter help_text `#234 <https://github.com/tfranzel/drf-spectacular/issues/234>`_
+- robustify normalization of tyes `#257 <https://github.com/tfranzel/drf-spectacular/issues/257>`_
+- bugfix PATCH split serializer disparity `#249 <https://github.com/tfranzel/drf-spectacular/issues/249>`_
+- django-filter description bugfix `#234 <https://github.com/tfranzel/drf-spectacular/issues/234>`_
+- bugfix unsupported http verbs `#244 <https://github.com/tfranzel/drf-spectacular/issues/244>`_
+- bugfix assert on methods in django-filter `#252 <https://github.com/tfranzel/drf-spectacular/issues/252>`_ `#234 <https://github.com/tfranzel/drf-spectacular/issues/234>`_ `#241 <https://github.com/tfranzel/drf-spectacular/issues/241>`_
+- Regression: Filterset defined as method (and from a @property) are not supported [Nicolas Delaby]
+- bugfix view-level AutoSchema noneffective with extend_schema `#241 <https://github.com/tfranzel/drf-spectacular/issues/241>`_
+- bugfix incorrect warning on paginated actions `#233 <https://github.com/tfranzel/drf-spectacular/issues/233>`_
+
+Breaking changes:
+
+- several small improvements that should not have a big impact. this is a y-stream release mainly due to schema changes that may occur with ``django-filter``.
+
+
 0.12.0 (2020-12-19)
 -------------------
 

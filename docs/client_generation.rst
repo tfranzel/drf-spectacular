@@ -23,7 +23,7 @@ Component issues
 ----------------
 
 Most client issues revolve around the construction of components. Some client targets have trouble with
-``readOnly`` and `required`` fields like ``id``. Even though technically correct, the generated code may not
+``readOnly`` and ``required`` fields like ``id``. Even though technically correct, the generated code may not
 allow creating objects with ``id`` missing for ``POST`` requests. Some fields like ``FileField`` behave very
 differently on requests and responses and are simply not translatable into a single component.
 
