@@ -68,3 +68,20 @@ Relevant settings:
 
     # Adds "blank" and "null" enum choices where appropriate. disable on client generation issues
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': True,
+
+
+Type issues
+-----------
+
+Some generator targets behave differently depending on how ``additionalProperties`` is structured.
+According to the specification all three variations should yield identical results, which unfortunately
+is not the case in practice.
+
+Relevant settings:
+
+.. code:: python
+
+    # Determines if and how free-form 'additionalProperties' should be emitted in the schema. Some
+    # code generator targets are sensitive to this. None disables generic 'additionalProperties'.
+    # allowed values are 'dict', 'bool', None
+    'GENERIC_ADDITIONAL_PROPERTIES': 'dict',

@@ -74,6 +74,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Camelize names like operationId and path parameter names
     'CAMELIZE_NAMES': False,
 
+    # Determines if and how free-form 'additionalProperties' should be emitted in the schema. Some
+    # code generator targets are sensitive to this. None disables generic 'additionalProperties'.
+    # allowed values are 'dict', 'bool', None
+    'GENERIC_ADDITIONAL_PROPERTIES': 'dict',
+
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
     'TITLE': '',
