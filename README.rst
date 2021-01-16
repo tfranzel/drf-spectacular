@@ -143,7 +143,7 @@ the sky is the limit.
 
 .. code:: python
 
-    from drf_spectacular.utils import extend_schema, OpenApiParameter
+    from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
     from drf_spectacular.types import OpenApiTypes
 
     class AlbumViewset(viewset.ModelViewset)
@@ -170,7 +170,7 @@ the sky is the limit.
                         OpenApiExample(
                             'Example 1',
                             summary='short optional summary',
-                            description='longer description'
+                            description='longer description',
                             value='1993-08-23'
                         ),
                         ...
@@ -188,8 +188,8 @@ the sky is the limit.
             # attach request/response examples to the operation.
             examples=[
                 OpenApiExample(
-                    'Example 1'
-                    description='longer description'
+                    'Example 1',
+                    description='longer description',
                     value=...
                 ),
                 ...
