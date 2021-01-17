@@ -1244,3 +1244,29 @@ def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, 
     schema = SchemaGenerator(patterns=router.urls).get_schema(request=None, public=True)
     assert '/x/{related_field}/' in schema['paths']
     assert '/x/{related_field}/{id}/' in schema['paths']
+
+
+@pytest.mark.contrib('psycopg2')
+def test_multiple_choice_enum(no_warnings):
+    from django.contrib.postgres.fields import ArrayField
+
+    class M4(models.Model):
+        multi = ArrayField(
+            models.CharField(max_length=10, choices=(('A', 'A'), ('B', 'B'))),
+            size=8,
+        )
+
+    class M4Serializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M4
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = M4Serializer
+        queryset = M4.objects.none()
+
+    schema = generate_schema('x', XViewset)
+    assert 'MultiEnum' in schema['components']['schemas']
+    prop = schema['components']['schemas']['M4']['properties']['multi']
+    assert prop['type'] == 'array'
+    assert prop['items']['$ref'] == '#/components/schemas/MultiEnum'

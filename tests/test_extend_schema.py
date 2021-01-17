@@ -47,7 +47,7 @@ class QuerySerializer(serializers.Serializer):
         min_length=3, max_length=10, help_text='filter by containing string', required=False
     )
     order_by = serializers.MultipleChoiceField(
-        choices=['a', 'b'],
+        choices=['a', 'b', 'c'],
         default=['a'],
     )
 

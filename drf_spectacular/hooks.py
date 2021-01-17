@@ -33,6 +33,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
                 yield component_name, schema['properties']
             yield from iter_prop_containers(schema.get('oneOf', []), component_name)
             yield from iter_prop_containers(schema.get('allOf', []), component_name)
+            yield from iter_prop_containers(schema.get('anyOf', []), component_name)
 
     def create_enum_component(name, schema):
         component = ResolvedComponent(
@@ -53,6 +54,8 @@ def postprocess_schema_enums(result, generator, **kwargs):
     # collect all enums, their names and choice sets
     for component_name, props in iter_prop_containers(schemas):
         for prop_name, prop_schema in props.items():
+            if prop_schema.get('type') == 'array':
+                prop_schema = prop_schema.get('items', {})
             if 'enum' not in prop_schema:
                 continue
             # remove blank/null entry for hashing. will be reconstructed in the last step
@@ -98,6 +101,10 @@ def postprocess_schema_enums(result, generator, **kwargs):
     # enum, replace it with a reference and add a corresponding component.
     for _, props in iter_prop_containers(schemas):
         for prop_name, prop_schema in props.items():
+            is_array = prop_schema.get('type') == 'array'
+            if is_array:
+                prop_schema = prop_schema.get('items', {})
+
             if 'enum' not in prop_schema:
                 continue
 
@@ -126,7 +133,10 @@ def postprocess_schema_enums(result, generator, **kwargs):
             else:
                 prop_schema.update({'oneOf': [c.ref for c in components]})
 
-            props[prop_name] = safe_ref(prop_schema)
+            if is_array:
+                props[prop_name]['items'] = safe_ref(prop_schema)
+            else:
+                props[prop_name] = safe_ref(prop_schema)
 
     # sort again with additional components
     result['components'] = generator.registry.build(spectacular_settings.APPEND_COMPONENTS)

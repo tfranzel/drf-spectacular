@@ -230,6 +230,7 @@ paths:
             enum:
             - a
             - b
+            - c
             type: string
           default:
           - a
@@ -339,6 +340,12 @@ components:
       required:
       - inline_b
       - inline_i
+    OrderByEnum:
+      enum:
+      - a
+      - b
+      - c
+      type: string
     Query:
       type: object
       properties:
@@ -355,10 +362,7 @@ components:
         order_by:
           type: array
           items:
-            enum:
-            - a
-            - b
-            type: string
+            $ref: '#/components/schemas/OrderByEnum'
           default:
           - a
       required:

@@ -103,6 +103,7 @@ urlpatterns = [
 
 @pytest.mark.urls(__name__)
 @pytest.mark.django_db
+@pytest.mark.contrib('django_filter')
 def test_django_filters_requests(no_warnings):
     other_sub_product = OtherSubProduct.objects.create(uuid=uuid.uuid4())
     product = Product.objects.create(
