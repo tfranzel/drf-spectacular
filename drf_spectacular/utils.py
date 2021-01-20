@@ -302,7 +302,7 @@ def extend_schema(
     return decorator
 
 
-def extend_schema_field(field):
+def extend_schema_field(field, component_name=None):
     """
     Decorator for the "field" kind. Can be used with ``SerializerMethodField`` (annotate the actual
     method) or with custom ``serializers.Field`` implementations.
@@ -312,11 +312,13 @@ def extend_schema_field(field):
 
     Always takes precedence over other mechanisms (e.g. type hints, auto-discovery).
 
-    :param field: accepts a ``Serializer`` or :class:`~.types.OpenApiTypes`
+    :param field: accepts a ``Serializer``, :class:`~.types.OpenApiTypes` or raw ``dict``
+    :param component_name: signals that the field should be broken out as separate component
     """
 
     def decorator(f):
         set_override(f, 'field', field)
+        set_override(f, 'field_component_name', component_name)
         return f
 
     return decorator

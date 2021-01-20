@@ -420,14 +420,29 @@ class AutoSchema(ViewInspector):
             return build_basic_type(OpenApiTypes.STR)
 
     def _map_serializer_field(self, field, direction):
+        meta = self._get_serializer_field_meta(field)
+
         if has_override(field, 'field'):
             override = get_override(field, 'field')
             if is_basic_type(override):
-                return build_basic_type(override)
+                schema = build_basic_type(override)
+            elif isinstance(override, dict):
+                schema = override
             else:
-                return self._map_serializer_field(override, direction)
+                schema = self._map_serializer_field(force_instance(override), direction)
 
-        meta = self._get_serializer_field_meta(field)
+            field_component_name = get_override(field, 'field_component_name')
+            if field_component_name:
+                component = ResolvedComponent(
+                    name=field_component_name,
+                    type=ResolvedComponent.SCHEMA,
+                    schema=schema,
+                    object=field,
+                )
+                self.registry.register_on_missing(component)
+                return append_meta(component.ref, meta)
+            else:
+                return append_meta(schema, meta)
 
         serializer_field_extension = OpenApiSerializerFieldExtension.get_match(field)
         if serializer_field_extension:
