@@ -153,19 +153,21 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         return view_endpoints
 
-    def parse(self, request, public):
+    def parse(self, input_request, public):
         """ Iterate endpoints generating per method path operations. """
         result = {}
         self._initialise_endpoints()
 
-        for path, path_regex, method, view in self._get_paths_and_endpoints(None if public else request):
+        for path, path_regex, method, view in self._get_paths_and_endpoints(None if public else input_request):
             if not self.has_view_permissions(path, method, view):
                 continue
 
-            # mocked request to allow certain operations in get_queryset and get_serializer[_class]
-            # without exceptions being raised due to no request.
-            if not request:
-                request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, request)
+            if input_request:
+                request = input_request
+            else:
+                # mocked request to allow certain operations in get_queryset and get_serializer[_class]
+                # without exceptions being raised due to no request.
+                request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, input_request)
 
             view.request = request
 
