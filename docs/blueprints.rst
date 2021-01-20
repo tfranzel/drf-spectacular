@@ -15,7 +15,7 @@ Blueprint files can be found `here <https://github.com/tfranzel/drf-spectacular/
 .. note:: Simply copy&paste the snippets into your codebase. The extensions register
   themselves automatically. Just be sure that the python interpreter sees them at least once.
   To that end, we recommend creating a ``YOURPROJECT/schema.py`` file and importing it in your
-  ``settings.py`` with ``import * from YOURPROJECT.schema``. Now you are all set.
+  ``settings.py`` with ``from YOURPROJECT.schema import *``. Now you are all set.
 
 
 dj-stripe
