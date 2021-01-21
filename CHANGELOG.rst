@@ -1,6 +1,18 @@
 Changelog
 =========
 
+0.13.1 (2021-01-21)
+-------------------
+
+- bugfix/handle more django-filter cases `#263 <https://github.com/tfranzel/drf-spectacular/issues/263>`_
+- bugfix missing meta on extend_serializer_field, raw schema, and breakout
+- expose explode and style for OpenApiParameter `#267 <https://github.com/tfranzel/drf-spectacular/issues/267>`_
+- Only generate mock request if there is no actual request [Matthias Erll]
+- Update blueprints.rst [takizuka]
+- bugfix enum substitution for enumed arrays (multiple choice)
+- Update README.rst [Chad Ramos]
+- Create new mock request on each operation [Matthias Erll]
+
 
 0.13.0 (2021-01-13)
 -------------------
