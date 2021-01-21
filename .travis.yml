@@ -22,8 +22,6 @@ jobs:
       env: TOXENV=py36-django3.0-drf3.10
     - python: 3.6
       env: TOXENV=py36-django3.0-drf3.11
-    - python: 3.6
-      env: TOXENV=py36-django3.1-drf3.11
 
     - python: 3.7
       env: TOXENV=py37-django2.2-drf3.10
@@ -34,7 +32,11 @@ jobs:
     - python: 3.7
       env: TOXENV=py37-django3.0-drf3.11
     - python: 3.7
+      env: TOXENV=py37-django3.0-drf3.12
+    - python: 3.7
       env: TOXENV=py37-django3.1-drf3.11
+    - python: 3.7
+      env: TOXENV=py37-django3.1-drf3.12
 
     - python: 3.8
       env: TOXENV=py38-django2.2-drf3.10
@@ -45,15 +47,21 @@ jobs:
     - python: 3.8
       env: TOXENV=py38-django3.0-drf3.11
     - python: 3.8
+      env: TOXENV=py38-django3.0-drf3.12
+    - python: 3.8
       env: TOXENV=py38-django3.1-drf3.11
+    - python: 3.8
+      env: TOXENV=py38-django3.1-drf3.12
 
     - python: 3.9
       env: TOXENV=py39-django3.1-drf3.11
+    - python: 3.9
+      env: TOXENV=py39-django3.1-drf3.12
 
     - python: 3.8
       env: TOXENV=py38-django3.1-drfmaster
     - python: 3.8
-      env: TOXENV=py38-djangomaster-drf3.11
+      env: TOXENV=py38-djangomaster-drf3.12
     - python: 3.8
       env: TOXENV=py38-drfmaster-djangomaster
     - python: 3.8
@@ -61,7 +69,7 @@ jobs:
 
   allow_failures:
     - env: TOXENV=py38-django3.1-drfmaster
-    - env: TOXENV=py38-djangomaster-drf3.11
+    - env: TOXENV=py38-djangomaster-drf3.12
     - env: TOXENV=py38-drfmaster-djangomaster
     - env: TOXENV=py38-drfmaster-djangomaster-allowcontribfail
 
