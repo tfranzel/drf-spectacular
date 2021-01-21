@@ -110,6 +110,8 @@ class OpenApiParameter(OpenApiSchemaBase):
             description='',
             enum=None,
             deprecated=False,
+            style=None,
+            explode=None,
             examples: Optional[List[OpenApiExample]] = None,
             exclude=False,
     ):
@@ -120,6 +122,8 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.description = description
         self.enum = enum
         self.deprecated = deprecated
+        self.style = style
+        self.explode = explode
         self.examples = examples or []
         self.exclude = exclude
 

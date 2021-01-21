@@ -1270,3 +1270,26 @@ def test_multiple_choice_enum(no_warnings):
     prop = schema['components']['schemas']['M4']['properties']['multi']
     assert prop['type'] == 'array'
     assert prop['items']['$ref'] == '#/components/schemas/MultiEnum'
+
+
+def test_explode_style_parameter_with_custom_schema(no_warnings):
+    @extend_schema(
+        parameters=[OpenApiParameter(
+            name='bbox',
+            type={'type': 'array', 'minItems': 4, 'maxItems': 6, 'items': {'type': 'number'}},
+            location=OpenApiParameter.QUERY,
+            required=False,
+            style='form',
+            explode=False,
+        )],
+        responses=OpenApiTypes.OBJECT,
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    parameter = schema['paths']['/x/']['get']['parameters'][0]
+    assert 'explode' in parameter
+    assert 'style' in parameter
+    assert parameter['schema']['type'] == 'array'
