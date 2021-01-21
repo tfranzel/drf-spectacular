@@ -10,7 +10,7 @@ from tests import assert_schema, generate_schema
 
 try:
     from django_filters.rest_framework import (
-        CharFilter, DjangoFilterBackend, FilterSet, NumberFilter,
+        BaseInFilter, CharFilter, DjangoFilterBackend, FilterSet, NumberFilter, OrderingFilter,
     )
 except ImportError:
     class DjangoFilterBackend:
@@ -24,6 +24,14 @@ except ImportError:
             pass
 
     class CharFilter:
+        def init(self, **kwargs):
+            pass
+
+    class OrderingFilter:
+        def init(self, **kwargs):
+            pass
+
+    class BaseInFilter:
         def init(self, **kwargs):
             pass
 
@@ -64,6 +72,12 @@ class ProductFilter(FilterSet):
     # implicit filter declaration
     subproduct__sub_price = NumberFilter()  # reverse relation
     other_sub_product__uuid = CharFilter()  # forward relation
+    # special cases
+    ordering = OrderingFilter(
+        fields=('price', 'in_stock'),
+        field_labels={'price': 'Price', 'in_stock': 'in stock'},
+    )
+    in_categories = BaseInFilter(field_name='category')
 
     class Meta:
         model = Product
@@ -135,3 +149,6 @@ def test_django_filters_requests(no_warnings):
     response = APIClient().get(f'/api/products/?int_id={product.id + 1}')
     assert response.status_code == 200
     assert len(response.json()) == 0
+    response = APIClient().get('/api/products/?ordering=in_stock,-price')
+    assert response.status_code == 200
+    assert len(response.json()) == 1

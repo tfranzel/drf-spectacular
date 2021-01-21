@@ -17,6 +17,18 @@ paths:
           - B
         description: some category description
       - in: query
+        name: in_categories
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - A
+            - B
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
         name: in_stock
         schema:
           type: boolean
@@ -40,6 +52,20 @@ paths:
         schema:
           type: number
         description: some injected help text
+      - in: query
+        name: ordering
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - -in_stock
+            - -price
+            - in_stock
+            - price
+        description: Ordering
+        explode: false
+        style: form
       - in: query
         name: other_sub_product__uuid
         schema:

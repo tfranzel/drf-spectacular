@@ -4,8 +4,8 @@ from django.db import models
 
 from drf_spectacular.extensions import OpenApiFilterExtension
 from drf_spectacular.plumbing import (
-    build_basic_type, build_parameter_type, follow_field_source, get_view_model, is_basic_type,
-    warn,
+    build_array_type, build_basic_type, build_parameter_type, follow_field_source, get_view_model,
+    is_basic_type, warn,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
@@ -37,24 +37,18 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         if not filterset_class:
             return []
 
-        parameters = []
-        for field_name, field in filterset_class.base_filters.items():
-            schema, description, enum = (
-                self.resolve_filter_field(auto_schema, model, filterset_class, field)
-            )
-            parameters.append(build_parameter_type(
-                name=field_name,
-                required=field.extra['required'],
-                location=OpenApiParameter.QUERY,
-                description=description,
-                schema=schema,
-                enum=enum,
-            ))
+        return [
+            self.resolve_filter_field(auto_schema, model, filterset_class, field_name, filter_field)
+            for field_name, filter_field in filterset_class.base_filters.items()
+        ]
 
-        return parameters
+    def resolve_filter_field(self, auto_schema, model, filterset_class, field_name, filter_field):
+        from django_filters.rest_framework import filters
 
-    def resolve_filter_field(self, auto_schema, model, filterset_class, filter_field):
-        if filter_field.method:
+        if isinstance(filter_field, filters.OrderingFilter):
+            # only here filter_field.field_name is not the model field name/path
+            schema = build_basic_type(OpenApiTypes.STR)
+        elif filter_field.method:
             filter_method = getattr(filterset_class, filter_field.method)
             filter_method_hints = typing.get_type_hints(filter_method)
 
@@ -72,18 +66,34 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 schema = self.map_filter_field(filter_field)
 
         enum = schema.pop('enum', None)
-
         if 'choices' in filter_field.extra:
             enum = [c for c, _ in filter_field.extra['choices']]
+        if enum:
+            schema['enum'] = sorted(enum)
 
         description = schema.pop('description', None)
-
         if filter_field.extra.get('help_text', None):
             description = filter_field.extra['help_text']
         elif filter_field.label is not None:
             description = filter_field.label
 
-        return schema, description, enum
+        if isinstance(filter_field, filters.BaseCSVFilter):
+            schema = build_array_type(schema)
+            explode = False
+            style = 'form'
+        else:
+            explode = None
+            style = None
+
+        return build_parameter_type(
+            name=field_name,
+            required=filter_field.extra['required'],
+            location=OpenApiParameter.QUERY,
+            description=description,
+            schema=schema,
+            explode=explode,
+            style=style
+        )
 
     def map_filter_field(self, filter_field):
         from django_filters.rest_framework import filters
