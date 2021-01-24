@@ -191,7 +191,8 @@ class AutoSchema(ViewInspector):
         }
         # override/add @extend_schema parameters
         for key in excluded_parameters:
-            del parameters[key]
+            if key in parameters:
+                del parameters[key]
         for key, parameter in override_parameters.items():
             parameters[key] = parameter
 

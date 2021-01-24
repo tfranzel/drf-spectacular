@@ -58,7 +58,10 @@ class AllFields(models.Model):
     field_smallint = models.SmallIntegerField()
     field_posint = models.PositiveIntegerField()
     field_possmallint = models.PositiveSmallIntegerField()
-    field_nullbool = models.NullBooleanField()
+    if DJANGO_VERSION > '3.1':
+        field_nullbool = models.BooleanField(null=True)
+    else:
+        field_nullbool = models.NullBooleanField()
     field_time = models.TimeField()
     field_duration = models.DurationField()
 
