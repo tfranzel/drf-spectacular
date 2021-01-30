@@ -92,7 +92,11 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
                     'expiration_date', OpenApiTypes.DATETIME, description='time the object will expire at'
                 ),
                 OpenApiParameter(
-                    'test_mode', bool, location=OpenApiParameter.HEADER, enum=[True, False],
+                    name='test_mode',
+                    type=bool,
+                    location=OpenApiParameter.HEADER,
+                    enum=[True, False],
+                    default=False,
                     description='creation will be in the sandbox',
                 )
             ],

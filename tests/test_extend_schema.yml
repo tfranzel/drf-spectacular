@@ -22,6 +22,7 @@ paths:
           enum:
           - false
           - true
+          default: false
         description: creation will be in the sandbox
       tags:
       - custom_tag

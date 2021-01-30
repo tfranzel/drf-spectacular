@@ -228,6 +228,7 @@ def build_parameter_type(
         deprecated=False,
         explode=None,
         style=None,
+        default=None,
         examples=None,
 ):
     irrelevant_field_meta = ['readOnly', 'writeOnly']
@@ -250,6 +251,8 @@ def build_parameter_type(
         schema['style'] = style
     if enum:
         schema['schema']['enum'] = sorted(enum)
+    if default is not None and 'default' not in irrelevant_field_meta:
+        schema['schema']['default'] = default
     if examples:
         schema['examples'] = examples
     return schema

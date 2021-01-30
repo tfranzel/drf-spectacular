@@ -145,6 +145,7 @@ class AutoSchema(ViewInspector):
                         deprecated=parameter.deprecated,
                         style=parameter.style,
                         explode=parameter.explode,
+                        default=parameter.default,
                         examples=build_examples_list(parameter.examples),
                     ))
             elif is_serializer(parameter):

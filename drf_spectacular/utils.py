@@ -112,6 +112,7 @@ class OpenApiParameter(OpenApiSchemaBase):
             deprecated=False,
             style=None,
             explode=None,
+            default=None,
             examples: Optional[List[OpenApiExample]] = None,
             exclude=False,
     ):
@@ -124,6 +125,7 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.deprecated = deprecated
         self.style = style
         self.explode = explode
+        self.default = default
         self.examples = examples or []
         self.exclude = exclude
 
