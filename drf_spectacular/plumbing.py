@@ -300,6 +300,7 @@ def build_root_object(paths, components):
         'info': {
             'title': settings.TITLE,
             'version': settings.VERSION,
+            **settings.EXTENSIONS_INFO,
         },
         'paths': {**paths, **settings.APPEND_PATHS},
         'components': components

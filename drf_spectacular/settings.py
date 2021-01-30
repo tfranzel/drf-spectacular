@@ -97,6 +97,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Optional: MUST contain 'url', may contain "description"
     'EXTERNAL_DOCS': {},
 
+    # Arbitrary specification extensions attached to the schema's info object.
+    # https://swagger.io/specification/#specification-extensions
+    'EXTENSIONS_INFO': {},
+
     # Oauth2 related settings. used for example by django-oauth2-toolkit.
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#oauth-flows-object
     'OAUTH2_FLOWS': [],
