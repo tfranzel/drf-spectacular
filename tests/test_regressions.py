@@ -1158,6 +1158,27 @@ def test_exclude_discovered_parameter(no_warnings):
     assert parameters[1]['name'] == 'random'
 
 
+def test_exclude_parameter_from_customized_autoschema(no_warnings):
+    class CustomSchema(AutoSchema):
+        def get_override_parameters(self):
+            return [OpenApiParameter('test')]
+
+    @extend_schema_view(list=extend_schema(parameters=[
+        OpenApiParameter('test', exclude=True),  # exclude from class override
+        OpenApiParameter('never_existed', exclude=True),  # provoke error
+        OpenApiParameter('keep', bool),  # for sanity check
+    ]))
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+        schema = CustomSchema()
+
+    schema = generate_schema('x', XViewset)
+    parameters = schema['paths']['/x/']['get']['parameters']
+    assert len(parameters) == 1
+    assert parameters[0]['name'] == 'keep'
+
+
 def test_manual_decimal_validator():
     # manually test this validator as it is not part of the default workflow
     class XSerializer(serializers.Serializer):

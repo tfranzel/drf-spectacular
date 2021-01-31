@@ -121,8 +121,7 @@ class AutoSchema(ViewInspector):
         return []
 
     def _process_override_parameters(self):
-        result = []
-        exclusions = []
+        result = {}
         for parameter in self.get_override_parameters():
             if isinstance(parameter, OpenApiParameter):
                 if is_basic_type(parameter.type):
@@ -133,9 +132,9 @@ class AutoSchema(ViewInspector):
                     schema = parameter.type
 
                 if parameter.exclude:
-                    exclusions.append((parameter.name, parameter.location))
+                    result[parameter.name, parameter.location] = None
                 else:
-                    result.append(build_parameter_type(
+                    result[parameter.name, parameter.location] = build_parameter_type(
                         name=parameter.name,
                         schema=schema,
                         location=parameter.location,
@@ -147,20 +146,20 @@ class AutoSchema(ViewInspector):
                         explode=parameter.explode,
                         default=parameter.default,
                         examples=build_examples_list(parameter.examples),
-                    ))
+                    )
             elif is_serializer(parameter):
                 # explode serializer into separate parameters. defaults to QUERY location
                 mapped = self._map_serializer(parameter, 'request')
                 for property_name, property_schema in mapped['properties'].items():
-                    result.append(build_parameter_type(
+                    result[property_name, OpenApiParameter.QUERY] = build_parameter_type(
                         name=property_name,
                         schema=property_schema,
                         location=OpenApiParameter.QUERY,
                         required=property_name in mapped.get('required', []),
-                    ))
+                    )
             else:
                 warn(f'could not resolve parameter annotation {parameter}. skipping.')
-        return result, exclusions
+        return result
 
     def _get_format_parameters(self):
         parameters = []
@@ -178,8 +177,7 @@ class AutoSchema(ViewInspector):
         def dict_helper(parameters):
             return {(p['name'], p['in']): p for p in parameters}
 
-        override_parameters, excluded_parameters = self._process_override_parameters()
-        override_parameters = dict_helper(override_parameters)
+        override_parameters = self._process_override_parameters()
         # remove overridden path parameters beforehand so that there are no irrelevant warnings.
         path_variables = [
             v for v in uritemplate.variables(self.path) if (v, 'path') not in override_parameters
@@ -190,12 +188,14 @@ class AutoSchema(ViewInspector):
             **dict_helper(self._get_pagination_parameters()),
             **dict_helper(self._get_format_parameters()),
         }
-        # override/add @extend_schema parameters
-        for key in excluded_parameters:
-            if key in parameters:
-                del parameters[key]
+        # override/add/remove @extend_schema parameters
         for key, parameter in override_parameters.items():
-            parameters[key] = parameter
+            if parameter is None:
+                # either omit or explicitly remove parameter
+                if key in parameters:
+                    del parameters[key]
+            else:
+                parameters[key] = parameter
 
         return sorted(parameters.values(), key=lambda p: p['name'])
 
