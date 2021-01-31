@@ -480,9 +480,9 @@ class AutoSchema(ViewInspector):
                 model_field = field.queryset.model._meta.pk
             else:
                 if isinstance(field.parent, serializers.ManyRelatedField):
-                    relation_field = field.parent.parent.Meta.model._meta.get_field(field.parent.field_name)
+                    relation_field = field.parent.parent.Meta.model._meta.get_field(field.parent.source)
                 else:
-                    relation_field = field.parent.Meta.model._meta.get_field(field.field_name)
+                    relation_field = field.parent.Meta.model._meta.get_field(field.source)
                 model_field = relation_field.related_model._meta.pk
 
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
