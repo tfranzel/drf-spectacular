@@ -1314,3 +1314,36 @@ def test_explode_style_parameter_with_custom_schema(no_warnings):
     assert 'explode' in parameter
     assert 'style' in parameter
     assert parameter['schema']['type'] == 'array'
+
+
+def test_incorrect_foreignkey_type_on_readonly_field(no_warnings):
+    class ReferencingModel(models.Model):
+        id = models.UUIDField(primary_key=True)
+        referenced_model = models.ForeignKey(SimpleModel, on_delete=models.CASCADE)
+        referenced_model_ro = models.ForeignKey(SimpleModel, on_delete=models.CASCADE)
+        referenced_model_m2m = models.ManyToManyField(SimpleModel)
+        referenced_model_m2m_ro = models.ManyToManyField(SimpleModel)
+
+    class ReferencingModelSerializer(serializers.ModelSerializer):
+        indirect_referenced_model_ro = serializers.PrimaryKeyRelatedField(
+            source='referenced_model',
+            read_only=True,
+        )
+
+        class Meta:
+            fields = '__all__'
+            read_only_fields = ['id', 'referenced_model_ro', 'referenced_model_m2m_ro']
+            model = ReferencingModel
+
+    class ReferencingModelViewset(viewsets.ModelViewSet):
+        serializer_class = ReferencingModelSerializer
+        queryset = ReferencingModel.objects.all()
+
+    schema = generate_schema('/x/', ReferencingModelViewset)
+    properties = schema['components']['schemas']['ReferencingModel']['properties']
+
+    assert properties['referenced_model']['type'] == 'integer'
+    assert properties['referenced_model_ro']['type'] == 'integer'
+    assert properties['referenced_model_m2m']['items']['type'] == 'integer'
+    assert properties['referenced_model_m2m_ro']['items']['type'] == 'integer'
+    assert properties['indirect_referenced_model_ro']['type'] == 'integer'
