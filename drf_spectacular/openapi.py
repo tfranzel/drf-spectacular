@@ -693,6 +693,8 @@ class AutoSchema(ViewInspector):
             if isinstance(default, set):
                 default = list(default)
             meta['default'] = default
+        if field._kwargs.get('label'):
+            meta['title'] = field._kwargs['label']
         if field.help_text:
             meta['description'] = str(field.help_text)
         return meta
