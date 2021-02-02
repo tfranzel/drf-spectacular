@@ -7,6 +7,7 @@ from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.authentication import BasicAuthentication
 
 from drf_spectacular.generators import SchemaGenerator
+from drf_spectacular.validation import validate_schema
 from tests import assert_schema
 
 try:
@@ -49,7 +50,7 @@ class IsAuthenticatedOrTokenHasScopeViewset(mixins.ListModelMixin, viewsets.Gene
 class TestScopesBackend(BaseScopes):
 
     def get_all_scopes(self):
-        return ['test_backend_scope']
+        return {'test_backend_scope': 'Test scope for ScopesBackend'}
 
 
 @mock.patch(
@@ -118,9 +119,10 @@ def test_oauth2_toolkit_scopes_backend(no_warnings):
 
     generator = SchemaGenerator(patterns=urlpatterns)
     schema = generator.get_schema(request=None, public=True)
+    validate_schema(schema)
 
     assert 'oauth2' in schema['components']['securitySchemes']
     oauth2 = schema['components']['securitySchemes']['oauth2']
     assert 'implicit' in oauth2['flows']
     flow = oauth2['flows']['implicit']
-    assert flow['scopes'] == ['test_backend_scope']
+    assert 'test_backend_scope' in flow['scopes']
