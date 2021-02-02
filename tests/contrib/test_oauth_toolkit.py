@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 from django.urls import include, path
+from oauth2_provider.scopes import BaseScopes
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.authentication import BasicAuthentication
 
@@ -45,6 +46,18 @@ class IsAuthenticatedOrTokenHasScopeViewset(mixins.ListModelMixin, viewsets.Gene
     required_scopes = ['extra_scope']
 
 
+class TestScopesBackend(BaseScopes):
+
+    def get_all_scopes(self):
+        return ['test_backend_scope']
+
+    def get_available_scopes(self, application=None, request=None, *args, **kwargs):
+        return ['test_backend_scope']
+
+    def get_default_scopes(self, application=None, request=None, *args, **kwargs):
+        return ['test_backend_scope']
+
+
 @mock.patch(
     'drf_spectacular.settings.spectacular_settings.OAUTH2_FLOWS',
     ['implicit']
@@ -81,3 +94,39 @@ def test_oauth2_toolkit(no_warnings):
     schema = generator.get_schema(request=None, public=True)
 
     assert_schema(schema, 'tests/contrib/test_oauth_toolkit.yml')
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.OAUTH2_FLOWS',
+    ['implicit']
+)
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.OAUTH2_REFRESH_URL',
+    'http://127.0.0.1:8000/o/refresh'
+)
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.OAUTH2_AUTHORIZATION_URL',
+    'http://127.0.0.1:8000/o/authorize'
+)
+@mock.patch(
+    'oauth2_provider.settings.oauth2_settings.SCOPES_BACKEND_CLASS',
+    TestScopesBackend,
+)
+@pytest.mark.contrib('oauth2_provider')
+def test_oauth2_toolkit_scopes_backend(no_warnings):
+    router = routers.SimpleRouter()
+    router.register('TokenHasReadWriteScope', TokenHasReadWriteScopeViewset, basename='x')
+
+    urlpatterns = [
+        *router.urls,
+        path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    ]
+
+    generator = SchemaGenerator(patterns=urlpatterns)
+    schema = generator.get_schema(request=None, public=True)
+
+    assert 'oauth2' in schema['components']['securitySchemes']
+    oauth2 = schema['components']['securitySchemes']['oauth2']
+    assert 'implicit' in oauth2['flows']
+    flow = oauth2['flows']['implicit']
+    assert flow['scopes'] == ['test_backend_scope']
