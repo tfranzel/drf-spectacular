@@ -51,12 +51,6 @@ class TestScopesBackend(BaseScopes):
     def get_all_scopes(self):
         return ['test_backend_scope']
 
-    def get_available_scopes(self, application=None, request=None, *args, **kwargs):
-        return ['test_backend_scope']
-
-    def get_default_scopes(self, application=None, request=None, *args, **kwargs):
-        return ['test_backend_scope']
-
 
 @mock.patch(
     'drf_spectacular.settings.spectacular_settings.OAUTH2_FLOWS',
