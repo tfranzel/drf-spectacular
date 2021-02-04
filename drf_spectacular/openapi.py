@@ -154,7 +154,7 @@ class AutoSchema(ViewInspector):
                     result[property_name, OpenApiParameter.QUERY] = build_parameter_type(
                         name=property_name,
                         schema=property_schema,
-                        description=property_schema.get('description', None),
+                        description=property_schema.pop('description', None),
                         location=OpenApiParameter.QUERY,
                         required=property_name in mapped.get('required', []),
                     )

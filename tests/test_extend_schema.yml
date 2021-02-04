@@ -216,7 +216,6 @@ paths:
         name: contains
         schema:
           type: string
-          description: filter by containing string
           maxLength: 10
           minLength: 3
         description: filter by containing string
@@ -242,7 +241,6 @@ paths:
           type: integer
           maximum: 5
           minimum: 1
-          description: filter by rating stars
         description: filter by rating stars
         required: true
       tags:
