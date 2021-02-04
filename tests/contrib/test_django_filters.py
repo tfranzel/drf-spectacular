@@ -62,6 +62,10 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+def external_filter_method(queryset, name, value):
+    return queryset  # pragma: no cover
+
+
 class ProductFilter(FilterSet):
     # explicit filter declaration
     max_price = NumberFilter(field_name="price", lookup_expr='lte', label='highest price')
@@ -69,6 +73,7 @@ class ProductFilter(FilterSet):
     sub = NumberFilter(field_name="subproduct", lookup_expr='exact')
     int_id = NumberFilter(method='filter_method_typed')
     number_id = NumberFilter(method='filter_method_untyped', help_text='some injected help text')
+    number_id_ext = NumberFilter(method=external_filter_method)
     # implicit filter declaration
     subproduct__sub_price = NumberFilter()  # reverse relation
     other_sub_product__uuid = CharFilter()  # forward relation
@@ -90,7 +95,7 @@ class ProductFilter(FilterSet):
         return queryset.filter(id=int(value))
 
     def filter_method_untyped(self, queryset, name, value):
-        return queryset.filter(id=int(value))
+        return queryset.filter(id=int(value))  # pragma: no cover
 
 
 class ProductViewset(viewsets.ReadOnlyModelViewSet):

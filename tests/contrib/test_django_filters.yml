@@ -53,6 +53,10 @@ paths:
           type: number
         description: some injected help text
       - in: query
+        name: number_id_ext
+        schema:
+          type: number
+      - in: query
         name: ordering
         schema:
           type: array

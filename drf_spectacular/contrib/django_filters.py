@@ -49,7 +49,11 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             # only here filter_field.field_name is not the model field name/path
             schema = build_basic_type(OpenApiTypes.STR)
         elif filter_field.method:
-            filter_method = getattr(filterset_class, filter_field.method)
+            if callable(filter_field.method):
+                filter_method = filter_field.method
+            else:
+                filter_method = getattr(filterset_class, filter_field.method)
+
             filter_method_hints = typing.get_type_hints(filter_method)
 
             if 'value' in filter_method_hints and is_basic_type(filter_method_hints['value']):
