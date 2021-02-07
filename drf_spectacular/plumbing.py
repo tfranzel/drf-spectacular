@@ -835,12 +835,14 @@ def resolve_type_hint(hint):
                 k: resolve_type_hint(v) for k, v in typing.get_type_hints(hint).items()
             }
         )
-    elif origin is typing.Union and len(args) == 2 and isinstance(None, args[1]):
-        # Optional[*] is resolved to Union[*, None]
-        schema = resolve_type_hint(args[0])
-        schema['nullable'] = True
-        return schema
     elif origin is typing.Union:
-        return {'oneOf': [resolve_type_hint(arg) for arg in args]}
+        type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
+        if len(type_args) > 1:
+            schema = {'oneOf': [resolve_type_hint(arg) for arg in type_args]}
+        else:
+            schema = resolve_type_hint(type_args[0])
+        if type(None) in args:
+            schema['nullable'] = True
+        return schema
     else:
         raise UnableToProceedError()
