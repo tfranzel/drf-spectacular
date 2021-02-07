@@ -54,7 +54,10 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             else:
                 filter_method = getattr(filterset_class, filter_field.method)
 
-            filter_method_hints = typing.get_type_hints(filter_method)
+            try:
+                filter_method_hints = typing.get_type_hints(filter_method)
+            except:  # noqa: E722
+                filter_method_hints = {}
 
             if 'value' in filter_method_hints and is_basic_type(filter_method_hints['value']):
                 schema = build_basic_type(filter_method_hints['value'])
