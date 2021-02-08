@@ -1053,6 +1053,27 @@ def test_pagination_reusage(no_warnings):
     validate_schema(schema)
 
 
+def test_pagination_disabled_on_action(no_warnings):
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+        pagination_class = pagination.LimitOffsetPagination
+
+        @extend_schema(responses={'200': SimpleSerializer(many=True)})
+        @action(methods=['GET'], detail=False, pagination_class=None)
+        def custom_action(self):
+            pass  # pragma: no cover
+
+    class YViewset(XViewset):
+        serializer_class = SimpleSerializer
+
+    schema = generate_schema('/x/', YViewset)
+    assert 'PaginatedSimpleList' in get_response_schema(schema['paths']['/x/']['get'])['$ref']
+    assert 'Simple' in get_response_schema(
+        schema['paths']['/x/custom_action/']['get']
+    )['items']['$ref']
+
+
 @mock.patch(
     'drf_spectacular.settings.spectacular_settings.SECURITY',
     [{'apiKeyAuth': []}]
