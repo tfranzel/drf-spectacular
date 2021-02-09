@@ -162,3 +162,13 @@ I'm using ``@action(detail=False)`` but the response schema is not a list
 The ``detail`` parameter in itself makes no statement about the action's response. Also note that the default
 for underspecified endpoints is a non-list response. To signal a listed response, you can use
 ``@extend_schema(response=XSerializer(many=True))``.
+
+
+Using ``@extend_schema`` on ``APIView`` has no effect
+-----------------------------------------------------
+
+``@extend_schema`` needs to be applied to the entrypoint method of the view. For views derived from ``Viewset``,
+these are methods like ``retrieve``, ``list``, ``create``. For ``APIView`` based views, these are ``get``, ``post``,
+``create``. This confusion commonly occurs while using convenience classes like ``ListAPIView``. ``ListAPIView`` does
+in fact have a ``list`` method (via mixin), but the actual entrypoint is still the ``get`` method, and the ``list``
+call is proxied through the entrypoint.
