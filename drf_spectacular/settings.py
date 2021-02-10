@@ -79,6 +79,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # allowed values are 'dict', 'bool', None
     'GENERIC_ADDITIONAL_PROPERTIES': 'dict',
 
+    # Determines whether operation parameters should be sorted alphanumerically or just in
+    # the order they arrived. Accepts either True, False, or a callable for sort's key arg.
+    'SORT_OPERATION_PARAMETERS': True,
+
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
     'TITLE': '',
@@ -118,6 +122,7 @@ IMPORT_STRINGS = [
     'PREPROCESSING_HOOKS',
     'GET_LIB_DOC_EXCLUDES',
     'GET_MOCK_REQUEST',
+    'SORT_OPERATION_PARAMETERS',
 ]
 
 spectacular_settings = APISettings(

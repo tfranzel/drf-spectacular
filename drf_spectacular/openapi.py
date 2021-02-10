@@ -198,7 +198,12 @@ class AutoSchema(ViewInspector):
             else:
                 parameters[key] = parameter
 
-        return sorted(parameters.values(), key=lambda p: p['name'])
+        if callable(spectacular_settings.SORT_OPERATION_PARAMETERS):
+            return sorted(parameters.values(), key=spectacular_settings.SORT_OPERATION_PARAMETERS)
+        elif spectacular_settings.SORT_OPERATION_PARAMETERS:
+            return sorted(parameters.values(), key=lambda p: p['name'])
+        else:
+            return list(parameters.values())
 
     def get_description(self):
         """ override this for custom behaviour """

@@ -1368,3 +1368,25 @@ def test_incorrect_foreignkey_type_on_readonly_field(no_warnings):
     assert properties['referenced_model_m2m']['items']['type'] == 'integer'
     assert properties['referenced_model_m2m_ro']['items']['type'] == 'integer'
     assert properties['indirect_referenced_model_ro']['type'] == 'integer'
+
+
+@pytest.mark.parametrize(['sorting', 'result'], [
+    (True, ['a', 'b', 'c']),
+    (False, ['b', 'c', 'a']),
+    (lambda x: (x['in'], x['name']), ['b', 'a', 'c']),
+])
+def test_parameter_sorting_setting(no_warnings, sorting, result):
+    @extend_schema(
+        parameters=[OpenApiParameter('b', str, 'header'), OpenApiParameter('c'), OpenApiParameter('a')],
+        responses=OpenApiTypes.FLOAT
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.SORT_OPERATION_PARAMETERS', sorting
+    ):
+        schema = generate_schema('/x/', view_function=view_func)
+        parameters = schema['paths']['/x/']['get']['parameters']
+        assert [p['name'] for p in parameters] == result
