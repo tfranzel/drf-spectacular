@@ -1,6 +1,26 @@
 Changelog
 =========
 
+0.13.2 (2021-02-11)
+-------------------
+
+- add setting for operation parameter sorting `#281 <https://github.com/tfranzel/drf-spectacular/issues/281>`_
+- bugfix/generalize Union hint extraction `#284 <https://github.com/tfranzel/drf-spectacular/issues/284>`_
+- bugfix functools.partial methods in django-filters `#290 <https://github.com/tfranzel/drf-spectacular/issues/290>`_
+- bugfix django-filter method filter `#290 <https://github.com/tfranzel/drf-spectacular/issues/290>`_
+- Check serialzer help_text field is passed to the query description [Jorge Rodríguez-Flores Esparza]
+- QUERY Parameters from serializer ignore description in SwaggerUI [Jorge Rodríguez-Flores Esparza]
+- README.rst encoding change [gongul]
+- Add support for SCOPES_BACKEND_CLASS setting from django-oauth-toolkit [diesieben07]
+- use source instead of field_name for model field detection `#274 <https://github.com/tfranzel/drf-spectacular/issues/274>`_ [diesieben07]
+- bugfix parameter removal from custom AutoSchema `#212 <https://github.com/tfranzel/drf-spectacular/issues/212>`_
+- add specification extension option to info section `#165 <https://github.com/tfranzel/drf-spectacular/issues/165>`_
+- add default to OpenApiParameter `#271 <https://github.com/tfranzel/drf-spectacular/issues/271>`_
+- show violating view for easier fixing `#278 <https://github.com/tfranzel/drf-spectacular/issues/278>`_
+- fix readonly related fields generating incorrect schema `#274 <https://github.com/tfranzel/drf-spectacular/issues/274>`_ [diesieben07]
+- bugfix save parameter removal `#212 <https://github.com/tfranzel/drf-spectacular/issues/212>`_
+
+
 0.13.1 (2021-01-21)
 -------------------
 
