@@ -76,7 +76,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         if 'choices' in filter_field.extra:
             enum = [c for c, _ in filter_field.extra['choices']]
         if enum:
-            schema['enum'] = sorted(enum)
+            schema['enum'] = sorted(enum, key=str)
 
         description = schema.pop('description', None)
         if filter_field.extra.get('help_text', None):
