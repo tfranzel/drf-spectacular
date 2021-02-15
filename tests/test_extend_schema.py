@@ -98,7 +98,22 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
                     enum=[True, False],
                     default=False,
                     description='creation will be in the sandbox',
-                )
+                ),
+                OpenApiParameter(
+                    name='X-Api-Version',
+                    type=str,
+                    location=OpenApiParameter.HEADER,
+                    response=True,
+                ),
+                OpenApiParameter(
+                    name='Location',
+                    type=OpenApiTypes.URI,
+                    location=OpenApiParameter.HEADER,
+                    description='URL of the created resource',
+                    response={
+                        201: True,
+                    },
+                ),
             ],
             description='this weird endpoint needs some explaining',
             summary='short summary',
