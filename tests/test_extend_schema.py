@@ -110,9 +110,7 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
                     type=OpenApiTypes.URI,
                     location=OpenApiParameter.HEADER,
                     description='URL of the created resource',
-                    response={
-                        201: True,
-                    },
+                    response=[201],
                 ),
             ],
             description='this weird endpoint needs some explaining',

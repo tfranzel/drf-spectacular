@@ -115,6 +115,7 @@ class OpenApiParameter(OpenApiSchemaBase):
             default=None,
             examples: Optional[List[OpenApiExample]] = None,
             exclude=False,
+            response: Union[bool, List[Union[int, str]]] = False,
     ):
         self.name = name
         self.type = type
@@ -128,6 +129,7 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.default = default
         self.examples = examples or []
         self.exclude = exclude
+        self.response = response
 
 
 def extend_schema(

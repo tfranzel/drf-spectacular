@@ -124,6 +124,9 @@ class AutoSchema(ViewInspector):
         result = {}
         for parameter in self.get_override_parameters():
             if isinstance(parameter, OpenApiParameter):
+                if parameter.response:
+                    continue
+
                 if is_basic_type(parameter.type):
                     schema = build_basic_type(parameter.type)
                 elif is_serializer(parameter.type):
@@ -1003,7 +1006,7 @@ class AutoSchema(ViewInspector):
         if not media_types:
             media_types = self.map_renderers('media_type')
 
-        return {
+        response = {
             'content': {
                 media_type: build_media_type_object(
                     schema,
@@ -1016,6 +1019,56 @@ class AutoSchema(ViewInspector):
             # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#responseObject
             'description': ''
         }
+        headers = self._get_response_headers_for_code(status_code)
+        if headers:
+            response['headers'] = headers
+        return response
+
+    def _get_response_headers_for_code(self, status_code) -> dict:
+        result = {}
+        # select the relevant response header parameters
+        for parameter in self.get_override_parameters():
+            if not isinstance(parameter, OpenApiParameter):
+                continue
+
+            response = parameter.response
+            if not response:
+                continue
+
+            if isinstance(response, list):
+                response = [str(code) for code in response]
+
+            # check if the parameter is always present, or only for this status code
+            if not (response is True or status_code in response):
+                continue
+
+            if is_basic_type(parameter.type):
+                schema = build_basic_type(parameter.type)
+            elif is_serializer(parameter.type):
+                warn('complex types for response header parameters are not supported yet. '
+                     f'got {parameter.type}. skipping.')
+                continue
+            else:
+                schema = parameter.type
+
+            parameter_type = build_parameter_type(
+                name=parameter.name,
+                schema=schema,
+                location=parameter.location,
+                required=parameter.required,
+                description=parameter.description,
+                enum=parameter.enum,
+                deprecated=parameter.deprecated,
+                style=parameter.style,
+                explode=parameter.explode,
+                default=parameter.default,
+                examples=build_examples_list(parameter.examples),
+            )
+            del parameter_type['name']
+            del parameter_type['in']
+            result[parameter.name] = parameter_type
+
+        return result
 
     def _get_serializer_name(self, serializer, direction):
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
