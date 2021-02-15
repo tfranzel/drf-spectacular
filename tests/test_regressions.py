@@ -12,6 +12,7 @@ from rest_framework import (
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
+from rest_framework.serializers import IntegerField, PrimaryKeyRelatedField
 
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.generators import SchemaGenerator
@@ -38,6 +39,13 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
         m1_r = models.ForeignKey(M1, on_delete=models.CASCADE)
         m1_rw = models.ForeignKey(M1, on_delete=models.CASCADE)
 
+    class M3(models.Model):
+        m2 = models.ForeignKey(M2, on_delete=models.CASCADE)
+
+        @property
+        def foo(self):
+            return 4.0
+
     class M2Serializer(serializers.ModelSerializer):
         class Meta:
             fields = ['m1_rw', 'm1_r']
@@ -48,10 +56,29 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
         serializer_class = M2Serializer
         queryset = M2.objects.none()
 
+    class M3Serializer(serializers.ModelSerializer):
+        m1 = PrimaryKeyRelatedField(source='m2.m1_r', required=False, read_only=True)
+        foo = IntegerField(required=False, read_only=True)
+
+        class Meta:
+            fields = ['m1', 'm2', 'foo']
+            read_only_fields = ['m1', 'foo']  # this produces the bug
+            model = M3
+
+    class M3Viewset(viewsets.ReadOnlyModelViewSet):
+        serializer_class = M3Serializer
+        queryset = M3.objects.none()
+
     schema = generate_schema('m2', M2Viewset)
     props = schema['components']['schemas']['M2']['properties']
     assert props['m1_rw']['type'] == 'integer'
     assert props['m1_r']['type'] == 'integer'
+
+    schema = generate_schema('m3', M3Viewset)
+    props = schema['components']['schemas']['M3']['properties']
+    assert props['m1']['type'] == 'integer'
+    assert props['m2']['type'] == 'integer'
+    assert props['foo']['type'] == 'integer'
 
 
 def test_path_implicit_required(no_warnings):
