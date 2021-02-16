@@ -12,7 +12,6 @@ from rest_framework import (
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
-from rest_framework.serializers import IntegerField, PrimaryKeyRelatedField
 
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.generators import SchemaGenerator
@@ -39,13 +38,6 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
         m1_r = models.ForeignKey(M1, on_delete=models.CASCADE)
         m1_rw = models.ForeignKey(M1, on_delete=models.CASCADE)
 
-    class M3(models.Model):
-        m2 = models.ForeignKey(M2, on_delete=models.CASCADE)
-
-        @property
-        def foo(self):
-            return 4.0
-
     class M2Serializer(serializers.ModelSerializer):
         class Meta:
             fields = ['m1_rw', 'm1_r']
@@ -56,29 +48,38 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
         serializer_class = M2Serializer
         queryset = M2.objects.none()
 
-    class M3Serializer(serializers.ModelSerializer):
-        m1 = PrimaryKeyRelatedField(source='m2.m1_r', required=False, read_only=True)
-        foo = IntegerField(required=False, read_only=True)
-
-        class Meta:
-            fields = ['m1', 'm2', 'foo']
-            read_only_fields = ['m1', 'foo']  # this produces the bug
-            model = M3
-
-    class M3Viewset(viewsets.ReadOnlyModelViewSet):
-        serializer_class = M3Serializer
-        queryset = M3.objects.none()
-
     schema = generate_schema('m2', M2Viewset)
     props = schema['components']['schemas']['M2']['properties']
     assert props['m1_rw']['type'] == 'integer'
     assert props['m1_r']['type'] == 'integer'
 
+
+def test_multi_step_serializer_primary_key_related_field(no_warnings):
+    class MA1(models.Model):
+        id = models.UUIDField(primary_key=True)
+
+    class MA2(models.Model):
+        m1 = models.ForeignKey(MA1, on_delete=models.CASCADE)
+
+    class MA3(models.Model):
+        m2 = models.ForeignKey(MA2, on_delete=models.CASCADE)
+
+    class M3Serializer(serializers.ModelSerializer):
+        # this scenario looks explicitly at multi-step sources with read_only=True
+        m1 = serializers.PrimaryKeyRelatedField(source='m2.m1', required=False, read_only=True)
+
+        class Meta:
+            fields = ['m1', 'm2']
+            model = MA3
+
+    class M3Viewset(viewsets.ReadOnlyModelViewSet):
+        serializer_class = M3Serializer
+        queryset = MA3.objects.none()
+
     schema = generate_schema('m3', M3Viewset)
-    props = schema['components']['schemas']['M3']['properties']
-    assert props['m1']['type'] == 'integer'
-    assert props['m2']['type'] == 'integer'
-    assert props['foo']['type'] == 'integer'
+    properties = schema['components']['schemas']['M3']['properties']
+    assert properties['m1']['format'] == 'uuid'
+    assert properties['m2']['type'] == 'integer'
 
 
 def test_path_implicit_required(no_warnings):
@@ -735,10 +736,12 @@ def test_read_only_many_related_field(no_warnings):
             pass  # pragma: no cover
 
     schema = generate_schema('x', view=XAPIView)
-    assert schema['components']['schemas']['X']['properties']['field_m2m_ro']['readOnly'] is True
+    properties = schema['components']['schemas']['X']['properties']
     # readOnly only needed on outer object, not in items
-    assert 'readOnly' not in schema['components']['schemas']['X']['properties']['field_m2m_ro']['items']
-    assert 'readOnly' not in schema['components']['schemas']['X']['properties']['field_m2m']
+    assert properties['field_m2m'] == {'type': 'array', 'items': {'type': 'integer'}}
+    assert properties['field_m2m_ro'] == {
+        'type': 'array', 'items': {'type': 'integer'}, 'readOnly': True
+    }
 
 
 def test_extension_subclass_discovery(no_warnings):
