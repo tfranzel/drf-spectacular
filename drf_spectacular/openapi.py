@@ -686,7 +686,7 @@ class AutoSchema(ViewInspector):
             warn(
                 f'unable to extract field metadata from field "{field}" because it appears '
                 f'to be neither a Field nor a Serializer. Proper handling may require an '
-                f'Extension or @extend_serializer_field. Skipping metadata extraction. '
+                f'Extension or @extend_schema_field. Skipping metadata extraction. '
             )
             return {}
 
@@ -959,9 +959,11 @@ class AutoSchema(ViewInspector):
 
     def _get_response_for_code(self, serializer, status_code, media_types=None):
         serializer = force_instance(serializer)
+        headers = self._get_response_headers_for_code(status_code)
+        headers = {'headers': headers} if headers else {}
 
         if not serializer:
-            return {'description': _('No response body')}
+            return {**headers, 'description': _('No response body')}
         elif is_list_serializer(serializer):
             if is_serializer(serializer.child):
                 schema = self.resolve_serializer(serializer.child, 'response').ref
@@ -970,7 +972,7 @@ class AutoSchema(ViewInspector):
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'response')
             if not component.schema:
-                return {'description': _('No response body')}
+                return {**headers, 'description': _('No response body')}
             schema = component.ref
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
@@ -1006,7 +1008,8 @@ class AutoSchema(ViewInspector):
         if not media_types:
             media_types = self.map_renderers('media_type')
 
-        response = {
+        return {
+            **headers,
             'content': {
                 media_type: build_media_type_object(
                     schema,
@@ -1019,10 +1022,6 @@ class AutoSchema(ViewInspector):
             # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#responseObject
             'description': ''
         }
-        headers = self._get_response_headers_for_code(status_code)
-        if headers:
-            response['headers'] = headers
-        return response
 
     def _get_response_headers_for_code(self, status_code) -> dict:
         result = {}

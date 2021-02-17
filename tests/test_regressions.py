@@ -1390,3 +1390,26 @@ def test_parameter_sorting_setting(no_warnings, sorting, result):
         schema = generate_schema('/x/', view_function=view_func)
         parameters = schema['paths']['/x/']['get']['parameters']
         assert [p['name'] for p in parameters] == result
+
+
+def test_response_headers_without_response_body(no_warnings):
+    @extend_schema(
+        responses={301: None},
+        tags=["Registration"],
+        parameters=[
+            OpenApiParameter(
+                name="Location",
+                type=OpenApiTypes.URI,
+                location=OpenApiParameter.HEADER,
+                description="/",
+                response=[301]
+            )
+        ]
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert 'Location' in schema['paths']['/x/']['get']['responses']['301']['headers']
+    assert 'content' not in schema['paths']['/x/']['get']['responses']['301']

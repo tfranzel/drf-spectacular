@@ -45,6 +45,10 @@ paths:
       deprecated: true
       responses:
         '200':
+          headers:
+            X-Api-Version:
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -52,16 +56,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Beta'
           description: ''
-          headers:
-            X-Api-Version:
-              schema:
-                type: string
         '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Gamma'
-          description: ''
           headers:
             X-Api-Version:
               schema:
@@ -71,16 +66,21 @@ paths:
                 type: string
                 format: uri
               description: URL of the created resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gamma'
+          description: ''
         '500':
+          headers:
+            X-Api-Version:
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDetail'
           description: ''
-          headers:
-            X-Api-Version:
-              schema:
-                type: string
   /doesitall/{id}/subscribe/:
     post:
       operationId: doesitall_subscribe_create
