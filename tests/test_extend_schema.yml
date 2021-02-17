@@ -52,18 +52,35 @@ paths:
                 items:
                   $ref: '#/components/schemas/Beta'
           description: ''
+          headers:
+            X-Api-Version:
+              schema:
+                type: string
         '201':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Gamma'
           description: ''
+          headers:
+            X-Api-Version:
+              schema:
+                type: string
+            Location:
+              schema:
+                type: string
+                format: uri
+              description: URL of the created resource
         '500':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDetail'
           description: ''
+          headers:
+            X-Api-Version:
+              schema:
+                type: string
   /doesitall/{id}/subscribe/:
     post:
       operationId: doesitall_subscribe_create

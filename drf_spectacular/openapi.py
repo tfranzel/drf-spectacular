@@ -124,6 +124,9 @@ class AutoSchema(ViewInspector):
         result = {}
         for parameter in self.get_override_parameters():
             if isinstance(parameter, OpenApiParameter):
+                if parameter.response:
+                    continue
+
                 if is_basic_type(parameter.type):
                     schema = build_basic_type(parameter.type)
                 elif is_serializer(parameter.type):
@@ -1003,7 +1006,7 @@ class AutoSchema(ViewInspector):
         if not media_types:
             media_types = self.map_renderers('media_type')
 
-        return {
+        response = {
             'content': {
                 media_type: build_media_type_object(
                     schema,
@@ -1016,6 +1019,52 @@ class AutoSchema(ViewInspector):
             # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#responseObject
             'description': ''
         }
+        headers = self._get_response_headers_for_code(status_code)
+        if headers:
+            response['headers'] = headers
+        return response
+
+    def _get_response_headers_for_code(self, status_code) -> dict:
+        result = {}
+        for parameter in self.get_override_parameters():
+            if not isinstance(parameter, OpenApiParameter):
+                continue
+            if not parameter.response:
+                continue
+            if (
+                isinstance(parameter.response, list)
+                and status_code not in [str(code) for code in parameter.response]
+            ):
+                continue
+
+            if is_basic_type(parameter.type):
+                schema = build_basic_type(parameter.type)
+            elif is_serializer(parameter.type):
+                schema = self.resolve_serializer(parameter.type, 'response').ref
+            else:
+                schema = parameter.type
+
+            if parameter.location not in [OpenApiParameter.HEADER, OpenApiParameter.COOKIE]:
+                warn(f'incompatible location type ignored for response parameter {parameter.name}')
+
+            parameter_type = build_parameter_type(
+                name=parameter.name,
+                schema=schema,
+                location=parameter.location,
+                required=parameter.required,
+                description=parameter.description,
+                enum=parameter.enum,
+                deprecated=parameter.deprecated,
+                style=parameter.style,
+                explode=parameter.explode,
+                default=parameter.default,
+                examples=build_examples_list(parameter.examples),
+            )
+            del parameter_type['name']
+            del parameter_type['in']
+            result[parameter.name] = parameter_type
+
+        return result
 
     def _get_serializer_name(self, serializer, direction):
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
