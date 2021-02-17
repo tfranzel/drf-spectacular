@@ -1026,30 +1026,26 @@ class AutoSchema(ViewInspector):
 
     def _get_response_headers_for_code(self, status_code) -> dict:
         result = {}
-        # select the relevant response header parameters
         for parameter in self.get_override_parameters():
             if not isinstance(parameter, OpenApiParameter):
                 continue
-
-            response = parameter.response
-            if not response:
+            if not parameter.response:
                 continue
-
-            if isinstance(response, list):
-                response = [str(code) for code in response]
-
-            # check if the parameter is always present, or only for this status code
-            if not (response is True or status_code in response):
+            if (
+                isinstance(parameter.response, list)
+                and status_code not in [str(code) for code in parameter.response]
+            ):
                 continue
 
             if is_basic_type(parameter.type):
                 schema = build_basic_type(parameter.type)
             elif is_serializer(parameter.type):
-                warn('complex types for response header parameters are not supported yet. '
-                     f'got {parameter.type}. skipping.')
-                continue
+                schema = self.resolve_serializer(parameter.type, 'response').ref
             else:
                 schema = parameter.type
+
+            if parameter.location not in [OpenApiParameter.HEADER, OpenApiParameter.COOKIE]:
+                warn(f'incompatible location type ignored for response parameter {parameter.name}')
 
             parameter_type = build_parameter_type(
                 name=parameter.name,
