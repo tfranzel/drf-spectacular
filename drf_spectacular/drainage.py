@@ -2,6 +2,8 @@ import sys
 from collections import defaultdict
 from typing import DefaultDict
 
+from drf_spectacular.settings import spectacular_settings
+
 
 class GeneratorStats:
     _warn_cache: DefaultDict[str, int] = defaultdict(int)
@@ -15,6 +17,8 @@ class GeneratorStats:
         self._error_cache.clear()
 
     def emit(self, msg, severity):
+        if spectacular_settings.DISABLE_ERRORS_AND_WARNINGS:
+            return
         assert severity in ['warning', 'error']
         msg = str(msg)
         cache = self._warn_cache if severity == 'warning' else self._error_cache
