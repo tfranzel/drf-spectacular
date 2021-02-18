@@ -27,6 +27,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # is the
     'SERVE_INCLUDE_SCHEMA': True,
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    'SERVE_AUTHENTICATION': None,
 
     # Dictionary of configurations to pass to the SwaggerUI({ ... })
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
