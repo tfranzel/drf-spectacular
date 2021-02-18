@@ -83,6 +83,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # the order they arrived. Accepts either True, False, or a callable for sort's key arg.
     'SORT_OPERATION_PARAMETERS': True,
 
+    # Option for turning off error and warn messages
+    'DISABLE_ERRORS_AND_WARNINGS': False,
+
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
     'TITLE': '',
