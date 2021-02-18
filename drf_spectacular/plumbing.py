@@ -771,7 +771,8 @@ def build_mock_request(method, path, view, original_request, **kwargs):
 def set_query_parameters(url, **kwargs) -> str:
     """ deconstruct url, safely attach query parameters in kwargs, and serialize again """
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
-    query = {k: v for k, v in kwargs.items() if v is not None}
+    query = urllib.parse.parse_qs(query)
+    query.update({k: v for k, v in kwargs.items() if v is not None})
     query = urllib.parse.urlencode(query, doseq=True)
     return urllib.parse.urlunparse((scheme, netloc, path, params, query, fragment))
 
