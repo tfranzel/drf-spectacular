@@ -7,7 +7,8 @@ from django.db import models
 from django.db.models import fields
 from django.urls import path, re_path
 from rest_framework import (
-    filters, generics, mixins, pagination, parsers, routers, serializers, views, viewsets,
+    filters, generics, mixins, pagination, parsers, renderers, routers, serializers, views,
+    viewsets,
 )
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action, api_view
@@ -1413,3 +1414,34 @@ def test_response_headers_without_response_body(no_warnings):
     schema = generate_schema('/x/', view_function=view_func)
     assert 'Location' in schema['paths']['/x/']['get']['responses']['301']['headers']
     assert 'content' not in schema['paths']['/x/']['get']['responses']['301']
+
+
+def test_customized_parsers_and_renderers_on_viewset(no_warnings):
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+        parser_classes = [parsers.MultiPartParser]
+
+        def get_renderers(self):
+            if self.action == 'json_in_multi_out':
+                return [renderers.MultiPartRenderer()]
+            else:
+                return [renderers.HTMLFormRenderer()]
+
+        @action(methods=['POST'], detail=False, parser_classes=[parsers.JSONParser])
+        def json_in_multi_out(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x/', XViewset)
+
+    create_op = schema['paths']['/x/']['post']
+    assert len(create_op['requestBody']['content']) == 1
+    assert 'multipart/form-data' in create_op['requestBody']['content']
+    assert len(create_op['responses']['201']['content']) == 1
+    assert 'text/html' in create_op['responses']['201']['content']
+
+    action_op = schema['paths']['/x/json_in_multi_out/']['post']
+    assert len(action_op['requestBody']['content']) == 1
+    assert 'application/json' in action_op['requestBody']['content']
+    assert len(action_op['responses']['200']['content']) == 1
+    assert 'multipart/form-data; boundary=BoUnDaRyStRiNg' in action_op['responses']['200']['content']

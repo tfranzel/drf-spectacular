@@ -1,6 +1,5 @@
 import re
 import typing
-from operator import attrgetter
 
 import uritemplate
 from django.core import exceptions as django_exceptions
@@ -798,13 +797,13 @@ class AutoSchema(ViewInspector):
         return None
 
     def map_parsers(self):
-        return list(map(attrgetter('media_type'), self.view.parser_classes))
+        return list(dict.fromkeys([p.media_type for p in self.view.get_parsers()]))
 
     def map_renderers(self, attribute):
         assert attribute in ['media_type', 'format']
         return list(dict.fromkeys([
-            getattr(r, attribute) for r in self.view.renderer_classes
-            if r != renderers.BrowsableAPIRenderer
+            getattr(r, attribute) for r in self.view.get_renderers()
+            if not isinstance(r, renderers.BrowsableAPIRenderer)
         ]))
 
     def _get_serializer(self):
