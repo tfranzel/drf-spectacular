@@ -802,7 +802,7 @@ class AutoSchema(ViewInspector):
     def map_renderers(self, attribute):
         assert attribute in ['media_type', 'format']
         return list(dict.fromkeys([
-            getattr(r, attribute) for r in self.view.get_renderers()
+            getattr(r, attribute).split(';')[0] for r in self.view.get_renderers()
             if not isinstance(r, renderers.BrowsableAPIRenderer)
         ]))
 

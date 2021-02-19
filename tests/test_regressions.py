@@ -1444,4 +1444,4 @@ def test_customized_parsers_and_renderers_on_viewset(no_warnings):
     assert len(action_op['requestBody']['content']) == 1
     assert 'application/json' in action_op['requestBody']['content']
     assert len(action_op['responses']['200']['content']) == 1
-    assert 'multipart/form-data; boundary=BoUnDaRyStRiNg' in action_op['responses']['200']['content']
+    assert 'multipart/form-data' in action_op['responses']['200']['content']
