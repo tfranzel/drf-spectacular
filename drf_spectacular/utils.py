@@ -163,10 +163,16 @@ def extend_schema(
         - ``Serializer`` instance (e.g. ``Serializer(many=True)`` for listings)
         - ``dict`` with status codes as keys and `Serializers` as values.
         - ``dict`` with tuple (status_code, media_type) as keys and `Serializers` as values.
+        - basic types or instances of ``OpenApiTypes``
         - :class:`.PolymorphicProxySerializer` for signaling that
           the operation may yield data from different serializers depending
           on the circumstances.
-    :param request: replaces the discovered ``Serializer``.
+    :param request: replaces the discovered ``Serializer``. Takes a variety of inputs
+        - ``Serializer`` class/instance
+        - basic types or instances of ``OpenApiTypes``
+        - :class:`.PolymorphicProxySerializer` for signaling that the operation
+          accepts a set of different types of objects.
+        - ``dict`` with media_type as keys and one of the above as values.
     :param auth:
     :param description: replaces discovered doc strings
     :param summary: an optional short summary of the description

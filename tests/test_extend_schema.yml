@@ -134,6 +134,32 @@ paths:
       responses:
         '201':
           description: No response body
+  /doesitall/custom_request_override/:
+    post:
+      operationId: doesitall_custom_request_override_create
+      description: ''
+      tags:
+      - doesitall
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+          text/html:
+            schema:
+              type: string
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
   /doesitall/document/:
     get:
       operationId: doesitall_document_retrieve

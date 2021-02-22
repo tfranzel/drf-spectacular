@@ -870,9 +870,40 @@ class AutoSchema(ViewInspector):
         if self.method not in ('PUT', 'PATCH', 'POST'):
             return None
 
-        serializer = force_instance(self.get_request_serializer())
+        request_serializer = self.get_request_serializer()
 
-        request_body_required = False
+        if isinstance(request_serializer, dict):
+            content = []
+            request_body_required = True
+            for media_type, serializer in request_serializer.items():
+                schema, partial_request_body_required = self._get_request_for_media_type(serializer)
+                examples = self._get_examples(serializer, 'request', media_type)
+                if not schema:
+                    continue
+                content.append((media_type, schema, examples))
+                request_body_required &= partial_request_body_required
+        else:
+            schema, request_body_required = self._get_request_for_media_type(request_serializer)
+            if not schema:
+                return
+            content = [
+                (media_type, schema, self._get_examples(request_serializer, 'request', media_type))
+                for media_type in self.map_parsers()
+            ]
+
+        request_body = {
+            'content': {
+                media_type: build_media_type_object(schema, examples)
+                for media_type, schema, examples in content
+            }
+        }
+        if request_body_required:
+            request_body['required'] = request_body_required
+        return request_body
+
+    def _get_request_for_media_type(self, serializer):
+        serializer = force_instance(serializer)
+
         if is_list_serializer(serializer):
             if is_serializer(serializer.child):
                 component = self.resolve_serializer(serializer.child, 'request')
@@ -886,7 +917,7 @@ class AutoSchema(ViewInspector):
             component = self.resolve_serializer(serializer, 'request')
             if not component.schema:
                 # serializer is empty so skip content enumeration
-                return None
+                return None, False
             schema = component.ref
             # request body is only required if any required property is not read-only
             readonly_props = [
@@ -896,8 +927,7 @@ class AutoSchema(ViewInspector):
             request_body_required = any(req not in readonly_props for req in required_props)
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
-            if not schema:
-                return None
+            request_body_required = False
         else:
             warn(
                 f'could not resolve request body for {self.method} {self.path}. defaulting to generic '
@@ -907,21 +937,8 @@ class AutoSchema(ViewInspector):
                 additionalProperties={},
                 description='Unspecified request body',
             )
-
-        request_body = {
-            'content': {
-                media_type: build_media_type_object(
-                    schema,
-                    self._get_examples(serializer, 'request', media_type)
-                )
-                for media_type in self.map_parsers()
-            }
-        }
-
-        if request_body_required:
-            request_body['required'] = request_body_required
-
-        return request_body
+            request_body_required = False
+        return schema, request_body_required
 
     def _get_response_bodies(self):
         response_serializers = self.get_response_serializers()

@@ -189,6 +189,18 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         def non_required_body(self, request):
             return Response([])  # pragma: no cover
 
+        @extend_schema(
+            request={
+                'application/json': dict,
+                'application/pdf': bytes,
+                'text/html': OpenApiTypes.STR
+            },
+            responses=None
+        )
+        @action(detail=False, methods=['POST'])
+        def custom_request_override(self, request):
+            return Response([])  # pragma: no cover
+
         @extend_schema(responses={
             (200, 'application/pdf'): bytes
         })
