@@ -351,4 +351,4 @@ def test_extend_schema_field_custom_schema_with_without_breakout(no_warnings):
     assert properties['field']['description'] == 'some explaining'
     assert properties['field']['readOnly']
     assert 'Breakout' in properties['field_breakout']['allOf'][0]['$ref']
-    properties['field_breakout']['readOnly']
+    assert properties['field_breakout']['readOnly']

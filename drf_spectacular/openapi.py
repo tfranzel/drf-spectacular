@@ -30,7 +30,7 @@ from drf_spectacular.plumbing import (
     is_serializer, resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
-from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.types import OpenApiTypes, build_generic_type
 from drf_spectacular.utils import OpenApiParameter
 
 
@@ -933,10 +933,8 @@ class AutoSchema(ViewInspector):
                 f'could not resolve request body for {self.method} {self.path}. defaulting to generic '
                 'free-form object. (maybe annotate a Serializer class?)'
             )
-            schema = build_object_type(
-                additionalProperties={},
-                description='Unspecified request body',
-            )
+            schema = build_generic_type()
+            schema['description'] = 'Unspecified request body'
             request_body_required = False
         return schema, request_body_required
 

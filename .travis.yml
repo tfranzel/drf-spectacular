@@ -72,10 +72,10 @@ jobs:
       env: TOXENV=py39-drfmaster-djangomaster-allowcontribfail
 
   allow_failures:
-    - env: TOXENV=py38-django3.1-drfmaster
-    - env: TOXENV=py38-djangomaster-drf3.12
-    - env: TOXENV=py38-drfmaster-djangomaster
-    - env: TOXENV=py38-drfmaster-djangomaster-allowcontribfail
+    - env: TOXENV=py39-django3.1-drfmaster
+    - env: TOXENV=py39-djangomaster-drf3.12
+    - env: TOXENV=py39-drfmaster-djangomaster
+    - env: TOXENV=py39-drfmaster-djangomaster-allowcontribfail
     - env: TOXENV=py310-django3.1-drf3.12
 
 install:

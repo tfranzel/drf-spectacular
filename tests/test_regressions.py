@@ -1445,3 +1445,13 @@ def test_customized_parsers_and_renderers_on_viewset(no_warnings):
     assert 'application/json' in action_op['requestBody']['content']
     assert len(action_op['responses']['200']['content']) == 1
     assert 'multipart/form-data' in action_op['responses']['200']['content']
+
+
+def test_technically_unnecessary_serializer_patch(no_warnings):
+    # ideally this extend_schema would not be necessary
+    @extend_schema_view(delete=extend_schema(responses=None))
+    class XAPIView(generics.DestroyAPIView):
+        queryset = SimpleModel.objects.none()
+
+    schema = generate_schema('/x/', view=XAPIView)
+    assert 'No response' in schema['paths']['/x/']['delete']['responses']['204']['description']

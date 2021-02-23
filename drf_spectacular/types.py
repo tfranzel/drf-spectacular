@@ -41,7 +41,7 @@ class OpenApiTypes(enum.Enum):
     NONE = enum.auto()
 
 
-def _get_generic_object():
+def build_generic_type():
     if spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES is None:
         return {'type': 'object'}
     elif spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES == 'bool':
@@ -73,7 +73,7 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.DATE: {'type': 'string', 'format': 'date'},
     OpenApiTypes.TIME: {'type': 'string', 'format': 'time'},
     OpenApiTypes.EMAIL: {'type': 'string', 'format': 'email'},
-    OpenApiTypes.OBJECT: _get_generic_object(),
+    OpenApiTypes.OBJECT: build_generic_type(),
     OpenApiTypes.NONE: {},
 }
 

@@ -436,7 +436,7 @@ class ResolvedComponent:
 
     @property
     def ref(self) -> dict:
-        assert self.name and self.type and self.object
+        assert self.__bool__()
         return {'$ref': f'#/components/{self.type}/{self.name}'}
 
 
