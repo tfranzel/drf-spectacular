@@ -59,14 +59,17 @@ jobs:
     - python: 3.9
       env: TOXENV=py39-django3.1-drf3.12
 
-    - python: 3.8
-      env: TOXENV=py38-django3.1-drfmaster
-    - python: 3.8
-      env: TOXENV=py38-djangomaster-drf3.12
-    - python: 3.8
-      env: TOXENV=py38-drfmaster-djangomaster
-    - python: 3.8
-      env: TOXENV=py38-drfmaster-djangomaster-allowcontribfail
+    - python: 3.10-dev
+      env: TOXENV=py310-django3.1-drf3.12
+
+    - python: 3.9
+      env: TOXENV=py39-django3.1-drfmaster
+    - python: 3.9
+      env: TOXENV=py39-djangomaster-drf3.12
+    - python: 3.9
+      env: TOXENV=py39-drfmaster-djangomaster
+    - python: 3.9
+      env: TOXENV=py39-drfmaster-djangomaster-allowcontribfail
 
   allow_failures:
     - env: TOXENV=py38-django3.1-drfmaster
