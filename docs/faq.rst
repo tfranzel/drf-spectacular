@@ -172,3 +172,12 @@ these are methods like ``retrieve``, ``list``, ``create``. For ``APIView`` based
 ``create``. This confusion commonly occurs while using convenience classes like ``ListAPIView``. ``ListAPIView`` does
 in fact have a ``list`` method (via mixin), but the actual entrypoint is still the ``get`` method, and the ``list``
 call is proxied through the entrypoint.
+
+
+Where should i put my extensions? / my extensions are not detected
+------------------------------------------------------------------
+
+The extensions register themselves automatically. Just be sure that the python interpreter sees them at least once.
+To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your ``PROJECT/__init__.py``
+(same directory as ``settings.py`` and ``urls.py``) with ``import PROJECT.schema``. Please do not import the file in
+``settings.py`` as this may potentially lead to cyclic import issues.
