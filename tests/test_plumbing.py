@@ -164,8 +164,18 @@ if sys.version_info >= (3, 9):
 
 @pytest.mark.parametrize(['type_hint', 'ref_schema'], TYPE_HINT_TEST_PARAMS)
 def test_type_hint_extraction(no_warnings, type_hint, ref_schema):
-    def func() -> type_hint:
-        pass  # pragma: no cover
+    if sys.version_info >= (3, 10):
+        # This partially defeats the purpose of the test, as this is not what
+        # happens in reality for 3.10. However, the other tests cover annotation
+        # usage sufficiently. i'm unaware on how to do this programmatically
+        # in the context of PEP 563. suggestions welcome!
+        def func():
+            pass  # pragma: no cover
+        func.__annotations__['return'] = type_hint
+    else:
+        # this is perfectly fine up to 3.9
+        def func() -> type_hint:
+            pass  # pragma: no cover
 
     # check expected resolution
     schema = resolve_type_hint(typing.get_type_hints(func).get('return'))

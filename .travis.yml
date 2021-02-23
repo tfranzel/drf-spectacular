@@ -76,6 +76,7 @@ jobs:
     - env: TOXENV=py38-djangomaster-drf3.12
     - env: TOXENV=py38-drfmaster-djangomaster
     - env: TOXENV=py38-drfmaster-djangomaster-allowcontribfail
+    - env: TOXENV=py310-django3.1-drf3.12
 
 install:
   - pip install -U pip
