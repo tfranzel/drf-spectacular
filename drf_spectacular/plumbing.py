@@ -360,9 +360,9 @@ def _follow_field_source(model, path: List[str]):
     else:
         if isinstance(field_or_property, property) or callable(field_or_property):
             if isinstance(field_or_property, property):
-                target_model = field_or_property.fget.__annotations__.get('return')
+                target_model = typing.get_type_hints(field_or_property.fget).get('return')
             else:
-                target_model = field_or_property.__annotations__.get('return')
+                target_model = typing.get_type_hints(field_or_property).get('return')
             if not target_model:
                 raise UnableToProceedError(
                     f'could not follow field source through intermediate property "{path[0]}" '
