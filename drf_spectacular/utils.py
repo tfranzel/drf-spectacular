@@ -168,6 +168,7 @@ def extend_schema(
           the operation may yield data from different serializers depending
           on the circumstances.
     :param request: replaces the discovered ``Serializer``. Takes a variety of inputs
+
         - ``Serializer`` class/instance
         - basic types or instances of ``OpenApiTypes``
         - :class:`.PolymorphicProxySerializer` for signaling that the operation
