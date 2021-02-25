@@ -490,10 +490,17 @@ class AutoSchema(ViewInspector):
                 model_field = field.queryset.model._meta.pk
             else:
                 if isinstance(field.parent, serializers.ManyRelatedField):
-                    relation_field = field.parent.parent.Meta.model._meta.get_field(field.parent.source)
+                    model = field.parent.parent.Meta.model
+                    source = field.parent.source.split('.')
                 else:
-                    relation_field = field.parent.Meta.model._meta.get_field(field.source)
-                model_field = relation_field.related_model._meta.pk
+                    model = field.parent.Meta.model
+                    source = field.source.split('.')
+
+                # estimates the relating model field and jumps to it's target model PK field.
+                # also differentiate as source can be direct (pk) or relation field (model).
+                model_field = follow_field_source(model, source)
+                if anyisinstance(model_field, [models.ForeignKey, models.ManyToManyField]):
+                    model_field = model_field.target_field
 
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
             # signals that attribute. however this does not apply in the context of relations.
