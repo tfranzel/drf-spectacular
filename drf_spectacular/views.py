@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
 from drf_spectacular.plumbing import get_relative_url, set_query_parameters
@@ -30,6 +31,11 @@ if spectacular_settings.SERVE_INCLUDE_SCHEMA:
 else:
     SCHEMA_KWARGS = {'exclude': True}
 
+if spectacular_settings.SERVE_AUTHENTICATION is not None:
+    AUTHENTICATION_CLASSES = spectacular_settings.SERVE_AUTHENTICATION
+else:
+    AUTHENTICATION_CLASSES = api_settings.DEFAULT_AUTHENTICATION_CLASSES
+
 
 class SpectacularAPIView(APIView):
     __doc__ = _("""
@@ -42,7 +48,7 @@ class SpectacularAPIView(APIView):
         OpenApiYamlRenderer, OpenApiYamlRenderer2, OpenApiJsonRenderer, OpenApiJsonRenderer2
     ]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
-
+    authentication_classes = AUTHENTICATION_CLASSES
     generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
     serve_public = spectacular_settings.SERVE_PUBLIC
     urlconf = spectacular_settings.SERVE_URLCONF
@@ -76,6 +82,7 @@ class SpectacularJSONAPIView(SpectacularAPIView):
 class SpectacularSwaggerView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
+    authentication_classes = AUTHENTICATION_CLASSES
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/swagger_ui.html'
@@ -140,6 +147,7 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
 class SpectacularRedocView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
+    authentication_classes = AUTHENTICATION_CLASSES
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/redoc.html'

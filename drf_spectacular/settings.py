@@ -20,13 +20,16 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Aid client generator targets that have trouble with read-only properties.
     'COMPONENT_NO_READ_ONLY_REQUIRED': False,
 
-    # Configuration for serving the schema with SpectacularAPIView
+    # Configuration for serving a schema subset with SpectacularAPIView
     'SERVE_URLCONF': None,
     # complete public schema or a subset based on the requesting user
     'SERVE_PUBLIC': True,
-    # is the
+    # include schema enpoint into schema
     'SERVE_INCLUDE_SCHEMA': True,
+    # list of authentication/permission classes for spectacular's views.
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    # None will default to DRF's AUTHENTICATION_CLASSES
+    'SERVE_AUTHENTICATION': None,
 
     # Dictionary of configurations to pass to the SwaggerUI({ ... })
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
@@ -120,6 +123,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 IMPORT_STRINGS = [
     'SCHEMA_AUTHENTICATION_CLASSES',
     'DEFAULT_GENERATOR_CLASS',
+    'SERVE_AUTHENTICATION',
     'SERVE_PERMISSIONS',
     'POSTPROCESSING_HOOKS',
     'PREPROCESSING_HOOKS',
