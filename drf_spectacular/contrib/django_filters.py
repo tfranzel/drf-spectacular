@@ -5,16 +5,10 @@ from django.db import models
 from drf_spectacular.extensions import OpenApiFilterExtension
 from drf_spectacular.plumbing import (
     build_array_type, build_basic_type, build_parameter_type, follow_field_source, get_view_model,
-    is_basic_type, warn,
+    is_basic_type,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
-
-try:
-    from django_filters.rest_framework import DjangoFilterBackend as OriginalDjangoFilterBackend
-except ImportError:
-    class OriginalDjangoFilterBackend:  # type: ignore
-        pass
 
 
 class DjangoFilterExtension(OpenApiFilterExtension):
@@ -22,13 +16,6 @@ class DjangoFilterExtension(OpenApiFilterExtension):
     match_subclasses = True
 
     def get_schema_operation_parameters(self, auto_schema, *args, **kwargs):
-        if issubclass(self.target_class, SpectacularDjangoFilterBackendMixin):
-            warn(
-                'DEPRECATED - Spectacular\'s DjangoFilterBackend is superseded by extension. you '
-                'can simply restore this to the original class, extensions will take care of the '
-                'rest.'
-            )
-
         model = get_view_model(auto_schema.view)
         if not model:
             return []
@@ -123,14 +110,3 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             # filters.LookupChoiceFilter: None,
         }
         return build_basic_type(mapping.get(filter_field.__class__, OpenApiTypes.STR))
-
-
-class SpectacularDjangoFilterBackendMixin:
-    """ DEPRECATED - superseded by FilterExtensions """
-    def get_schema_operation_parameters(self, view):
-        return super().get_schema_operation_parameters(view)
-
-
-class DjangoFilterBackend(SpectacularDjangoFilterBackendMixin, OriginalDjangoFilterBackend):
-    """ DEPRECATED - superseded by FilterExtensions """
-    pass
