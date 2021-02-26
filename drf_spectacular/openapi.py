@@ -436,6 +436,8 @@ class AutoSchema(ViewInspector):
             override = get_override(field, 'field')
             if is_basic_type(override):
                 schema = build_basic_type(override)
+                if schema is None:
+                    return None
             elif isinstance(override, dict):
                 schema = override
             else:
@@ -725,7 +727,7 @@ class AutoSchema(ViewInspector):
 
             schema = self._map_serializer_field(field, direction)
             # skip field if there is no schema for the direction
-            if not schema:
+            if schema is None:
                 continue
 
             add_to_required = (
@@ -885,14 +887,14 @@ class AutoSchema(ViewInspector):
             for media_type, serializer in request_serializer.items():
                 schema, partial_request_body_required = self._get_request_for_media_type(serializer)
                 examples = self._get_examples(serializer, 'request', media_type)
-                if not schema:
+                if schema is None:
                     continue
                 content.append((media_type, schema, examples))
                 request_body_required &= partial_request_body_required
         else:
             schema, request_body_required = self._get_request_for_media_type(request_serializer)
-            if not schema:
-                return
+            if schema is None:
+                return None
             content = [
                 (media_type, schema, self._get_examples(request_serializer, 'request', media_type))
                 for media_type in self.map_parsers()

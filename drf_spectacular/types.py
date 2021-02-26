@@ -1,4 +1,5 @@
 import enum
+import typing
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -39,6 +40,7 @@ class OpenApiTypes(enum.Enum):
     EMAIL = enum.auto()
     OBJECT = enum.auto()
     NONE = enum.auto()
+    ANY = enum.auto()
 
 
 def build_generic_type():
@@ -74,7 +76,8 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.TIME: {'type': 'string', 'format': 'time'},
     OpenApiTypes.EMAIL: {'type': 'string', 'format': 'email'},
     OpenApiTypes.OBJECT: build_generic_type(),
-    OpenApiTypes.NONE: {},
+    OpenApiTypes.ANY: {},
+    OpenApiTypes.NONE: None,
 }
 
 
@@ -89,6 +92,7 @@ PYTHON_TYPE_MAPPING = {
     datetime: OpenApiTypes.DATETIME,
     date: OpenApiTypes.DATE,
     dict: OpenApiTypes.OBJECT,
+    typing.Any: OpenApiTypes.ANY,
     None: OpenApiTypes.NONE,
 }
 
