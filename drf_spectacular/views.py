@@ -31,6 +31,11 @@ if spectacular_settings.SERVE_INCLUDE_SCHEMA:
 else:
     SCHEMA_KWARGS = {'exclude': True}
 
+if spectacular_settings.SERVE_AUTHENTICATION is not None:
+    AUTHENTICATION_CLASSES = spectacular_settings.SERVE_AUTHENTICATION
+else:
+    AUTHENTICATION_CLASSES = api_settings.DEFAULT_AUTHENTICATION_CLASSES
+
 
 class SpectacularAPIView(APIView):
     __doc__ = _("""
@@ -43,7 +48,7 @@ class SpectacularAPIView(APIView):
         OpenApiYamlRenderer, OpenApiYamlRenderer2, OpenApiJsonRenderer, OpenApiJsonRenderer2
     ]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
-    authentication_classes = spectacular_settings.SERVE_AUTHENTICATION or api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    authentication_classes = AUTHENTICATION_CLASSES
     generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
     serve_public = spectacular_settings.SERVE_PUBLIC
     urlconf = spectacular_settings.SERVE_URLCONF
@@ -77,7 +82,7 @@ class SpectacularJSONAPIView(SpectacularAPIView):
 class SpectacularSwaggerView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
-    authentication_classes = spectacular_settings.SERVE_AUTHENTICATION or api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    authentication_classes = AUTHENTICATION_CLASSES
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/swagger_ui.html'
@@ -142,7 +147,7 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
 class SpectacularRedocView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
-    authentication_classes = spectacular_settings.SERVE_AUTHENTICATION or api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    authentication_classes = AUTHENTICATION_CLASSES
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/redoc.html'
