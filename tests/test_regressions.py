@@ -1,5 +1,6 @@
 import typing
 import uuid
+from decimal import Decimal
 from unittest import mock
 
 import pytest
@@ -19,6 +20,7 @@ from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.hooks import preprocess_exclude_path_format
 from drf_spectacular.openapi import AutoSchema
+from drf_spectacular.renderers import OpenApiYamlRenderer
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
@@ -1248,6 +1250,37 @@ def test_manual_decimal_validator():
     field = schema['components']['schemas']['X']['properties']['field']
     assert field['maximum'] == 100
     assert field['minimum'] == -100
+
+
+def test_serialization_with_decimal_values(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.DecimalField(
+            decimal_places=2,
+            min_value=Decimal('1'),
+            max_value=Decimal('100.00'),
+            max_digits=5,
+            coerce_to_string=False,
+        )
+        field_coerced = serializers.DecimalField(
+            decimal_places=2,
+            min_value=Decimal('1'),
+            max_value=Decimal('100.00'),
+            max_digits=5,
+            coerce_to_string=True,
+        )
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    field = schema['components']['schemas']['X']['properties']['field']
+    assert field['minimum'] and field['maximum']
+
+    schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
+    assert b'maximum: 100.00\n' in schema_yml
+    assert b'minimum: 1\n' in schema_yml
 
 
 def test_non_supported_http_verbs(no_warnings):

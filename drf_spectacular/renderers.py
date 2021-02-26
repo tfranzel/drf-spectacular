@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import yaml
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.renderers import BaseRenderer, JSONRenderer
@@ -22,6 +24,15 @@ class OpenApiYamlRenderer(BaseRenderer):
             scalar.style = '|' if '\n' in data else None
             return scalar
         Dumper.add_representer(str, multiline_str_representer)
+
+        def decimal_representer(dumper, data):
+            # prevent emitting "!! float" tags on fractionless decimals
+            value = str(data)
+            if '.' in value:
+                return dumper.represent_scalar('tag:yaml.org,2002:float', value)
+            else:
+                return dumper.represent_scalar('tag:yaml.org,2002:int', value)
+        Dumper.add_representer(Decimal, decimal_representer)
 
         return yaml.dump(
             data,
