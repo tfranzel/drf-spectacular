@@ -153,12 +153,12 @@ def build_basic_type(obj):
     """
     resolve either enum or actual type and yield schema template for modification
     """
-    if obj in OPENAPI_TYPE_MAPPING:
+    if obj is None or type(obj) is None or obj is OpenApiTypes.NONE:
+        return None
+    elif obj in OPENAPI_TYPE_MAPPING:
         return dict(OPENAPI_TYPE_MAPPING[obj])
     elif obj in PYTHON_TYPE_MAPPING:
         return dict(OPENAPI_TYPE_MAPPING[PYTHON_TYPE_MAPPING[obj]])
-    elif obj is None or type(obj) is None:
-        return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.NONE])
     else:
         warn(f'could not resolve type for "{obj}". defaulting to "string"')
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])

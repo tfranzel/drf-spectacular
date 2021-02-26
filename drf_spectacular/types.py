@@ -76,14 +76,8 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.TIME: {'type': 'string', 'format': 'time'},
     OpenApiTypes.EMAIL: {'type': 'string', 'format': 'email'},
     OpenApiTypes.OBJECT: build_generic_type(),
-    OpenApiTypes.ANY: {'anyOf': [
-        {'type': 'string'},
-        {'type': 'number'}, 
-        {'type': 'boolean'}, 
-        {'type': 'array', 'items': {}},
-        {'type': 'object'}
-    ]},
-    OpenApiTypes.NONE: {},
+    OpenApiTypes.ANY: {},
+    OpenApiTypes.NONE: None,
 }
 
 

@@ -1,3 +1,4 @@
+import typing
 import uuid
 from unittest import mock
 
@@ -1455,3 +1456,28 @@ def test_technically_unnecessary_serializer_patch(no_warnings):
 
     schema = generate_schema('/x/', view=XAPIView)
     assert 'No response' in schema['paths']['/x/']['delete']['responses']['204']['description']
+
+
+def test_any_placeholder_on_request_response():
+    @extend_schema_field(OpenApiTypes.ANY)
+    class CustomField(serializers.IntegerField):
+        pass  # pragma: no cover
+
+    class XSerializer(serializers.Serializer):
+        method_field = serializers.SerializerMethodField(help_text='Any')
+        custom_field = CustomField()
+
+        def get_method_field(self, obj) -> typing.Any:
+            return
+
+    @extend_schema(request=typing.Any, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert get_request_schema(schema['paths']['/x/']['post']) == {}
+
+    properties = schema['components']['schemas']['X']['properties']
+    assert properties['custom_field'] == {}
+    assert properties['method_field'] == {'readOnly': True, 'description': 'Any'}
