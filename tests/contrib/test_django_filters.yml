@@ -9,6 +9,11 @@ paths:
       description: ''
       parameters:
       - in: query
+        name: all_values
+        schema:
+          type: number
+          format: float
+      - in: query
         name: category
         schema:
           type: string
@@ -37,6 +42,10 @@ paths:
         schema:
           type: integer
       - in: query
+        name: is_free
+        schema:
+          type: boolean
+      - in: query
         name: max_price
         schema:
           type: number
@@ -47,6 +56,26 @@ paths:
         schema:
           type: number
           format: float
+      - in: query
+        name: model_multi_cat
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - A
+            - B
+        description: some category description
+        explode: true
+        style: form
+      - in: query
+        name: model_single_cat
+        schema:
+          type: string
+          enum:
+          - A
+          - B
+        description: some category description
       - in: query
         name: number_id
         schema:
@@ -75,6 +104,16 @@ paths:
         schema:
           type: string
           format: uuid
+      - in: query
+        name: price_range_max
+        schema:
+          type: number
+          format: float
+      - in: query
+        name: price_range_min
+        schema:
+          type: number
+          format: float
       - in: query
         name: sub
         schema:

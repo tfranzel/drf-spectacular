@@ -37,6 +37,7 @@ class OpenApiTypes(enum.Enum):
     DATETIME = enum.auto()
     DATE = enum.auto()
     TIME = enum.auto()
+    DURATION = enum.auto()
     EMAIL = enum.auto()
     OBJECT = enum.auto()
     NONE = enum.auto()
@@ -74,6 +75,7 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.DATETIME: {'type': 'string', 'format': 'date-time'},
     OpenApiTypes.DATE: {'type': 'string', 'format': 'date'},
     OpenApiTypes.TIME: {'type': 'string', 'format': 'time'},
+    OpenApiTypes.DURATION: {'type': 'string', 'format': 'duration'},  # ISO 8601
     OpenApiTypes.EMAIL: {'type': 'string', 'format': 'email'},
     OpenApiTypes.OBJECT: build_generic_type(),
     OpenApiTypes.ANY: {},

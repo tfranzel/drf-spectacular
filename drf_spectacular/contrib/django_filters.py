@@ -10,10 +10,24 @@ from drf_spectacular.plumbing import (
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
 
+# Underspecified filter fields for which heuristics are performed. Serves
+# as an explicit list of all remaining/partially-handled filter fields.
+# ----------------------------------------------------------------------------
+# 'AllValuesFilter',  # for no DB hit skip choices
+# 'AllValuesMultipleFilter',  # for no DB hit skip choices, multi handled
+# 'ChoiceFilter',  # enum handled
+# 'DateRangeFilter',  # TODO not sure how this one works exactly
+# 'LookupChoiceFilter',  # TODO not sure how this one works exactly
+# 'ModelChoiceFilter',  # enum handled
+# 'ModelMultipleChoiceFilter',  # enum,multi handled
+# 'MultipleChoiceFilter',  # enum,multi handled
+# 'RangeFilter',  # min/max handled
+# 'TypedChoiceFilter',  # enum handled
+# 'TypedMultipleChoiceFilter',  # enum,multi handled
+
 
 class DjangoFilterExtension(OpenApiFilterExtension):
     target_class = 'django_filters.rest_framework.DjangoFilterBackend'
-    match_subclasses = True
 
     def get_schema_operation_parameters(self, auto_schema, *args, **kwargs):
         model = get_view_model(auto_schema.view)
@@ -24,41 +38,63 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         if not filterset_class:
             return []
 
-        return [
-            self.resolve_filter_field(auto_schema, model, filterset_class, field_name, filter_field)
-            for field_name, filter_field in filterset_class.base_filters.items()
-        ]
+        result = []
+        for field_name, filter_field in filterset_class.base_filters.items():
+            result += self.resolve_filter_field(
+                auto_schema, model, filterset_class, field_name, filter_field
+            )
+        return result
 
     def resolve_filter_field(self, auto_schema, model, filterset_class, field_name, filter_field):
         from django_filters.rest_framework import filters
 
-        if isinstance(filter_field, filters.OrderingFilter):
-            # only here filter_field.field_name is not the model field name/path
-            schema = build_basic_type(OpenApiTypes.STR)
+        unambiguous_mapping = {
+            filters.CharFilter: OpenApiTypes.STR,
+            filters.BooleanFilter: OpenApiTypes.BOOL,
+            filters.DateFilter: OpenApiTypes.DATE,
+            filters.DateTimeFilter: OpenApiTypes.DATETIME,
+            filters.IsoDateTimeFilter: OpenApiTypes.DATETIME,
+            filters.TimeFilter: OpenApiTypes.TIME,
+            filters.UUIDFilter: OpenApiTypes.UUID,
+            filters.DurationFilter: OpenApiTypes.DURATION,
+            filters.OrderingFilter: OpenApiTypes.STR,
+            filters.TimeRangeFilter: OpenApiTypes.TIME,
+            filters.DateFromToRangeFilter: OpenApiTypes.DATE,
+            filters.IsoDateTimeFromToRangeFilter: OpenApiTypes.DATETIME,
+            filters.DateTimeFromToRangeFilter: OpenApiTypes.DATETIME,
+        }
+        if isinstance(filter_field, tuple(unambiguous_mapping)):
+            schema = build_basic_type(unambiguous_mapping[filter_field.__class__])
+        elif isinstance(filter_field, (filters.NumberFilter, filters.NumericRangeFilter)):
+            # NumberField is underspecified by itself. try to find the
+            # type that makes the most sense or default to generic NUMBER
+            if filter_field.method:
+                schema = self._build_filter_method_type(filterset_class, filter_field)
+                if schema['type'] not in ['integer', 'number']:
+                    schema = build_basic_type(OpenApiTypes.NUMBER)
+            else:
+                model_field = self._get_model_field(filter_field, model)
+                if isinstance(model_field, models.IntegerField):
+                    schema = build_basic_type(OpenApiTypes.INT)
+                elif isinstance(model_field, models.FloatField):
+                    schema = build_basic_type(OpenApiTypes.FLOAT)
+                elif isinstance(model_field, models.DecimalField):
+                    schema = build_basic_type(OpenApiTypes.NUMBER)  # TODO may be improved
+                else:
+                    schema = build_basic_type(OpenApiTypes.NUMBER)
         elif filter_field.method:
-            if callable(filter_field.method):
-                filter_method = filter_field.method
-            else:
-                filter_method = getattr(filterset_class, filter_field.method)
-
-            try:
-                filter_method_hints = typing.get_type_hints(filter_method)
-            except:  # noqa: E722
-                filter_method_hints = {}
-
-            if 'value' in filter_method_hints and is_basic_type(filter_method_hints['value']):
-                schema = build_basic_type(filter_method_hints['value'])
-            else:
-                schema = self.map_filter_field(filter_field)
+            # try to make best effort on the given method
+            schema = self._build_filter_method_type(filterset_class, filter_field)
         else:
-            path = filter_field.field_name.split('__')
-            model_field = follow_field_source(model, path)
-
+            # last resort is to lookup the type via the model field.
+            model_field = self._get_model_field(filter_field, model)
             if isinstance(model_field, models.Field):
                 schema = auto_schema._map_model_field(model_field, direction=None)
             else:
-                schema = self.map_filter_field(filter_field)
+                # default to string if nothing else works
+                schema = build_basic_type(OpenApiTypes.STR)
 
+        # enrich schema with additional info from filter_field
         enum = schema.pop('enum', None)
         if 'choices' in filter_field.extra:
             enum = [c for c, _ in filter_field.extra['choices']]
@@ -71,42 +107,55 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         elif filter_field.label is not None:
             description = filter_field.label
 
+        # parameter style variations based on filter base class
         if isinstance(filter_field, filters.BaseCSVFilter):
             schema = build_array_type(schema)
+            field_names = [field_name]
             explode = False
             style = 'form'
+        elif isinstance(filter_field, filters.MultipleChoiceFilter):
+            schema = build_array_type(schema)
+            field_names = [field_name]
+            explode = True
+            style = 'form'
+        elif isinstance(filter_field, (filters.RangeFilter, filters.NumericRangeFilter)):
+            field_names = [f'{field_name}_min', f'{field_name}_max']
+            explode = None
+            style = None
         else:
+            field_names = [field_name]
             explode = None
             style = None
 
-        return build_parameter_type(
-            name=field_name,
-            required=filter_field.extra['required'],
-            location=OpenApiParameter.QUERY,
-            description=description,
-            schema=schema,
-            explode=explode,
-            style=style
-        )
+        return [
+            build_parameter_type(
+                name=field_name,
+                required=filter_field.extra['required'],
+                location=OpenApiParameter.QUERY,
+                description=description,
+                schema=schema,
+                explode=explode,
+                style=style
+            )
+            for field_name in field_names
+        ]
 
-    def map_filter_field(self, filter_field):
-        from django_filters.rest_framework import filters
-        mapping = {
-            filters.CharFilter: OpenApiTypes.STR,
-            filters.BooleanFilter: OpenApiTypes.BOOL,
-            filters.DateFilter: OpenApiTypes.DATE,
-            filters.DateTimeFilter: OpenApiTypes.DATETIME,
-            filters.TimeFilter: OpenApiTypes.TIME,
-            filters.UUIDFilter: OpenApiTypes.UUID,
-            filters.NumberFilter: OpenApiTypes.NUMBER,
-            # TODO underspecified filters. fallback to STR
-            # filters.ChoiceFilter: None,
-            # filters.TypedChoiceFilter: None,
-            # filters.MultipleChoiceFilter: None,
-            # filters.DurationFilter: None,
-            # filters.NumericRangeFilter: None,
-            # filters.RangeFilter: None,
-            # filters.BaseCSVFilter: None,
-            # filters.LookupChoiceFilter: None,
-        }
-        return build_basic_type(mapping.get(filter_field.__class__, OpenApiTypes.STR))
+    def _build_filter_method_type(self, filterset_class, filter_field):
+        if callable(filter_field.method):
+            filter_method = filter_field.method
+        else:
+            filter_method = getattr(filterset_class, filter_field.method)
+
+        try:
+            filter_method_hints = typing.get_type_hints(filter_method)
+        except:  # noqa: E722
+            filter_method_hints = {}
+
+        if 'value' in filter_method_hints and is_basic_type(filter_method_hints['value']):
+            return build_basic_type(filter_method_hints['value'])
+        else:
+            return build_basic_type(OpenApiTypes.STR)
+
+    def _get_model_field(self, filter_field, model):
+        path = filter_field.field_name.split('__')
+        return follow_field_source(model, path)

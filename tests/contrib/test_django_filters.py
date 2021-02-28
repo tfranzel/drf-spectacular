@@ -10,7 +10,9 @@ from tests import assert_schema, generate_schema
 
 try:
     from django_filters.rest_framework import (
-        BaseInFilter, CharFilter, DjangoFilterBackend, FilterSet, NumberFilter, OrderingFilter,
+        AllValuesFilter, BaseInFilter, BooleanFilter, CharFilter, DjangoFilterBackend, FilterSet,
+        ModelChoiceFilter, ModelMultipleChoiceFilter, MultipleChoiceFilter, NumberFilter,
+        NumericRangeFilter, OrderingFilter, RangeFilter, UUIDFilter,
     )
 except ImportError:
     class DjangoFilterBackend:
@@ -23,17 +25,17 @@ except ImportError:
         def init(self, **kwargs):
             pass
 
-    class CharFilter:
-        def init(self, **kwargs):
-            pass
-
-    class OrderingFilter:
-        def init(self, **kwargs):
-            pass
-
-    class BaseInFilter:
-        def init(self, **kwargs):
-            pass
+    CharFilter = NumberFilter
+    OrderingFilter = NumberFilter
+    BaseInFilter = NumberFilter
+    BooleanFilter = NumberFilter
+    UUIDFilter = NumberFilter
+    NumericRangeFilter = NumberFilter
+    RangeFilter = NumberFilter
+    MultipleChoiceFilter = NumberFilter
+    ModelChoiceFilter = NumberFilter
+    ModelMultipleChoiceFilter = NumberFilter
+    AllValuesFilter = NumberFilter
 
 
 class OtherSubProduct(models.Model):
@@ -76,13 +78,18 @@ class ProductFilter(FilterSet):
     number_id_ext = NumberFilter(method=external_filter_method)
     # implicit filter declaration
     subproduct__sub_price = NumberFilter()  # reverse relation
-    other_sub_product__uuid = CharFilter()  # forward relation
+    other_sub_product__uuid = UUIDFilter()  # forward relation
     # special cases
     ordering = OrderingFilter(
         fields=('price', 'in_stock'),
         field_labels={'price': 'Price', 'in_stock': 'in stock'},
     )
     in_categories = BaseInFilter(field_name='category')
+    is_free = BooleanFilter(field_name='price', lookup_expr='isnull')
+    price_range = RangeFilter(field_name='price')
+    model_multi_cat = ModelMultipleChoiceFilter(field_name='category', queryset=Product.objects.all())
+    model_single_cat = ModelChoiceFilter(field_name='category', queryset=Product.objects.all())
+    all_values = AllValuesFilter(field_name='price')
 
     class Meta:
         model = Product
@@ -126,7 +133,7 @@ urlpatterns = [
 def test_django_filters_requests(no_warnings):
     other_sub_product = OtherSubProduct.objects.create(uuid=uuid.uuid4())
     product = Product.objects.create(
-        category='X', price=4, in_stock=True, other_sub_product=other_sub_product
+        category='A', price=4, in_stock=True, other_sub_product=other_sub_product
     )
     SubProduct.objects.create(sub_price=5, product=product)
 
@@ -156,4 +163,16 @@ def test_django_filters_requests(no_warnings):
     assert len(response.json()) == 0
     response = APIClient().get('/api/products/?ordering=in_stock,-price')
     assert response.status_code == 200
+    assert len(response.json()) == 1
+    response = APIClient().get('/api/products/?price_range_min=7')
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+    response = APIClient().get('/api/products/?price_range_max=1')
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+    response = APIClient().get('/api/products/?price_range_min=1&price_range_max=5')
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    response = APIClient().get('/api/products/?multi_cat=A&multi_cat=B')
+    assert response.status_code == 200, response.content
     assert len(response.json()) == 1
