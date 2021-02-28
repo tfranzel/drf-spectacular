@@ -74,7 +74,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                     schema = build_basic_type(OpenApiTypes.NUMBER)
             else:
                 model_field = self._get_model_field(filter_field, model)
-                if isinstance(model_field, models.IntegerField):
+                if isinstance(model_field, (models.IntegerField, models.AutoField)):
                     schema = build_basic_type(OpenApiTypes.INT)
                 elif isinstance(model_field, models.FloatField):
                     schema = build_basic_type(OpenApiTypes.FLOAT)
