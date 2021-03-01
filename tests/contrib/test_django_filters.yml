@@ -22,6 +22,22 @@ paths:
           - B
         description: some category description
       - in: query
+        name: custom_filter
+        schema:
+          type: boolean
+      - in: query
+        name: custom_underspec_filter
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - A
+            - B
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
         name: in_categories
         schema:
           type: array

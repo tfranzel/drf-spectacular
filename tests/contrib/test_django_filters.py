@@ -68,6 +68,14 @@ def external_filter_method(queryset, name, value):
     return queryset  # pragma: no cover
 
 
+class CustomBooleanFilter(BooleanFilter):
+    pass
+
+
+class CustomBaseInFilter(BaseInFilter):
+    pass
+
+
 class ProductFilter(FilterSet):
     # explicit filter declaration
     max_price = NumberFilter(field_name="price", lookup_expr='lte', label='highest price')
@@ -90,6 +98,9 @@ class ProductFilter(FilterSet):
     model_multi_cat = ModelMultipleChoiceFilter(field_name='category', queryset=Product.objects.all())
     model_single_cat = ModelChoiceFilter(field_name='category', queryset=Product.objects.all())
     all_values = AllValuesFilter(field_name='price')
+
+    custom_filter = CustomBooleanFilter(field_name='price', lookup_expr='isnull')
+    custom_underspec_filter = CustomBaseInFilter(field_name='category')
 
     class Meta:
         model = Product
