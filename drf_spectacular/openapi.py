@@ -1,3 +1,4 @@
+import copy
 import re
 import typing
 
@@ -27,7 +28,8 @@ from drf_spectacular.plumbing import (
     build_array_type, build_basic_type, build_choice_field, build_examples_list,
     build_media_type_object, build_object_type, build_parameter_type, error, follow_field_source,
     force_instance, get_doc, get_view_model, is_basic_type, is_field, is_list_serializer,
-    is_serializer, resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
+    is_patched_serializer, is_serializer, resolve_regex_path_parameter, resolve_type_hint, safe_ref,
+    warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes, build_generic_type
@@ -741,9 +743,8 @@ class AutoSchema(ViewInspector):
 
             properties[field.field_name] = safe_ref(schema)
 
-        if self.method == 'PATCH' and spectacular_settings.COMPONENT_SPLIT_PATCH:
-            if direction == 'request' and serializer.partial and not serializer.read_only:
-                required = []
+        if is_patched_serializer(serializer, direction):
+            required = []
 
         return build_object_type(
             properties=properties,
@@ -922,6 +923,10 @@ class AutoSchema(ViewInspector):
             request_body_required = True
         elif is_serializer(serializer):
             if self.method == 'PATCH':
+                # we simulate what DRF is doing: the entry serializer is set to partial
+                # for PATCH requests. serializer instances received via extend_schema
+                # may be reused; prevent race conditions by modifying a copy.
+                serializer = copy.copy(serializer)
                 serializer.partial = True
             component = self.resolve_serializer(serializer, 'request')
             if not component.schema:
@@ -1106,9 +1111,8 @@ class AutoSchema(ViewInspector):
         if name.endswith('Serializer'):
             name = name[:-10]
 
-        if self.method == 'PATCH' and spectacular_settings.COMPONENT_SPLIT_PATCH:
-            if direction == 'request' and serializer.partial and not serializer.read_only:
-                name = 'Patched' + name
+        if is_patched_serializer(serializer, direction):
+            name = 'Patched' + name
 
         if direction == 'request' and spectacular_settings.COMPONENT_SPLIT_REQUEST:
             name = name + 'Request'

@@ -1,0 +1,127 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /x/{id}/:
+    put:
+      operationId: x_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pn m2.
+        required: true
+      tags:
+      - x
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/YRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Y'
+          description: ''
+    patch:
+      operationId: x_partial_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pn m2.
+        required: true
+      tags:
+      - x
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedYRequest'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Y'
+          description: ''
+components:
+  schemas:
+    PatchedXRequest:
+      type: object
+      properties:
+        field:
+          type: integer
+    PatchedYRequest:
+      type: object
+      properties:
+        field_relation:
+          $ref: '#/components/schemas/XRequest'
+        field_relation_partial:
+          $ref: '#/components/schemas/PatchedXRequest'
+    X:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        field:
+          type: integer
+      required:
+      - field
+      - id
+    XRequest:
+      type: object
+      properties:
+        field:
+          type: integer
+      required:
+      - field
+    Y:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        field_relation:
+          $ref: '#/components/schemas/X'
+        field_relation_partial:
+          $ref: '#/components/schemas/X'
+      required:
+      - field_relation
+      - field_relation_partial
+      - id
+    YRequest:
+      type: object
+      properties:
+        field_relation:
+          $ref: '#/components/schemas/XRequest'
+        field_relation_partial:
+          $ref: '#/components/schemas/PatchedXRequest'
+      required:
+      - field_relation
+      - field_relation_partial
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session

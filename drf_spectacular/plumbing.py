@@ -91,6 +91,15 @@ def is_basic_type(obj, allow_none=True):
     return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
 
 
+def is_patched_serializer(serializer, direction):
+    return bool(
+        spectacular_settings.COMPONENT_SPLIT_PATCH
+        and serializer.partial
+        and not serializer.read_only
+        and not (spectacular_settings.COMPONENT_SPLIT_REQUEST and direction == 'response')
+    )
+
+
 def get_lib_doc_excludes():
     # do not import on package level due to potential import recursion when loading
     # extensions as recommended:  USER's settings.py -> USER EXTENSIONS -> extensions.py
