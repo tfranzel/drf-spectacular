@@ -437,8 +437,11 @@ class AutoSchema(ViewInspector):
             )
             return build_basic_type(OpenApiTypes.STR)
 
-    def _map_serializer_field(self, field, direction):
-        meta = self._get_serializer_field_meta(field)
+    def _map_serializer_field(self, field, direction, collect_meta=True):
+        if collect_meta:
+            meta = self._get_serializer_field_meta(field)
+        else:
+            meta = {}
 
         if has_override(field, 'field'):
             override = get_override(field, 'field')
@@ -449,7 +452,7 @@ class AutoSchema(ViewInspector):
             elif isinstance(override, dict):
                 schema = override
             else:
-                schema = self._map_serializer_field(force_instance(override), direction)
+                schema = self._map_serializer_field(force_instance(override), direction, False)
 
             field_component_name = get_override(field, 'field_component_name')
             if field_component_name:
@@ -469,23 +472,23 @@ class AutoSchema(ViewInspector):
             schema = serializer_field_extension.map_serializer_field(self, direction)
             return append_meta(schema, meta)
 
-        # nested serializer
-        if isinstance(field, serializers.Serializer):
-            component = self.resolve_serializer(field, direction)
-            return append_meta(component.ref, meta) if component else None
-
         # nested serializer with many=True gets automatically replaced with ListSerializer
-        if isinstance(field, serializers.ListSerializer):
+        if is_list_serializer(field):
             if is_serializer(field.child):
                 component = self.resolve_serializer(field.child, direction)
                 return append_meta(build_array_type(component.ref), meta) if component else None
             else:
-                schema = self._map_serializer_field(field.child, direction)
+                schema = self._map_serializer_field(field.child, direction, collect_meta)
                 return append_meta(build_array_type(schema), meta)
+
+        # nested serializer
+        if is_serializer(field):
+            component = self.resolve_serializer(field, direction)
+            return append_meta(component.ref, meta) if component else None
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
-            schema = self._map_serializer_field(field.child_relation, direction)
+            schema = self._map_serializer_field(field.child_relation, direction, collect_meta)
             # remove hand-over initkwargs applying only to outer scope
             schema.pop('description', None)
             schema.pop('readOnly', None)
@@ -542,7 +545,7 @@ class AutoSchema(ViewInspector):
                 component = self.resolve_serializer(field.child, direction)
                 return append_meta(build_array_type(component.ref), meta) if component else None
             else:
-                schema = self._map_serializer_field(field.child, direction)
+                schema = self._map_serializer_field(field.child, direction, collect_meta)
                 return append_meta(build_array_type(schema), meta)
 
         # DateField and DateTimeField type is string
@@ -625,7 +628,9 @@ class AutoSchema(ViewInspector):
         if anyisinstance(field, [serializers.DictField, serializers.HStoreField]):
             content = build_basic_type(OpenApiTypes.OBJECT)
             if not isinstance(field.child, _UnvalidatedField):
-                content['additionalProperties'] = self._map_serializer_field(field.child, direction)
+                content['additionalProperties'] = self._map_serializer_field(
+                    field.child, direction, collect_meta
+                )
             return append_meta(content, meta)
 
         if isinstance(field, serializers.CharField):

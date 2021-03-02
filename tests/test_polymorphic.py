@@ -3,10 +3,13 @@ from unittest import mock
 import pytest
 from django.db import models
 from rest_framework import serializers, viewsets
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
-from drf_spectacular.utils import OpenApiParameter, PolymorphicProxySerializer, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter, PolymorphicProxySerializer, extend_schema, extend_schema_field,
+)
 from tests import assert_schema, generate_schema
 
 
@@ -90,3 +93,27 @@ def test_polymorphic(no_warnings, viewset):
         generate_schema('persons', viewset),
         'tests/test_polymorphic.yml'
     )
+
+
+def test_polymorphic_serializer_as_field_via_extend_schema_field(no_warnings):
+    @extend_schema_field(
+        PolymorphicProxySerializer(
+            component_name='MetaPerson',
+            serializers=[LegalPersonSerializer, NaturalPersonSerializer],
+            resource_type_field_name='type',
+        )
+    )
+    class XField(serializers.DictField):
+        pass
+
+    class XSerializer(serializers.Serializer):
+        field = XField()
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert 'MetaPerson' in schema['components']['schemas']
+    assert 'MetaPerson' in schema['components']['schemas']['X']['properties']['field']['$ref']
