@@ -85,6 +85,14 @@ paths:
         explode: true
         style: form
       - in: query
+        name: model_multi_cat_relation
+        schema:
+          type: array
+          items:
+            type: integer
+        explode: true
+        style: form
+      - in: query
         name: model_single_cat
         schema:
           type: string

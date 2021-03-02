@@ -2,6 +2,7 @@ import typing
 
 from django.db import models
 
+from drf_spectacular.drainage import warn
 from drf_spectacular.extensions import OpenApiFilterExtension
 from drf_spectacular.plumbing import (
     build_array_type, build_basic_type, build_parameter_type, follow_field_source, get_view_model,
@@ -92,7 +93,14 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             # last resort is to lookup the type via the model field.
             model_field = self._get_model_field(filter_field, model)
             if isinstance(model_field, models.Field):
-                schema = auto_schema._map_model_field(model_field, direction=None)
+                try:
+                    schema = auto_schema._map_model_field(model_field, direction=None)
+                except Exception as exc:
+                    warn(
+                        f'Exception raised while trying resolve model field for django-filter '
+                        f'field "{field_name}". Defaulting to string (Exception: {exc})'
+                    )
+                    schema = build_basic_type(OpenApiTypes.STR)
             else:
                 # default to string if nothing else works
                 schema = build_basic_type(OpenApiTypes.STR)

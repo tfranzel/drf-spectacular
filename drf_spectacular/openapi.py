@@ -405,6 +405,12 @@ class AutoSchema(ViewInspector):
             if not field.queryset:
                 field.queryset = model_field.related_model.objects.none()
             return self._map_serializer_field(field, direction)
+        elif isinstance(field, serializers.ManyRelatedField):
+            # special case handling similar to the case above. "parent.parent" on child_relation
+            # is None and there is no queryset. patch in as _map_serializer_field requires one.
+            if not field.child_relation.queryset:
+                field.child_relation.queryset = model_field.related_model.objects.none()
+            return self._map_serializer_field(field, direction)
         elif field and not anyisinstance(field, [serializers.ReadOnlyField, serializers.ModelField]):
             return self._map_serializer_field(field, direction)
         elif isinstance(model_field, models.ForeignKey):

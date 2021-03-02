@@ -102,6 +102,11 @@ class ProductFilter(FilterSet):
     custom_filter = CustomBooleanFilter(field_name='price', lookup_expr='isnull')
     custom_underspec_filter = CustomBaseInFilter(field_name='category')
 
+    model_multi_cat_relation = ModelMultipleChoiceFilter(
+        field_name='other_sub_product',
+        queryset=OtherSubProduct.objects.all()
+    )
+
     class Meta:
         model = Product
         fields = [
@@ -187,3 +192,36 @@ def test_django_filters_requests(no_warnings):
     response = APIClient().get('/api/products/?multi_cat=A&multi_cat=B')
     assert response.status_code == 200, response.content
     assert len(response.json()) == 1
+
+
+def test_through_model_multi_choice_filter(no_warnings):
+    class RelationModel(models.Model):
+        test = models.CharField(max_length=50)
+
+    class TestModel(models.Model):
+        reltd = models.ManyToManyField(RelationModel, through="ThroughModel")
+
+    class ThroughModel(models.Model):
+        tm = models.ForeignKey(TestModel, on_delete=models.PROTECT)
+        rm = models.ForeignKey(RelationModel, on_delete=models.PROTECT)
+
+    class MyFilter(FilterSet):
+        reltd = ModelMultipleChoiceFilter(field_name="reltd", label="reltd")
+
+        class Meta:
+            model = TestModel
+            fields = ["reltd"]
+
+    class TestSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = TestModel
+            fields = '__all__'
+
+    class TestViewSet(viewsets.ModelViewSet):
+        queryset = TestModel.objects.all()
+        serializer_class = TestSerializer
+
+        filter_backends = [DjangoFilterBackend]
+        filter_class = MyFilter
+
+    generate_schema('x', TestViewSet)
