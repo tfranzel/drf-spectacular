@@ -15,3 +15,5 @@ only minor modifications.
 - ``@swagger_serializer_method`` is equivalent to :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>`.
 
 - ``ref_name`` on Serializer ``Meta`` classes is supported (excluding inlining with ``ref_name=None``)
+
+- ``swagger_fake_view`` is available as attribute on views to signal schema generation

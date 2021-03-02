@@ -92,6 +92,10 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         view = super().create_view(callback, method, request)
 
+        # drf-yasg compatibility feature. makes the view aware that we are running
+        # schema generation and not a real request.
+        view.swagger_fake_view = True
+
         # callback.cls is hosted in urlpatterns and is therefore not an ephemeral modification.
         # restore after view creation so potential revisits have a clean state as basis.
         if override_view:

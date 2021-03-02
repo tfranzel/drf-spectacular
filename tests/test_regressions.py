@@ -1009,11 +1009,13 @@ def test_mocked_request_with_get_queryset_get_serializer_class(no_warnings):
         def get_serializer_class(self):
             assert not self.request.user.is_authenticated
             assert self.action in ['retrieve', 'list']
+            assert getattr(self, 'swagger_fake_view', False)  # drf-yasg comp
             return SimpleSerializer
 
         def get_queryset(self):
             assert not self.request.user.is_authenticated
             assert self.request.method == 'GET'
+            assert getattr(self, 'swagger_fake_view', False)  # drf-yasg comp
             return SimpleModel.objects.none()
 
     generate_schema('x', XViewset)
