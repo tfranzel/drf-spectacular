@@ -1,3 +1,4 @@
+import contextlib
 import sys
 from collections import defaultdict
 from typing import DefaultDict
@@ -20,7 +21,7 @@ class GeneratorStats:
         if spectacular_settings.DISABLE_ERRORS_AND_WARNINGS:
             return
         assert severity in ['warning', 'error']
-        msg = str(msg)
+        msg = _get_current_trace() + str(msg)
         cache = self._warn_cache if severity == 'warning' else self._error_cache
         if msg not in cache:
             print(f'{severity.capitalize()} #{len(cache)}: {msg}', file=sys.stderr)
@@ -49,6 +50,23 @@ def error(msg):
 
 def reset_generator_stats():
     GENERATOR_STATS.reset()
+
+
+_TRACES = []
+
+
+@contextlib.contextmanager
+def add_trace_message(trace_message):
+    """
+    Adds a message to be used as a prefix when emitting warnings and errors.
+    """
+    _TRACES.append(trace_message)
+    yield
+    _TRACES.pop()
+
+
+def _get_current_trace():
+    return ''.join(f"{trace}: " for trace in _TRACES if trace)
 
 
 def has_override(obj, prop):

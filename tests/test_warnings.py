@@ -79,7 +79,7 @@ def test_no_queryset_warn(capsys):
     generate_schema('x1', X1Viewset)
     stderr = capsys.readouterr().err
     assert 'obtaining queryset from' in stderr  # warning 1
-    assert 'failed to obtain model through view\'s queryset' in stderr  # warning 2
+    assert 'X1Viewset: failed to obtain model through view\'s queryset' in stderr  # warning 2
 
 
 def test_path_param_not_in_model(capsys):
@@ -92,7 +92,9 @@ def test_path_param_not_in_model(capsys):
             pass  # pragma: no cover
 
     generate_schema('x1', XViewset)
-    assert 'no such field' in capsys.readouterr().err
+    stderr = capsys.readouterr().err
+    assert 'no such field' in stderr
+    assert 'XViewset' in stderr
 
 
 def test_no_authentication_scheme_registered(capsys):
@@ -107,7 +109,9 @@ def test_no_authentication_scheme_registered(capsys):
         authentication_classes = [XAuth]
 
     generate_schema('x', XViewset)
-    assert 'no OpenApiAuthenticationExtension registered' in capsys.readouterr().err
+    stderr = capsys.readouterr().err
+    assert 'no OpenApiAuthenticationExtension registered' in stderr
+    assert 'XViewset' in stderr
 
 
 def test_serializer_not_found(capsys):
@@ -115,7 +119,7 @@ def test_serializer_not_found(capsys):
         pass  # pragma: no cover
 
     generate_schema('x', XViewset)
-    assert 'Exception raised while getting serializer' in capsys.readouterr().err
+    assert 'XViewset: exception raised while getting serializer.' in capsys.readouterr().err
 
 
 def test_extend_schema_unknown_class(capsys):
@@ -150,7 +154,7 @@ def test_no_serializer_class_on_apiview(capsys):
             pass  # pragma: no cover
 
     generate_schema('x', view=XView)
-    assert 'Unable to guess serializer for' in capsys.readouterr().err
+    assert 'XView: unable to guess serializer.' in capsys.readouterr().err
 
 
 def test_unable_to_follow_field_source_through_intermediate_property_warning(capsys):
@@ -173,7 +177,7 @@ def test_unable_to_follow_field_source_through_intermediate_property_warning(cap
 
     generate_schema('x', view=XAPIView)
     assert (
-        'could not follow field source through intermediate property'
+        'XAPIView: XSerializer: could not follow field source through intermediate property'
     ) in capsys.readouterr().err
 
 
@@ -201,8 +205,8 @@ def test_unable_to_derive_function_type_warning(capsys):
 
     generate_schema('x', view=XAPIView)
     stderr = capsys.readouterr().err
-    assert 'unable to resolve type hint for function "x"' in stderr
-    assert 'unable to resolve type hint for function "get_y"' in stderr
+    assert 'XAPIView: XSerializer: unable to resolve type hint for function "x"' in stderr
+    assert 'XAPIView: XSerializer: unable to resolve type hint for function "get_y"' in stderr
 
 
 def test_operation_id_collision_resolution(capsys):

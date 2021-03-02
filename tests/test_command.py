@@ -49,5 +49,5 @@ def test_command_fail(capsys):
             '--urlconf=tests.test_command',
         )
     stderr = capsys.readouterr().err
-    assert 'Error #0: Unable to guess serializer' in stderr
+    assert 'Error #0: func: unable to guess serializer' in stderr
     assert 'Schema generation summary:' in stderr

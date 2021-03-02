@@ -20,7 +20,7 @@ def assert_schema(schema, reference_filename, transforms=None):
 
     if not os.path.exists(reference_filename):
         raise RuntimeError(
-            f'{reference_filename} was not found for comparison. carefully inspect '
+            f'{reference_filename} was not found for comparison. Carefully inspect '
             f'the generated {reference_filename.replace(".yml", "_out.yml")} and '
             f'copy it to {reference_filename} to serve as new ground truth.'
         )
@@ -51,23 +51,29 @@ def generate_schema(route, viewset=None, view=None, view_function=None):
     from rest_framework import routers
     from rest_framework.viewsets import ViewSetMixin
 
+    from drf_spectacular.drainage import add_trace_message
     from drf_spectacular.generators import SchemaGenerator
 
     patterns = []
+    trace_message = ''
     if viewset:
         assert issubclass(viewset, ViewSetMixin)
         router = routers.SimpleRouter()
         router.register(route, viewset, basename=route)
         patterns = router.urls
+        trace_message = viewset.__name__
     elif view:
         patterns = [path(route, view.as_view())]
+        trace_message = view.__name__
     elif view_function:
         patterns = [path(route, view_function)]
+        trace_message = view_function.__name__
 
-    generator = SchemaGenerator(patterns=patterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)  # make sure generated schemas are always valid
-    return schema
+    with add_trace_message(trace_message):
+        generator = SchemaGenerator(patterns=patterns)
+        schema = generator.get_schema(request=None, public=True)
+        validate_schema(schema)  # make sure generated schemas are always valid
+        return schema
 
 
 def get_response_schema(operation, status=None, content_type='application/json'):
