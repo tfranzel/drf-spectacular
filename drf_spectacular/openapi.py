@@ -18,7 +18,7 @@ from rest_framework.views import APIView
 
 from drf_spectacular.authentication import OpenApiAuthenticationExtension
 from drf_spectacular.contrib import *  # noqa: F403, F401
-from drf_spectacular.drainage import get_override, has_override
+from drf_spectacular.drainage import add_trace_message, get_override, has_override
 from drf_spectacular.extensions import (
     OpenApiFilterExtension, OpenApiSerializerExtension, OpenApiSerializerFieldExtension,
 )
@@ -161,7 +161,7 @@ class AutoSchema(ViewInspector):
                         required=property_name in mapped.get('required', []),
                     )
             else:
-                warn(f'could not resolve parameter annotation {parameter}. skipping.')
+                warn(f'could not resolve parameter annotation {parameter}. Skipping.')
         return result
 
     def _get_format_parameters(self):
@@ -325,9 +325,9 @@ class AutoSchema(ViewInspector):
             elif get_view_model(self.view) is None:
                 warn(
                     f'could not derive type of path parameter "{variable}" because because it '
-                    f'is untyped and obtaining queryset from {self.view.__class__} failed. '
-                    f'consider adding a type to the path (e.g. <int:{variable}>) or annotating '
-                    f'the parameter type with @extend_schema. defaulting to "string".'
+                    f'is untyped and obtaining queryset from the viewset failed. '
+                    f'Consider adding a type to the path (e.g. <int:{variable}>) or annotating '
+                    f'the parameter type with @extend_schema. Defaulting to "string".'
                 )
             else:
                 try:
@@ -339,8 +339,8 @@ class AutoSchema(ViewInspector):
                 except django_exceptions.FieldDoesNotExist:
                     warn(
                         f'could not derive type of path parameter "{variable}" because '
-                        f'model "{model}" did contain no such field. consider annotating '
-                        f'parameter with @extend_schema. defaulting to "string".'
+                        f'model "{model}" did contain no such field. Consider annotating '
+                        f'parameter with @extend_schema. Defaulting to "string".'
                     )
 
             parameters.append(build_parameter_type(
@@ -417,15 +417,15 @@ class AutoSchema(ViewInspector):
             if not field_cls:
                 warn(
                     f'model field "{model_field.get_internal_type()}" has no mapping in '
-                    f'ModelSerializer. it may be a deprecated field. defaulting to "string"'
+                    f'ModelSerializer. It may be a deprecated field. Defaulting to "string"'
                 )
                 return build_basic_type(OpenApiTypes.STR)
             return self._map_serializer_field(field_cls(), direction)
         else:
             error(
-                f'could not resolve model field "{model_field}". failed to resolve through '
+                f'could not resolve model field "{model_field}". Failed to resolve through '
                 f'serializer_field_mapping, get_internal_type(), or any override mechanism. '
-                f'defaulting to "string"'
+                f'Defaulting to "string"'
             )
             return build_basic_type(OpenApiTypes.STR)
 
@@ -642,7 +642,7 @@ class AutoSchema(ViewInspector):
             schema = self._map_model_field(field.model_field, direction)
             return append_meta(schema, meta)
 
-        warn(f'could not resolve serializer field "{field}". defaulting to "string"')
+        warn(f'could not resolve serializer field "{field}". Defaulting to "string"')
         return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
     def _map_min_max(self, field, content):
@@ -794,8 +794,8 @@ class AutoSchema(ViewInspector):
             return resolve_type_hint(hint)
         except UnableToProceedError:
             warn(
-                f'unable to resolve type hint for function "{method.__name__}". consider '
-                f'using a type hint or @extend_schema_field. defaulting to string.'
+                f'unable to resolve type hint for function "{method.__name__}". Consider '
+                f'using a type hint or @extend_schema_field. Defaulting to string.'
             )
             return build_basic_type(OpenApiTypes.STR)
 
@@ -835,15 +835,15 @@ class AutoSchema(ViewInspector):
                     return view.serializer_class
                 else:
                     error(
-                        f'Unable to guess serializer for {view.__class__.__name__}. This is graceful '
-                        f'fallback handling for APIViews. Consider using GenericAPIView as view base '
-                        f'class, if view is under your control. ignoring view for now. '
+                        'unable to guess serializer. This is graceful '
+                        'fallback handling for APIViews. Consider using GenericAPIView as view base '
+                        'class, if view is under your control. Ignoring view for now. '
                     )
             else:
-                error('Encountered unknown view base class. please report this issue. ignoring for now')
+                error('Encountered unknown view base class. Please report this issue. Ignoring for now')
         except Exception as exc:
             error(
-                f'Exception raised while getting serializer from {view.__class__.__name__}. Hint: '
+                f'exception raised while getting serializer. Hint: '
                 f'Is get_serializer_class() returning None or is get_queryset() not working without '
                 f'a request? Ignoring the view for now. (Exception: {exc})'
             )
@@ -939,8 +939,8 @@ class AutoSchema(ViewInspector):
             request_body_required = False
         else:
             warn(
-                f'could not resolve request body for {self.method} {self.path}. defaulting to generic '
-                'free-form object. (maybe annotate a Serializer class?)'
+                f'could not resolve request body for {self.method} {self.path}. Defaulting to generic '
+                'free-form object. (Maybe annotate a Serializer class?)'
             )
             schema = build_generic_type()
             schema['description'] = 'Unspecified request body'
@@ -974,7 +974,7 @@ class AutoSchema(ViewInspector):
             warn(
                 f'could not resolve "{response_serializers}" for {self.method} {self.path}. '
                 f'Expected either a serializer or some supported override mechanism. '
-                f'defaulting to generic free-form object.'
+                f'Defaulting to generic free-form object.'
             )
             schema = build_basic_type(OpenApiTypes.OBJECT)
             schema['description'] = _('Unspecified response body')
@@ -1005,7 +1005,7 @@ class AutoSchema(ViewInspector):
         else:
             warn(
                 f'could not resolve "{serializer}" for {self.method} {self.path}. Expected either '
-                f'a serializer or some supported override mechanism. defaulting to '
+                f'a serializer or some supported override mechanism. Defaulting to '
                 f'generic free-form object.'
             )
             schema = build_basic_type(OpenApiTypes.OBJECT)
@@ -1123,27 +1123,27 @@ class AutoSchema(ViewInspector):
             f'https://github.com/tfranzel/drf-spectacular/issues '
         )
         serializer = force_instance(serializer)
+        with add_trace_message(serializer.__class__.__name__):
+            component = ResolvedComponent(
+                name=self._get_serializer_name(serializer, direction),
+                type=ResolvedComponent.SCHEMA,
+                object=serializer,
+            )
+            if component in self.registry:
+                return self.registry[component]  # return component with schema
 
-        component = ResolvedComponent(
-            name=self._get_serializer_name(serializer, direction),
-            type=ResolvedComponent.SCHEMA,
-            object=serializer,
-        )
-        if component in self.registry:
-            return self.registry[component]  # return component with schema
-
-        self.registry.register(component)
-        component.schema = self._map_serializer(serializer, direction)
-        # 4 cases:
-        #   1. polymorphic container component -> use
-        #   2. concrete component with properties -> use
-        #   3. concrete component without properties -> prob. transactional so discard
-        #   4. explicit list component -> demultiplexed at usage location so discard
-        keep_component = (
-            any(nest_tag in component.schema for nest_tag in ['oneOf', 'allOf', 'anyOf'])
-            or component.schema.get('properties', {})
-        )
-        if not keep_component:
-            del self.registry[component]
-            return ResolvedComponent(None, None)  # sentinel
-        return component
+            self.registry.register(component)
+            component.schema = self._map_serializer(serializer, direction)
+            # 4 cases:
+            #   1. polymorphic container component -> use
+            #   2. concrete component with properties -> use
+            #   3. concrete component without properties -> prob. transactional so discard
+            #   4. explicit list component -> demultiplexed at usage location so discard
+            keep_component = (
+                any(nest_tag in component.schema for nest_tag in ['oneOf', 'allOf', 'anyOf'])
+                or component.schema.get('properties', {})
+            )
+            if not keep_component:
+                del self.registry[component]
+                return ResolvedComponent(None, None)  # sentinel
+            return component

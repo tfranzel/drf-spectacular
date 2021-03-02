@@ -82,15 +82,15 @@ def postprocess_schema_enums(result, generator, **kwargs):
                 enum_name = f'{camelize(prop_name)}{prop_hash[:3].capitalize()}Enum'
                 warn(
                     f'enum naming encountered a non-optimally resolvable collision for fields '
-                    f'named "{prop_name}". the same name has been used for multiple choice sets '
-                    f'in multiple components. the collision was resolved with "{enum_name}". '
+                    f'named "{prop_name}". The same name has been used for multiple choice sets '
+                    f'in multiple components. The collision was resolved with "{enum_name}". '
                     f'add an entry to ENUM_NAME_OVERRIDES to fix the naming.'
                 )
             if enum_name_mapping.get(prop_hash, enum_name) != enum_name:
                 warn(
-                    f'encountered multiple names for the same choice set ({enum_name}). this '
+                    f'encountered multiple names for the same choice set ({enum_name}). This '
                     f'may be unwanted even though the generated schema is technically correct. '
-                    f'add an entry to ENUM_NAME_OVERRIDES to fix the naming.'
+                    f'Add an entry to ENUM_NAME_OVERRIDES to fix the naming.'
                 )
                 del enum_name_mapping[prop_hash]
             else:

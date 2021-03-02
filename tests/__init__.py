@@ -20,7 +20,7 @@ def assert_schema(schema, reference_filename, transforms=None):
 
     if not os.path.exists(reference_filename):
         raise RuntimeError(
-            f'{reference_filename} was not found for comparison. carefully inspect '
+            f'{reference_filename} was not found for comparison. Carefully inspect '
             f'the generated {reference_filename.replace(".yml", "_out.yml")} and '
             f'copy it to {reference_filename} to serve as new ground truth.'
         )

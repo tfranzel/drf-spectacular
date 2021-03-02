@@ -6,7 +6,7 @@ from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignor
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 from rest_framework.settings import api_settings
 
-from drf_spectacular.drainage import reset_generator_stats
+from drf_spectacular.drainage import add_trace_message, reset_generator_stats
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
@@ -193,7 +193,14 @@ class SchemaGenerator(BaseSchemaGenerator):
                 f'DEFAULT_SCHEMA_CLASS pointing to "drf_spectacular.openapi.AutoSchema" '
                 f'or any other drf-spectacular compatible AutoSchema?'
             )
-            operation = view.schema.get_operation(path, path_regex, method, self.registry)
+            if hasattr(view, '__class__'):
+                trace_message = view.__class__.__name__
+            elif hasattr(view, '__name__'):
+                trace_message = view.__name__
+            else:
+                trace_message = None
+            with add_trace_message(trace_message):
+                operation = view.schema.get_operation(path, path_regex, method, self.registry)
 
             # operation was manually removed via @extend_schema
             if not operation:
