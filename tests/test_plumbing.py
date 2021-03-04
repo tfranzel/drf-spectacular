@@ -47,12 +47,14 @@ def test_force_instance():
 
 def test_follow_field_source_forward_reverse(no_warnings):
     class FFS1(models.Model):
+        id = models.UUIDField(primary_key=True)
         field_bool = models.BooleanField()
 
     class FFS2(models.Model):
         ffs1 = models.ForeignKey(FFS1, on_delete=models.PROTECT)
 
     class FFS3(models.Model):
+        id = models.CharField(primary_key=True, max_length=3)
         ffs2 = models.ForeignKey(FFS2, on_delete=models.PROTECT)
         field_float = models.FloatField()
 
@@ -63,14 +65,14 @@ def test_follow_field_source_forward_reverse(no_warnings):
 
     assert isinstance(forward_field, models.BooleanField)
     assert isinstance(reverse_field, models.FloatField)
-    assert isinstance(forward_model, models.ForeignKey)
-    assert isinstance(reverse_model, models.AutoField)
+    assert isinstance(forward_model, models.UUIDField)
+    assert isinstance(reverse_model, models.CharField)
 
     auto_schema = AutoSchema()
     assert auto_schema._map_model_field(forward_field, None)['type'] == 'boolean'
     assert auto_schema._map_model_field(reverse_field, None)['type'] == 'number'
-    assert auto_schema._map_model_field(forward_model, None)['type'] == 'integer'
-    assert auto_schema._map_model_field(reverse_model, None)['type'] == 'integer'
+    assert auto_schema._map_model_field(forward_model, None)['type'] == 'string'
+    assert auto_schema._map_model_field(reverse_model, None)['type'] == 'string'
 
 
 def test_detype_patterns_with_module_includes(no_warnings):

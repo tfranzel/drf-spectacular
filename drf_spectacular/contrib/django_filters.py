@@ -105,6 +105,9 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 # default to string if nothing else works
                 schema = build_basic_type(OpenApiTypes.STR)
 
+        # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
+        # signals that attribute. however this does not apply in this context.
+        schema.pop('readOnly', None)
         # enrich schema with additional info from filter_field
         enum = schema.pop('enum', None)
         if 'choices' in filter_field.extra:

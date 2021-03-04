@@ -511,8 +511,9 @@ class AutoSchema(ViewInspector):
                 # estimates the relating model field and jumps to it's target model PK field.
                 # also differentiate as source can be direct (pk) or relation field (model).
                 model_field = follow_field_source(model, source)
-                if anyisinstance(model_field, [models.ForeignKey, models.ManyToManyField]):
-                    model_field = model_field.target_field
+                if callable(model_field):
+                    # follow_field_source bailed with a warning. be graceful and default to str.
+                    model_field = models.TextField()
 
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
             # signals that attribute. however this does not apply in the context of relations.

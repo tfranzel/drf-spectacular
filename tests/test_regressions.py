@@ -39,6 +39,7 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
         pass  # pragma: no cover
 
     class M2(models.Model):
+        id = models.UUIDField()
         m1_r = models.ForeignKey(M1, on_delete=models.CASCADE)
         m1_rw = models.ForeignKey(M1, on_delete=models.CASCADE)
 
@@ -84,6 +85,127 @@ def test_multi_step_serializer_primary_key_related_field(no_warnings):
     properties = schema['components']['schemas']['M3']['properties']
     assert properties['m1']['format'] == 'uuid'
     assert properties['m2']['type'] == 'integer'
+
+
+def test_serializer_reverse_relations_including_read_only(no_warnings):
+    class M5(models.Model):
+        pass
+
+    class M5One(models.Model):
+        id = models.CharField(primary_key=True, max_length=10)
+        field = models.OneToOneField(M5, on_delete=models.CASCADE)
+
+    class M5Many(models.Model):
+        id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+        field = models.ManyToManyField(M5)
+
+    class M5Foreign(models.Model):
+        id = models.FloatField(primary_key=True)
+        field = models.ForeignKey(M5, on_delete=models.CASCADE)
+
+    class XSerializer(serializers.ModelSerializer):
+        m5foreign_set_explicit = serializers.PrimaryKeyRelatedField(
+            many=True, source='m5foreign_set', queryset=M5Foreign.objects.all()
+        )
+        m5foreign_set_ro = serializers.PrimaryKeyRelatedField(
+            many=True, source='m5foreign_set', read_only=True,
+        )
+        m5many_set_explicit = serializers.PrimaryKeyRelatedField(
+            many=True, source='m5many_set', queryset=M5Many.objects.all()
+        )
+        m5many_set_ro = serializers.PrimaryKeyRelatedField(
+            many=True, source='m5many_set', read_only=True,
+        )
+        m5one_ro = serializers.PrimaryKeyRelatedField(
+            source='m5one', read_only=True,
+        )
+
+        class Meta:
+            model = M5
+            fields = [
+                'm5many_set',
+                'm5many_set_explicit',
+                'm5many_set_ro',
+                'm5foreign_set',
+                'm5foreign_set_explicit',
+                'm5foreign_set_ro',
+                'm5one',
+                'm5one_ro',
+            ]
+
+    class TestViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+        queryset = M5.objects.all()
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x/', TestViewSet)
+    properties = schema['components']['schemas']['X']['properties']
+
+    m5many_pk = {'type': 'string', 'format': 'uuid'}
+    assert properties['m5many_set']['items'] == m5many_pk
+    assert properties['m5many_set_ro']['items'] == m5many_pk
+    assert properties['m5many_set_explicit']['items'] == m5many_pk
+
+    m5foreign_pk = {'type': 'number', 'format': 'float'}
+    assert properties['m5foreign_set']['items'] == m5foreign_pk
+    assert properties['m5foreign_set_ro']['items'] == m5foreign_pk
+    assert properties['m5foreign_set_explicit']['items'] == m5foreign_pk
+
+    assert properties['m5one'] == {'type': 'string'}
+    assert properties['m5one_ro'] == {'readOnly': True, 'type': 'string'}
+
+
+def test_serializer_forward_relations_including_read_only(no_warnings):
+    class M6One(models.Model):
+        id = models.CharField(primary_key=True, max_length=10)
+
+    class M6Many(models.Model):
+        id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+
+    class M6Foreign(models.Model):
+        id = models.FloatField(primary_key=True)
+
+    class M6(models.Model):
+        field_one = models.OneToOneField(M6One, on_delete=models.CASCADE)
+        field_many = models.ManyToManyField(M6Many)
+        field_foreign = models.ForeignKey(M6Foreign, on_delete=models.CASCADE)
+
+    class XSerializer(serializers.ModelSerializer):
+        field_one_ro = serializers.PrimaryKeyRelatedField(
+            source='field_one', read_only=True
+        )
+        field_foreign_ro = serializers.PrimaryKeyRelatedField(
+            source='field_foreign', read_only=True
+        )
+        field_many_ro = serializers.PrimaryKeyRelatedField(
+            source='field_many', read_only=True, many=True
+        )
+
+        class Meta:
+            model = M6
+            fields = [
+                'field_one',
+                'field_one_ro',
+                'field_many',
+                'field_many_ro',
+                'field_foreign',
+                'field_foreign_ro',
+            ]
+
+    class TestViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+        queryset = M6.objects.all()
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x/', TestViewSet)
+    properties = schema['components']['schemas']['X']['properties']
+
+    assert properties['field_one'] == {'type': 'string'}
+    assert properties['field_one_ro'] == {'type': 'string', 'readOnly': True}
+    assert properties['field_foreign'] == {'type': 'number', 'format': 'float'}
+    assert properties['field_foreign_ro'] == {'type': 'number', 'format': 'float', 'readOnly': True}
+    assert properties['field_many'] == {'type': 'array', 'items': {'type': 'string', 'format': 'uuid'}}
+    assert properties['field_many_ro'] == {
+        'type': 'array', 'items': {'type': 'string', 'format': 'uuid'}, 'readOnly': True
+    }
 
 
 def test_path_implicit_required(no_warnings):
