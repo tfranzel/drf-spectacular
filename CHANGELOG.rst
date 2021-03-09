@@ -1,6 +1,51 @@
 Changelog
 =========
 
+0.14.0 (2021-03-09)
+-------------------
+
+- Fixed bug with `cached_property` non-Model objects not being traversed [Luke Plant]
+- Fixed issue `#314 <https://github.com/tfranzel/drf-spectacular/issues/314>`_ - include information about view/serializer in warnings. [Luke Plant]
+- bugfix forward/reverse model traversal `#323 <https://github.com/tfranzel/drf-spectacular/issues/323>`_
+- fix nested serializer detection & smarter metadata extraction `#319 <https://github.com/tfranzel/drf-spectacular/issues/319>`_
+- add drf-yasg compatibility feature 'swagger_fake_view' `#321 <https://github.com/tfranzel/drf-spectacular/issues/321>`_
+- fix django-filter through model edge case & catch exceptions `#320 <https://github.com/tfranzel/drf-spectacular/issues/320>`_
+- refactor/bugfix PATCH & Serializer(partial=True) behaviour.
+- bugfix django-filter custom filter class resolution `#317 <https://github.com/tfranzel/drf-spectacular/issues/317>`_
+- bugfix django-filter for Django 2.2 AutoField
+- improved/restructured resolution priority in django-filter extension `#317 <https://github.com/tfranzel/drf-spectacular/issues/317>`_ `#234 <https://github.com/tfranzel/drf-spectacular/issues/234>`_
+- handle Decimals for YAML `#316 <https://github.com/tfranzel/drf-spectacular/issues/316>`_
+- remove deprecated django-filter backend solution
+- update swagger-ui version
+- bugfix [] case and lint `#312 <https://github.com/tfranzel/drf-spectacular/issues/312>`_
+- discriminate None and typing.Any usage `#315 <https://github.com/tfranzel/drf-spectacular/issues/315>`_
+- fix multi-step source relation field resolution, again. `#274 <https://github.com/tfranzel/drf-spectacular/issues/274>`_ `#296 <https://github.com/tfranzel/drf-spectacular/issues/296>`_
+- Add any type for OpenApiTypes [André da Silva]
+- improve Extension usage documentation `#307 <https://github.com/tfranzel/drf-spectacular/issues/307>`_
+- restructure request body for extend_schema `#266 <https://github.com/tfranzel/drf-spectacular/issues/266>`_ `#279 <https://github.com/tfranzel/drf-spectacular/issues/279>`_
+- bugfix multipart boundary showing up in Accept header
+- bugfix: use get_parsers() and get_renderers() `#266 <https://github.com/tfranzel/drf-spectacular/issues/266>`_
+- Fix for better support of PEP 563 compatible annotations. [Luke Plant]
+- Add document authentication [gongul]
+- Do not override query params [Fabricio Aguiar]
+- New setting for enabling/disabling error/warn messages [Fabricio Aguiar]
+- bugfix response headers without body `#297 <https://github.com/tfranzel/drf-spectacular/issues/297>`_
+- issue `#296 <https://github.com/tfranzel/drf-spectacular/issues/296>`_ [Luis Saavedra]
+- :sparkles: Fixes `#283 <https://github.com/tfranzel/drf-spectacular/issues/283>`_ -- implement response header parameters [Sergei Maertens]
+- :white_check_mark: Added feature test for response headers [Sergei Maertens]
+- robustify django-filter enum sorting `#295 <https://github.com/tfranzel/drf-spectacular/issues/295>`_
+
+Breaking changes / important additions:
+
+- `drf-spectacular`'s custom ``DjangoFilterBackend`` removed after previous deprecation. Just use the original class again.
+- ``django-filter`` extension received a significant refactoring so your schema may have several changes, hopefully positive ones.
+- Added response headers feature
+- Extended ``@extend_schema(request=X)``, where ``X`` may now also be a ``Dict[content_type, serializer_etc]``
+- Updated Swagger UI version
+- Fixed several model traveral issues that may lead to PK changes in the schema
+- Added `drf-yasg's` ``swagger_fake_view``
+
+
 0.13.2 (2021-02-11)
 -------------------
 
