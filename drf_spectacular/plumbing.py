@@ -383,15 +383,17 @@ def _follow_field_source(model, path: List[str]):
             else:
                 return field
     else:
-        if isinstance(field_or_property, property) or callable(field_or_property):
+        if isinstance(field_or_property, (property, cached_property)) or callable(field_or_property):
             if isinstance(field_or_property, property):
                 target_model = typing.get_type_hints(field_or_property.fget).get('return')
+            elif isinstance(field_or_property, cached_property):
+                target_model = typing.get_type_hints(field_or_property.func).get('return')
             else:
                 target_model = typing.get_type_hints(field_or_property).get('return')
             if not target_model:
                 raise UnableToProceedError(
                     f'could not follow field source through intermediate property "{path[0]}" '
-                    f'on model {model}. please add a type hint on the model\'s property/function '
+                    f'on model {model}. Please add a type hint on the model\'s property/function '
                     f'to enable traversal of the source path "{".".join(path)}".'
                 )
             return _follow_field_source(target_model, path[1:])

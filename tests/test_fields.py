@@ -32,6 +32,23 @@ class AuxSerializer(serializers.ModelSerializer):
         model = Aux
 
 
+class SubObject:
+    def __init__(self, instance):
+        self._instance = instance
+
+    @property
+    def calculated(self) -> int:
+        return self._instance.field_int
+
+    @property
+    def nested(self) -> 'SubObject':
+        return self
+
+    @property
+    def model_instance(self) -> 'AllFields':
+        return self._instance
+
+
 class AllFields(models.Model):
     # basics
     field_int = models.IntegerField()
@@ -102,6 +119,14 @@ class AllFields(models.Model):
     def model_function_model(self) -> Aux:
         return self.field_foreign
 
+    @property
+    def sub_object(self) -> SubObject:
+        return SubObject(self)
+
+    @cached_property
+    def sub_object_cached(self) -> SubObject:
+        return SubObject(self)
+
 
 class AllFieldsSerializer(serializers.ModelSerializer):
     field_decimal_uncoerced = serializers.DecimalField(
@@ -169,6 +194,15 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     # there is a JSON model field for django>=3.1 that would be placed automatically. for <=3.1 we
     # need to set the field explicitly. defined here for both cases to have consistent ordering.
     field_json = serializers.JSONField()
+
+    # traversal of non-model types of complex object
+    field_sub_object_calculated = serializers.ReadOnlyField(source='sub_object.calculated')
+    field_sub_object_nested_calculated = serializers.ReadOnlyField(source='sub_object.nested.calculated')
+    field_sub_object_model_int = serializers.ReadOnlyField(source='sub_object.model_instance.field_int')
+
+    field_sub_object_cached_calculated = serializers.ReadOnlyField(source='sub_object_cached.calculated')
+    field_sub_object_cached_nested_calculated = serializers.ReadOnlyField(source='sub_object_cached.nested.calculated')
+    field_sub_object_cached_model_int = serializers.ReadOnlyField(source='sub_object_cached.model_instance.field_int')
 
     class Meta:
         fields = '__all__'

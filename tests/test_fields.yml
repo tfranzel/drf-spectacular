@@ -173,6 +173,24 @@ components:
         field_json:
           type: object
           additionalProperties: {}
+        field_sub_object_calculated:
+          type: integer
+          readOnly: true
+        field_sub_object_nested_calculated:
+          type: integer
+          readOnly: true
+        field_sub_object_model_int:
+          type: integer
+          readOnly: true
+        field_sub_object_cached_calculated:
+          type: integer
+          readOnly: true
+        field_sub_object_cached_nested_calculated:
+          type: integer
+          readOnly: true
+        field_sub_object_cached_model_int:
+          type: integer
+          readOnly: true
         field_int:
           type: integer
         field_float:
@@ -292,6 +310,12 @@ components:
       - field_related_string
       - field_slug
       - field_smallint
+      - field_sub_object_cached_calculated
+      - field_sub_object_cached_model_int
+      - field_sub_object_cached_nested_calculated
+      - field_sub_object_calculated
+      - field_sub_object_model_int
+      - field_sub_object_nested_calculated
       - field_text
       - field_time
       - field_url
