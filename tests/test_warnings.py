@@ -1,3 +1,4 @@
+from typing import Union
 from unittest import mock
 
 import pytest
@@ -207,6 +208,37 @@ def test_unable_to_derive_function_type_warning(capsys):
     stderr = capsys.readouterr().err
     assert 'XAPIView: XSerializer: unable to resolve type hint for function "x"' in stderr
     assert 'XAPIView: XSerializer: unable to resolve type hint for function "get_y"' in stderr
+
+
+def test_unable_to_traverse_union_type_hint(capsys):
+    class Foo:
+        foo_value: int = 1
+
+    class Bar:
+        pass
+
+    class FailingFieldSourceTraversalModel3(models.Model):
+        @property
+        def foo_or_bar(self) -> Union[Foo, Bar]:
+            pass  # pragma: no cover
+
+    class XSerializer(serializers.ModelSerializer):
+        foo_value = serializers.ReadOnlyField(source='foo_or_bar.foo_value')
+
+        class Meta:
+            model = FailingFieldSourceTraversalModel3
+            fields = '__all__'
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('foo_value', view=XAPIView)
+    stderr = capsys.readouterr().err
+    assert 'could not traverse Union type' in stderr
+    assert 'Foo' in stderr
+    assert 'Bar' in stderr
 
 
 def test_operation_id_collision_resolution(capsys):

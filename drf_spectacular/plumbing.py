@@ -391,11 +391,11 @@ def _follow_field_source(model, path: List[str]):
     else:
         if isinstance(field_or_property, (property, cached_property)) or callable(field_or_property):
             if isinstance(field_or_property, property):
-                target_model = typing.get_type_hints(field_or_property.fget).get('return')
+                target_model = _follow_return_type(field_or_property.fget)
             elif isinstance(field_or_property, cached_property):
-                target_model = typing.get_type_hints(field_or_property.func).get('return')
+                target_model = _follow_return_type(field_or_property.func)
             else:
-                target_model = typing.get_type_hints(field_or_property).get('return')
+                target_model = _follow_return_type(field_or_property)
             if not target_model:
                 raise UnableToProceedError(
                     f'could not follow field source through intermediate property "{path[0]}" '
@@ -406,6 +406,25 @@ def _follow_field_source(model, path: List[str]):
         else:
             target_model = model._meta.get_field(path[0]).related_model
             return _follow_field_source(target_model, path[1:])
+
+
+def _follow_return_type(a_callable):
+    target_type = typing.get_type_hints(a_callable).get('return')
+    if target_type is None:
+        return target_type
+    origin, args = _get_type_hint_origin(target_type)
+    if origin is typing.Union:
+        type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
+        if len(type_args) > 1:
+            warn(
+                f'could not traverse Union type, because we don\'t know which type to choose '
+                f'from {type_args}. Consider terminating "source" on a custom property '
+                f'that indicates the expected Optional/Union type. Defaulting to "string"'
+            )
+            return target_type
+        # Optional:
+        return type_args[0]
+    return target_type
 
 
 def follow_field_source(model, path):
