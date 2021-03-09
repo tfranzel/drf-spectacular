@@ -133,7 +133,7 @@ def get_view_model(view):
     except Exception as exc:
         warn(
             f'failed to obtain model through view\'s queryset due to raised exception. '
-            f'prevent this either by setting "queryset = Model.objects.none()" on the view, '
+            f'Prevent this either by setting "queryset = Model.objects.none()" on the view, '
             f'having an empty fallback in get_queryset() or by using @extend_schema. '
             f'(Exception: {exc})'
         )
@@ -414,8 +414,8 @@ def follow_field_source(model, path):
     except Exception as exc:
         warn(
             f'could not resolve field on model {model} with path "{".".join(path)}". '
-            f'this is likely a custom field that does some unknown magic. maybe '
-            f'consider annotating the field/property? defaulting to "string". (Exception: {exc})'
+            f'This is likely a custom field that does some unknown magic. Maybe '
+            f'consider annotating the field/property? Defaulting to "string". (Exception: {exc})'
         )
 
     def dummy_property(obj) -> str:
@@ -606,8 +606,8 @@ def load_enum_name_overrides():
 
     if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
         error(
-            'ENUM_NAME_OVERRIDES has duplication issues. encountered multiple names '
-            'for the same choice set. enum naming might be unexpected.'
+            'ENUM_NAME_OVERRIDES has duplication issues. Encountered multiple names '
+            'for the same choice set. Enum naming might be unexpected.'
         )
     return overrides
 
@@ -685,7 +685,7 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
                 urlconf=tuple(detype_pattern(p) for p in patterns)
             ).resolve(path)
         except Resolver404:
-            error(f"namespace versioning path resolution failed for {path}. path will be ignored.")
+            error(f"namespace versioning path resolution failed for {path}. Path will be ignored.")
     elif issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
         # Append the version into request accepted_media_type.
         # e.g "application/json; version=1.0"
