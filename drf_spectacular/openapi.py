@@ -826,7 +826,7 @@ class AutoSchema(ViewInspector):
         return list(dict.fromkeys([
             getattr(r, attribute).split(';')[0]
             for r in self.view.get_renderers()
-            if not isinstance(r, renderers.BrowsableAPIRenderer) and getattr(r, attribute)
+            if not isinstance(r, renderers.BrowsableAPIRenderer) and getattr(r, attribute, None)
         ]))
 
     def _get_serializer(self):
