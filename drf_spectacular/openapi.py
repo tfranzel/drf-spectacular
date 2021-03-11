@@ -187,20 +187,49 @@ class AutoSchema(ViewInspector):
         path_variables = [
             v for v in uritemplate.variables(self.path) if (v, 'path') not in override_parameters
         ]
+        filter_params = self._get_filter_parameters()
+        if filter_params:
+            component_name = f"{self.view.__class__.__name__}{self.method}Filter"
+            component = ResolvedComponent(
+                name=component_name,
+                type=ResolvedComponent.SCHEMA,
+                object=component_name,
+                schema={'type': 'object', 'properties': {
+                    param['name']: param['schema'] for param in filter_params
+                }}
+            )
+            self.registry.register_on_missing(component)
+            filter_params = [
+                {'in': 'query', 'name': 'filter', 'schema': component.ref}
+            ]
+        pagination_params = self._get_pagination_parameters()
+        if pagination_params:
+            component = ResolvedComponent(
+                name='PaginationQueryParams',
+                type=ResolvedComponent.SCHEMA,
+                object='PaginationQueryParams',
+                schema={'type': 'object', 'properties': {
+                    param['name']: param['schema'] for param in pagination_params
+                }}
+            )
+            self.registry.register_on_missing(component)
+            pagination_params = [
+                {'in': 'query', 'name': 'pagination', 'schema': component.ref}
+            ]
         parameters = {
             **dict_helper(self._resolve_path_parameters(path_variables)),
-            **dict_helper(self._get_filter_parameters()),
-            **dict_helper(self._get_pagination_parameters()),
+            **dict_helper(filter_params),
+            **dict_helper(pagination_params),
             **dict_helper(self._get_format_parameters()),
         }
         # override/add/remove @extend_schema parameters
-        for key, parameter in override_parameters.items():
-            if parameter is None:
-                # either omit or explicitly remove parameter
-                if key in parameters:
-                    del parameters[key]
-            else:
-                parameters[key] = parameter
+        # for key, parameter in override_parameters.items():  # TODO: enable override
+        #     if parameter is None:
+        #         # either omit or explicitly remove parameter
+        #         if key in parameters:
+        #             del parameters[key]
+        #     else:
+        #         parameters[key] = parameter
 
         if callable(spectacular_settings.SORT_OPERATION_PARAMETERS):
             return sorted(parameters.values(), key=spectacular_settings.SORT_OPERATION_PARAMETERS)
