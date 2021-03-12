@@ -29,7 +29,7 @@ class BasicScheme(OpenApiAuthenticationExtension):
 
 
 class TokenScheme(OpenApiAuthenticationExtension):
-    target_class = 'rest_framework.authentication.TokenAuthentication'
+    target_class = 'project.auth.FXGAuthentication'
     name = 'tokenAuth'
     match_subclasses = True
     priority = -1
