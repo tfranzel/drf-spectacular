@@ -223,13 +223,13 @@ class AutoSchema(ViewInspector):
             **dict_helper(self._get_format_parameters()),
         }
         # override/add/remove @extend_schema parameters
-        # for key, parameter in override_parameters.items():  # TODO: enable override
-        #     if parameter is None:
-        #         # either omit or explicitly remove parameter
-        #         if key in parameters:
-        #             del parameters[key]
-        #     else:
-        #         parameters[key] = parameter
+        for key, parameter in override_parameters.items():  # TODO: enable override
+            if parameter is None:
+                # either omit or explicitly remove parameter
+                if key in parameters:
+                    del parameters[key]
+            elif key[1] == 'path':
+                parameters[key] = parameter
 
         if callable(spectacular_settings.SORT_OPERATION_PARAMETERS):
             return sorted(parameters.values(), key=spectacular_settings.SORT_OPERATION_PARAMETERS)
