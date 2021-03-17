@@ -1668,3 +1668,44 @@ def test_any_placeholder_on_request_response():
     properties = schema['components']['schemas']['X']['properties']
     assert properties['custom_field'] == {}
     assert properties['method_field'] == {'readOnly': True, 'description': 'Any'}
+
+
+def test_categorized_choices(no_warnings):
+    media_choices = [
+        ('Audio', (('vinyl', 'Vinyl'), ('cd', 'CD'))),
+        ('Video', (('vhs', 'VHS Tape'), ('dvd', 'DVD'))),
+        ('unknown', 'Unknown'),
+    ]
+    media_choices_audio = [
+        ('Audio', (('vinyl', 'Vinyl'), ('cd', 'CD'))),
+        ('unknown', 'Unknown'),
+    ]
+
+    class M6(models.Model):
+        cat_choice = models.CharField(max_length=10, choices=media_choices)
+
+    class M6Serializer(serializers.ModelSerializer):
+        audio_choice = serializers.ChoiceField(choices=media_choices_audio)
+
+        class Meta:
+            fields = '__all__'
+            model = M6
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = M6Serializer
+        queryset = M6.objects.none()
+
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
+        {'MediaEnum': media_choices}
+    ):
+        schema = generate_schema('x', XViewset)
+
+    # test base functionality of flattening categories
+    assert schema['components']['schemas']['AudioChoiceEnum']['enum'] == [
+        'vinyl', 'cd', 'unknown'
+    ]
+    # test override match works synchronously
+    assert schema['components']['schemas']['MediaEnum']['enum'] == [
+        'vinyl', 'cd', 'vhs', 'dvd', 'unknown'
+    ]

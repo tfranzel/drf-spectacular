@@ -7,7 +7,7 @@ import typing
 import urllib.parse
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
-from collections.abc import Hashable, Iterable
+from collections.abc import Hashable
 from decimal import Decimal
 from enum import Enum
 from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
@@ -602,9 +602,15 @@ def load_enum_name_overrides():
             choices = choices.choices
         if inspect.isclass(choices) and issubclass(choices, Enum):
             choices = [c.value for c in choices]
-        if isinstance(choices, Iterable) and isinstance(choices[0], str):
-            choices = [(c, c) for c in choices]
-        overrides[list_hash(list(dict(choices).keys()))] = name
+        normalized_choices = []
+        for choice in choices:
+            if isinstance(choice, str):
+                normalized_choices.append((choice, choice))  # simple choice list
+            elif isinstance(choice[1], (list, tuple)):
+                normalized_choices.extend(choice[1])  # categorized nested choices
+            else:
+                normalized_choices.append(choice)  # normal 2-tuple form
+        overrides[list_hash(list(dict(normalized_choices).keys()))] = name
 
     if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
         error(
