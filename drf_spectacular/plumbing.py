@@ -306,13 +306,17 @@ def build_choice_field(field):
     return schema
 
 
-def build_root_object(paths, components):
+def build_root_object(paths, components, version):
     settings = spectacular_settings
+    if settings.VERSION and version:
+        version = f'{settings.VERSION} ({version})'
+    else:
+        version = settings.VERSION or version or ''
     root = {
         'openapi': '3.0.3',
         'info': {
             'title': settings.TITLE,
-            'version': settings.VERSION,
+            'version': version,
             **settings.EXTENSIONS_INFO,
         },
         'paths': {**paths, **settings.APPEND_PATHS},

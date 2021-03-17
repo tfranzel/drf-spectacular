@@ -105,6 +105,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'CONTACT': {},
     # Optional: MUST contain "name", MAY contain URL
     'LICENSE': {},
+    # Statically set schema version. May also be an empty string. When used together with
+    # view versioning, will become '0.0.0 (v2)' for 'v2' versioned requests.
+    # Set VERSION to None if only the request version should be rendered.
     'VERSION': '0.0.0',
     # Optional list of servers.
     # Each entry MUST contain "url", MAY contain "description", "variables"
