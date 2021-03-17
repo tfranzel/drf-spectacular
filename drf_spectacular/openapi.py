@@ -45,10 +45,11 @@ class AutoSchema(ViewInspector):
         'delete': 'destroy',
     }
 
-    def get_operation(self, path, path_regex, method, registry: ComponentRegistry):
+    def get_operation(self, path, path_regex, path_prefix, method, registry: ComponentRegistry):
         self.registry = registry
         self.path = path
         self.path_regex = path_regex
+        self.path_prefix = path_prefix
         self.method = method
 
         operation = {}
@@ -301,7 +302,7 @@ class AutoSchema(ViewInspector):
     def _tokenize_path(self):
         # remove path prefix
         path = re.sub(
-            pattern=spectacular_settings.SCHEMA_PATH_PREFIX,
+            pattern=self.path_prefix,
             repl='',
             string=self.path,
             flags=re.IGNORECASE

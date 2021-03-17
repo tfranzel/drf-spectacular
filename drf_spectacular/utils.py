@@ -212,14 +212,14 @@ def extend_schema(
             return method_scope and version_scope
 
         class ExtendedSchema(BaseSchema):
-            def get_operation(self, path, path_regex, method, registry):
+            def get_operation(self, path, path_regex, path_prefix, method, registry):
                 self.method = method
 
                 if exclude and is_in_scope(self):
                     return None
                 if operation is not None and is_in_scope(self):
                     return operation
-                return super().get_operation(path, path_regex, method, registry)
+                return super().get_operation(path, path_regex, path_prefix, method, registry)
 
             def get_operation_id(self):
                 if operation_id and is_in_scope(self):

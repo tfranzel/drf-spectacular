@@ -6,7 +6,7 @@ info:
 paths:
   /api/schema/:
     get:
-      operationId: api_schema_retrieve
+      operationId: schema_retrieve
       description: |-
         OpenApi3 schema for this API. Format can be selected via content negotiation.
 
@@ -28,7 +28,7 @@ paths:
           - de-de
           - en-us
       tags:
-      - api
+      - schema
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -55,10 +55,10 @@ paths:
           description: ''
   /api/x/:
     get:
-      operationId: api_x_list
+      operationId: x_list
       description: Eine laengere Erklaerung des Views
       tags:
-      - api
+      - x
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -73,11 +73,11 @@ paths:
                   $ref: '#/components/schemas/X'
           description: ''
     post:
-      operationId: api_x_create
+      operationId: x_create
       description: Eine laengere Erklaerung des Views
       summary: Hauptendpunkt fuer die Erstellung von X
       tags:
-      - api
+      - x
       requestBody:
         content:
           application/json:
@@ -99,7 +99,7 @@ paths:
           description: Kein Inhalt
   /api/x/{id}/:
     get:
-      operationId: api_x_retrieve
+      operationId: x_retrieve
       description: Eine laengere Erklaerung des Views
       parameters:
       - in: path
@@ -109,7 +109,7 @@ paths:
         description: A unique integer value identifying this Internätiönalisierung.
         required: true
       tags:
-      - api
+      - x
       security:
       - cookieAuth: []
       - basicAuth: []

@@ -1,3 +1,5 @@
+import os
+import re
 from urllib.parse import urljoin
 
 from django.urls import URLPattern, URLResolver
@@ -161,8 +163,22 @@ class SchemaGenerator(BaseSchemaGenerator):
         """ Iterate endpoints generating per method path operations. """
         result = {}
         self._initialise_endpoints()
+        endpoints = self._get_paths_and_endpoints(None if public else input_request)
 
-        for path, path_regex, method, view in self._get_paths_and_endpoints(None if public else input_request):
+        if spectacular_settings.SCHEMA_PATH_PREFIX is None:
+            # estimate common path prefix if none was given. only use it if we encountered more
+            # than one view to prevent emission of erroneous and unnecessary fallback names.
+            non_trivial_prefix = len(set([view.__class__ for _, _, _, view in endpoints])) > 1
+            if non_trivial_prefix:
+                path_prefix = os.path.commonpath([path for path, _, _, _ in endpoints])
+            else:
+                path_prefix = '/'
+        else:
+            path_prefix = spectacular_settings.SCHEMA_PATH_PREFIX
+        if not path_prefix.startswith('^'):
+            path_prefix = '^' + path_prefix  # make sure regex only matches from the start
+
+        for path, path_regex, method, view in endpoints:
             if not self.has_view_permissions(path, method, view):
                 continue
 
@@ -204,7 +220,9 @@ class SchemaGenerator(BaseSchemaGenerator):
             else:
                 trace_message = None
             with add_trace_message(trace_message):
-                operation = view.schema.get_operation(path, path_regex, method, self.registry)
+                operation = view.schema.get_operation(
+                    path, path_regex, path_prefix, method, self.registry
+                )
 
             # operation was manually removed via @extend_schema
             if not operation:
@@ -214,6 +232,9 @@ class SchemaGenerator(BaseSchemaGenerator):
             if path.startswith('/'):
                 path = path[1:]
             path = urljoin(self.url or '/', path)
+
+            if spectacular_settings.SCHEMA_PATH_PREFIX_TRIM:
+                path = re.sub(pattern=path_prefix, repl='', string=path, flags=re.IGNORECASE)
 
             if spectacular_settings.CAMELIZE_NAMES:
                 path, operation = camelize_operation(path, operation)
