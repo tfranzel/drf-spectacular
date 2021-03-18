@@ -1,6 +1,5 @@
 import os
 import re
-from urllib.parse import urljoin
 
 from django.urls import URLPattern, URLResolver
 from rest_framework import views, viewsets
@@ -228,13 +227,11 @@ class SchemaGenerator(BaseSchemaGenerator):
             if not operation:
                 continue
 
-            # Normalise path for any provided mount url.
-            if path.startswith('/'):
-                path = path[1:]
-            path = urljoin(self.url or '/', path)
-
             if spectacular_settings.SCHEMA_PATH_PREFIX_TRIM:
                 path = re.sub(pattern=path_prefix, repl='', string=path, flags=re.IGNORECASE)
+
+            if not path.startswith('/'):
+                path = '/' + path
 
             if spectacular_settings.CAMELIZE_NAMES:
                 path, operation = camelize_operation(path, operation)

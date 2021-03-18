@@ -1225,7 +1225,7 @@ def test_pagination_disabled_on_action(no_warnings):
     class YViewset(XViewset):
         serializer_class = SimpleSerializer
 
-    schema = generate_schema('/x/', YViewset)
+    schema = generate_schema('x', YViewset)
     assert 'PaginatedSimpleList' in get_response_schema(schema['paths']['/x/']['get'])['$ref']
     assert 'Simple' in get_response_schema(
         schema['paths']['/x/custom_action/']['get']
@@ -1452,8 +1452,8 @@ def test_nested_ro_serializer_has_required_fields_on_patch(no_warnings):
 
 
 @pytest.mark.parametrize('path', [
-    r'x/(?P<related_field>[0-9a-f-]{36})/',
-    r'x/<related_field>/',
+    r'x/(?P<related_field>[0-9a-f-]{36})',
+    r'x/<related_field>',
 ])
 def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, path):
     class M3(models.Model):
@@ -1620,7 +1620,7 @@ def test_customized_parsers_and_renderers_on_viewset(no_warnings):
         def json_in_multi_out(self, request):
             pass  # pragma: no cover
 
-    schema = generate_schema('/x/', XViewset)
+    schema = generate_schema('x', XViewset)
 
     create_op = schema['paths']['/x/']['post']
     assert len(create_op['requestBody']['content']) == 1
@@ -1709,3 +1709,15 @@ def test_categorized_choices(no_warnings):
     assert schema['components']['schemas']['MediaEnum']['enum'] == [
         'vinyl', 'cd', 'vhs', 'dvd', 'unknown'
     ]
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX', '/api/v[0-9]/')
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX_TRIM', True)
+def test_schema_path_prefix_trim(no_warnings):
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/api/v1/x/', view_function=view_func)
+    assert '/x/' in schema['paths']
