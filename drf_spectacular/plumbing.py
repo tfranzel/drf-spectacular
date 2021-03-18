@@ -104,6 +104,12 @@ def is_patched_serializer(serializer, direction):
     )
 
 
+def is_trivial_string_variation(a: str, b: str):
+    a = (a or '').strip().lower().replace(' ', '_').replace('-', '_')
+    b = (b or '').strip().lower().replace(' ', '_').replace('-', '_')
+    return a == b
+
+
 def get_lib_doc_excludes():
     # do not import on package level due to potential import recursion when loading
     # extensions as recommended:  USER's settings.py -> USER EXTENSIONS -> extensions.py

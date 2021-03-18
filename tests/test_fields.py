@@ -55,7 +55,7 @@ class AllFields(models.Model):
     field_float = models.FloatField()
     field_bool = models.BooleanField()
     field_char = models.CharField(max_length=100)
-    field_text = models.TextField()
+    field_text = models.TextField(verbose_name='a text field')
     # special
     field_slug = models.SlugField()
     field_email = models.EmailField()
@@ -145,7 +145,7 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     def get_field_method_object(self, obj) -> dict:
         return {'key': 'value'}
 
-    field_regex = serializers.RegexField(r'^[a-zA-z0-9]{10}\-[a-z]')
+    field_regex = serializers.RegexField(r'^[a-zA-z0-9]{10}\-[a-z]', label='A regex field')
 
     # composite fields
     field_list = serializers.ListField(

@@ -372,6 +372,7 @@ components:
         pk:
           type: integer
           readOnly: true
+          title: ID
         username:
           type: string
           description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
@@ -382,6 +383,7 @@ components:
           type: string
           format: email
           readOnly: true
+          title: Email address
         first_name:
           type: string
           maxLength: 150
@@ -432,6 +434,7 @@ components:
         pk:
           type: integer
           readOnly: true
+          title: ID
         username:
           type: string
           description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
@@ -442,6 +445,7 @@ components:
           type: string
           format: email
           readOnly: true
+          title: Email address
         first_name:
           type: string
           maxLength: 150

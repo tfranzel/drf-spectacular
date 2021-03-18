@@ -28,8 +28,8 @@ from drf_spectacular.plumbing import (
     build_array_type, build_basic_type, build_choice_field, build_examples_list,
     build_media_type_object, build_object_type, build_parameter_type, error, follow_field_source,
     force_instance, get_doc, get_view_model, is_basic_type, is_field, is_list_serializer,
-    is_patched_serializer, is_serializer, resolve_regex_path_parameter, resolve_type_hint, safe_ref,
-    warn,
+    is_patched_serializer, is_serializer, is_trivial_string_variation, resolve_regex_path_parameter,
+    resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes, build_generic_type
@@ -395,6 +395,7 @@ class AutoSchema(ViewInspector):
                 nested_depth=0,
             )
             field = field_cls(**field_kwargs)
+            field.field_name = model_field.name
         except:  # noqa
             field = None
 
@@ -542,12 +543,15 @@ class AutoSchema(ViewInspector):
 
         if isinstance(field, serializers.ListField):
             if isinstance(field.child, _UnvalidatedField):
-                return append_meta(build_array_type({}), meta)
+                return append_meta(build_array_type(build_basic_type(OpenApiTypes.ANY)), meta)
             elif is_serializer(field.child):
                 component = self.resolve_serializer(field.child, direction)
                 return append_meta(build_array_type(component.ref), meta) if component else None
             else:
                 schema = self._map_serializer_field(field.child, direction, collect_meta)
+                # remove automatically attached but redundant title
+                if is_trivial_string_variation(field.field_name, schema.get('title')):
+                    schema.pop('title', None)
                 return append_meta(build_array_type(schema), meta)
 
         # DateField and DateTimeField type is string
@@ -725,6 +729,8 @@ class AutoSchema(ViewInspector):
             if isinstance(default, set):
                 default = list(default)
             meta['default'] = default
+        if field.label and not is_trivial_string_variation(field.label, field.field_name):
+            meta['title'] = str(field.label)
         if field.help_text:
             meta['description'] = str(field.help_text)
         return meta

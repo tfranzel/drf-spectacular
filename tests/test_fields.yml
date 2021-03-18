@@ -113,6 +113,7 @@ components:
           readOnly: true
         field_regex:
           type: string
+          title: A regex field
           pattern: ^[a-zA-z0-9]{10}\-[a-z]
         field_list:
           type: array
@@ -203,6 +204,7 @@ components:
           maxLength: 100
         field_text:
           type: string
+          title: A text field
         field_slug:
           type: string
           maxLength: 50
