@@ -133,8 +133,13 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             explode = True
             style = 'form'
         elif isinstance(filter_field, (filters.RangeFilter, filters.NumericRangeFilter)):
-            suffixes = filter_field.field_class.widget.suffixes
-            field_names = [f'{field_name}_{suffixes[0]}', f'{field_name}_{suffixes[1]}']
+            try:
+                suffixes = filter_field.field_class.widget.suffixes
+            except AttributeError:
+                suffixes = ['min', 'max']
+            field_names = [
+                f'{field_name}_{suffix}' if suffix else field_name for suffix in suffixes
+            ]
             explode = None
             style = None
         else:
