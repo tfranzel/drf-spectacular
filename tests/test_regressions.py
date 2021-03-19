@@ -1721,3 +1721,28 @@ def test_schema_path_prefix_trim(no_warnings):
 
     schema = generate_schema('/api/v1/x/', view_function=view_func)
     assert '/x/' in schema['paths']
+
+
+def test_list_and_pagination_on_non_2XX_schemas(no_warnings):
+    @extend_schema_view(
+        list=extend_schema(responses={
+            200: SimpleSerializer,
+            400: {'type': 'object', 'properties': {'code': {'type': 'string'}}},
+            403: OpenApiTypes.OBJECT
+        })
+    )
+    class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+        pagination_class = pagination.LimitOffsetPagination
+
+    schema = generate_schema('x', XViewset)
+    assert get_response_schema(schema['paths']['/x/']['get']) == {
+        '$ref': '#/components/schemas/PaginatedSimpleList'
+    }
+    assert get_response_schema(schema['paths']['/x/']['get'], '400') == {
+        'type': 'object', 'properties': {'code': {'type': 'string'}}
+    }
+    assert get_response_schema(schema['paths']['/x/']['get'], '403') == {
+        'type': 'object', 'additionalProperties': {}
+    }

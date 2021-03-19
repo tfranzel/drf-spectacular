@@ -1027,6 +1027,8 @@ class AutoSchema(ViewInspector):
         elif isinstance(serializer, dict):
             # bypass processing and use given schema directly
             schema = serializer
+            # prevent invalid dict case in _is_list_view() as this not a status_code dict.
+            serializer = None
         else:
             warn(
                 f'could not resolve "{serializer}" for {self.method} {self.path}. Expected either '
@@ -1036,7 +1038,11 @@ class AutoSchema(ViewInspector):
             schema = build_basic_type(OpenApiTypes.OBJECT)
             schema['description'] = _('Unspecified response body')
 
-        if self._is_list_view(serializer) and not get_override(serializer, 'many') is False:
+        if (
+            self._is_list_view(serializer)
+            and get_override(serializer, 'many') is not False
+            and '200' <= status_code < '300'
+        ):
             schema = build_array_type(schema)
             paginator = self._get_paginator()
 
