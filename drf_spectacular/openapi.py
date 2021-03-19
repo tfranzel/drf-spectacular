@@ -24,12 +24,12 @@ from drf_spectacular.extensions import (
     OpenApiFilterExtension, OpenApiSerializerExtension, OpenApiSerializerFieldExtension,
 )
 from drf_spectacular.plumbing import (
-    ComponentRegistry, ResolvedComponent, UnableToProceedError, anyisinstance, append_meta,
-    build_array_type, build_basic_type, build_choice_field, build_examples_list,
-    build_media_type_object, build_object_type, build_parameter_type, error, follow_field_source,
-    force_instance, get_doc, get_view_model, is_basic_type, is_field, is_list_serializer,
-    is_patched_serializer, is_serializer, is_trivial_string_variation, resolve_regex_path_parameter,
-    resolve_type_hint, safe_ref, warn,
+    ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta, build_array_type,
+    build_basic_type, build_choice_field, build_examples_list, build_media_type_object,
+    build_object_type, build_parameter_type, error, follow_field_source, force_instance, get_doc,
+    get_view_model, is_basic_type, is_field, is_list_serializer, is_patched_serializer,
+    is_serializer, is_trivial_string_variation, resolve_regex_path_parameter, resolve_type_hint,
+    safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes, build_generic_type
@@ -413,7 +413,7 @@ class AutoSchema(ViewInspector):
             if not field.child_relation.queryset:
                 field.child_relation.queryset = model_field.related_model.objects.none()
             return self._map_serializer_field(field, direction)
-        elif field and not anyisinstance(field, [serializers.ReadOnlyField, serializers.ModelField]):
+        elif field and not isinstance(field, (serializers.ReadOnlyField, serializers.ModelField)):
             return self._map_serializer_field(field, direction)
         elif isinstance(model_field, models.ForeignKey):
             return self._map_model_field(model_field.target_field, direction)
@@ -625,13 +625,13 @@ class AutoSchema(ViewInspector):
             method = getattr(field.parent, field.method_name)
             return append_meta(self._map_response_type_hint(method), meta)
 
-        if anyisinstance(field, [serializers.BooleanField, serializers.NullBooleanField]):
+        if isinstance(field, (serializers.BooleanField, serializers.NullBooleanField)):
             return append_meta(build_basic_type(OpenApiTypes.BOOL), meta)
 
         if isinstance(field, serializers.JSONField):
             return append_meta(build_basic_type(OpenApiTypes.OBJECT), meta)
 
-        if anyisinstance(field, [serializers.DictField, serializers.HStoreField]):
+        if isinstance(field, (serializers.DictField, serializers.HStoreField)):
             content = build_basic_type(OpenApiTypes.OBJECT)
             if not isinstance(field.child, _UnvalidatedField):
                 content['additionalProperties'] = self._map_serializer_field(

@@ -52,10 +52,6 @@ class UnableToProceedError(Exception):
     pass
 
 
-def anyisinstance(obj, type_list):
-    return any([isinstance(obj, t) for t in type_list])
-
-
 def get_class(obj) -> type:
     return obj if inspect.isclass(obj) else obj.__class__
 
