@@ -212,13 +212,7 @@ class SchemaGenerator(BaseSchemaGenerator):
                 f'DEFAULT_SCHEMA_CLASS pointing to "drf_spectacular.openapi.AutoSchema" '
                 f'or any other drf-spectacular compatible AutoSchema?'
             )
-            if hasattr(view, '__class__'):
-                trace_message = view.__class__.__name__
-            elif hasattr(view, '__name__'):
-                trace_message = view.__name__
-            else:
-                trace_message = None
-            with add_trace_message(trace_message):
+            with add_trace_message(getattr(view, '__class__', view).__name__):
                 operation = view.schema.get_operation(
                     path, path_regex, path_prefix, method, self.registry
                 )

@@ -1723,6 +1723,16 @@ def test_schema_path_prefix_trim(no_warnings):
     assert '/x/' in schema['paths']
 
 
+def test_nameless_root_endpoint(no_warnings):
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/', view_function=view_func)
+    assert schema['paths']['/']['post']['operationId'] == 'root_create'
+
+
 def test_list_and_pagination_on_non_2XX_schemas(no_warnings):
     @extend_schema_view(
         list=extend_schema(responses={
