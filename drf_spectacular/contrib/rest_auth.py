@@ -1,6 +1,7 @@
 from django.conf import settings
 from rest_framework import serializers
 
+from drf_spectacular.contrib.rest_framework_simplejwt import TokenRefreshSerializerExtension
 from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiViewExtension
 from drf_spectacular.utils import extend_schema
 
@@ -87,6 +88,13 @@ class RestAuthJWTSerializer(OpenApiSerializerExtension):
             user = UserDetailsSerializer()
 
         return auto_schema._map_serializer(Fixed, direction)
+
+
+class CookieTokenRefreshSerializerExtension(TokenRefreshSerializerExtension):
+    target_class = 'dj_rest_auth.jwt_auth.CookieTokenRefreshSerializer'
+
+    def get_name(self):
+        return 'TokenRefresh'
 
 
 class RestAuthRegisterView(OpenApiViewExtension):
