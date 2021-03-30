@@ -192,6 +192,14 @@ components:
         field_sub_object_cached_model_int:
           type: integer
           readOnly: true
+        field_optional_sub_object_calculated:
+          type: integer
+          readOnly: true
+          nullable: true
+        field_sub_object_optional_int:
+          type: integer
+          nullable: true
+          readOnly: true
         field_int:
           type: integer
         field_float:
@@ -300,6 +308,7 @@ components:
       - field_model_cached_property_float
       - field_model_property_float
       - field_o2o
+      - field_optional_sub_object_calculated
       - field_posint
       - field_possmallint
       - field_read_only_model_function_basic
@@ -318,6 +327,7 @@ components:
       - field_sub_object_calculated
       - field_sub_object_model_int
       - field_sub_object_nested_calculated
+      - field_sub_object_optional_int
       - field_text
       - field_time
       - field_url
