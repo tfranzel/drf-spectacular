@@ -132,6 +132,23 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.response = response
 
 
+class OpenApiResponse(OpenApiSchemaBase):
+    """
+    Helper class to bundle a response object (``Serializer``, ``OpenApiType``,
+    raw schema, etc) together with a response object description and/or examples.
+    Examples can alternatively be provided via @extend_schema.
+    """
+    def __init__(
+            self,
+            response: Any = None,
+            description: Optional[str] = None,
+            examples: Optional[List[OpenApiExample]] = None
+    ):
+        self.response = response
+        self.description = description
+        self.examples = examples or []
+
+
 def extend_schema(
         operation_id=None,
         parameters=None,
@@ -164,6 +181,8 @@ def extend_schema(
         - ``dict`` with status codes as keys and `Serializers` as values.
         - ``dict`` with tuple (status_code, media_type) as keys and `Serializers` as values.
         - basic types or instances of ``OpenApiTypes``
+        - :class:`.OpenApiResponse` for bundling any of the other choices together with
+          either a dedicated response description and/or examples.
         - :class:`.PolymorphicProxySerializer` for signaling that
           the operation may yield data from different serializers depending
           on the circumstances.

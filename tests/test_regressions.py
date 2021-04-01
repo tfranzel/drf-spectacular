@@ -23,8 +23,8 @@ from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.renderers import OpenApiYamlRenderer
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
-    OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
-    extend_schema_view, inline_serializer,
+    OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_field,
+    extend_schema_serializer, extend_schema_view, inline_serializer,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema, get_request_schema, get_response_schema
@@ -1755,4 +1755,45 @@ def test_list_and_pagination_on_non_2XX_schemas(no_warnings):
     }
     assert get_response_schema(schema['paths']['/x/']['get'], '403') == {
         'type': 'object', 'additionalProperties': {}
+    }
+
+
+def test_openapi_response_wrapper(no_warnings):
+    @extend_schema_view(
+        create=extend_schema(description='creation description', responses={
+            201: OpenApiResponse(response=int, description='creation with int response.'),
+            222: OpenApiResponse(description='creation with no response.'),
+            223: None,
+            224: int,
+        }),
+        list=extend_schema(responses=OpenApiResponse(
+            response=OpenApiTypes.INT,
+            description='a list that actually returns numbers',
+            examples=[OpenApiExample('One', 1), OpenApiExample('Two', 2)],
+        )),
+    )
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/']['get']['responses'] == {
+        '200': {
+            'content': {
+                'application/json': {
+                    'schema': {'type': 'integer'},
+                    'examples': {'One': {'value': 1}, 'Two': {'value': 2}}
+                }
+            },
+            'description': 'a list that actually returns numbers'
+        }
+    }
+    assert schema['paths']['/x/']['post']['responses'] == {
+        '201': {
+            'content': {'application/json': {'schema': {'type': 'integer'}}},
+            'description': 'creation with int response.'
+        },
+        '222': {'description': 'creation with no response.'},
+        '223': {'description': 'No response body'},
+        '224': {'content': {'application/json': {'schema': {'type': 'integer'}}}, 'description': ''}
     }

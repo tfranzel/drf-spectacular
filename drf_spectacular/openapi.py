@@ -33,7 +33,7 @@ from drf_spectacular.plumbing import (
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes, build_generic_type
-from drf_spectacular.utils import OpenApiParameter
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse
 
 
 class AutoSchema(ViewInspector):
@@ -872,7 +872,7 @@ class AutoSchema(ViewInspector):
     def get_examples(self):
         return []
 
-    def _get_examples(self, serializer, direction, media_type, status_code=None):
+    def _get_examples(self, serializer, direction, media_type, status_code=None, extras=None):
         examples = self.get_examples()
 
         if not examples:
@@ -881,8 +881,11 @@ class AutoSchema(ViewInspector):
             elif is_serializer(serializer):
                 examples = get_override(serializer, 'examples', [])
 
+        # additional examples provided via OpenApiResponse are merged with the other methods
+        extras = extras or []
+
         filtered_examples = []
-        for example in examples:
+        for example in examples + extras:
             if direction == 'request' and example.response_only:
                 continue
             if direction == 'response' and example.request_only:
@@ -975,7 +978,11 @@ class AutoSchema(ViewInspector):
     def _get_response_bodies(self):
         response_serializers = self.get_response_serializers()
 
-        if is_serializer(response_serializers) or is_basic_type(response_serializers):
+        if (
+            is_serializer(response_serializers)
+            or is_basic_type(response_serializers)
+            or isinstance(response_serializers, OpenApiResponse)
+        ):
             if self.method == 'DELETE':
                 return {'204': {'description': _('No response body')}}
             if self.method == 'POST' and getattr(self.view, 'action', None) == 'create':
@@ -1006,12 +1013,19 @@ class AutoSchema(ViewInspector):
             return {'200': self._get_response_for_code(schema, '200')}
 
     def _get_response_for_code(self, serializer, status_code, media_types=None):
+        if isinstance(serializer, OpenApiResponse):
+            serializer, description, examples = (
+                serializer.response, serializer.description, serializer.examples
+            )
+        else:
+            description, examples = '', []
+
         serializer = force_instance(serializer)
         headers = self._get_response_headers_for_code(status_code)
         headers = {'headers': headers} if headers else {}
 
         if not serializer:
-            return {**headers, 'description': _('No response body')}
+            return {**headers, 'description': description or _('No response body')}
         elif is_list_serializer(serializer):
             if is_serializer(serializer.child):
                 schema = self.resolve_serializer(serializer.child, 'response').ref
@@ -1020,7 +1034,7 @@ class AutoSchema(ViewInspector):
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'response')
             if not component.schema:
-                return {**headers, 'description': _('No response body')}
+                return {**headers, 'description': description or _('No response body')}
             schema = component.ref
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
@@ -1067,14 +1081,11 @@ class AutoSchema(ViewInspector):
             'content': {
                 media_type: build_media_type_object(
                     schema,
-                    self._get_examples(serializer, 'response', media_type, status_code)
+                    self._get_examples(serializer, 'response', media_type, status_code, examples)
                 )
                 for media_type in media_types
             },
-            # Description is required by spec, but descriptions for each response code don't really
-            # fit into our model. Description is therefore put into the higher level slots.
-            # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#responseObject
-            'description': ''
+            'description': description
         }
 
     def _get_response_headers_for_code(self, status_code) -> dict:
