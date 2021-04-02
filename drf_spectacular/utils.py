@@ -2,13 +2,12 @@ import functools
 import inspect
 from typing import Any, Dict, List, Optional, Type, Union
 
-from rest_framework.fields import empty, Field
+from rest_framework.fields import Field, empty
 from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import error, get_view_methods, set_override, warn
 from drf_spectacular.types import OpenApiTypes
-
 
 _SerializerType = Union[Serializer, Type[Serializer]]
 _SerializerTypeVariations = Union[OpenApiTypes, 'PolymorphicProxySerializer', _SerializerType]
