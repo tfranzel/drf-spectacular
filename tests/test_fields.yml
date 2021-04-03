@@ -235,8 +235,7 @@ components:
         field_decimal:
           type: string
           format: decimal
-          maximum: 1000
-          minimum: -1000
+          pattern: ^\d{0,3}(\.\d{0,3})?$
         field_file:
           type: string
           format: uri

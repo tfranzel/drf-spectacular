@@ -591,13 +591,17 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.DecimalField):
             if getattr(field, 'coerce_to_string', api_settings.COERCE_DECIMAL_TO_STRING):
                 content = {**build_basic_type(OpenApiTypes.STR), 'format': 'decimal'}
+                if field.max_whole_digits:
+                    content['pattern'] = (
+                        f'^\\d{{0,{field.max_whole_digits}}}'
+                        f'(\\.\\d{{0,{field.decimal_places}}})?$'
+                    )
             else:
                 content = build_basic_type(OpenApiTypes.DECIMAL)
-
-            if field.max_whole_digits:
-                content['maximum'] = int(field.max_whole_digits * '9') + 1
-                content['minimum'] = -content['maximum']
-            self._map_min_max(field, content)
+                if field.max_whole_digits:
+                    content['maximum'] = int(field.max_whole_digits * '9') + 1
+                    content['minimum'] = -content['maximum']
+                self._map_min_max(field, content)
             return append_meta(content, meta)
 
         if isinstance(field, serializers.FloatField):
