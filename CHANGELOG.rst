@@ -7,7 +7,7 @@ Changelog
 - fix boundaries for decimals coerced to strings `#335 <https://github.com/tfranzel/drf-spectacular/issues/335>`_
 - improve util type hints
 - add convenience response wrapper OpenApiResponse `#345 <https://github.com/tfranzel/drf-spectacular/issues/345>`_ `#272 <https://github.com/tfranzel/drf-spectacular/issues/272>`_ `#116 <https://github.com/tfranzel/drf-spectacular/issues/116>`_
-- adapt for dj-rest-auth upstream changes in iMerica/dj-rest-auth`#227 <https://github.com/tfranzel/drf-spectacular/issues/227>`_
+- adapt for dj-rest-auth upstream changes in iMerica/dj-rest-auth#227
 - Fixed traversing of 'Optional' type annotations [Luke Plant]
 - prevent pagination on error responses. `#277 <https://github.com/tfranzel/drf-spectacular/issues/277>`_
 - fix SCHEMA_PATH_PREFIX_TRIM ^/ pitfall & remove unused old URL mounting
@@ -22,9 +22,9 @@ Changelog
 
 Breaking changes / important additions:
 
-- explicitly set responses via `@extend_schema` will not get paginated/listed anymore for non `2XX`-status codes.
-- New default `None` for `SCHEMA_PATH_PREFIX` will attempt to determine a reasonable prefix. Previous behavior is restored with `''`
-- Added `OpenApiResponses` to gain access to response object descriptions.
+- explicitly set responses via ``@extend_schema`` will not get paginated/listed anymore for non-``2XX`` status codes.
+- New default ``None`` for ``SCHEMA_PATH_PREFIX`` will attempt to determine a reasonable prefix. Previous behavior is restored with ``''``
+- Added ``OpenApiResponses`` to gain access to response object descriptions.
 
 0.14.0 (2021-03-09)
 -------------------
