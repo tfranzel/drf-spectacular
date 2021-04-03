@@ -1,6 +1,31 @@
 Changelog
 =========
 
+0.15.0 (2021-04-03)
+-------------------
+
+- fix boundaries for decimals coerced to strings `#335 <https://github.com/tfranzel/drf-spectacular/issues/335>`_
+- improve util type hints
+- add convenience response wrapper OpenApiResponse `#345 <https://github.com/tfranzel/drf-spectacular/issues/345>`_ `#272 <https://github.com/tfranzel/drf-spectacular/issues/272>`_ `#116 <https://github.com/tfranzel/drf-spectacular/issues/116>`_
+- adapt for dj-rest-auth upstream changes in iMerica/dj-rest-auth`#227 <https://github.com/tfranzel/drf-spectacular/issues/227>`_
+- Fixed traversing of 'Optional' type annotations [Luke Plant]
+- prevent pagination on error responses. `#277 <https://github.com/tfranzel/drf-spectacular/issues/277>`_
+- fix SCHEMA_PATH_PREFIX_TRIM ^/ pitfall & remove unused old URL mounting
+- slighly improve `#332 <https://github.com/tfranzel/drf-spectacular/issues/332>`_ for django-filter range filters
+- introduce non-redundant title field. `#191 <https://github.com/tfranzel/drf-spectacular/issues/191>`_ `#286 <https://github.com/tfranzel/drf-spectacular/issues/286>`_
+- improve schema version string handling including variations `#303 <https://github.com/tfranzel/drf-spectacular/issues/303>`_
+- bugfix ENUM_NAME_OVERRIDES for categorized choices `#339 <https://github.com/tfranzel/drf-spectacular/issues/339>`_
+- improve SCHEMA_PATH_PREFIX handling, add auto-detect default, introduce prefix trimming `#336 <https://github.com/tfranzel/drf-spectacular/issues/336>`_
+- add support for all django-filters RangeFilter [Jules Waldhart]
+- Added default value for missing attribute [Matthias Erll]
+- Fix map_renderers where format is None [Matthias Erll]
+
+Breaking changes / important additions:
+
+- explicitly set responses via `@extend_schema` will not get paginated/listed anymore for non `2XX`-status codes.
+- New default `None` for `SCHEMA_PATH_PREFIX` will attempt to determine a reasonable prefix. Previous behavior is restored with `''`
+- Added `OpenApiResponses` to gain access to response object descriptions.
+
 0.14.0 (2021-03-09)
 -------------------
 
@@ -31,8 +56,8 @@ Changelog
 - New setting for enabling/disabling error/warn messages [Fabricio Aguiar]
 - bugfix response headers without body `#297 <https://github.com/tfranzel/drf-spectacular/issues/297>`_
 - issue `#296 <https://github.com/tfranzel/drf-spectacular/issues/296>`_ [Luis Saavedra]
-- :sparkles: Fixes `#283 <https://github.com/tfranzel/drf-spectacular/issues/283>`_ -- implement response header parameters [Sergei Maertens]
-- :white_check_mark: Added feature test for response headers [Sergei Maertens]
+- Fixes `#283 <https://github.com/tfranzel/drf-spectacular/issues/283>`_ -- implement response header parameters [Sergei Maertens]
+- Added feature test for response headers [Sergei Maertens]
 - robustify django-filter enum sorting `#295 <https://github.com/tfranzel/drf-spectacular/issues/295>`_
 
 Breaking changes / important additions:

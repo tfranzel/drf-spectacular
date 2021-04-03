@@ -17,3 +17,5 @@ only minor modifications.
 - ``ref_name`` on Serializer ``Meta`` classes is supported (excluding inlining with ``ref_name=None``)
 
 - ``swagger_fake_view`` is available as attribute on views to signal schema generation
+
+- ``Response`` is largely identical to :py:class:`OpenApiParameter <drf_spectacular.utils.OpenApiResponse>`.
