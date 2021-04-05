@@ -1797,3 +1797,23 @@ def test_openapi_response_wrapper(no_warnings):
         '223': {'description': 'No response body'},
         '224': {'content': {'application/json': {'schema': {'type': 'integer'}}}, 'description': ''}
     }
+
+
+def test_prefix_estimation_with_re_special_chars_as_literals_in_path(no_warnings):
+    # make sure prefix estimation logic does not choke on reserved RE chars
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func1(request, format=None):
+        pass  # pragma: no cover
+
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func2(request, format=None):
+        pass  # pragma: no cover
+
+    generator = SchemaGenerator(patterns=[
+        path('/\\/x/', view_func1),
+        path('/\\/y/', view_func2)
+    ])
+    schema = generator.get_schema(request=None, public=True)
+    assert schema['paths']['/\\/x/']['post']['tags'] == ['x']
