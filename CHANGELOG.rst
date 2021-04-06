@@ -22,9 +22,10 @@ Changelog
 
 Breaking changes / important additions:
 
-- explicitly set responses via ``@extend_schema`` will not get paginated/listed anymore for non-``2XX`` status codes.
+- explicitly set responses via ``@extend_schema`` will not get paginated/listed anymore for non ``2XX`` status codes.
 - New default ``None`` for ``SCHEMA_PATH_PREFIX`` will attempt to determine a reasonable prefix. Previous behavior is restored with ``''``
 - Added ``OpenApiResponses`` to gain access to response object descriptions.
+
 
 0.14.0 (2021-03-09)
 -------------------

@@ -18,4 +18,4 @@ only minor modifications.
 
 - ``swagger_fake_view`` is available as attribute on views to signal schema generation
 
-- ``Response`` is largely identical to :py:class:`OpenApiParameter <drf_spectacular.utils.OpenApiResponse>`.
+- ``Response`` is largely identical to :py:class:`OpenApiResponse <drf_spectacular.utils.OpenApiResponse>`.
