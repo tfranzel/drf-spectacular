@@ -1,6 +1,17 @@
 Changelog
 =========
 
+
+0.15.1 (2021-04-08)
+-------------------
+
+- bugfix prefix estimation with RE special char literals in path `#358 <https://github.com/tfranzel/drf-spectacular/issues/358>`_
+
+Breaking changes / important additions:
+
+- minor release to fix newly introduced default prefix estimation.
+
+
 0.15.0 (2021-04-03)
 -------------------
 
