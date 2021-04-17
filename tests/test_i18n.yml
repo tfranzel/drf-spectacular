@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: ''
-  version: 0.0.0
   description: Lazy translated description with missing translation
+  version: 0.0.0
 paths:
   /api/schema/:
     get:

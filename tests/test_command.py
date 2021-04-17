@@ -31,6 +31,33 @@ def test_command_parameterized(capsys):
     assert 'openapi' in schema
     assert 'info' in schema
     assert 'paths' in schema
+    assert '' in schema['info']['title']
+    assert '' in schema['info']['description']
+    assert '0.0.0' in schema['info']['version']
+
+
+def test_command_parameterized_infos(capsys):
+    with tempfile.NamedTemporaryFile() as fh:
+        management.call_command(
+            'spectacular',
+            '--validate',
+            '--fail-on-warn',
+            '--lang=de',
+            '--generator-class=drf_spectacular.generators.SchemaGenerator',
+            '--file=' + fh.name,
+            '--title=test',
+            '--description=test',
+            '--url=/test/',
+        )
+        schema = yaml.load(fh.read(), Loader=yaml.SafeLoader)
+
+    assert 'openapi' in schema
+    assert 'info' in schema
+    assert 'paths' in schema
+    assert 'test' in schema['info']['title']
+    assert 'test' in schema['info']['description']
+    assert '0.0.0' in schema['info']['version']
+    assert '/test/' in schema['servers'][0]['url']
 
 
 @api_view(['GET'])

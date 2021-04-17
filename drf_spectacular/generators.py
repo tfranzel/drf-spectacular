@@ -243,6 +243,9 @@ class SchemaGenerator(BaseSchemaGenerator):
             paths=self.parse(request, public),
             components=self.registry.build(spectacular_settings.APPEND_COMPONENTS),
             version=self.api_version or getattr(request, 'version', None),
+            title=self.title,
+            description=self.description,
+            url=self.url,
         )
         for hook in spectacular_settings.POSTPROCESSING_HOOKS:
             result = hook(result=result, generator=self, request=request, public=public)
