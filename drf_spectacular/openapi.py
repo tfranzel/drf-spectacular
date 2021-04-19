@@ -472,7 +472,17 @@ class AutoSchema(ViewInspector):
         serializer_field_extension = OpenApiSerializerFieldExtension.get_match(field)
         if serializer_field_extension:
             schema = serializer_field_extension.map_serializer_field(self, direction)
-            return append_meta(schema, meta)
+            if serializer_field_extension.get_name():
+                component = ResolvedComponent(
+                    name=serializer_field_extension.get_name(),
+                    type=ResolvedComponent.SCHEMA,
+                    schema=schema,
+                    object=field,
+                )
+                self.registry.register_on_missing(component)
+                return append_meta(component.ref, meta)
+            else:
+                return append_meta(schema, meta)
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if is_list_serializer(field):
