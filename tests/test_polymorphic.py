@@ -147,3 +147,29 @@ def test_polymorphic_serializer_as_method_field_via_extend_schema_field(no_warni
         },
         'required': ['field']
     }
+
+
+def test_stripped_down_polymorphic_serializer(no_warnings):
+    @extend_schema_field(
+        PolymorphicProxySerializer(
+            component_name='MetaPerson',
+            serializers=[LegalPersonSerializer, NaturalPersonSerializer],
+            resource_type_field_name=None,
+        )
+    )
+    class XField(serializers.DictField):
+        pass  # pragma: no cover
+
+    class XSerializer(serializers.Serializer):
+        field = XField()
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['components']['schemas']['MetaPerson'] == {'oneOf': [
+        {'$ref': '#/components/schemas/LegalPerson'},
+        {'$ref': '#/components/schemas/NaturalPerson'}
+    ]}

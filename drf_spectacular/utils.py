@@ -40,9 +40,11 @@ class PolymorphicProxySerializer:
 
     Also make sure that each sub-serializer has a field named after the value of
     ``resource_type_field_name`` (discriminator field). Generated clients will likely
-    depend on the existence of this field.
+    depend on the existence of this field. Setting ``resource_type_field_name``
+    to ``None`` will remove the discriminator altogether. This may be useful in
+    certain situations, but will most likely break client generation.
 
-    For that reason, it is **strongly** recommended to pass the ``Serializers`` as **list**,
+    It is **strongly** recommended to pass the ``Serializers`` as **list**,
     and by that let *drf-spectacular* retrieve the field and handle the mapping
     automatically. In special circumstances, the field may not available when
     drf-spectacular processes the serializer. In those cases you can explicitly state
@@ -53,7 +55,7 @@ class PolymorphicProxySerializer:
             self,
             component_name: str,
             serializers: Union[List[_SerializerType], Dict[str, _SerializerType]],
-            resource_type_field_name: str
+            resource_type_field_name: Optional[str],
     ):
         self.component_name = component_name
         self.serializers = serializers

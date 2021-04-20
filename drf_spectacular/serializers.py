@@ -16,13 +16,16 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
         else:
             sub_components = self._get_implicit_sub_components(auto_schema, direction)
 
-        return {
-            'oneOf': [ref for _, ref in sub_components],
-            'discriminator': {
-                'propertyName': self.target.resource_type_field_name,
-                'mapping': {resource_type: ref['$ref'] for resource_type, ref in sub_components}
+        if self.target.resource_type_field_name is None:
+            return {'oneOf': [ref for _, ref in sub_components]}
+        else:
+            return {
+                'oneOf': [ref for _, ref in sub_components],
+                'discriminator': {
+                    'propertyName': self.target.resource_type_field_name,
+                    'mapping': {resource_type: ref['$ref'] for resource_type, ref in sub_components}
+                }
             }
-        }
 
     def _get_implicit_sub_components(self, auto_schema, direction):
         sub_components = []
@@ -35,11 +38,12 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
                 discriminator_field = sub_serializer.fields[self.target.resource_type_field_name]
                 resource_type = discriminator_field.to_representation(None)
             except:  # noqa: E722
-                warn(
-                    f'sub-serializer {resolved_sub_serializer.name} of {self.target.component_name} '
-                    f'must contain the discriminator field "{self.target.resource_type_field_name}". '
-                    f'defaulting to sub-serializer name, but schema will likely not match the API.'
-                )
+                if self.target.resource_type_field_name is not None:
+                    warn(
+                        f'sub-serializer {resolved_sub_serializer.name} of {self.target.component_name} '
+                        f'must contain the discriminator field "{self.target.resource_type_field_name}". '
+                        f'defaulting to sub-serializer name, but schema will likely not match the API.'
+                    )
                 resource_type = resolved_sub_serializer.name
 
             sub_components.append((resource_type, resolved_sub_serializer.ref))
