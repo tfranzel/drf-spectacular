@@ -104,7 +104,7 @@ def test_polymorphic_serializer_as_field_via_extend_schema_field(no_warnings):
         )
     )
     class XField(serializers.DictField):
-        pass
+        pass  # pragma: no cover
 
     class XSerializer(serializers.Serializer):
         field = XField()
@@ -117,3 +117,33 @@ def test_polymorphic_serializer_as_field_via_extend_schema_field(no_warnings):
     schema = generate_schema('x', view_function=view_func)
     assert 'MetaPerson' in schema['components']['schemas']
     assert 'MetaPerson' in schema['components']['schemas']['X']['properties']['field']['$ref']
+
+
+def test_polymorphic_serializer_as_method_field_via_extend_schema_field(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.SerializerMethodField()
+
+        @extend_schema_field(
+            PolymorphicProxySerializer(
+                component_name='MetaPerson',
+                serializers=[LegalPersonSerializer, NaturalPersonSerializer],
+                resource_type_field_name='type',
+            )
+        )
+        def get_field(self, request):
+            pass  # pragma: no cover
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert 'MetaPerson' in schema['components']['schemas']
+    assert schema['components']['schemas']['X'] == {
+        'type': 'object',
+        'properties': {
+            'field': {'allOf': [{'$ref': '#/components/schemas/MetaPerson'}], 'readOnly': True}
+        },
+        'required': ['field']
+    }

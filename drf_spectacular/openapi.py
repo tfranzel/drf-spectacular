@@ -439,11 +439,8 @@ class AutoSchema(ViewInspector):
             )
             return build_basic_type(OpenApiTypes.STR)
 
-    def _map_serializer_field(self, field, direction, collect_meta=True):
-        if collect_meta:
-            meta = self._get_serializer_field_meta(field)
-        else:
-            meta = {}
+    def _map_serializer_field(self, field, direction):
+        meta = self._get_serializer_field_meta(field)
 
         if has_override(field, 'field'):
             override = get_override(field, 'field')
@@ -454,7 +451,7 @@ class AutoSchema(ViewInspector):
             elif isinstance(override, dict):
                 schema = override
             else:
-                schema = self._map_serializer_field(force_instance(override), direction, False)
+                schema = self._map_serializer_field(force_instance(override), direction)
 
             field_component_name = get_override(field, 'field_component_name')
             if field_component_name:
@@ -490,7 +487,7 @@ class AutoSchema(ViewInspector):
                 component = self.resolve_serializer(field.child, direction)
                 return append_meta(build_array_type(component.ref), meta) if component else None
             else:
-                schema = self._map_serializer_field(field.child, direction, collect_meta)
+                schema = self._map_serializer_field(field.child, direction)
                 return append_meta(build_array_type(schema), meta)
 
         # nested serializer
@@ -500,7 +497,7 @@ class AutoSchema(ViewInspector):
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
-            schema = self._map_serializer_field(field.child_relation, direction, collect_meta)
+            schema = self._map_serializer_field(field.child_relation, direction)
             # remove hand-over initkwargs applying only to outer scope
             schema.pop('description', None)
             schema.pop('readOnly', None)
@@ -558,7 +555,7 @@ class AutoSchema(ViewInspector):
                 component = self.resolve_serializer(field.child, direction)
                 return append_meta(build_array_type(component.ref), meta) if component else None
             else:
-                schema = self._map_serializer_field(field.child, direction, collect_meta)
+                schema = self._map_serializer_field(field.child, direction)
                 # remove automatically attached but redundant title
                 if is_trivial_string_variation(field.field_name, schema.get('title')):
                     schema.pop('title', None)
@@ -648,9 +645,7 @@ class AutoSchema(ViewInspector):
         if isinstance(field, (serializers.DictField, serializers.HStoreField)):
             content = build_basic_type(OpenApiTypes.OBJECT)
             if not isinstance(field.child, _UnvalidatedField):
-                content['additionalProperties'] = self._map_serializer_field(
-                    field.child, direction, collect_meta
-                )
+                content['additionalProperties'] = self._map_serializer_field(field.child, direction)
             return append_meta(content, meta)
 
         if isinstance(field, serializers.CharField):
@@ -724,11 +719,6 @@ class AutoSchema(ViewInspector):
 
     def _get_serializer_field_meta(self, field):
         if not isinstance(field, serializers.Field):
-            warn(
-                f'unable to extract field metadata from field "{field}" because it appears '
-                f'to be neither a Field nor a Serializer. Proper handling may require an '
-                f'Extension or @extend_schema_field. Skipping metadata extraction. '
-            )
             return {}
 
         meta = {}
