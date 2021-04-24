@@ -1,6 +1,5 @@
 import pytest
 from django.db import models
-from django.urls import path
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -16,19 +15,9 @@ class ESVModel(models.Model):
     pass
 
 
-class ESVSubModel(models.Model):
-    esv = models.ForeignKey(ESVModel, on_delete=models.CASCADE)
-
-
 class ESVSerializer(serializers.ModelSerializer):
     class Meta:
         model = ESVModel
-        fields = '__all__'
-
-
-class ESVSubSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ESVSubModel
         fields = '__all__'
 
 
@@ -57,15 +46,6 @@ class XViewset(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Generi
         return Response('2019-03-01')
 
 
-class XNestedViewset(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    queryset = ESVSubModel.objects.all()
-    serializer_class = ESVSubSerializer
-
-    @extend_schema(tags=['nested-retrieve-tag'])
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
-
-
 # view to make sure there is no cross-talk
 class YViewSet(viewsets.ModelViewSet):
     serializer_class = ESVSerializer
@@ -75,9 +55,7 @@ class YViewSet(viewsets.ModelViewSet):
 router = routers.SimpleRouter()
 router.register('x', XViewset)
 router.register('y', YViewSet)
-urlpatterns = router.urls + [
-    path('/xy/{esv_pk}/nested_action/{pk}/', XNestedViewset.as_view({'get': 'retrieve'})),
-]
+urlpatterns = router.urls
 
 
 @pytest.mark.urls(__name__)

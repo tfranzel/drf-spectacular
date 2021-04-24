@@ -81,35 +81,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ESV'
           description: ''
-  /xy/{esv_id}/nested_action/{id}/:
-    get:
-      operationId: xy_nested_action_retrieve
-      description: ''
-      parameters:
-      - in: path
-        name: esv_id
-        schema:
-          type: integer
-        required: true
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this esv sub model.
-        required: true
-      tags:
-      - nested-retrieve-tag
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ESVSub'
-          description: ''
   /y/:
     get:
       operationId: y_list
@@ -276,17 +247,6 @@ components:
           type: integer
           readOnly: true
       required:
-      - id
-    ESVSub:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        esv:
-          type: integer
-      required:
-      - esv
       - id
     PatchedESV:
       type: object

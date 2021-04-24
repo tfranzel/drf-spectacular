@@ -46,14 +46,13 @@ def assert_schema(schema, reference_filename, transforms=None):
     validate_schema(schema)
 
 
-def generate_schema(route, viewset=None, view=None, view_function=None):
+def generate_schema(route, viewset=None, view=None, view_function=None, patterns=None):
     from django.urls import path
     from rest_framework import routers
     from rest_framework.viewsets import ViewSetMixin
 
     from drf_spectacular.generators import SchemaGenerator
 
-    patterns = []
     if viewset:
         assert issubclass(viewset, ViewSetMixin)
         router = routers.SimpleRouter()
@@ -63,6 +62,8 @@ def generate_schema(route, viewset=None, view=None, view_function=None):
         patterns = [path(route, view.as_view())]
     elif view_function:
         patterns = [path(route, view_function)]
+    else:
+        assert route is None and isinstance(patterns, list)
 
     generator = SchemaGenerator(patterns=patterns)
     schema = generator.get_schema(request=None, public=True)
