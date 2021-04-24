@@ -2,7 +2,7 @@ from unittest import mock
 
 from django.utils.http import urlsafe_base64_encode
 from rest_framework import mixins, serializers, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
@@ -47,7 +47,7 @@ class QuerySerializer(serializers.Serializer):
         min_length=3, max_length=10, help_text='filter by containing string', required=False
     )
     order_by = serializers.MultipleChoiceField(
-        choices=['a', 'b'],
+        choices=['a', 'b', 'c'],
         default=['a'],
     )
 
@@ -92,9 +92,26 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
                     'expiration_date', OpenApiTypes.DATETIME, description='time the object will expire at'
                 ),
                 OpenApiParameter(
-                    'test_mode', bool, location=OpenApiParameter.HEADER, enum=[True, False],
+                    name='test_mode',
+                    type=bool,
+                    location=OpenApiParameter.HEADER,
+                    enum=[True, False],
+                    default=False,
                     description='creation will be in the sandbox',
-                )
+                ),
+                OpenApiParameter(
+                    name='X-Api-Version',
+                    type=str,
+                    location=OpenApiParameter.HEADER,
+                    response=True,
+                ),
+                OpenApiParameter(
+                    name='Location',
+                    type=OpenApiTypes.URI,
+                    location=OpenApiParameter.HEADER,
+                    description='URL of the created resource',
+                    response=[201],
+                ),
             ],
             description='this weird endpoint needs some explaining',
             summary='short summary',
@@ -170,6 +187,18 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         @extend_schema(request=DeltaSerializer)
         @action(detail=False, methods=['POST'])
         def non_required_body(self, request):
+            return Response([])  # pragma: no cover
+
+        @extend_schema(
+            request={
+                'application/json': dict,
+                'application/pdf': bytes,
+                'text/html': OpenApiTypes.STR
+            },
+            responses=None
+        )
+        @action(detail=False, methods=['POST'])
+        def custom_request_override(self, request):
             return Response([])  # pragma: no cover
 
         @extend_schema(responses={
@@ -271,3 +300,55 @@ def test_layered_extend_schema_on_view_and_method_with_serializer(no_warnings):
     assert extended_action_op['$ref'].endswith('C')
     assert list_op['items']['$ref'].endswith('B')
     assert raw_action_op['$ref'].endswith('B')
+
+
+def test_extend_schema_field_with_serializer_as_override(no_warnings):
+    class OverrideSerializer(serializers.Serializer):
+        field = serializers.UUIDField()
+
+    @extend_schema_field(field=OverrideSerializer)
+    class CustomField(serializers.CharField):
+        pass
+
+    class XSerializer(serializers.Serializer):
+        field = CustomField(read_only=True)
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['components']['schemas']['Override']['type'] == 'object'
+    property_field = schema['components']['schemas']['X']['properties']['field']
+    assert 'Override' in property_field['allOf'][0]['$ref']
+    assert property_field['readOnly']
+
+
+def test_extend_schema_field_custom_schema_with_without_breakout(no_warnings):
+    field_schema = {'type': 'string', 'pattern': '^[0-9]*$', 'description': 'some explaining'}
+
+    @extend_schema_field(field=field_schema, component_name='Breakout')
+    class CustomBreakoutField(serializers.CharField):
+        pass
+
+    @extend_schema_field(field=field_schema)
+    class CustomField(serializers.CharField):
+        pass
+
+    class XSerializer(serializers.Serializer):
+        field = CustomField(read_only=True)
+        field_breakout = CustomBreakoutField(read_only=True)
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['components']['schemas']['Breakout']['type'] == 'string'
+    properties = schema['components']['schemas']['X']['properties']
+    assert properties['field']['description'] == 'some explaining'
+    assert properties['field']['readOnly']
+    assert 'Breakout' in properties['field_breakout']['allOf'][0]['$ref']
+    assert properties['field_breakout']['readOnly']

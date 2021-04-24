@@ -31,6 +31,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/MetaPerson'
           description: ''
+  /persons/{id}/:
+    patch:
+      operationId: persons_partial_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - persons
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMetaPerson'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMetaPerson'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMetaPerson'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaPerson'
+          description: ''
 components:
   schemas:
     LegalPerson:
@@ -78,6 +112,42 @@ components:
       - id
       - last_name
       - type
+    PatchedLegalPerson:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        company_name:
+          type: string
+          maxLength: 30
+        type:
+          type: string
+          readOnly: true
+    PatchedMetaPerson:
+      oneOf:
+      - $ref: '#/components/schemas/PatchedLegalPerson'
+      - $ref: '#/components/schemas/PatchedNaturalPerson'
+      discriminator:
+        propertyName: type
+        mapping:
+          legal: '#/components/schemas/PatchedLegalPerson'
+          natural: '#/components/schemas/PatchedNaturalPerson'
+    PatchedNaturalPerson:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 30
+        last_name:
+          type: string
+          maxLength: 30
+        type:
+          type: string
+          readOnly: true
   securitySchemes:
     basicAuth:
       type: http

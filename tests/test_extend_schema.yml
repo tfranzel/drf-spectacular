@@ -22,6 +22,7 @@ paths:
           enum:
           - false
           - true
+          default: false
         description: creation will be in the sandbox
       tags:
       - custom_tag
@@ -44,6 +45,10 @@ paths:
       deprecated: true
       responses:
         '200':
+          headers:
+            X-Api-Version:
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -52,12 +57,25 @@ paths:
                   $ref: '#/components/schemas/Beta'
           description: ''
         '201':
+          headers:
+            X-Api-Version:
+              schema:
+                type: string
+            Location:
+              schema:
+                type: string
+                format: uri
+              description: URL of the created resource
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Gamma'
           description: ''
         '500':
+          headers:
+            X-Api-Version:
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -115,6 +133,32 @@ paths:
       - {}
       responses:
         '201':
+          description: No response body
+  /doesitall/custom_request_override/:
+    post:
+      operationId: doesitall_custom_request_override_create
+      description: ''
+      tags:
+      - doesitall
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+          text/html:
+            schema:
+              type: string
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
           description: No response body
   /doesitall/document/:
     get:
@@ -215,9 +259,9 @@ paths:
         name: contains
         schema:
           type: string
-          description: filter by containing string
           maxLength: 10
           minLength: 3
+        description: filter by containing string
       - in: query
         name: nested
         schema:
@@ -230,6 +274,7 @@ paths:
             enum:
             - a
             - b
+            - c
             type: string
           default:
           - a
@@ -239,7 +284,7 @@ paths:
           type: integer
           maximum: 5
           minimum: 1
-          description: filter by rating stars
+        description: filter by rating stars
         required: true
       tags:
       - doesitall
@@ -339,6 +384,12 @@ components:
       required:
       - inline_b
       - inline_i
+    OrderByEnum:
+      enum:
+      - a
+      - b
+      - c
+      type: string
     Query:
       type: object
       properties:
@@ -355,10 +406,7 @@ components:
         order_by:
           type: array
           items:
-            enum:
-            - a
-            - b
-            type: string
+            $ref: '#/components/schemas/OrderByEnum'
           default:
           - a
       required:

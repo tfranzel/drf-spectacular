@@ -47,12 +47,14 @@ def test_force_instance():
 
 def test_follow_field_source_forward_reverse(no_warnings):
     class FFS1(models.Model):
+        id = models.UUIDField(primary_key=True)
         field_bool = models.BooleanField()
 
     class FFS2(models.Model):
         ffs1 = models.ForeignKey(FFS1, on_delete=models.PROTECT)
 
     class FFS3(models.Model):
+        id = models.CharField(primary_key=True, max_length=3)
         ffs2 = models.ForeignKey(FFS2, on_delete=models.PROTECT)
         field_float = models.FloatField()
 
@@ -63,14 +65,14 @@ def test_follow_field_source_forward_reverse(no_warnings):
 
     assert isinstance(forward_field, models.BooleanField)
     assert isinstance(reverse_field, models.FloatField)
-    assert isinstance(forward_model, models.ForeignKey)
-    assert isinstance(reverse_model, models.AutoField)
+    assert isinstance(forward_model, models.UUIDField)
+    assert isinstance(reverse_model, models.CharField)
 
     auto_schema = AutoSchema()
     assert auto_schema._map_model_field(forward_field, None)['type'] == 'boolean'
     assert auto_schema._map_model_field(reverse_field, None)['type'] == 'number'
-    assert auto_schema._map_model_field(forward_model, None)['type'] == 'integer'
-    assert auto_schema._map_model_field(reverse_model, None)['type'] == 'integer'
+    assert auto_schema._map_model_field(forward_model, None)['type'] == 'string'
+    assert auto_schema._map_model_field(reverse_model, None)['type'] == 'string'
 
 
 def test_detype_patterns_with_module_includes(no_warnings):
@@ -116,6 +118,12 @@ TYPE_HINT_TEST_PARAMS = [
     ), (
         typing.Union[int, str],
         {'oneOf': [{'type': 'integer'}, {'type': 'string'}]}
+    ), (
+        typing.Union[int, str, None],
+        {'oneOf': [{'type': 'integer'}, {'type': 'string'}], 'nullable': True}
+    ), (
+        typing.Optional[typing.Union[int, str]],
+        {'oneOf': [{'type': 'integer'}, {'type': 'string'}], 'nullable': True}
     )
 ]
 
@@ -158,8 +166,18 @@ if sys.version_info >= (3, 9):
 
 @pytest.mark.parametrize(['type_hint', 'ref_schema'], TYPE_HINT_TEST_PARAMS)
 def test_type_hint_extraction(no_warnings, type_hint, ref_schema):
-    def func() -> type_hint:
-        pass  # pragma: no cover
+    if sys.version_info >= (3, 10):
+        # This partially defeats the purpose of the test, as this is not what
+        # happens in reality for 3.10. However, the other tests cover annotation
+        # usage sufficiently. i'm unaware on how to do this programmatically
+        # in the context of PEP 563. suggestions welcome!
+        def func():
+            pass  # pragma: no cover
+        func.__annotations__['return'] = type_hint
+    else:
+        # this is perfectly fine up to 3.9
+        def func() -> type_hint:
+            pass  # pragma: no cover
 
     # check expected resolution
     schema = resolve_type_hint(typing.get_type_hints(func).get('return'))

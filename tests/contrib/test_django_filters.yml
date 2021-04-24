@@ -9,47 +9,144 @@ paths:
       description: ''
       parameters:
       - in: query
+        name: all_values
+        schema:
+          type: number
+          format: float
+      - in: query
         name: category
         schema:
+          type: string
           enum:
           - A
           - B
-          type: string
-        description: category
+        description: some category description
+      - in: query
+        name: custom_filter
+        schema:
+          type: boolean
+      - in: query
+        name: custom_underspec_filter
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - A
+            - B
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: in_categories
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - A
+            - B
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - in: query
         name: in_stock
         schema:
           type: boolean
-        description: in_stock
+      - in: query
+        name: int_id
+        schema:
+          type: integer
+      - in: query
+        name: is_free
+        schema:
+          type: boolean
       - in: query
         name: max_price
         schema:
           type: number
           format: float
-        description: max_price
+        description: highest price
       - in: query
         name: max_sub_price
         schema:
           type: number
           format: float
-        description: max_sub_price
+      - in: query
+        name: model_multi_cat
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - A
+            - B
+        description: some category description
+        explode: true
+        style: form
+      - in: query
+        name: model_multi_cat_relation
+        schema:
+          type: array
+          items:
+            type: integer
+        explode: true
+        style: form
+      - in: query
+        name: model_single_cat
+        schema:
+          type: string
+          enum:
+          - A
+          - B
+        description: some category description
+      - in: query
+        name: number_id
+        schema:
+          type: number
+        description: some injected help text
+      - in: query
+        name: number_id_ext
+        schema:
+          type: number
+      - in: query
+        name: ordering
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - -in_stock
+            - -price
+            - in_stock
+            - price
+        description: Ordering
+        explode: false
+        style: form
       - in: query
         name: other_sub_product__uuid
         schema:
           type: string
           format: uuid
-        description: other_sub_product__uuid
+      - in: query
+        name: price_range_max
+        schema:
+          type: number
+          format: float
+      - in: query
+        name: price_range_min
+        schema:
+          type: number
+          format: float
       - in: query
         name: sub
         schema:
           type: integer
-        description: sub
       - in: query
         name: subproduct__sub_price
         schema:
           type: number
           format: float
-        description: subproduct__sub_price
       tags:
       - products
       security:
@@ -103,7 +200,9 @@ components:
           type: integer
           readOnly: true
         category:
-          $ref: '#/components/schemas/CategoryEnum'
+          allOf:
+          - $ref: '#/components/schemas/CategoryEnum'
+          description: some category description
         in_stock:
           type: boolean
         price:

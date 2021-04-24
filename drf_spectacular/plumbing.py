@@ -7,7 +7,7 @@ import typing
 import urllib.parse
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
-from collections.abc import Hashable, Iterable
+from collections.abc import Hashable
 from decimal import Decimal
 from enum import Enum
 from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
@@ -15,6 +15,10 @@ from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 import inflection
 import uritemplate
 from django.apps import apps
+from django.db.models.fields.related_descriptors import (
+    ForwardManyToOneDescriptor, ManyToManyDescriptor, ReverseManyToOneDescriptor,
+    ReverseOneToOneDescriptor,
+)
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.urls.resolvers import (  # type: ignore
     _PATH_PARAMETER_COMPONENT_RE, RegexPattern, Resolver404, RoutePattern, URLPattern, URLResolver,
@@ -46,10 +50,6 @@ T = TypeVar('T')
 
 class UnableToProceedError(Exception):
     pass
-
-
-def anyisinstance(obj, type_list):
-    return any([isinstance(obj, t) for t in type_list])
 
 
 def get_class(obj) -> type:
@@ -91,6 +91,21 @@ def is_basic_type(obj, allow_none=True):
     return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
 
 
+def is_patched_serializer(serializer, direction):
+    return bool(
+        spectacular_settings.COMPONENT_SPLIT_PATCH
+        and serializer.partial
+        and not serializer.read_only
+        and not (spectacular_settings.COMPONENT_SPLIT_REQUEST and direction == 'response')
+    )
+
+
+def is_trivial_string_variation(a: str, b: str):
+    a = (a or '').strip().lower().replace(' ', '_').replace('-', '_')
+    b = (b or '').strip().lower().replace(' ', '_').replace('-', '_')
+    return a == b
+
+
 def get_lib_doc_excludes():
     # do not import on package level due to potential import recursion when loading
     # extensions as recommended:  USER's settings.py -> USER EXTENSIONS -> extensions.py
@@ -120,7 +135,7 @@ def get_view_model(view):
     except Exception as exc:
         warn(
             f'failed to obtain model through view\'s queryset due to raised exception. '
-            f'prevent this either by setting "queryset = Model.objects.none()" on the view, '
+            f'Prevent this either by setting "queryset = Model.objects.none()" on the view, '
             f'having an empty fallback in get_queryset() or by using @extend_schema. '
             f'(Exception: {exc})'
         )
@@ -153,12 +168,12 @@ def build_basic_type(obj):
     """
     resolve either enum or actual type and yield schema template for modification
     """
-    if obj in OPENAPI_TYPE_MAPPING:
+    if obj is None or type(obj) is None or obj is OpenApiTypes.NONE:
+        return None
+    elif obj in OPENAPI_TYPE_MAPPING:
         return dict(OPENAPI_TYPE_MAPPING[obj])
     elif obj in PYTHON_TYPE_MAPPING:
         return dict(OPENAPI_TYPE_MAPPING[PYTHON_TYPE_MAPPING[obj]])
-    elif obj is None or type(obj) is None:
-        return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.NONE])
     else:
         warn(f'could not resolve type for "{obj}". defaulting to "string"')
         return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])
@@ -228,6 +243,7 @@ def build_parameter_type(
         deprecated=False,
         explode=None,
         style=None,
+        default=None,
         examples=None,
 ):
     irrelevant_field_meta = ['readOnly', 'writeOnly']
@@ -250,6 +266,8 @@ def build_parameter_type(
         schema['style'] = style
     if enum:
         schema['schema']['enum'] = sorted(enum)
+    if default is not None and 'default' not in irrelevant_field_meta:
+        schema['schema']['default'] = default
     if examples:
         schema['examples'] = examples
     return schema
@@ -290,13 +308,18 @@ def build_choice_field(field):
     return schema
 
 
-def build_root_object(paths, components):
+def build_root_object(paths, components, version):
     settings = spectacular_settings
+    if settings.VERSION and version:
+        version = f'{settings.VERSION} ({version})'
+    else:
+        version = settings.VERSION or version or ''
     root = {
         'openapi': '3.0.3',
         'info': {
             'title': settings.TITLE,
-            'version': settings.VERSION,
+            'version': version,
+            **settings.EXTENSIONS_INFO,
         },
         'paths': {**paths, **settings.APPEND_PATHS},
         'components': components
@@ -346,29 +369,62 @@ def _follow_field_source(model, path: List[str]):
             return field_or_property.func
         elif callable(field_or_property):
             return field_or_property
+        elif isinstance(field_or_property, ManyToManyDescriptor):
+            if field_or_property.reverse:
+                return field_or_property.rel.target_field  # m2m reverse
+            else:
+                return field_or_property.field.target_field  # m2m forward
+        elif isinstance(field_or_property, ReverseOneToOneDescriptor):
+            return field_or_property.related.target_field  # o2o reverse
+        elif isinstance(field_or_property, ReverseManyToOneDescriptor):
+            return field_or_property.rel.target_field  # type: ignore # foreign reverse
+        elif isinstance(field_or_property, ForwardManyToOneDescriptor):
+            return field_or_property.field.target_field  # type: ignore # o2o & foreign forward
         else:
             field = model._meta.get_field(path[0])
             if isinstance(field, ForeignObjectRel):
-                # resolve DRF internal object to PK field as approximation
-                return field.get_related_field()  # type: ignore
+                # case only occurs when relations are traversed in reverse and
+                # not via the related_name (default: X_set) but the model name.
+                return field.target_field
             else:
                 return field
     else:
-        if isinstance(field_or_property, property) or callable(field_or_property):
+        if isinstance(field_or_property, (property, cached_property)) or callable(field_or_property):
             if isinstance(field_or_property, property):
-                target_model = field_or_property.fget.__annotations__.get('return')
+                target_model = _follow_return_type(field_or_property.fget)
+            elif isinstance(field_or_property, cached_property):
+                target_model = _follow_return_type(field_or_property.func)
             else:
-                target_model = field_or_property.__annotations__.get('return')
+                target_model = _follow_return_type(field_or_property)
             if not target_model:
                 raise UnableToProceedError(
                     f'could not follow field source through intermediate property "{path[0]}" '
-                    f'on model {model}. please add a type hint on the model\'s property/function '
+                    f'on model {model}. Please add a type hint on the model\'s property/function '
                     f'to enable traversal of the source path "{".".join(path)}".'
                 )
             return _follow_field_source(target_model, path[1:])
         else:
             target_model = model._meta.get_field(path[0]).related_model
             return _follow_field_source(target_model, path[1:])
+
+
+def _follow_return_type(a_callable):
+    target_type = typing.get_type_hints(a_callable).get('return')
+    if target_type is None:
+        return target_type
+    origin, args = _get_type_hint_origin(target_type)
+    if origin is typing.Union:
+        type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
+        if len(type_args) > 1:
+            warn(
+                f'could not traverse Union type, because we don\'t know which type to choose '
+                f'from {type_args}. Consider terminating "source" on a custom property '
+                f'that indicates the expected Optional/Union type. Defaulting to "string"'
+            )
+            return target_type
+        # Optional:
+        return type_args[0]
+    return target_type
 
 
 def follow_field_source(model, path):
@@ -385,8 +441,8 @@ def follow_field_source(model, path):
     except Exception as exc:
         warn(
             f'could not resolve field on model {model} with path "{".".join(path)}". '
-            f'this is likely a custom field that does some unknown magic. maybe '
-            f'consider annotating the field/property? defaulting to "string". (Exception: {exc})'
+            f'This is likely a custom field that does some unknown magic. Maybe '
+            f'consider annotating the field/property? Defaulting to "string". (Exception: {exc})'
         )
 
     def dummy_property(obj) -> str:
@@ -432,7 +488,7 @@ class ResolvedComponent:
 
     @property
     def ref(self) -> dict:
-        assert self.name and self.type and self.object
+        assert self.__bool__()
         return {'$ref': f'#/components/{self.type}/{self.name}'}
 
 
@@ -571,14 +627,20 @@ def load_enum_name_overrides():
             choices = choices.choices
         if inspect.isclass(choices) and issubclass(choices, Enum):
             choices = [c.value for c in choices]
-        if isinstance(choices, Iterable) and isinstance(choices[0], str):
-            choices = [(c, c) for c in choices]
-        overrides[list_hash(list(dict(choices).keys()))] = name
+        normalized_choices = []
+        for choice in choices:
+            if isinstance(choice, str):
+                normalized_choices.append((choice, choice))  # simple choice list
+            elif isinstance(choice[1], (list, tuple)):
+                normalized_choices.extend(choice[1])  # categorized nested choices
+            else:
+                normalized_choices.append(choice)  # normal 2-tuple form
+        overrides[list_hash(list(dict(normalized_choices).keys()))] = name
 
     if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
         error(
-            'ENUM_NAME_OVERRIDES has duplication issues. encountered multiple names '
-            'for the same choice set. enum naming might be unexpected.'
+            'ENUM_NAME_OVERRIDES has duplication issues. Encountered multiple names '
+            'for the same choice set. Enum naming might be unexpected.'
         )
     return overrides
 
@@ -656,7 +718,7 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
                 urlconf=tuple(detype_pattern(p) for p in patterns)
             ).resolve(path)
         except Resolver404:
-            error(f"namespace versioning path resolution failed for {path}. path will be ignored.")
+            error(f"namespace versioning path resolution failed for {path}. Path will be ignored.")
     elif issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
         # Append the version into request accepted_media_type.
         # e.g "application/json; version=1.0"
@@ -719,6 +781,9 @@ def normalize_result_object(result):
         return [normalize_result_object(v) for v in result]
     if isinstance(result, Promise):
         return str(result)
+    for base_type in [bool, int, float, str]:
+        if isinstance(result, base_type):
+            return base_type(result)  # coerce basic sub types
     return result
 
 
@@ -764,7 +829,8 @@ def build_mock_request(method, path, view, original_request, **kwargs):
 def set_query_parameters(url, **kwargs) -> str:
     """ deconstruct url, safely attach query parameters in kwargs, and serialize again """
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
-    query = {k: v for k, v in kwargs.items() if v is not None}
+    query = urllib.parse.parse_qs(query)
+    query.update({k: v for k, v in kwargs.items() if v is not None})
     query = urllib.parse.urlencode(query, doseq=True)
     return urllib.parse.urlunparse((scheme, netloc, path, params, query, fragment))
 
@@ -828,12 +894,14 @@ def resolve_type_hint(hint):
                 k: resolve_type_hint(v) for k, v in typing.get_type_hints(hint).items()
             }
         )
-    elif origin is typing.Union and len(args) == 2 and isinstance(None, args[1]):
-        # Optional[*] is resolved to Union[*, None]
-        schema = resolve_type_hint(args[0])
-        schema['nullable'] = True
-        return schema
     elif origin is typing.Union:
-        return {'oneOf': [resolve_type_hint(arg) for arg in args]}
+        type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
+        if len(type_args) > 1:
+            schema = {'oneOf': [resolve_type_hint(arg) for arg in type_args]}
+        else:
+            schema = resolve_type_hint(type_args[0])
+        if type(None) in args:
+            schema['nullable'] = True
+        return schema
     else:
         raise UnableToProceedError()

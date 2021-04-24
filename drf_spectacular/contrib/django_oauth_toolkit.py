@@ -27,7 +27,7 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
                 return {self.name: permission.get_scopes(request, view)}
 
     def get_security_definition(self, auto_schema):
-        from oauth2_provider.settings import oauth2_settings
+        from oauth2_provider.scopes import get_scopes_backend
 
         from drf_spectacular.settings import spectacular_settings
 
@@ -40,8 +40,8 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
                 flows[flow_type]['tokenUrl'] = spectacular_settings.OAUTH2_TOKEN_URL
             if spectacular_settings.OAUTH2_REFRESH_URL:
                 flows[flow_type]['refreshUrl'] = spectacular_settings.OAUTH2_REFRESH_URL
-            if oauth2_settings.SCOPES:
-                flows[flow_type]['scopes'] = oauth2_settings.SCOPES
+            scope_backend = get_scopes_backend()
+            flows[flow_type]['scopes'] = scope_backend.get_all_scopes()
 
         return {
             'type': 'oauth2',

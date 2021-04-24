@@ -1,7 +1,10 @@
 import enum
+import typing
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
+
+from drf_spectacular.settings import spectacular_settings
 
 
 class OpenApiTypes(enum.Enum):
@@ -14,6 +17,7 @@ class OpenApiTypes(enum.Enum):
     - Use OBJECT for arbitrary free-form object (usually a dict)
 
     """
+    NUMBER = enum.auto()
     FLOAT = enum.auto()
     DOUBLE = enum.auto()
     BOOL = enum.auto()
@@ -33,13 +37,25 @@ class OpenApiTypes(enum.Enum):
     DATETIME = enum.auto()
     DATE = enum.auto()
     TIME = enum.auto()
+    DURATION = enum.auto()
     EMAIL = enum.auto()
     OBJECT = enum.auto()
     NONE = enum.auto()
+    ANY = enum.auto()
+
+
+def build_generic_type():
+    if spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES is None:
+        return {'type': 'object'}
+    elif spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES == 'bool':
+        return {'type': 'object', 'additionalProperties': True}
+    else:
+        return {'type': 'object', 'additionalProperties': {}}
 
 
 # make a copy with dict() before modifying returned dict
 OPENAPI_TYPE_MAPPING = {
+    OpenApiTypes.NUMBER: {'type': 'number'},
     OpenApiTypes.FLOAT: {'type': 'number', 'format': 'float'},
     OpenApiTypes.DOUBLE: {'type': 'number', 'format': 'double'},
     OpenApiTypes.BOOL: {'type': 'boolean'},
@@ -59,10 +75,13 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.DATETIME: {'type': 'string', 'format': 'date-time'},
     OpenApiTypes.DATE: {'type': 'string', 'format': 'date'},
     OpenApiTypes.TIME: {'type': 'string', 'format': 'time'},
+    OpenApiTypes.DURATION: {'type': 'string', 'format': 'duration'},  # ISO 8601
     OpenApiTypes.EMAIL: {'type': 'string', 'format': 'email'},
-    OpenApiTypes.OBJECT: {'type': 'object', 'additionalProperties': {}},
-    OpenApiTypes.NONE: {},
+    OpenApiTypes.OBJECT: build_generic_type(),
+    OpenApiTypes.ANY: {},
+    OpenApiTypes.NONE: None,
 }
+
 
 PYTHON_TYPE_MAPPING = {
     str: OpenApiTypes.STR,
@@ -75,6 +94,7 @@ PYTHON_TYPE_MAPPING = {
     datetime: OpenApiTypes.DATETIME,
     date: OpenApiTypes.DATE,
     dict: OpenApiTypes.OBJECT,
+    typing.Any: OpenApiTypes.ANY,
     None: OpenApiTypes.NONE,
 }
 

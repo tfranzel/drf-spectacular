@@ -2,6 +2,7 @@ import tempfile
 import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Optional
 
 import pytest
 from django import __version__ as DJANGO_VERSION
@@ -32,13 +33,34 @@ class AuxSerializer(serializers.ModelSerializer):
         model = Aux
 
 
+class SubObject:
+    def __init__(self, instance):
+        self._instance = instance
+
+    @property
+    def calculated(self) -> int:
+        return self._instance.field_int
+
+    @property
+    def nested(self) -> 'SubObject':
+        return self
+
+    @property
+    def model_instance(self) -> 'AllFields':
+        return self._instance
+
+    @property
+    def optional_int(self) -> Optional[int]:
+        return 1
+
+
 class AllFields(models.Model):
     # basics
     field_int = models.IntegerField()
     field_float = models.FloatField()
     field_bool = models.BooleanField()
     field_char = models.CharField(max_length=100)
-    field_text = models.TextField()
+    field_text = models.TextField(verbose_name='a text field')
     # special
     field_slug = models.SlugField()
     field_email = models.EmailField()
@@ -58,7 +80,10 @@ class AllFields(models.Model):
     field_smallint = models.SmallIntegerField()
     field_posint = models.PositiveIntegerField()
     field_possmallint = models.PositiveSmallIntegerField()
-    field_nullbool = models.NullBooleanField()
+    if DJANGO_VERSION > '3.1':
+        field_nullbool = models.BooleanField(null=True)
+    else:
+        field_nullbool = models.NullBooleanField()
     field_time = models.TimeField()
     field_duration = models.DurationField()
 
@@ -99,6 +124,18 @@ class AllFields(models.Model):
     def model_function_model(self) -> Aux:
         return self.field_foreign
 
+    @property
+    def sub_object(self) -> SubObject:
+        return SubObject(self)
+
+    @cached_property
+    def sub_object_cached(self) -> SubObject:
+        return SubObject(self)
+
+    @property
+    def optional_sub_object(self) -> Optional[SubObject]:
+        return SubObject(self)
+
 
 class AllFieldsSerializer(serializers.ModelSerializer):
     field_decimal_uncoerced = serializers.DecimalField(
@@ -117,7 +154,7 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     def get_field_method_object(self, obj) -> dict:
         return {'key': 'value'}
 
-    field_regex = serializers.RegexField(r'^[a-zA-z0-9]{10}\-[a-z]')
+    field_regex = serializers.RegexField(r'^[a-zA-z0-9]{10}\-[a-z]', label='A regex field')
 
     # composite fields
     field_list = serializers.ListField(
@@ -166,6 +203,25 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     # there is a JSON model field for django>=3.1 that would be placed automatically. for <=3.1 we
     # need to set the field explicitly. defined here for both cases to have consistent ordering.
     field_json = serializers.JSONField()
+
+    # traversal of non-model types of complex object
+    field_sub_object_calculated = serializers.ReadOnlyField(source='sub_object.calculated')
+    field_sub_object_nested_calculated = serializers.ReadOnlyField(source='sub_object.nested.calculated')
+    field_sub_object_model_int = serializers.ReadOnlyField(source='sub_object.model_instance.field_int')
+
+    field_sub_object_cached_calculated = serializers.ReadOnlyField(source='sub_object_cached.calculated')
+    field_sub_object_cached_nested_calculated = serializers.ReadOnlyField(source='sub_object_cached.nested.calculated')
+    field_sub_object_cached_model_int = serializers.ReadOnlyField(source='sub_object_cached.model_instance.field_int')
+
+    # typing.Optional
+    field_optional_sub_object_calculated = serializers.ReadOnlyField(
+        source='optional_sub_object.calculated',
+        allow_null=True,
+    )
+    field_sub_object_optional_int = serializers.ReadOnlyField(
+        source='sub_object.optional_int',
+        allow_null=True,
+    )
 
     class Meta:
         fields = '__all__'

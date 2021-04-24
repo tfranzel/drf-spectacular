@@ -113,6 +113,7 @@ components:
           readOnly: true
         field_regex:
           type: string
+          title: A regex field
           pattern: ^[a-zA-z0-9]{10}\-[a-z]
         field_list:
           type: array
@@ -173,6 +174,32 @@ components:
         field_json:
           type: object
           additionalProperties: {}
+        field_sub_object_calculated:
+          type: integer
+          readOnly: true
+        field_sub_object_nested_calculated:
+          type: integer
+          readOnly: true
+        field_sub_object_model_int:
+          type: integer
+          readOnly: true
+        field_sub_object_cached_calculated:
+          type: integer
+          readOnly: true
+        field_sub_object_cached_nested_calculated:
+          type: integer
+          readOnly: true
+        field_sub_object_cached_model_int:
+          type: integer
+          readOnly: true
+        field_optional_sub_object_calculated:
+          type: integer
+          readOnly: true
+          nullable: true
+        field_sub_object_optional_int:
+          type: integer
+          nullable: true
+          readOnly: true
         field_int:
           type: integer
         field_float:
@@ -185,6 +212,7 @@ components:
           maxLength: 100
         field_text:
           type: string
+          title: A text field
         field_slug:
           type: string
           maxLength: 50
@@ -207,8 +235,7 @@ components:
         field_decimal:
           type: string
           format: decimal
-          maximum: 1000
-          minimum: -1000
+          pattern: ^\d{0,3}(\.\d{0,3})?$
         field_file:
           type: string
           format: uri
@@ -280,6 +307,7 @@ components:
       - field_model_cached_property_float
       - field_model_property_float
       - field_o2o
+      - field_optional_sub_object_calculated
       - field_posint
       - field_possmallint
       - field_read_only_model_function_basic
@@ -292,6 +320,13 @@ components:
       - field_related_string
       - field_slug
       - field_smallint
+      - field_sub_object_cached_calculated
+      - field_sub_object_cached_model_int
+      - field_sub_object_cached_nested_calculated
+      - field_sub_object_calculated
+      - field_sub_object_model_int
+      - field_sub_object_nested_calculated
+      - field_sub_object_optional_int
       - field_text
       - field_time
       - field_url

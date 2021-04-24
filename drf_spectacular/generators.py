@@ -1,5 +1,5 @@
+import os
 import re
-from urllib.parse import urljoin
 
 from django.urls import URLPattern, URLResolver
 from rest_framework import views, viewsets
@@ -8,7 +8,7 @@ from rest_framework.schemas.generators import get_pk_name  # type: ignore
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 from rest_framework.settings import api_settings
 
-from drf_spectacular.drainage import reset_generator_stats
+from drf_spectacular.drainage import add_trace_message, reset_generator_stats
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
@@ -64,6 +64,13 @@ class EndpointEnumerator(BaseEndpointEnumerator):
 
         return api_endpoints
 
+    def get_allowed_methods(self, callback):
+        methods = super().get_allowed_methods(callback)
+        return [
+            method for method in methods
+            if method not in ('OPTIONS', 'HEAD', 'TRACE', 'CONNECT')
+        ]
+
 
 class SchemaGenerator(BaseSchemaGenerator):
     endpoint_inspector_cls = EndpointEnumerator
@@ -110,6 +117,10 @@ class SchemaGenerator(BaseSchemaGenerator):
             callback.cls = override_view.view_replacement()
 
         view = super().create_view(callback, method, request)
+
+        # drf-yasg compatibility feature. makes the view aware that we are running
+        # schema generation and not a real request.
+        view.swagger_fake_view = True
 
         # callback.cls is hosted in urlpatterns and is therefore not an ephemeral modification.
         # restore after view creation so potential revisits have a clean state as basis.
@@ -172,19 +183,36 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         return view_endpoints
 
-    def parse(self, request, public):
+    def parse(self, input_request, public):
         """ Iterate endpoints generating per method path operations. """
         result = {}
         self._initialise_endpoints()
+        endpoints = self._get_paths_and_endpoints(None if public else input_request)
 
-        for path, path_regex, method, view in self._get_paths_and_endpoints(None if public else request):
+        if spectacular_settings.SCHEMA_PATH_PREFIX is None:
+            # estimate common path prefix if none was given. only use it if we encountered more
+            # than one view to prevent emission of erroneous and unnecessary fallback names.
+            non_trivial_prefix = len(set([view.__class__ for _, _, _, view in endpoints])) > 1
+            if non_trivial_prefix:
+                path_prefix = os.path.commonpath([path for path, _, _, _ in endpoints])
+                path_prefix = re.escape(path_prefix)  # guard for RE special chars in path
+            else:
+                path_prefix = '/'
+        else:
+            path_prefix = spectacular_settings.SCHEMA_PATH_PREFIX
+        if not path_prefix.startswith('^'):
+            path_prefix = '^' + path_prefix  # make sure regex only matches from the start
+
+        for path, path_regex, method, view in endpoints:
             if not self.has_view_permissions(path, method, view):
                 continue
 
-            # mocked request to allow certain operations in get_queryset and get_serializer[_class]
-            # without exceptions being raised due to no request.
-            if not request:
-                request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, request)
+            if input_request:
+                request = input_request
+            else:
+                # mocked request to allow certain operations in get_queryset and get_serializer[_class]
+                # without exceptions being raised due to no request.
+                request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, input_request)
 
             view.request = request
 
@@ -206,20 +234,24 @@ class SchemaGenerator(BaseSchemaGenerator):
                     continue
 
             assert isinstance(view.schema, AutoSchema), (
-                'Incompatible AutoSchema used on View. Is DRF\'s DEFAULT_SCHEMA_CLASS '
-                'pointing to "drf_spectacular.openapi.AutoSchema" or any other drf-spectacular '
-                'compatible AutoSchema?'
+                f'Incompatible AutoSchema used on View {view.__class__}. Is DRF\'s '
+                f'DEFAULT_SCHEMA_CLASS pointing to "drf_spectacular.openapi.AutoSchema" '
+                f'or any other drf-spectacular compatible AutoSchema?'
             )
-            operation = view.schema.get_operation(path, path_regex, method, self.registry)
+            with add_trace_message(getattr(view, '__class__', view).__name__):
+                operation = view.schema.get_operation(
+                    path, path_regex, path_prefix, method, self.registry
+                )
 
             # operation was manually removed via @extend_schema
             if not operation:
                 continue
 
-            # Normalise path for any provided mount url.
-            if path.startswith('/'):
-                path = path[1:]
-            path = urljoin(self.url or '/', path)
+            if spectacular_settings.SCHEMA_PATH_PREFIX_TRIM:
+                path = re.sub(pattern=path_prefix, repl='', string=path, flags=re.IGNORECASE)
+
+            if not path.startswith('/'):
+                path = '/' + path
 
             if spectacular_settings.CAMELIZE_NAMES:
                 path, operation = camelize_operation(path, operation)
@@ -235,6 +267,7 @@ class SchemaGenerator(BaseSchemaGenerator):
         result = build_root_object(
             paths=self.parse(request, public),
             components=self.registry.build(spectacular_settings.APPEND_COMPONENTS),
+            version=self.api_version or getattr(request, 'version', None),
         )
         for hook in spectacular_settings.POSTPROCESSING_HOOKS:
             result = hook(result=result, generator=self, request=request, public=public)

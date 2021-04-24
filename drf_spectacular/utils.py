@@ -2,13 +2,15 @@ import functools
 import inspect
 from typing import Any, Dict, List, Optional, Type, Union
 
-from rest_framework.fields import empty
+from rest_framework.fields import Field, empty
 from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import error, get_view_methods, set_override, warn
+from drf_spectacular.types import OpenApiTypes
 
-SerializerType = Union[Serializer, Type[Serializer]]
+_SerializerType = Union[Serializer, Type[Serializer]]
+_SerializerTypeVariations = Union[OpenApiTypes, 'PolymorphicProxySerializer', _SerializerType]
 
 
 class PolymorphicProxySerializer:
@@ -38,9 +40,11 @@ class PolymorphicProxySerializer:
 
     Also make sure that each sub-serializer has a field named after the value of
     ``resource_type_field_name`` (discriminator field). Generated clients will likely
-    depend on the existence of this field.
+    depend on the existence of this field. Setting ``resource_type_field_name``
+    to ``None`` will remove the discriminator altogether. This may be useful in
+    certain situations, but will most likely break client generation.
 
-    For that reason, it is **strongly** recommended to pass the ``Serializers`` as **list**,
+    It is **strongly** recommended to pass the ``Serializers`` as **list**,
     and by that let *drf-spectacular* retrieve the field and handle the mapping
     automatically. In special circumstances, the field may not available when
     drf-spectacular processes the serializer. In those cases you can explicitly state
@@ -50,12 +54,14 @@ class PolymorphicProxySerializer:
     def __init__(
             self,
             component_name: str,
-            serializers: Union[List[SerializerType], Dict[str, SerializerType]],
-            resource_type_field_name: str
+            serializers: Union[List[_SerializerType], Dict[str, _SerializerType]],
+            resource_type_field_name: Optional[str],
     ):
         self.component_name = component_name
         self.serializers = serializers
         self.resource_type_field_name = resource_type_field_name
+        self.partial = False
+        self.read_only = False
 
 
 class OpenApiSchemaBase:
@@ -101,15 +107,19 @@ class OpenApiParameter(OpenApiSchemaBase):
 
     def __init__(
             self,
-            name,
-            type=str,
-            location=QUERY,
-            required=False,
-            description='',
-            enum=None,
-            deprecated=False,
+            name: str,
+            type: Any = str,
+            location: str = QUERY,
+            required: bool = False,
+            description: str = '',
+            enum: Optional[List[Any]] = None,
+            deprecated: bool = False,
+            style: Optional[str] = None,
+            explode: Optional[bool] = None,
+            default: Any = None,
             examples: Optional[List[OpenApiExample]] = None,
-            exclude=False,
+            exclude: bool = False,
+            response: Union[bool, List[Union[int, str]]] = False,
     ):
         self.name = name
         self.type = type
@@ -118,24 +128,45 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.description = description
         self.enum = enum
         self.deprecated = deprecated
+        self.style = style
+        self.explode = explode
+        self.default = default
         self.examples = examples or []
         self.exclude = exclude
+        self.response = response
+
+
+class OpenApiResponse(OpenApiSchemaBase):
+    """
+    Helper class to bundle a response object (``Serializer``, ``OpenApiType``,
+    raw schema, etc) together with a response object description and/or examples.
+    Examples can alternatively be provided via @extend_schema.
+    """
+    def __init__(
+            self,
+            response: Any = None,
+            description: Optional[str] = None,
+            examples: Optional[List[OpenApiExample]] = None
+    ):
+        self.response = response
+        self.description = description
+        self.examples = examples or []
 
 
 def extend_schema(
-        operation_id=None,
-        parameters=None,
-        request=empty,
-        responses=empty,
-        auth=None,
-        description=None,
-        summary=None,
-        deprecated=None,
-        tags=None,
-        exclude=False,
-        operation=None,
-        methods=None,
-        versions=None,
+        operation_id: Optional[str] = None,
+        parameters: Optional[List[OpenApiParameter]] = None,
+        request: Any = empty,
+        responses: Any = empty,
+        auth: Optional[List[str]] = None,
+        description: Optional[str] = None,
+        summary: Optional[str] = None,
+        deprecated: Optional[bool] = None,
+        tags: Optional[List[str]] = None,
+        exclude: bool = False,
+        operation: Optional[Dict] = None,
+        methods: Optional[List[str]] = None,
+        versions: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
 ):
     """
@@ -153,11 +184,20 @@ def extend_schema(
         - ``Serializer`` instance (e.g. ``Serializer(many=True)`` for listings)
         - ``dict`` with status codes as keys and `Serializers` as values.
         - ``dict`` with tuple (status_code, media_type) as keys and `Serializers` as values.
+        - basic types or instances of ``OpenApiTypes``
+        - :class:`.OpenApiResponse` for bundling any of the other choices together with
+          either a dedicated response description and/or examples.
         - :class:`.PolymorphicProxySerializer` for signaling that
           the operation may yield data from different serializers depending
           on the circumstances.
-    :param request: replaces the discovered ``Serializer``.
-    :param auth:
+    :param request: replaces the discovered ``Serializer``. Takes a variety of inputs
+
+        - ``Serializer`` class/instance
+        - basic types or instances of ``OpenApiTypes``
+        - :class:`.PolymorphicProxySerializer` for signaling that the operation
+          accepts a set of different types of objects.
+        - ``dict`` with media_type as keys and one of the above as values.
+    :param auth: replace discovered auth with explicit list of auth methods
     :param description: replaces discovered doc strings
     :param summary: an optional short summary of the description
     :param deprecated: mark operation as deprecated
@@ -195,14 +235,14 @@ def extend_schema(
             return method_scope and version_scope
 
         class ExtendedSchema(BaseSchema):
-            def get_operation(self, path, path_regex, method, registry):
+            def get_operation(self, path, path_regex, path_prefix, method, registry):
                 self.method = method
 
                 if exclude and is_in_scope(self):
                     return None
                 if operation is not None and is_in_scope(self):
                     return operation
-                return super().get_operation(path, path_regex, method, registry)
+                return super().get_operation(path, path_regex, path_prefix, method, registry)
 
             def get_operation_id(self):
                 if operation_id and is_in_scope(self):
@@ -296,7 +336,10 @@ def extend_schema(
     return decorator
 
 
-def extend_schema_field(field):
+def extend_schema_field(
+        field: Union[_SerializerTypeVariations, Dict],
+        component_name: Optional[str] = None
+):
     """
     Decorator for the "field" kind. Can be used with ``SerializerMethodField`` (annotate the actual
     method) or with custom ``serializers.Field`` implementations.
@@ -306,19 +349,21 @@ def extend_schema_field(field):
 
     Always takes precedence over other mechanisms (e.g. type hints, auto-discovery).
 
-    :param field: accepts a ``Serializer`` or :class:`~.types.OpenApiTypes`
+    :param field: accepts a ``Serializer``, :class:`~.types.OpenApiTypes` or raw ``dict``
+    :param component_name: signals that the field should be broken out as separate component
     """
 
     def decorator(f):
         set_override(f, 'field', field)
+        set_override(f, 'field_component_name', component_name)
         return f
 
     return decorator
 
 
 def extend_schema_serializer(
-        many=None,
-        exclude_fields=None,
+        many: Optional[bool] = None,
+        exclude_fields: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
 ):
     """
@@ -384,7 +429,7 @@ def extend_schema_view(**kwargs):
     return decorator
 
 
-def inline_serializer(name: str, fields: Dict[str, object], **kwargs) -> SerializerType:
+def inline_serializer(name: str, fields: Dict[str, Field], **kwargs) -> Serializer:
     """
     A helper function to create an inline serializer. Primary use is with `@extend_schema`,
     where one needs an implicit one-off serializer that is not reflected in an actual class.

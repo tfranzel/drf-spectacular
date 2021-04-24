@@ -42,6 +42,10 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
     """
     _registry: List['OpenApiSerializerFieldExtension'] = []
 
+    def get_name(self) -> Optional[str]:
+        """ return str for breaking out field schema into separate component """
+        return None
+
     @abstractmethod
     def map_serializer_field(self, auto_schema, direction):
         pass  # pragma: no cover

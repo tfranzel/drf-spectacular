@@ -1,6 +1,6 @@
+import copy
 import re
 import typing
-from operator import attrgetter
 
 import uritemplate
 from django.core import exceptions as django_exceptions
@@ -19,20 +19,21 @@ from rest_framework.views import APIView
 
 from drf_spectacular.authentication import OpenApiAuthenticationExtension
 from drf_spectacular.contrib import *  # noqa: F403, F401
-from drf_spectacular.drainage import get_override, has_override
+from drf_spectacular.drainage import add_trace_message, get_override, has_override
 from drf_spectacular.extensions import (
     OpenApiFilterExtension, OpenApiSerializerExtension, OpenApiSerializerFieldExtension,
 )
 from drf_spectacular.plumbing import (
-    ComponentRegistry, ResolvedComponent, UnableToProceedError, anyisinstance, append_meta,
-    build_array_type, build_basic_type, build_choice_field, build_examples_list,
-    build_media_type_object, build_object_type, build_parameter_type, error, follow_field_source,
-    force_instance, get_doc, get_view_model, is_basic_type, is_field, is_list_serializer,
-    is_serializer, resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
+    ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta, build_array_type,
+    build_basic_type, build_choice_field, build_examples_list, build_media_type_object,
+    build_object_type, build_parameter_type, error, follow_field_source, force_instance, get_doc,
+    get_view_model, is_basic_type, is_field, is_list_serializer, is_patched_serializer,
+    is_serializer, is_trivial_string_variation, resolve_regex_path_parameter, resolve_type_hint,
+    safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter
+from drf_spectacular.types import OpenApiTypes, build_generic_type
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse
 
 
 class AutoSchema(ViewInspector):
@@ -44,10 +45,11 @@ class AutoSchema(ViewInspector):
         'delete': 'destroy',
     }
 
-    def get_operation(self, path, path_regex, method, registry: ComponentRegistry):
+    def get_operation(self, path, path_regex, path_prefix, method, registry: ComponentRegistry):
         self.registry = registry
         self.path = path
         self.path_regex = path_regex
+        self.path_prefix = path_prefix
         self.method = method
 
         operation = {}
@@ -121,10 +123,12 @@ class AutoSchema(ViewInspector):
         return []
 
     def _process_override_parameters(self):
-        result = []
-        exclusions = []
+        result = {}
         for parameter in self.get_override_parameters():
             if isinstance(parameter, OpenApiParameter):
+                if parameter.response:
+                    continue
+
                 if is_basic_type(parameter.type):
                     schema = build_basic_type(parameter.type)
                 elif is_serializer(parameter.type):
@@ -133,9 +137,9 @@ class AutoSchema(ViewInspector):
                     schema = parameter.type
 
                 if parameter.exclude:
-                    exclusions.append((parameter.name, parameter.location))
+                    result[parameter.name, parameter.location] = None
                 else:
-                    result.append(build_parameter_type(
+                    result[parameter.name, parameter.location] = build_parameter_type(
                         name=parameter.name,
                         schema=schema,
                         location=parameter.location,
@@ -143,21 +147,25 @@ class AutoSchema(ViewInspector):
                         description=parameter.description,
                         enum=parameter.enum,
                         deprecated=parameter.deprecated,
+                        style=parameter.style,
+                        explode=parameter.explode,
+                        default=parameter.default,
                         examples=build_examples_list(parameter.examples),
-                    ))
+                    )
             elif is_serializer(parameter):
                 # explode serializer into separate parameters. defaults to QUERY location
                 mapped = self._map_serializer(parameter, 'request')
                 for property_name, property_schema in mapped['properties'].items():
-                    result.append(build_parameter_type(
+                    result[property_name, OpenApiParameter.QUERY] = build_parameter_type(
                         name=property_name,
                         schema=property_schema,
+                        description=property_schema.pop('description', None),
                         location=OpenApiParameter.QUERY,
                         required=property_name in mapped.get('required', []),
-                    ))
+                    )
             else:
-                warn(f'could not resolve parameter annotation {parameter}. skipping.')
-        return result, exclusions
+                warn(f'could not resolve parameter annotation {parameter}. Skipping.')
+        return result
 
     def _get_format_parameters(self):
         parameters = []
@@ -175,8 +183,7 @@ class AutoSchema(ViewInspector):
         def dict_helper(parameters):
             return {(p['name'], p['in']): p for p in parameters}
 
-        override_parameters, excluded_parameters = self._process_override_parameters()
-        override_parameters = dict_helper(override_parameters)
+        override_parameters = self._process_override_parameters()
         # remove overridden path parameters beforehand so that there are no irrelevant warnings.
         path_variables = [
             v for v in uritemplate.variables(self.path) if (v, 'path') not in override_parameters
@@ -187,13 +194,21 @@ class AutoSchema(ViewInspector):
             **dict_helper(self._get_pagination_parameters()),
             **dict_helper(self._get_format_parameters()),
         }
-        # override/add @extend_schema parameters
-        for key in excluded_parameters:
-            del parameters[key]
+        # override/add/remove @extend_schema parameters
         for key, parameter in override_parameters.items():
-            parameters[key] = parameter
+            if parameter is None:
+                # either omit or explicitly remove parameter
+                if key in parameters:
+                    del parameters[key]
+            else:
+                parameters[key] = parameter
 
-        return sorted(parameters.values(), key=lambda p: p['name'])
+        if callable(spectacular_settings.SORT_OPERATION_PARAMETERS):
+            return sorted(parameters.values(), key=spectacular_settings.SORT_OPERATION_PARAMETERS)
+        elif spectacular_settings.SORT_OPERATION_PARAMETERS:
+            return sorted(parameters.values(), key=lambda p: p['name'])
+        else:
+            return list(parameters.values())
 
     def get_description(self):
         """ override this for custom behaviour """
@@ -287,7 +302,7 @@ class AutoSchema(ViewInspector):
     def _tokenize_path(self):
         # remove path prefix
         path = re.sub(
-            pattern=spectacular_settings.SCHEMA_PATH_PREFIX,
+            pattern=self.path_prefix,
             repl='',
             string=self.path,
             flags=re.IGNORECASE
@@ -313,9 +328,9 @@ class AutoSchema(ViewInspector):
             elif get_view_model(self.view) is None:
                 warn(
                     f'could not derive type of path parameter "{variable}" because because it '
-                    f'is untyped and obtaining queryset from {self.view.__class__} failed. '
-                    f'consider adding a type to the path (e.g. <int:{variable}>) or annotating '
-                    f'the parameter type with @extend_schema. defaulting to "string".'
+                    f'is untyped and obtaining queryset from the viewset failed. '
+                    f'Consider adding a type to the path (e.g. <int:{variable}>) or annotating '
+                    f'the parameter type with @extend_schema. Defaulting to "string".'
                 )
             else:
                 try:
@@ -327,8 +342,8 @@ class AutoSchema(ViewInspector):
                 except django_exceptions.FieldDoesNotExist:
                     warn(
                         f'could not derive type of path parameter "{variable}" because '
-                        f'model "{model}" did contain no such field. consider annotating '
-                        f'parameter with @extend_schema. defaulting to "string".'
+                        f'model "{model}" did contain no such field. Consider annotating '
+                        f'parameter with @extend_schema. Defaulting to "string".'
                     )
 
             parameters.append(build_parameter_type(
@@ -380,12 +395,25 @@ class AutoSchema(ViewInspector):
                 nested_depth=0,
             )
             field = field_cls(**field_kwargs)
+            field.field_name = model_field.name
         except:  # noqa
             field = None
 
         # For some cases, the DRF init logic either breaks (custom field with internal type) or
         # the resulting field is underspecified with regards to the schema (ReadOnlyField).
-        if field and not anyisinstance(field, [serializers.ReadOnlyField, serializers.ModelField]):
+        if field and isinstance(field, serializers.PrimaryKeyRelatedField):
+            # special case handling only for _resolve_path_parameters() where neither queryset nor
+            # parent is set by build_field. patch in queryset as _map_serializer_field requires it
+            if not field.queryset:
+                field.queryset = model_field.related_model.objects.none()
+            return self._map_serializer_field(field, direction)
+        elif isinstance(field, serializers.ManyRelatedField):
+            # special case handling similar to the case above. "parent.parent" on child_relation
+            # is None and there is no queryset. patch in as _map_serializer_field requires one.
+            if not field.child_relation.queryset:
+                field.child_relation.queryset = model_field.related_model.objects.none()
+            return self._map_serializer_field(field, direction)
+        elif field and not isinstance(field, (serializers.ReadOnlyField, serializers.ModelField)):
             return self._map_serializer_field(field, direction)
         elif isinstance(model_field, models.ForeignKey):
             return self._map_model_field(model_field.target_field, direction)
@@ -399,46 +427,73 @@ class AutoSchema(ViewInspector):
             if not field_cls:
                 warn(
                     f'model field "{model_field.get_internal_type()}" has no mapping in '
-                    f'ModelSerializer. it may be a deprecated field. defaulting to "string"'
+                    f'ModelSerializer. It may be a deprecated field. Defaulting to "string"'
                 )
                 return build_basic_type(OpenApiTypes.STR)
             return self._map_serializer_field(field_cls(), direction)
         else:
             error(
-                f'could not resolve model field "{model_field}". failed to resolve through '
+                f'could not resolve model field "{model_field}". Failed to resolve through '
                 f'serializer_field_mapping, get_internal_type(), or any override mechanism. '
-                f'defaulting to "string"'
+                f'Defaulting to "string"'
             )
             return build_basic_type(OpenApiTypes.STR)
 
     def _map_serializer_field(self, field, direction):
+        meta = self._get_serializer_field_meta(field)
+
         if has_override(field, 'field'):
             override = get_override(field, 'field')
             if is_basic_type(override):
-                return build_basic_type(override)
+                schema = build_basic_type(override)
+                if schema is None:
+                    return None
+            elif isinstance(override, dict):
+                schema = override
             else:
-                return self._map_serializer_field(override, direction)
+                schema = self._map_serializer_field(force_instance(override), direction)
 
-        meta = self._get_serializer_field_meta(field)
+            field_component_name = get_override(field, 'field_component_name')
+            if field_component_name:
+                component = ResolvedComponent(
+                    name=field_component_name,
+                    type=ResolvedComponent.SCHEMA,
+                    schema=schema,
+                    object=field,
+                )
+                self.registry.register_on_missing(component)
+                return append_meta(component.ref, meta)
+            else:
+                return append_meta(schema, meta)
 
         serializer_field_extension = OpenApiSerializerFieldExtension.get_match(field)
         if serializer_field_extension:
             schema = serializer_field_extension.map_serializer_field(self, direction)
-            return append_meta(schema, meta)
-
-        # nested serializer
-        if isinstance(field, serializers.Serializer):
-            component = self.resolve_serializer(field, direction)
-            return append_meta(component.ref, meta) if component else None
+            if serializer_field_extension.get_name():
+                component = ResolvedComponent(
+                    name=serializer_field_extension.get_name(),
+                    type=ResolvedComponent.SCHEMA,
+                    schema=schema,
+                    object=field,
+                )
+                self.registry.register_on_missing(component)
+                return append_meta(component.ref, meta)
+            else:
+                return append_meta(schema, meta)
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
-        if isinstance(field, serializers.ListSerializer):
+        if is_list_serializer(field):
             if is_serializer(field.child):
                 component = self.resolve_serializer(field.child, direction)
                 return append_meta(build_array_type(component.ref), meta) if component else None
             else:
                 schema = self._map_serializer_field(field.child, direction)
                 return append_meta(build_array_type(schema), meta)
+
+        # nested serializer
+        if is_serializer(field):
+            component = self.resolve_serializer(field, direction)
+            return append_meta(component.ref, meta) if component else None
 
         # Related fields.
         if isinstance(field, serializers.ManyRelatedField):
@@ -456,9 +511,18 @@ class AutoSchema(ViewInspector):
                 model_field = field.queryset.model._meta.pk
             else:
                 if isinstance(field.parent, serializers.ManyRelatedField):
-                    model_field = field.parent.parent.Meta.model._meta.pk
+                    model = field.parent.parent.Meta.model
+                    source = field.parent.source.split('.')
                 else:
-                    model_field = field.parent.Meta.model._meta.pk
+                    model = field.parent.Meta.model
+                    source = field.source.split('.')
+
+                # estimates the relating model field and jumps to it's target model PK field.
+                # also differentiate as source can be direct (pk) or relation field (model).
+                model_field = follow_field_source(model, source)
+                if callable(model_field):
+                    # follow_field_source bailed with a warning. be graceful and default to str.
+                    model_field = models.TextField()
 
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
             # signals that attribute. however this does not apply in the context of relations.
@@ -486,12 +550,15 @@ class AutoSchema(ViewInspector):
 
         if isinstance(field, serializers.ListField):
             if isinstance(field.child, _UnvalidatedField):
-                return append_meta(build_array_type({}), meta)
+                return append_meta(build_array_type(build_basic_type(OpenApiTypes.ANY)), meta)
             elif is_serializer(field.child):
                 component = self.resolve_serializer(field.child, direction)
                 return append_meta(build_array_type(component.ref), meta) if component else None
             else:
                 schema = self._map_serializer_field(field.child, direction)
+                # remove automatically attached but redundant title
+                if is_trivial_string_variation(field.field_name, schema.get('title')):
+                    schema.pop('title', None)
                 return append_meta(build_array_type(schema), meta)
 
         # DateField and DateTimeField type is string
@@ -531,13 +598,17 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.DecimalField):
             if getattr(field, 'coerce_to_string', api_settings.COERCE_DECIMAL_TO_STRING):
                 content = {**build_basic_type(OpenApiTypes.STR), 'format': 'decimal'}
+                if field.max_whole_digits:
+                    content['pattern'] = (
+                        f'^\\d{{0,{field.max_whole_digits}}}'
+                        f'(\\.\\d{{0,{field.decimal_places}}})?$'
+                    )
             else:
                 content = build_basic_type(OpenApiTypes.DECIMAL)
-
-            if field.max_whole_digits:
-                content['maximum'] = int(field.max_whole_digits * '9') + 1
-                content['minimum'] = -content['maximum']
-            self._map_min_max(field, content)
+                if field.max_whole_digits:
+                    content['maximum'] = int(field.max_whole_digits * '9') + 1
+                    content['minimum'] = -content['maximum']
+                self._map_min_max(field, content)
             return append_meta(content, meta)
 
         if isinstance(field, serializers.FloatField):
@@ -565,13 +636,13 @@ class AutoSchema(ViewInspector):
             method = getattr(field.parent, field.method_name)
             return append_meta(self._map_response_type_hint(method), meta)
 
-        if anyisinstance(field, [serializers.BooleanField, serializers.NullBooleanField]):
+        if isinstance(field, (serializers.BooleanField, serializers.NullBooleanField)):
             return append_meta(build_basic_type(OpenApiTypes.BOOL), meta)
 
         if isinstance(field, serializers.JSONField):
             return append_meta(build_basic_type(OpenApiTypes.OBJECT), meta)
 
-        if anyisinstance(field, [serializers.DictField, serializers.HStoreField]):
+        if isinstance(field, (serializers.DictField, serializers.HStoreField)):
             content = build_basic_type(OpenApiTypes.OBJECT)
             if not isinstance(field.child, _UnvalidatedField):
                 content['additionalProperties'] = self._map_serializer_field(field.child, direction)
@@ -599,7 +670,7 @@ class AutoSchema(ViewInspector):
             schema = self._map_model_field(field.model_field, direction)
             return append_meta(schema, meta)
 
-        warn(f'could not resolve serializer field "{field}". defaulting to "string"')
+        warn(f'could not resolve serializer field "{field}". Defaulting to "string"')
         return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
     def _map_min_max(self, field, content):
@@ -648,11 +719,6 @@ class AutoSchema(ViewInspector):
 
     def _get_serializer_field_meta(self, field):
         if not isinstance(field, serializers.Field):
-            warn(
-                f'unable to extract field metadata from field "{field}" because it appears '
-                f'to be neither a Field nor a Serializer. Proper handling may require an '
-                f'Extension or @extend_serializer_field. Skipping metadata extraction. '
-            )
             return {}
 
         meta = {}
@@ -667,6 +733,8 @@ class AutoSchema(ViewInspector):
             if isinstance(default, set):
                 default = list(default)
             meta['default'] = default
+        if field.label and not is_trivial_string_variation(field.label, field.field_name):
+            meta['title'] = str(field.label)
         if field.help_text:
             meta['description'] = str(field.help_text)
         return meta
@@ -684,7 +752,7 @@ class AutoSchema(ViewInspector):
 
             schema = self._map_serializer_field(field, direction)
             # skip field if there is no schema for the direction
-            if not schema:
+            if schema is None:
                 continue
 
             add_to_required = (
@@ -698,9 +766,8 @@ class AutoSchema(ViewInspector):
 
             properties[field.field_name] = safe_ref(schema)
 
-        if spectacular_settings.COMPONENT_SPLIT_PATCH:
-            if self.method == 'PATCH' and direction == 'request':
-                required = []
+        if is_patched_serializer(serializer, direction):
+            required = []
 
         return build_object_type(
             properties=properties,
@@ -751,8 +818,8 @@ class AutoSchema(ViewInspector):
             return resolve_type_hint(hint)
         except UnableToProceedError:
             warn(
-                f'unable to resolve type hint for function "{method.__name__}". consider '
-                f'using a type hint or @extend_schema_field. defaulting to string.'
+                f'unable to resolve type hint for function "{method.__name__}". Consider '
+                f'using a type hint or @extend_schema_field. Defaulting to string.'
             )
             return build_basic_type(OpenApiTypes.STR)
 
@@ -763,13 +830,14 @@ class AutoSchema(ViewInspector):
         return None
 
     def map_parsers(self):
-        return list(map(attrgetter('media_type'), self.view.parser_classes))
+        return list(dict.fromkeys([p.media_type for p in self.view.get_parsers()]))
 
     def map_renderers(self, attribute):
         assert attribute in ['media_type', 'format']
         return list(dict.fromkeys([
-            getattr(r, attribute) for r in self.view.renderer_classes
-            if r != renderers.BrowsableAPIRenderer
+            getattr(r, attribute).split(';')[0]
+            for r in self.view.get_renderers()
+            if not isinstance(r, renderers.BrowsableAPIRenderer) and getattr(r, attribute, None)
         ]))
 
     def _get_serializer(self):
@@ -792,15 +860,15 @@ class AutoSchema(ViewInspector):
                     return view.serializer_class
                 else:
                     error(
-                        f'Unable to guess serializer for {view.__class__.__name__}. This is graceful '
-                        f'fallback handling for APIViews. Consider using GenericAPIView as view base '
-                        f'class, if view is under your control. ignoring view for now. '
+                        'unable to guess serializer. This is graceful '
+                        'fallback handling for APIViews. Consider using GenericAPIView as view base '
+                        'class, if view is under your control. Ignoring view for now. '
                     )
             else:
-                error('Encountered unknown view base class. please report this issue. ignoring for now')
+                error('Encountered unknown view base class. Please report this issue. Ignoring for now')
         except Exception as exc:
             error(
-                f'Exception raised while getting serializer from {view.__class__.__name__}. Hint: '
+                f'exception raised while getting serializer. Hint: '
                 f'Is get_serializer_class() returning None or is get_queryset() not working without '
                 f'a request? Ignoring the view for now. (Exception: {exc})'
             )
@@ -808,7 +876,7 @@ class AutoSchema(ViewInspector):
     def get_examples(self):
         return []
 
-    def _get_examples(self, serializer, direction, media_type, status_code=None):
+    def _get_examples(self, serializer, direction, media_type, status_code=None, extras=None):
         examples = self.get_examples()
 
         if not examples:
@@ -817,8 +885,11 @@ class AutoSchema(ViewInspector):
             elif is_serializer(serializer):
                 examples = get_override(serializer, 'examples', [])
 
+        # additional examples provided via OpenApiResponse are merged with the other methods
+        extras = extras or []
+
         filtered_examples = []
-        for example in examples:
+        for example in examples + extras:
             if direction == 'request' and example.response_only:
                 continue
             if direction == 'response' and example.request_only:
@@ -836,9 +907,40 @@ class AutoSchema(ViewInspector):
         if self.method not in ('PUT', 'PATCH', 'POST'):
             return None
 
-        serializer = force_instance(self.get_request_serializer())
+        request_serializer = self.get_request_serializer()
 
-        request_body_required = False
+        if isinstance(request_serializer, dict):
+            content = []
+            request_body_required = True
+            for media_type, serializer in request_serializer.items():
+                schema, partial_request_body_required = self._get_request_for_media_type(serializer)
+                examples = self._get_examples(serializer, 'request', media_type)
+                if schema is None:
+                    continue
+                content.append((media_type, schema, examples))
+                request_body_required &= partial_request_body_required
+        else:
+            schema, request_body_required = self._get_request_for_media_type(request_serializer)
+            if schema is None:
+                return None
+            content = [
+                (media_type, schema, self._get_examples(request_serializer, 'request', media_type))
+                for media_type in self.map_parsers()
+            ]
+
+        request_body = {
+            'content': {
+                media_type: build_media_type_object(schema, examples)
+                for media_type, schema, examples in content
+            }
+        }
+        if request_body_required:
+            request_body['required'] = request_body_required
+        return request_body
+
+    def _get_request_for_media_type(self, serializer):
+        serializer = force_instance(serializer)
+
         if is_list_serializer(serializer):
             if is_serializer(serializer.child):
                 component = self.resolve_serializer(serializer.child, 'request')
@@ -847,10 +949,16 @@ class AutoSchema(ViewInspector):
                 schema = build_array_type(self._map_serializer_field(serializer.child, 'request'))
             request_body_required = True
         elif is_serializer(serializer):
+            if self.method == 'PATCH':
+                # we simulate what DRF is doing: the entry serializer is set to partial
+                # for PATCH requests. serializer instances received via extend_schema
+                # may be reused; prevent race conditions by modifying a copy.
+                serializer = copy.copy(serializer)
+                serializer.partial = True
             component = self.resolve_serializer(serializer, 'request')
             if not component.schema:
                 # serializer is empty so skip content enumeration
-                return None
+                return None, False
             schema = component.ref
             # request body is only required if any required property is not read-only
             readonly_props = [
@@ -860,37 +968,25 @@ class AutoSchema(ViewInspector):
             request_body_required = any(req not in readonly_props for req in required_props)
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
-            if not schema:
-                return None
+            request_body_required = False
         else:
             warn(
-                f'could not resolve request body for {self.method} {self.path}. defaulting to generic '
-                'free-form object. (maybe annotate a Serializer class?)'
+                f'could not resolve request body for {self.method} {self.path}. Defaulting to generic '
+                'free-form object. (Maybe annotate a Serializer class?)'
             )
-            schema = build_object_type(
-                additionalProperties={},
-                description='Unspecified request body',
-            )
-
-        request_body = {
-            'content': {
-                media_type: build_media_type_object(
-                    schema,
-                    self._get_examples(serializer, 'request', media_type)
-                )
-                for media_type in self.map_parsers()
-            }
-        }
-
-        if request_body_required:
-            request_body['required'] = request_body_required
-
-        return request_body
+            schema = build_generic_type()
+            schema['description'] = 'Unspecified request body'
+            request_body_required = False
+        return schema, request_body_required
 
     def _get_response_bodies(self):
         response_serializers = self.get_response_serializers()
 
-        if is_serializer(response_serializers) or is_basic_type(response_serializers):
+        if (
+            is_serializer(response_serializers)
+            or is_basic_type(response_serializers)
+            or isinstance(response_serializers, OpenApiResponse)
+        ):
             if self.method == 'DELETE':
                 return {'204': {'description': _('No response body')}}
             if self.method == 'POST' and getattr(self.view, 'action', None) == 'create':
@@ -914,17 +1010,26 @@ class AutoSchema(ViewInspector):
             warn(
                 f'could not resolve "{response_serializers}" for {self.method} {self.path}. '
                 f'Expected either a serializer or some supported override mechanism. '
-                f'defaulting to generic free-form object.'
+                f'Defaulting to generic free-form object.'
             )
             schema = build_basic_type(OpenApiTypes.OBJECT)
             schema['description'] = _('Unspecified response body')
             return {'200': self._get_response_for_code(schema, '200')}
 
     def _get_response_for_code(self, serializer, status_code, media_types=None):
+        if isinstance(serializer, OpenApiResponse):
+            serializer, description, examples = (
+                serializer.response, serializer.description, serializer.examples
+            )
+        else:
+            description, examples = '', []
+
         serializer = force_instance(serializer)
+        headers = self._get_response_headers_for_code(status_code)
+        headers = {'headers': headers} if headers else {}
 
         if not serializer:
-            return {'description': _('No response body')}
+            return {**headers, 'description': description or _('No response body')}
         elif is_list_serializer(serializer):
             if is_serializer(serializer.child):
                 schema = self.resolve_serializer(serializer.child, 'response').ref
@@ -933,23 +1038,29 @@ class AutoSchema(ViewInspector):
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'response')
             if not component.schema:
-                return {'description': _('No response body')}
+                return {**headers, 'description': description or _('No response body')}
             schema = component.ref
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
         elif isinstance(serializer, dict):
             # bypass processing and use given schema directly
             schema = serializer
+            # prevent invalid dict case in _is_list_view() as this not a status_code dict.
+            serializer = None
         else:
             warn(
                 f'could not resolve "{serializer}" for {self.method} {self.path}. Expected either '
-                f'a serializer or some supported override mechanism. defaulting to '
+                f'a serializer or some supported override mechanism. Defaulting to '
                 f'generic free-form object.'
             )
             schema = build_basic_type(OpenApiTypes.OBJECT)
             schema['description'] = _('Unspecified response body')
 
-        if self._is_list_view(serializer) and not get_override(serializer, 'many') is False:
+        if (
+            self._is_list_view(serializer)
+            and get_override(serializer, 'many') is not False
+            and '200' <= status_code < '300'
+        ):
             schema = build_array_type(schema)
             paginator = self._get_paginator()
 
@@ -970,18 +1081,58 @@ class AutoSchema(ViewInspector):
             media_types = self.map_renderers('media_type')
 
         return {
+            **headers,
             'content': {
                 media_type: build_media_type_object(
                     schema,
-                    self._get_examples(serializer, 'response', media_type, status_code)
+                    self._get_examples(serializer, 'response', media_type, status_code, examples)
                 )
                 for media_type in media_types
             },
-            # Description is required by spec, but descriptions for each response code don't really
-            # fit into our model. Description is therefore put into the higher level slots.
-            # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#responseObject
-            'description': ''
+            'description': description
         }
+
+    def _get_response_headers_for_code(self, status_code) -> dict:
+        result = {}
+        for parameter in self.get_override_parameters():
+            if not isinstance(parameter, OpenApiParameter):
+                continue
+            if not parameter.response:
+                continue
+            if (
+                isinstance(parameter.response, list)
+                and status_code not in [str(code) for code in parameter.response]
+            ):
+                continue
+
+            if is_basic_type(parameter.type):
+                schema = build_basic_type(parameter.type)
+            elif is_serializer(parameter.type):
+                schema = self.resolve_serializer(parameter.type, 'response').ref
+            else:
+                schema = parameter.type
+
+            if parameter.location not in [OpenApiParameter.HEADER, OpenApiParameter.COOKIE]:
+                warn(f'incompatible location type ignored for response parameter {parameter.name}')
+
+            parameter_type = build_parameter_type(
+                name=parameter.name,
+                schema=schema,
+                location=parameter.location,
+                required=parameter.required,
+                description=parameter.description,
+                enum=parameter.enum,
+                deprecated=parameter.deprecated,
+                style=parameter.style,
+                explode=parameter.explode,
+                default=parameter.default,
+                examples=build_examples_list(parameter.examples),
+            )
+            del parameter_type['name']
+            del parameter_type['in']
+            result[parameter.name] = parameter_type
+
+        return result
 
     def _get_serializer_name(self, serializer, direction):
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
@@ -1001,9 +1152,8 @@ class AutoSchema(ViewInspector):
         if name.endswith('Serializer'):
             name = name[:-10]
 
-        if self.method == 'PATCH' and spectacular_settings.COMPONENT_SPLIT_PATCH:
-            if not serializer.read_only and direction == 'request':
-                name = 'Patched' + name
+        if is_patched_serializer(serializer, direction):
+            name = 'Patched' + name
 
         if direction == 'request' and spectacular_settings.COMPONENT_SPLIT_REQUEST:
             name = name + 'Request'
@@ -1018,27 +1168,27 @@ class AutoSchema(ViewInspector):
             f'https://github.com/tfranzel/drf-spectacular/issues '
         )
         serializer = force_instance(serializer)
+        with add_trace_message(serializer.__class__.__name__):
+            component = ResolvedComponent(
+                name=self._get_serializer_name(serializer, direction),
+                type=ResolvedComponent.SCHEMA,
+                object=serializer,
+            )
+            if component in self.registry:
+                return self.registry[component]  # return component with schema
 
-        component = ResolvedComponent(
-            name=self._get_serializer_name(serializer, direction),
-            type=ResolvedComponent.SCHEMA,
-            object=serializer,
-        )
-        if component in self.registry:
-            return self.registry[component]  # return component with schema
-
-        self.registry.register(component)
-        component.schema = self._map_serializer(serializer, direction)
-        # 4 cases:
-        #   1. polymorphic container component -> use
-        #   2. concrete component with properties -> use
-        #   3. concrete component without properties -> prob. transactional so discard
-        #   4. explicit list component -> demultiplexed at usage location so discard
-        keep_component = (
-            any(nest_tag in component.schema for nest_tag in ['oneOf', 'allOf', 'anyOf'])
-            or component.schema.get('properties', {})
-        )
-        if not keep_component:
-            del self.registry[component]
-            return ResolvedComponent(None, None)  # sentinel
-        return component
+            self.registry.register(component)
+            component.schema = self._map_serializer(serializer, direction)
+            # 4 cases:
+            #   1. polymorphic container component -> use
+            #   2. concrete component with properties -> use
+            #   3. concrete component without properties -> prob. transactional so discard
+            #   4. explicit list component -> demultiplexed at usage location so discard
+            keep_component = (
+                any(nest_tag in component.schema for nest_tag in ['oneOf', 'allOf', 'anyOf'])
+                or component.schema.get('properties', {})
+            )
+            if not keep_component:
+                del self.registry[component]
+                return ResolvedComponent(None, None)  # sentinel
+            return component

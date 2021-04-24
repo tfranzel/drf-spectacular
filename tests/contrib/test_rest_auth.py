@@ -1,5 +1,6 @@
 import re
 from importlib import reload
+from unittest import mock
 
 import pytest
 from django.urls import include, path
@@ -14,6 +15,7 @@ transforms = [
 
 
 @pytest.mark.contrib('dj_rest_auth', 'allauth')
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX', '')
 def test_rest_auth(no_warnings):
     urlpatterns = [
         path('rest-auth/', include('dj_rest_auth.urls')),
@@ -29,6 +31,7 @@ def test_rest_auth(no_warnings):
 
 
 @pytest.mark.contrib('dj_rest_auth', 'allauth', 'rest_framework_simplejwt')
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX', '')
 def test_rest_auth_token(no_warnings, settings):
     settings.REST_USE_JWT = True
     # flush module import cache to re-evaluate conditional import

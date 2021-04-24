@@ -1,4 +1,6 @@
+import typing
 import uuid
+from decimal import Decimal
 from unittest import mock
 
 import pytest
@@ -7,7 +9,8 @@ from django.db import models
 from django.db.models import fields
 from django.urls import path, re_path
 from rest_framework import (
-    filters, generics, mixins, pagination, parsers, routers, serializers, views, viewsets,
+    filters, generics, mixins, pagination, parsers, renderers, routers, serializers, views,
+    viewsets,
 )
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action, api_view
@@ -17,10 +20,11 @@ from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.hooks import preprocess_exclude_path_format
 from drf_spectacular.openapi import AutoSchema
+from drf_spectacular.renderers import OpenApiYamlRenderer
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
-    OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
-    extend_schema_view, inline_serializer,
+    OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_field,
+    extend_schema_serializer, extend_schema_view, inline_serializer,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema, get_request_schema, get_response_schema
@@ -35,6 +39,7 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
         pass  # pragma: no cover
 
     class M2(models.Model):
+        id = models.UUIDField()
         m1_r = models.ForeignKey(M1, on_delete=models.CASCADE)
         m1_rw = models.ForeignKey(M1, on_delete=models.CASCADE)
 
@@ -52,6 +57,155 @@ def test_primary_key_read_only_queryset_not_found(no_warnings):
     props = schema['components']['schemas']['M2']['properties']
     assert props['m1_rw']['type'] == 'integer'
     assert props['m1_r']['type'] == 'integer'
+
+
+def test_multi_step_serializer_primary_key_related_field(no_warnings):
+    class MA1(models.Model):
+        id = models.UUIDField(primary_key=True)
+
+    class MA2(models.Model):
+        m1 = models.ForeignKey(MA1, on_delete=models.CASCADE)
+
+    class MA3(models.Model):
+        m2 = models.ForeignKey(MA2, on_delete=models.CASCADE)
+
+    class M3Serializer(serializers.ModelSerializer):
+        # this scenario looks explicitly at multi-step sources with read_only=True
+        m1 = serializers.PrimaryKeyRelatedField(source='m2.m1', required=False, read_only=True)
+
+        class Meta:
+            fields = ['m1', 'm2']
+            model = MA3
+
+    class M3Viewset(viewsets.ReadOnlyModelViewSet):
+        serializer_class = M3Serializer
+        queryset = MA3.objects.none()
+
+    schema = generate_schema('m3', M3Viewset)
+    properties = schema['components']['schemas']['M3']['properties']
+    assert properties['m1']['format'] == 'uuid'
+    assert properties['m2']['type'] == 'integer'
+
+
+def test_serializer_reverse_relations_including_read_only(no_warnings):
+    class M5(models.Model):
+        pass
+
+    class M5One(models.Model):
+        id = models.CharField(primary_key=True, max_length=10)
+        field = models.OneToOneField(M5, on_delete=models.CASCADE)
+
+    class M5Many(models.Model):
+        id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+        field = models.ManyToManyField(M5)
+
+    class M5Foreign(models.Model):
+        id = models.FloatField(primary_key=True)
+        field = models.ForeignKey(M5, on_delete=models.CASCADE)
+
+    class XSerializer(serializers.ModelSerializer):
+        m5foreign_set_explicit = serializers.PrimaryKeyRelatedField(
+            many=True, source='m5foreign_set', queryset=M5Foreign.objects.all()
+        )
+        m5foreign_set_ro = serializers.PrimaryKeyRelatedField(
+            many=True, source='m5foreign_set', read_only=True,
+        )
+        m5many_set_explicit = serializers.PrimaryKeyRelatedField(
+            many=True, source='m5many_set', queryset=M5Many.objects.all()
+        )
+        m5many_set_ro = serializers.PrimaryKeyRelatedField(
+            many=True, source='m5many_set', read_only=True,
+        )
+        m5one_ro = serializers.PrimaryKeyRelatedField(
+            source='m5one', read_only=True,
+        )
+
+        class Meta:
+            model = M5
+            fields = [
+                'm5many_set',
+                'm5many_set_explicit',
+                'm5many_set_ro',
+                'm5foreign_set',
+                'm5foreign_set_explicit',
+                'm5foreign_set_ro',
+                'm5one',
+                'm5one_ro',
+            ]
+
+    class TestViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+        queryset = M5.objects.all()
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x/', TestViewSet)
+    properties = schema['components']['schemas']['X']['properties']
+
+    m5many_pk = {'type': 'string', 'format': 'uuid'}
+    assert properties['m5many_set']['items'] == m5many_pk
+    assert properties['m5many_set_ro']['items'] == m5many_pk
+    assert properties['m5many_set_explicit']['items'] == m5many_pk
+
+    m5foreign_pk = {'type': 'number', 'format': 'float'}
+    assert properties['m5foreign_set']['items'] == m5foreign_pk
+    assert properties['m5foreign_set_ro']['items'] == m5foreign_pk
+    assert properties['m5foreign_set_explicit']['items'] == m5foreign_pk
+
+    assert properties['m5one'] == {'type': 'string'}
+    assert properties['m5one_ro'] == {'readOnly': True, 'type': 'string'}
+
+
+def test_serializer_forward_relations_including_read_only(no_warnings):
+    class M6One(models.Model):
+        id = models.CharField(primary_key=True, max_length=10)
+
+    class M6Many(models.Model):
+        id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+
+    class M6Foreign(models.Model):
+        id = models.FloatField(primary_key=True)
+
+    class M6(models.Model):
+        field_one = models.OneToOneField(M6One, on_delete=models.CASCADE)
+        field_many = models.ManyToManyField(M6Many)
+        field_foreign = models.ForeignKey(M6Foreign, on_delete=models.CASCADE)
+
+    class XSerializer(serializers.ModelSerializer):
+        field_one_ro = serializers.PrimaryKeyRelatedField(
+            source='field_one', read_only=True
+        )
+        field_foreign_ro = serializers.PrimaryKeyRelatedField(
+            source='field_foreign', read_only=True
+        )
+        field_many_ro = serializers.PrimaryKeyRelatedField(
+            source='field_many', read_only=True, many=True
+        )
+
+        class Meta:
+            model = M6
+            fields = [
+                'field_one',
+                'field_one_ro',
+                'field_many',
+                'field_many_ro',
+                'field_foreign',
+                'field_foreign_ro',
+            ]
+
+    class TestViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+        queryset = M6.objects.all()
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x/', TestViewSet)
+    properties = schema['components']['schemas']['X']['properties']
+
+    assert properties['field_one'] == {'type': 'string'}
+    assert properties['field_one_ro'] == {'type': 'string', 'readOnly': True}
+    assert properties['field_foreign'] == {'type': 'number', 'format': 'float'}
+    assert properties['field_foreign_ro'] == {'type': 'number', 'format': 'float', 'readOnly': True}
+    assert properties['field_many'] == {'type': 'array', 'items': {'type': 'string', 'format': 'uuid'}}
+    assert properties['field_many_ro'] == {
+        'type': 'array', 'items': {'type': 'string', 'format': 'uuid'}, 'readOnly': True
+    }
 
 
 def test_path_implicit_required(no_warnings):
@@ -708,10 +862,12 @@ def test_read_only_many_related_field(no_warnings):
             pass  # pragma: no cover
 
     schema = generate_schema('x', view=XAPIView)
-    assert schema['components']['schemas']['X']['properties']['field_m2m_ro']['readOnly'] is True
+    properties = schema['components']['schemas']['X']['properties']
     # readOnly only needed on outer object, not in items
-    assert 'readOnly' not in schema['components']['schemas']['X']['properties']['field_m2m_ro']['items']
-    assert 'readOnly' not in schema['components']['schemas']['X']['properties']['field_m2m']
+    assert properties['field_m2m'] == {'type': 'array', 'items': {'type': 'integer'}}
+    assert properties['field_m2m_ro'] == {
+        'type': 'array', 'items': {'type': 'integer'}, 'readOnly': True
+    }
 
 
 def test_extension_subclass_discovery(no_warnings):
@@ -975,11 +1131,13 @@ def test_mocked_request_with_get_queryset_get_serializer_class(no_warnings):
         def get_serializer_class(self):
             assert not self.request.user.is_authenticated
             assert self.action in ['retrieve', 'list']
+            assert getattr(self, 'swagger_fake_view', False)  # drf-yasg comp
             return SimpleSerializer
 
         def get_queryset(self):
             assert not self.request.user.is_authenticated
             assert self.request.method == 'GET'
+            assert getattr(self, 'swagger_fake_view', False)  # drf-yasg comp
             return SimpleModel.objects.none()
 
     generate_schema('x', XViewset)
@@ -1051,6 +1209,27 @@ def test_pagination_reusage(no_warnings):
     generator = SchemaGenerator(patterns=router.urls)
     schema = generator.get_schema(request=None, public=True)
     validate_schema(schema)
+
+
+def test_pagination_disabled_on_action(no_warnings):
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+        pagination_class = pagination.LimitOffsetPagination
+
+        @extend_schema(responses={'200': SimpleSerializer(many=True)})
+        @action(methods=['GET'], detail=False, pagination_class=None)
+        def custom_action(self):
+            pass  # pragma: no cover
+
+    class YViewset(XViewset):
+        serializer_class = SimpleSerializer
+
+    schema = generate_schema('x', YViewset)
+    assert 'PaginatedSimpleList' in get_response_schema(schema['paths']['/x/']['get'])['$ref']
+    assert 'Simple' in get_response_schema(
+        schema['paths']['/x/custom_action/']['get']
+    )['items']['$ref']
 
 
 @mock.patch(
@@ -1158,6 +1337,27 @@ def test_exclude_discovered_parameter(no_warnings):
     assert parameters[1]['name'] == 'random'
 
 
+def test_exclude_parameter_from_customized_autoschema(no_warnings):
+    class CustomSchema(AutoSchema):
+        def get_override_parameters(self):
+            return [OpenApiParameter('test')]
+
+    @extend_schema_view(list=extend_schema(parameters=[
+        OpenApiParameter('test', exclude=True),  # exclude from class override
+        OpenApiParameter('never_existed', exclude=True),  # provoke error
+        OpenApiParameter('keep', bool),  # for sanity check
+    ]))
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+        schema = CustomSchema()
+
+    schema = generate_schema('x', XViewset)
+    parameters = schema['paths']['/x/']['get']['parameters']
+    assert len(parameters) == 1
+    assert parameters[0]['name'] == 'keep'
+
+
 def test_manual_decimal_validator():
     # manually test this validator as it is not part of the default workflow
     class XSerializer(serializers.Serializer):
@@ -1174,3 +1374,446 @@ def test_manual_decimal_validator():
     field = schema['components']['schemas']['X']['properties']['field']
     assert field['maximum'] == 100
     assert field['minimum'] == -100
+
+
+def test_serialization_with_decimal_values(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.DecimalField(
+            decimal_places=2,
+            min_value=Decimal('1'),
+            max_value=Decimal('100.00'),
+            max_digits=5,
+            coerce_to_string=False,
+        )
+        field_coerced = serializers.DecimalField(
+            decimal_places=2,
+            min_value=Decimal('1'),
+            max_value=Decimal('100.00'),
+            max_digits=5,
+            coerce_to_string=True,
+        )
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    field = schema['components']['schemas']['X']['properties']['field']
+    assert field['minimum'] and field['maximum']
+
+    schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
+    assert b'maximum: 100.00\n' in schema_yml
+    assert b'minimum: 1\n' in schema_yml
+
+
+def test_non_supported_http_verbs(no_warnings):
+    HTTP_METHODS = [
+        'GET',
+        'HEAD',
+        'POST',
+        'PUT',
+        'DELETE',
+        'CONNECT',
+        'OPTIONS',
+        'TRACE',
+        'PATCH'
+    ]
+    for x in HTTP_METHODS:
+        @extend_schema(request=int, responses=int)
+        @api_view([x])
+        def view_func(request, format=None):
+            pass  # pragma: no cover
+
+        generate_schema('x', view_function=view_func)
+
+
+def test_nested_ro_serializer_has_required_fields_on_patch(no_warnings):
+    # issue #249 raised a disparity problem between serializer name
+    # generation and the actual serializer construction on PATCH.
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+    class YSerializer(serializers.Serializer):
+        x_field = XSerializer(read_only=True)
+
+    class YViewSet(viewsets.GenericViewSet):
+        serializer_class = YSerializer
+        queryset = SimpleModel.objects.all()
+
+        def partial_update(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', YViewSet)
+    assert len(schema['components']['schemas']) == 3
+    assert 'Y' in schema['components']['schemas']
+    assert 'PatchedY' in schema['components']['schemas']
+    assert 'required' in schema['components']['schemas']['X']
+
+
+@pytest.mark.parametrize('path', [
+    r'x/(?P<related_field>[0-9a-f-]{36})',
+    r'x/<related_field>',
+])
+def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, path):
+    class M3(models.Model):
+        related_field = models.ForeignKey(SimpleModel, on_delete=models.PROTECT, editable=False)
+        many_related = models.ManyToManyField(SimpleModel)
+
+    class M3Serializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M3
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = M3Serializer
+        queryset = M3.objects.none()
+
+    router = routers.SimpleRouter()
+    router.register(path, XViewset)
+
+    schema = SchemaGenerator(patterns=router.urls).get_schema(request=None, public=True)
+    assert '/x/{related_field}/' in schema['paths']
+    assert '/x/{related_field}/{id}/' in schema['paths']
+
+
+@pytest.mark.contrib('psycopg2')
+def test_multiple_choice_enum(no_warnings):
+    from django.contrib.postgres.fields import ArrayField
+
+    class M4(models.Model):
+        multi = ArrayField(
+            models.CharField(max_length=10, choices=(('A', 'A'), ('B', 'B'))),
+            size=8,
+        )
+
+    class M4Serializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = M4
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = M4Serializer
+        queryset = M4.objects.none()
+
+    schema = generate_schema('x', XViewset)
+    assert 'MultiEnum' in schema['components']['schemas']
+    prop = schema['components']['schemas']['M4']['properties']['multi']
+    assert prop['type'] == 'array'
+    assert prop['items']['$ref'] == '#/components/schemas/MultiEnum'
+
+
+def test_explode_style_parameter_with_custom_schema(no_warnings):
+    @extend_schema(
+        parameters=[OpenApiParameter(
+            name='bbox',
+            type={'type': 'array', 'minItems': 4, 'maxItems': 6, 'items': {'type': 'number'}},
+            location=OpenApiParameter.QUERY,
+            required=False,
+            style='form',
+            explode=False,
+        )],
+        responses=OpenApiTypes.OBJECT,
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    parameter = schema['paths']['/x/']['get']['parameters'][0]
+    assert 'explode' in parameter
+    assert 'style' in parameter
+    assert parameter['schema']['type'] == 'array'
+
+
+def test_incorrect_foreignkey_type_on_readonly_field(no_warnings):
+    class ReferencingModel(models.Model):
+        id = models.UUIDField(primary_key=True)
+        referenced_model = models.ForeignKey(SimpleModel, on_delete=models.CASCADE)
+        referenced_model_ro = models.ForeignKey(SimpleModel, on_delete=models.CASCADE)
+        referenced_model_m2m = models.ManyToManyField(SimpleModel)
+        referenced_model_m2m_ro = models.ManyToManyField(SimpleModel)
+
+    class ReferencingModelSerializer(serializers.ModelSerializer):
+        indirect_referenced_model_ro = serializers.PrimaryKeyRelatedField(
+            source='referenced_model',
+            read_only=True,
+        )
+
+        class Meta:
+            fields = '__all__'
+            read_only_fields = ['id', 'referenced_model_ro', 'referenced_model_m2m_ro']
+            model = ReferencingModel
+
+    class ReferencingModelViewset(viewsets.ModelViewSet):
+        serializer_class = ReferencingModelSerializer
+        queryset = ReferencingModel.objects.all()
+
+    schema = generate_schema('/x/', ReferencingModelViewset)
+    properties = schema['components']['schemas']['ReferencingModel']['properties']
+
+    assert properties['referenced_model']['type'] == 'integer'
+    assert properties['referenced_model_ro']['type'] == 'integer'
+    assert properties['referenced_model_m2m']['items']['type'] == 'integer'
+    assert properties['referenced_model_m2m_ro']['items']['type'] == 'integer'
+    assert properties['indirect_referenced_model_ro']['type'] == 'integer'
+
+
+@pytest.mark.parametrize(['sorting', 'result'], [
+    (True, ['a', 'b', 'c']),
+    (False, ['b', 'c', 'a']),
+    (lambda x: (x['in'], x['name']), ['b', 'a', 'c']),
+])
+def test_parameter_sorting_setting(no_warnings, sorting, result):
+    @extend_schema(
+        parameters=[OpenApiParameter('b', str, 'header'), OpenApiParameter('c'), OpenApiParameter('a')],
+        responses=OpenApiTypes.FLOAT
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.SORT_OPERATION_PARAMETERS', sorting
+    ):
+        schema = generate_schema('/x/', view_function=view_func)
+        parameters = schema['paths']['/x/']['get']['parameters']
+        assert [p['name'] for p in parameters] == result
+
+
+def test_response_headers_without_response_body(no_warnings):
+    @extend_schema(
+        responses={301: None},
+        tags=["Registration"],
+        parameters=[
+            OpenApiParameter(
+                name="Location",
+                type=OpenApiTypes.URI,
+                location=OpenApiParameter.HEADER,
+                description="/",
+                response=[301]
+            )
+        ]
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert 'Location' in schema['paths']['/x/']['get']['responses']['301']['headers']
+    assert 'content' not in schema['paths']['/x/']['get']['responses']['301']
+
+
+def test_customized_parsers_and_renderers_on_viewset(no_warnings):
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+        parser_classes = [parsers.MultiPartParser]
+
+        def get_renderers(self):
+            if self.action == 'json_in_multi_out':
+                return [renderers.MultiPartRenderer()]
+            else:
+                return [renderers.HTMLFormRenderer()]
+
+        @action(methods=['POST'], detail=False, parser_classes=[parsers.JSONParser])
+        def json_in_multi_out(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', XViewset)
+
+    create_op = schema['paths']['/x/']['post']
+    assert len(create_op['requestBody']['content']) == 1
+    assert 'multipart/form-data' in create_op['requestBody']['content']
+    assert len(create_op['responses']['201']['content']) == 1
+    assert 'text/html' in create_op['responses']['201']['content']
+
+    action_op = schema['paths']['/x/json_in_multi_out/']['post']
+    assert len(action_op['requestBody']['content']) == 1
+    assert 'application/json' in action_op['requestBody']['content']
+    assert len(action_op['responses']['200']['content']) == 1
+    assert 'multipart/form-data' in action_op['responses']['200']['content']
+
+
+def test_technically_unnecessary_serializer_patch(no_warnings):
+    # ideally this extend_schema would not be necessary
+    @extend_schema_view(delete=extend_schema(responses=None))
+    class XAPIView(generics.DestroyAPIView):
+        queryset = SimpleModel.objects.none()
+
+    schema = generate_schema('/x/', view=XAPIView)
+    assert 'No response' in schema['paths']['/x/']['delete']['responses']['204']['description']
+
+
+def test_any_placeholder_on_request_response():
+    @extend_schema_field(OpenApiTypes.ANY)
+    class CustomField(serializers.IntegerField):
+        pass  # pragma: no cover
+
+    class XSerializer(serializers.Serializer):
+        method_field = serializers.SerializerMethodField(help_text='Any')
+        custom_field = CustomField()
+
+        def get_method_field(self, obj) -> typing.Any:
+            return
+
+    @extend_schema(request=typing.Any, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert get_request_schema(schema['paths']['/x/']['post']) == {}
+
+    properties = schema['components']['schemas']['X']['properties']
+    assert properties['custom_field'] == {}
+    assert properties['method_field'] == {'readOnly': True, 'description': 'Any'}
+
+
+def test_categorized_choices(no_warnings):
+    media_choices = [
+        ('Audio', (('vinyl', 'Vinyl'), ('cd', 'CD'))),
+        ('Video', (('vhs', 'VHS Tape'), ('dvd', 'DVD'))),
+        ('unknown', 'Unknown'),
+    ]
+    media_choices_audio = [
+        ('Audio', (('vinyl', 'Vinyl'), ('cd', 'CD'))),
+        ('unknown', 'Unknown'),
+    ]
+
+    class M6(models.Model):
+        cat_choice = models.CharField(max_length=10, choices=media_choices)
+
+    class M6Serializer(serializers.ModelSerializer):
+        audio_choice = serializers.ChoiceField(choices=media_choices_audio)
+
+        class Meta:
+            fields = '__all__'
+            model = M6
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = M6Serializer
+        queryset = M6.objects.none()
+
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
+        {'MediaEnum': media_choices}
+    ):
+        schema = generate_schema('x', XViewset)
+
+    # test base functionality of flattening categories
+    assert schema['components']['schemas']['AudioChoiceEnum']['enum'] == [
+        'vinyl', 'cd', 'unknown'
+    ]
+    # test override match works synchronously
+    assert schema['components']['schemas']['MediaEnum']['enum'] == [
+        'vinyl', 'cd', 'vhs', 'dvd', 'unknown'
+    ]
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX', '/api/v[0-9]/')
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX_TRIM', True)
+def test_schema_path_prefix_trim(no_warnings):
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/api/v1/x/', view_function=view_func)
+    assert '/x/' in schema['paths']
+
+
+def test_nameless_root_endpoint(no_warnings):
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/', view_function=view_func)
+    assert schema['paths']['/']['post']['operationId'] == 'root_create'
+
+
+def test_list_and_pagination_on_non_2XX_schemas(no_warnings):
+    @extend_schema_view(
+        list=extend_schema(responses={
+            200: SimpleSerializer,
+            400: {'type': 'object', 'properties': {'code': {'type': 'string'}}},
+            403: OpenApiTypes.OBJECT
+        })
+    )
+    class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+        pagination_class = pagination.LimitOffsetPagination
+
+    schema = generate_schema('x', XViewset)
+    assert get_response_schema(schema['paths']['/x/']['get']) == {
+        '$ref': '#/components/schemas/PaginatedSimpleList'
+    }
+    assert get_response_schema(schema['paths']['/x/']['get'], '400') == {
+        'type': 'object', 'properties': {'code': {'type': 'string'}}
+    }
+    assert get_response_schema(schema['paths']['/x/']['get'], '403') == {
+        'type': 'object', 'additionalProperties': {}
+    }
+
+
+def test_openapi_response_wrapper(no_warnings):
+    @extend_schema_view(
+        create=extend_schema(description='creation description', responses={
+            201: OpenApiResponse(response=int, description='creation with int response.'),
+            222: OpenApiResponse(description='creation with no response.'),
+            223: None,
+            224: int,
+        }),
+        list=extend_schema(responses=OpenApiResponse(
+            response=OpenApiTypes.INT,
+            description='a list that actually returns numbers',
+            examples=[OpenApiExample('One', 1), OpenApiExample('Two', 2)],
+        )),
+    )
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/']['get']['responses'] == {
+        '200': {
+            'content': {
+                'application/json': {
+                    'schema': {'type': 'integer'},
+                    'examples': {'One': {'value': 1}, 'Two': {'value': 2}}
+                }
+            },
+            'description': 'a list that actually returns numbers'
+        }
+    }
+    assert schema['paths']['/x/']['post']['responses'] == {
+        '201': {
+            'content': {'application/json': {'schema': {'type': 'integer'}}},
+            'description': 'creation with int response.'
+        },
+        '222': {'description': 'creation with no response.'},
+        '223': {'description': 'No response body'},
+        '224': {'content': {'application/json': {'schema': {'type': 'integer'}}}, 'description': ''}
+    }
+
+
+def test_prefix_estimation_with_re_special_chars_as_literals_in_path(no_warnings):
+    # make sure prefix estimation logic does not choke on reserved RE chars
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func1(request, format=None):
+        pass  # pragma: no cover
+
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func2(request, format=None):
+        pass  # pragma: no cover
+
+    generator = SchemaGenerator(patterns=[
+        path('/\\/x/', view_func1),
+        path('/\\/y/', view_func2)
+    ])
+    schema = generator.get_schema(request=None, public=True)
+    assert schema['paths']['/\\/x/']['post']['tags'] == ['x']

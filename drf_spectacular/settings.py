@@ -4,9 +4,16 @@ from django.conf import settings
 from rest_framework.settings import APISettings
 
 SPECTACULAR_DEFAULTS: Dict[str, Any] = {
-    # path prefix is used for tagging the discovered operations.
-    # use '/api/v[0-9]' for tagging apis like '/api/v1/albums' with ['albums']
-    'SCHEMA_PATH_PREFIX': r'',
+    # A regex specifying the common denominator for all operation paths. If
+    # SCHEMA_PATH_PREFIX is set to None, drf-spectacular will attempt to estimate
+    # a common prefix. use '' to disable.
+    # Mainly used for tag extraction, where paths like '/api/v1/albums' with
+    # a SCHEMA_PATH_PREFIX regex '/api/v[0-9]' would yield the tag 'albums'.
+    'SCHEMA_PATH_PREFIX': None,
+    # Remove matching SCHEMA_PATH_PREFIX from operation path. Usually used in
+    # conjunction with appended prefixes in SERVERS.
+    'SCHEMA_PATH_PREFIX_TRIM': False,
+
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
     # Schema generation parameters to influence how components are constructed.
@@ -20,21 +27,24 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Aid client generator targets that have trouble with read-only properties.
     'COMPONENT_NO_READ_ONLY_REQUIRED': False,
 
-    # Configuration for serving the schema with SpectacularAPIView
+    # Configuration for serving a schema subset with SpectacularAPIView
     'SERVE_URLCONF': None,
     # complete public schema or a subset based on the requesting user
     'SERVE_PUBLIC': True,
-    # is the
+    # include schema enpoint into schema
     'SERVE_INCLUDE_SCHEMA': True,
+    # list of authentication/permission classes for spectacular's views.
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    # None will default to DRF's AUTHENTICATION_CLASSES
+    'SERVE_AUTHENTICATION': None,
 
     # Dictionary of configurations to pass to the SwaggerUI({ ... })
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
     },
-    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.35.1',
-    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.35.1/favicon-32x32.png',
+    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.44.0',
+    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.44.0/favicon-32x32.png',
 
     # Append OpenAPI objects to path and components in addition to the generated objects
     'APPEND_PATHS': {},
@@ -74,6 +84,18 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Camelize names like operationId and path parameter names
     'CAMELIZE_NAMES': False,
 
+    # Determines if and how free-form 'additionalProperties' should be emitted in the schema. Some
+    # code generator targets are sensitive to this. None disables generic 'additionalProperties'.
+    # allowed values are 'dict', 'bool', None
+    'GENERIC_ADDITIONAL_PROPERTIES': 'dict',
+
+    # Determines whether operation parameters should be sorted alphanumerically or just in
+    # the order they arrived. Accepts either True, False, or a callable for sort's key arg.
+    'SORT_OPERATION_PARAMETERS': True,
+
+    # Option for turning off error and warn messages
+    'DISABLE_ERRORS_AND_WARNINGS': False,
+
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
     'TITLE': '',
@@ -83,6 +105,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'CONTACT': {},
     # Optional: MUST contain "name", MAY contain URL
     'LICENSE': {},
+    # Statically set schema version. May also be an empty string. When used together with
+    # view versioning, will become '0.0.0 (v2)' for 'v2' versioned requests.
+    # Set VERSION to None if only the request version should be rendered.
     'VERSION': '0.0.0',
     # Optional list of servers.
     # Each entry MUST contain "url", MAY contain "description", "variables"
@@ -91,6 +116,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'TAGS': [],
     # Optional: MUST contain 'url', may contain "description"
     'EXTERNAL_DOCS': {},
+
+    # Arbitrary specification extensions attached to the schema's info object.
+    # https://swagger.io/specification/#specification-extensions
+    'EXTENSIONS_INFO': {},
 
     # Oauth2 related settings. used for example by django-oauth2-toolkit.
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#oauth-flows-object
@@ -104,11 +133,13 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 IMPORT_STRINGS = [
     'SCHEMA_AUTHENTICATION_CLASSES',
     'DEFAULT_GENERATOR_CLASS',
+    'SERVE_AUTHENTICATION',
     'SERVE_PERMISSIONS',
     'POSTPROCESSING_HOOKS',
     'PREPROCESSING_HOOKS',
     'GET_LIB_DOC_EXCLUDES',
     'GET_MOCK_REQUEST',
+    'SORT_OPERATION_PARAMETERS',
 ]
 
 spectacular_settings = APISettings(

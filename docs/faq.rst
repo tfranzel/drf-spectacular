@@ -43,6 +43,7 @@ under varying situations. In those cases it is best to override what the introsp
 decuded and state explicitly what is to be expected.
 Work through the steps in :ref:`customization` to adapt your schema.
 
+
 I get duplicated operations with a ``{format}``-suffix
 ------------------------------------------------------
 Your app likely uses DRF's ``format_suffix_patterns``. If those operations are
@@ -152,3 +153,31 @@ not just components with ``FileFields``.
 Also consider explicitly setting ``parser_classes = [parsers.MultiPartParser]`` (or any file compatible parser)
 on your `View` or write a custom `get_parser_classes`. These fields do not work with the default ``JsonParser``
 and that fact should be represented in the schema.
+
+
+I'm using ``@action(detail=False)`` but the response schema is not a list
+-------------------------------------------------------------------------
+
+``detail=True/False`` only specifies whether the action should be routed at ``x/{id}/action`` or ``x/action``.
+The ``detail`` parameter in itself makes no statement about the action's response. Also note that the default
+for underspecified endpoints is a non-list response. To signal a listed response, you can use
+``@extend_schema(response=XSerializer(many=True))``.
+
+
+Using ``@extend_schema`` on ``APIView`` has no effect
+-----------------------------------------------------
+
+``@extend_schema`` needs to be applied to the entrypoint method of the view. For views derived from ``Viewset``,
+these are methods like ``retrieve``, ``list``, ``create``. For ``APIView`` based views, these are ``get``, ``post``,
+``create``. This confusion commonly occurs while using convenience classes like ``ListAPIView``. ``ListAPIView`` does
+in fact have a ``list`` method (via mixin), but the actual entrypoint is still the ``get`` method, and the ``list``
+call is proxied through the entrypoint.
+
+
+Where should i put my extensions? / my extensions are not detected
+------------------------------------------------------------------
+
+The extensions register themselves automatically. Just be sure that the python interpreter sees them at least once.
+To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your ``PROJECT/__init__.py``
+(same directory as ``settings.py`` and ``urls.py``) with ``import PROJECT.schema``. Please do not import the file in
+``settings.py`` as this may potentially lead to cyclic import issues.

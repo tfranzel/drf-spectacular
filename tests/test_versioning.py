@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 import yaml
 from django.conf.urls import include
@@ -224,3 +226,18 @@ def test_spectacular_view_accept_header_versioning(no_warnings, version):
 def test_spectacular_ui_view_versioning(no_warnings, url, schema_url):
     response = APIClient().get(url)
     assert schema_url in response.content
+
+
+@pytest.mark.urls(__name__)
+def test_spectacular_versioning_info_object_variations(no_warnings):
+    # with default VERSION 0.0.0
+    response = APIClient().get('/api/nv/v2/schema/')
+    assert b'version: 0.0.0 (v2)\n' in response.content
+    response = APIClient().get('/api/schema/')
+    assert b'version: 0.0.0\n' in response.content
+
+    with mock.patch('drf_spectacular.settings.spectacular_settings.VERSION', None):
+        response = APIClient().get('/api/nv/v2/schema/')
+        assert b'version: v2\n' in response.content
+        response = APIClient().get('/api/schema/')
+        assert b"version: ''\n" in response.content

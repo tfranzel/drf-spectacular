@@ -19,6 +19,7 @@ def validate_schema(api_schema):
         openapi3_schema_spec = json.load(fh)
 
     # coerce any remnants of objects to basic types
-    api_schema = json.loads(json.dumps(api_schema))
+    from drf_spectacular.renderers import OpenApiJsonRenderer
+    api_schema = json.loads(OpenApiJsonRenderer().render(api_schema))
 
     jsonschema.validate(instance=api_schema, schema=openapi3_schema_spec)
