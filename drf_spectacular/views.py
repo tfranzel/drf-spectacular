@@ -67,7 +67,10 @@ class SpectacularAPIView(APIView):
             return self._get_schema_response(request)
 
     def _get_schema_response(self, request):
-        generator = self.generator_class(urlconf=self.urlconf, api_version=self.api_version)
+        # version specified as parameter to the view always takes precedence. after
+        # that we try to source version through the schema view's own versioning_class.
+        version = self.api_version or request.version
+        generator = self.generator_class(urlconf=self.urlconf, api_version=version)
         return Response(generator.get_schema(request=request, public=self.serve_public))
 
 

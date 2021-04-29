@@ -105,7 +105,8 @@ class SchemaGenerator(BaseSchemaGenerator):
             original_cls = callback.cls
             callback.cls = override_view.view_replacement()
 
-        view = super().create_view(callback, method, request)
+        # we refrain from passing request and deal with it ourselves in parse()
+        view = super().create_view(callback, method, None)
 
         # drf-yasg compatibility feature. makes the view aware that we are running
         # schema generation and not a real request.
@@ -160,13 +161,13 @@ class SchemaGenerator(BaseSchemaGenerator):
             self.inspector = self.endpoint_inspector_cls(self.patterns, self.urlconf)
             self.endpoints = self.inspector.get_api_endpoints()
 
-    def _get_paths_and_endpoints(self, request):
+    def _get_paths_and_endpoints(self):
         """
         Generate (path, method, view) given (path, method, callback) for paths.
         """
         view_endpoints = []
         for path, path_regex, method, callback in self.endpoints:
-            view = self.create_view(callback, method, request)
+            view = self.create_view(callback, method)
             path = self.coerce_path(path, method, view)
             view_endpoints.append((path, path_regex, method, view))
 
@@ -176,7 +177,7 @@ class SchemaGenerator(BaseSchemaGenerator):
         """ Iterate endpoints generating per method path operations. """
         result = {}
         self._initialise_endpoints()
-        endpoints = self._get_paths_and_endpoints(None if public else input_request)
+        endpoints = self._get_paths_and_endpoints()
 
         if spectacular_settings.SCHEMA_PATH_PREFIX is None:
             # estimate common path prefix if none was given. only use it if we encountered more
@@ -193,17 +194,10 @@ class SchemaGenerator(BaseSchemaGenerator):
             path_prefix = '^' + path_prefix  # make sure regex only matches from the start
 
         for path, path_regex, method, view in endpoints:
-            if not self.has_view_permissions(path, method, view):
+            view.request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, input_request)
+
+            if not (public or self.has_view_permissions(path, method, view)):
                 continue
-
-            if input_request:
-                request = input_request
-            else:
-                # mocked request to allow certain operations in get_queryset and get_serializer[_class]
-                # without exceptions being raised due to no request.
-                request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, input_request)
-
-            view.request = request
 
             if view.versioning_class and not is_versioning_supported(view.versioning_class):
                 warn(
@@ -212,8 +206,7 @@ class SchemaGenerator(BaseSchemaGenerator):
                 )
             elif view.versioning_class:
                 version = (
-                    self.api_version  # generator was explicitly versioned
-                    or getattr(request, 'version', None)  # incoming request was versioned
+                    self.api_version  # explicit version from CLI, SpecView or SpecView request
                     or view.versioning_class.default_version  # fallback
                 )
                 if not version:

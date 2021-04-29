@@ -1,4 +1,5 @@
 import difflib
+import json
 import os
 
 from drf_spectacular.validation import validate_schema
@@ -35,15 +36,21 @@ def assert_schema(schema, reference_filename, transforms=None):
     for t in transforms or []:
         generated = t(generated)
 
-    diff = difflib.unified_diff(
-        expected.splitlines(True),
-        generated.splitlines(True),
-    )
-    diff = ''.join(diff)
-    assert expected == generated and not diff, diff
-
+    assert_equal(expected, generated)
     # this is more a less a sanity check as checked-in schemas should be valid anyhow
     validate_schema(schema)
+
+
+def assert_equal(a, b):
+    if not isinstance(a, str) or isinstance(b, str):
+        a = json.dumps(a, indent=4)
+        b = json.dumps(b, indent=4)
+    diff = difflib.unified_diff(
+        a.splitlines(True),
+        b.splitlines(True),
+    )
+    diff = ''.join(diff)
+    assert a == b and not diff, diff
 
 
 def generate_schema(route, viewset=None, view=None, view_function=None, patterns=None):
