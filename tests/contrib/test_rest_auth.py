@@ -5,8 +5,7 @@ from unittest import mock
 import pytest
 from django.urls import include, path
 
-from drf_spectacular.generators import SchemaGenerator
-from tests import assert_schema
+from tests import assert_schema, generate_schema
 
 transforms = [
     # User model first_name differences
@@ -21,10 +20,7 @@ def test_rest_auth(no_warnings):
         path('rest-auth/', include('dj_rest_auth.urls')),
         path('rest-auth/registration/', include('dj_rest_auth.registration.urls')),
     ]
-
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-
+    schema = generate_schema(None, patterns=urlpatterns)
     assert_schema(
         schema, 'tests/contrib/test_rest_auth.yml', transforms=transforms
     )
@@ -44,8 +40,7 @@ def test_rest_auth_token(no_warnings, settings):
         path('rest-auth/registration/', include('dj_rest_auth.registration.urls')),
     ]
 
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
+    schema = generate_schema(None, patterns=urlpatterns)
 
     assert_schema(
         schema, 'tests/contrib/test_rest_auth_token.yml', transforms=transforms

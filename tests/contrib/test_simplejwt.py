@@ -2,8 +2,7 @@ import pytest
 from django.urls import path
 from rest_framework import mixins, routers, serializers, viewsets
 
-from drf_spectacular.generators import SchemaGenerator
-from tests import assert_schema
+from tests import assert_schema, generate_schema
 
 try:
     from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -36,7 +35,5 @@ def test_simplejwt(no_warnings):
         path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     ]
 
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-
+    schema = generate_schema(None, patterns=urlpatterns)
     assert_schema(schema, 'tests/contrib/test_simplejwt.yml')

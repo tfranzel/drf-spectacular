@@ -2,8 +2,7 @@ import pytest
 from django.urls import path
 from rest_framework import mixins, routers, serializers, viewsets
 
-from drf_spectacular.generators import SchemaGenerator
-from tests import assert_schema
+from tests import assert_schema, generate_schema
 
 try:
     from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -32,7 +31,6 @@ def test_drf_jwt(no_warnings):
         path('api-token-auth/', obtain_jwt_token, name='get_token'),
     ]
 
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
+    schema = generate_schema(None, patterns=urlpatterns)
 
     assert_schema(schema, 'tests/contrib/test_drf_jwt.yml')

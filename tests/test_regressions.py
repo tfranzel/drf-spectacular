@@ -17,7 +17,6 @@ from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
 from drf_spectacular.extensions import OpenApiSerializerExtension
-from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.hooks import preprocess_exclude_path_format
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.renderers import OpenApiYamlRenderer
@@ -26,7 +25,6 @@ from drf_spectacular.utils import (
     OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_field,
     extend_schema_serializer, extend_schema_view, inline_serializer,
 )
-from drf_spectacular.validation import validate_schema
 from tests import generate_schema, get_request_schema, get_response_schema
 from tests.models import SimpleModel, SimpleSerializer
 
@@ -233,12 +231,10 @@ def test_free_form_responses(no_warnings):
         def get(self, request):
             pass  # pragma: no cover
 
-    generator = SchemaGenerator(patterns=[
+    generate_schema(None, patterns=[
         re_path(r'^x$', XAPIView.as_view(), name='x'),
         re_path(r'^y$', YAPIView.as_view(), name='y'),
     ])
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
 
 
 @mock.patch(
@@ -254,12 +250,10 @@ def test_append_extra_components(no_warnings):
         def get(self, request):
             pass  # pragma: no cover
 
-    generator = SchemaGenerator(patterns=[
+    schema = generate_schema(None, patterns=[
         re_path(r'^x$', XAPIView.as_view(), name='x'),
     ])
-    schema = generator.get_schema(request=None, public=True)
     assert len(schema['components']['schemas']) == 2
-    validate_schema(schema)
 
 
 def test_serializer_retrieval_from_view(no_warnings):
@@ -285,9 +279,7 @@ def test_serializer_retrieval_from_view(no_warnings):
     router = routers.SimpleRouter()
     router.register('x1', X1Viewset, basename='x1')
     router.register('x2', X2Viewset, basename='x2')
-    generator = SchemaGenerator(patterns=router.urls)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=router.urls)
     assert len(schema['components']['schemas']) == 2
     assert 'Unused' not in schema['components']['schemas']
 
@@ -493,9 +485,7 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
     ]
     urlpatterns = format_suffix_patterns(urlpatterns, allowed=allowed)
 
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=urlpatterns)
 
     # Only seven alternatives are created, as /pi/{format} would be
     # /pi/.json which is not supported.
@@ -535,9 +525,7 @@ def test_drf_format_suffix_parameter_exclude(no_warnings):
     urlpatterns = format_suffix_patterns([
         path('pi', view_func),
     ])
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=urlpatterns)
     assert list(schema['paths'].keys()) == ['/pi']
 
 
@@ -548,9 +536,7 @@ def test_regex_path_parameter_discovery(no_warnings):
         pass  # pragma: no cover
 
     urlpatterns = [re_path(r'^/pi/<int:precision>', pi)]
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=urlpatterns)
     parameter = schema['paths']['/pi/{precision}']['get']['parameters'][0]
     assert parameter['name'] == 'precision'
     assert parameter['in'] == 'path'
@@ -955,9 +941,7 @@ def test_schema_contains_only_urlpatterns_first_match(no_warnings):
         path('api/x/', XAPIView.as_view()),  # only first occurrence is used
         path('api/x/', YAPIView.as_view()),
     ]
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=urlpatterns)
     assert len(schema['components']['schemas']) == 1
     assert 'X' in schema['components']['schemas']
     operation = schema['paths']['/api/x/']['get']
@@ -1206,9 +1190,7 @@ def test_pagination_reusage(no_warnings):
     router = routers.SimpleRouter()
     router.register('x', XViewset, basename='x')
     router.register('y', YViewset, basename='y')
-    generator = SchemaGenerator(patterns=router.urls)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    generate_schema(None, patterns=router.urls)
 
 
 def test_pagination_disabled_on_action(no_warnings):
@@ -1266,9 +1248,7 @@ def test_basic_viewset_without_queryset_with_explicit_pk_typing(no_warnings):
     urlpatterns = [
         path("api/<path:some_var>/<uuid:pk>/", XViewset.as_view({"get": "retrieve"}))
     ]
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=urlpatterns)
     operation = schema['paths']['/api/{some_var}/{id}/']['get']
     assert operation['parameters'][0]['name'] == 'id'
     assert operation['parameters'][0]['schema']['format'] == 'uuid'
@@ -1472,7 +1452,7 @@ def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, 
     router = routers.SimpleRouter()
     router.register(path, XViewset)
 
-    schema = SchemaGenerator(patterns=router.urls).get_schema(request=None, public=True)
+    schema = generate_schema(None, patterns=router.urls)
     assert '/x/{related_field}/' in schema['paths']
     assert '/x/{related_field}/{id}/' in schema['paths']
 
@@ -1811,9 +1791,8 @@ def test_prefix_estimation_with_re_special_chars_as_literals_in_path(no_warnings
     def view_func2(request, format=None):
         pass  # pragma: no cover
 
-    generator = SchemaGenerator(patterns=[
+    schema = generate_schema(None, patterns=[
         path('/\\/x/', view_func1),
         path('/\\/y/', view_func2)
     ])
-    schema = generator.get_schema(request=None, public=True)
     assert schema['paths']['/\\/x/']['post']['tags'] == ['x']
