@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 import typing
 from datetime import datetime
@@ -11,7 +12,8 @@ from rest_framework import generics, serializers
 
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
-    detype_pattern, follow_field_source, force_instance, is_field, is_serializer, resolve_type_hint,
+    analyze_named_regex_pattern, detype_pattern, follow_field_source, force_instance, is_field,
+    is_serializer, resolve_type_hint,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
@@ -192,3 +194,17 @@ def test_type_hint_extraction(no_warnings, type_hint, ref_schema):
         serializer_class = XSerializer
 
     validate_schema(generate_schema('/x', view=XView))
+
+
+@pytest.mark.parametrize(['pattern', 'output'], [
+    ('(?P<t1><,()(())(),)', {'t1': '<,()(())(),'}),
+    (r'(?P<t1>.\\)', {'t1': r'.\\'}),
+    (r'(?P<t1>.\\\\)', {'t1': r'.\\\\'}),
+    (r'(?P<t1>.\))', {'t1': r'.\)'}),
+    (r'(?P<t1>)', {'t1': r''}),
+    (r'(?P<t1>.[\(]{2})', {'t1': r'.[\(]{2}'}),
+    (r'(?P<t1>(.))/\(t/(?P<t2>\){2}()\({2}().*)', {'t1': '(.)', 't2': r'\){2}()\({2}().*'}),
+])
+def test_analyze_named_regex_pattern(no_warnings, pattern, output):
+    re.compile(pattern)  # check validity of regex
+    assert analyze_named_regex_pattern(pattern) == output

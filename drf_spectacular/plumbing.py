@@ -735,6 +735,51 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
     return path
 
 
+def analyze_named_regex_pattern(path):
+    """ safely extract named groups and their pattern from given regex pattern """
+    result = {}
+    stack = 0
+    name_capture, name_buffer = False, ''
+    regex_capture, regex_buffer = False, ''
+    i = 0
+    while i < len(path):
+        # estimate state at position i
+        skip = False
+        if path[i] == '\\':
+            ff = 2
+        elif path[i:i + 4] == '(?P<':
+            skip = True
+            name_capture = True
+            ff = 4
+        elif path[i] in '(':
+            stack += 1
+            ff = 1
+        elif path[i] == '>' and name_capture:
+            assert name_buffer
+            name_capture = False
+            regex_capture = True
+            skip = True
+            ff = 1
+        elif path[i] in ')':
+            if regex_capture and not stack:
+                regex_capture = False
+                result[name_buffer] = regex_buffer
+                name_buffer, regex_buffer = '', ''
+            else:
+                stack -= 1
+            ff = 1
+        else:
+            ff = 1
+        # fill buffer based on state
+        if name_capture and not skip:
+            name_buffer += path[i:i + ff]
+        elif regex_capture and not skip:
+            regex_buffer += path[i:i + ff]
+        i += ff
+    assert not stack
+    return result
+
+
 def detype_pattern(pattern):
     """
     return an equivalent pattern that accepts arbitrary values for path parameters.
@@ -763,8 +808,14 @@ def detype_pattern(pattern):
             is_endpoint=pattern._is_endpoint
         )
     elif isinstance(pattern, RegexPattern):
+        detyped_regex = pattern._regex
+        for name, regex in analyze_named_regex_pattern(pattern._regex).items():
+            detyped_regex = detyped_regex.replace(
+                f'(?P<{name}>{regex})',
+                f'(?P<{name}>[^/]+)',
+            )
         return RegexPattern(
-            regex=re.sub(r'\(\?P<(\w+)>.+?\)', r'(?P<\1>[^/]+)', pattern._regex),
+            regex=detyped_regex,
             name=pattern.name,
             is_endpoint=pattern._is_endpoint
         )

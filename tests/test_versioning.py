@@ -1,8 +1,10 @@
+import re
 from unittest import mock
 
 import pytest
 import yaml
 from django.conf.urls import include
+from django.db import models
 from django.urls import path, re_path
 from rest_framework import generics, mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient, APIRequestFactory
@@ -100,28 +102,43 @@ def test_namespace_versioning(no_warnings, viewset_cls, version):
     assert_schema(schema, f'tests/test_versioning_{version}.yml')
 
 
-def test_namespace_versioning_urlpatterns_simplification(no_warnings):
+@pytest.mark.parametrize(['path_func', 'path_str', 'pattern', ], [
+    (path, '{id}/', '<int:pk>/'),
+    (path, '{id}/', '<pk>/'),
+    (re_path, '{id}/', r'(?P<pk>[0-9A-Fa-f-]+)/'),
+    (re_path, '{id}/', r'(?P<pk>[^/]+)/$'),
+    (re_path, '{id}/', r'(?P<pk>[a-z]{2}(-[a-z]{2})?)/'),
+    (re_path, '{field}/t/{id}/', r'^(?P<field>[^/.]+)/t/(?P<pk>[^/.]+)/'),
+    (re_path, '{field}/t/{id}/', r'^(?P<field>[A-Z\(\)]+)/t/(?P<pk>[^/.]+)/'),
+])
+def test_namespace_versioning_urlpatterns_simplification(no_warnings, path_func, path_str, pattern):
+    class LookupModel(models.Model):
+        field = models.IntegerField()
+
+    class LookupSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = LookupModel
+            fields = '__all__'
+
     class NamespaceVersioningAPIView(generics.RetrieveUpdateDestroyAPIView):
         versioning_class = NamespaceVersioning
-        serializer_class = Xv1Serializer
-        queryset = SimpleModel.objects.all()
+        serializer_class = LookupSerializer
+        queryset = LookupModel.objects.all()
 
-    urls = (
-        path('x/<int:pk>/', NamespaceVersioningAPIView.as_view()),
-        path('y/<pk>/', NamespaceVersioningAPIView.as_view()),
-        re_path('z/(?P<pk>[0-9A-Fa-f-]+)/', NamespaceVersioningAPIView.as_view()),
-    )
+    # make sure regex are valid
+    if path_func == re_path:
+        re.compile(pattern)
+
+    patterns_v1 = [path_func(pattern, NamespaceVersioningAPIView.as_view())]
     generator = SchemaGenerator(
-        patterns=[path('v1/<int:some_param>/', include((urls, 'v1'))), ],
+        patterns=[path('v1/<int:some_param>/', include((patterns_v1, 'v1')))],
         api_version='v1',
     )
     schema = generator.get_schema(request=None, public=True)
 
-    for s in ['x', 'y', 'z']:
-        parameters = schema['paths'][f'/v1/{{some_param}}/{s}/{{id}}/']['get']['parameters']
-        parameters = {p['name']: p for p in parameters}
-        assert parameters['id']['schema']['type'] == 'integer'
-        assert parameters['some_param']['schema']['type'] == 'integer'
+    parameters = schema['paths']['/v1/{some_param}/' + path_str]['get']['parameters']
+    for p in parameters:
+        assert p['schema']['type'] == 'integer'
 
 
 @pytest.mark.parametrize('viewset_cls', [AcceptHeaderVersioningViewset, AcceptHeaderVersioningViewset2])
