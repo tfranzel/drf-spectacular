@@ -78,6 +78,20 @@ class SchemaGenerator(BaseSchemaGenerator):
         self.inspector = None
         super().__init__(*args, **kwargs)
 
+    def coerce_path(self, path, method, view):
+        """
+        Customized coerce_path which also considers the `_pk` suffix in URL paths
+        of nested routers.
+        """
+        path = super().coerce_path(path, method, view)  # take care of {pk}
+        model = getattr(getattr(view, 'queryset', None), 'model', None)
+        if not self.coerce_path_pk or not model:
+            return path
+        for match in re.findall(r'{(\w+)_pk}', path):
+            if hasattr(model, match):
+                path = path.replace(f'{match}_pk', f'{match}_id')
+        return path
+
     def create_view(self, callback, method, request=None):
         """
         customized create_view which is called when all routes are traversed. part of this

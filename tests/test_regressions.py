@@ -1796,3 +1796,34 @@ def test_prefix_estimation_with_re_special_chars_as_literals_in_path(no_warnings
         path('/\\/y/', view_func2)
     ])
     assert schema['paths']['/\\/x/']['post']['tags'] == ['x']
+
+
+def test_nested_router_urls(no_warnings):
+    # somewhat tailored to drf-nested-routers but also serves a generic purpose
+    # as "id" coercion also makes sense for "_pk" suffixes.
+    class RouteNestedMaildropModel(models.Model):
+        renamed_id = models.IntegerField(primary_key=True)
+
+    class RouteNestedClientModel(models.Model):
+        id = models.UUIDField(primary_key=True)
+
+    class RouteNestedModel(models.Model):
+        client = models.ForeignKey(RouteNestedClientModel, on_delete=models.CASCADE)
+        maildrop = models.ForeignKey(RouteNestedMaildropModel, on_delete=models.CASCADE)
+
+    class RouteNestedViewset(viewsets.ModelViewSet):
+        queryset = RouteNestedModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    urlpatterns = [
+        path(
+            '/clients/{client_pk}/maildrops/{maildrop_pk}/recipients/{pk}/',
+            RouteNestedViewset.as_view({'get': 'retrieve'})
+        ),
+    ]
+    schema = generate_schema(None, patterns=urlpatterns)
+    operation = schema['paths']['/clients/{client_id}/maildrops/{maildrop_id}/recipients/{id}/']['get']
+    assert operation['parameters'][0]['name'] == 'client_id'
+    assert operation['parameters'][0]['schema'] == {'format': 'uuid', 'type': 'string'}
+    assert operation['parameters'][2]['name'] == 'maildrop_id'
+    assert operation['parameters'][2]['schema'] == {'type': 'integer'}
