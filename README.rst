@@ -38,7 +38,7 @@ Features
         - `SimpleJWT <https://github.com/SimpleJWT/django-rest-framework-simplejwt>`_
         - `DjangoOAuthToolkit <https://github.com/jazzband/django-oauth-toolkit>`_
         - `djangorestframework-jwt <https://github.com/jpadilla/django-rest-framework-jwt>`_ (tested fork `drf-jwt <https://github.com/Styria-Digital/django-rest-framework-jwt>`_)
-        - `dj-rest-auth <https://github.com/jazzband/dj-rest-auth>`_ (maintained fork of `django-rest-auth <https://github.com/Tivix/django-rest-auth>`_)
+        - `dj-rest-auth <https://github.com/iMerica/dj-rest-auth>`_ (maintained fork of `django-rest-auth <https://github.com/Tivix/django-rest-auth>`_)
         - `djangorestframework-camel-case <https://github.com/vbabiy/djangorestframework-camel-case>`_ (via postprocessing hook ``camelize_serializer_fields``)
         - `django-filter <https://github.com/carltongibson/django-filter>`_
 
@@ -54,8 +54,8 @@ Requirements
 ------------
 
 -  Python >= 3.6
--  Django (2.2, 3.0, 3.1)
--  Django REST Framework (3.10, 3.11)
+-  Django (2.2, 3.1, 3.2)
+-  Django REST Framework (3.10, 3.11, 3.12)
 
 Installation
 ------------
@@ -76,13 +76,26 @@ then add drf-spectacular to installed apps in ``settings.py``
     ]
 
 
-and finally register our spectacular AutoSchema with DRF
+and finally register our spectacular AutoSchema with DRF.
 
 .. code:: python
 
     REST_FRAMEWORK = {
         # YOUR SETTINGS
         'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    }
+
+drf-spectacular ships with sane `default settings <https://drf-spectacular.readthedocs.io/en/latest/settings.html>`_
+that should work reasonably well out of the box. It is not necessary to
+specify any settings, but we comment to specify at least some metadata.
+
+.. code:: python
+
+    SPECTACULAR_SETTINGS = {
+        'TITLE': 'Your Project API',
+        'DESCRIPTION': 'Your project description',
+        'VERSION': '1.0.0',
+        # OTHER SETTINGS
     }
 
 Release management
