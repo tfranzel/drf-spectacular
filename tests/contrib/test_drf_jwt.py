@@ -6,7 +6,6 @@ from tests import assert_schema, generate_schema
 
 try:
     from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-    from rest_framework_jwt.views import obtain_jwt_token
 except ImportError:
     JSONWebTokenAuthentication = None
 
@@ -23,6 +22,8 @@ class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 @pytest.mark.contrib('rest_framework_jwt')
 def test_drf_jwt(no_warnings):
+    from rest_framework_jwt.views import obtain_jwt_token
+
     router = routers.SimpleRouter()
     router.register('x', XViewset, basename="x")
 
