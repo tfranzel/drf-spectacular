@@ -160,6 +160,9 @@ class SpectacularRedocView(APIView):
         schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
         schema_url = set_query_parameters(schema_url, lang=request.GET.get('lang'))
         return Response(
-            {'schema_url': schema_url},
+            data={
+                'dist': spectacular_settings.REDOC_DIST,
+                'schema_url': schema_url,
+            },
             template_name=self.template_name
         )

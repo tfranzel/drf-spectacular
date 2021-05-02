@@ -46,6 +46,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.44.0',
     'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.44.0/favicon-32x32.png',
 
+    'REDOC_DIST': '//cdn.jsdelivr.net/npm/redoc@next',
+
     # Append OpenAPI objects to path and components in addition to the generated objects
     'APPEND_PATHS': {},
     'APPEND_COMPONENTS': {},
