@@ -226,11 +226,14 @@ def test_spectacular_view_versioning(no_warnings, url, path_count):
 @pytest.mark.parametrize('version', ['v1', 'v2'])
 @pytest.mark.urls(__name__)
 def test_spectacular_view_accept_header_versioning(no_warnings, version):
-    response = APIClient().get('/api/ahv/schema/', HTTP_ACCEPT='application/json; version={version}')
-    assert response.status_code == 200
+    response = APIClient().get(
+        '/api/ahv/schema/', HTTP_ACCEPT=f'application/json; version={version}'
+    )
+    assert response.status_code == 200, response.content
     schema = yaml.load(response.content, Loader=yaml.SafeLoader)
     validate_schema(schema)
-    assert len(schema['paths']) == 6
+    assert schema['info']['version'] == f'0.0.0 ({version})'
+    assert len(schema['paths']) == 8
 
 
 @pytest.mark.parametrize(['url', 'schema_url'], [
