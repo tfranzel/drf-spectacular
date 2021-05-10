@@ -1,6 +1,27 @@
 Changelog
 =========
 
+0.16.0 (2021-05-10)
+-------------------
+
+- add redoc dist setting
+- bugfix mock request asymmetry `#370 <https://github.com/tfranzel/drf-spectacular/issues/370>`_ `#250 <https://github.com/tfranzel/drf-spectacular/issues/250>`_
+- refactor urlpattern simplification `#373 <https://github.com/tfranzel/drf-spectacular/issues/373>`_ `#168 <https://github.com/tfranzel/drf-spectacular/issues/168>`_
+- include relation PKs into SCHEMA_COERCE_PATH_PK handling `#251 <https://github.com/tfranzel/drf-spectacular/issues/251>`_
+- allow PolymorphicProxySerializer to be simple 'oneOf'
+- bugfix incorrect PolymorphicProxySerializer warning on extend_schema_field `#263 <https://github.com/tfranzel/drf-spectacular/issues/263>`_
+- add break-out option for SerializerFieldExtension
+- Modify urls for nested routers [Matthias Erll]
+
+Breaking changes / important additions:
+
+- Revamped handling of mocked requests. Now ``GET_MOCK_REQUEST`` is always called, not just for offline schema generation.
+  In case there is a real request available, we carry over headers and authetication. If you use your own implementation,
+  you may want to inspect the new default implementation.
+- NamespaceVersioning: switched path variable substitution from regex to custom state machine due to parethesis counting issue.
+- Improved implicit support for `drf-nested-routers <https://github.com/alanjds/drf-nested-routers>`_
+- Added some convenience options for plain ``oneOf`` to PolymorphicProxySerializer
+- This release should have minimal impact on the generated schema. We opt for a y-stream release due to potentially breaking changes when a user-provided ``GET_MOCK_REQUEST`` is used.
 
 0.15.1 (2021-04-08)
 -------------------
