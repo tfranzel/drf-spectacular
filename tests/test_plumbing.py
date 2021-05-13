@@ -124,8 +124,8 @@ TYPE_HINT_TEST_PARAMS = [
         typing.Union[int, str, None],
         {'oneOf': [{'type': 'integer'}, {'type': 'string'}], 'nullable': True}
     ), (
-        typing.Optional[typing.Union[int, str]],
-        {'oneOf': [{'type': 'integer'}, {'type': 'string'}], 'nullable': True}
+        typing.Optional[typing.Union[str, int]],
+        {'oneOf': [{'type': 'string'}, {'type': 'integer'}], 'nullable': True}
     )
 ]
 
