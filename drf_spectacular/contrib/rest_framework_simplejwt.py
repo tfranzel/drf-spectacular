@@ -65,3 +65,7 @@ class SimpleJWTScheme(OpenApiAuthenticationExtension):
             'scheme': 'bearer',
             'bearerFormat': api_settings.AUTH_HEADER_TYPES[0],
         }
+
+
+class SimpleJWTTokenUserScheme(SimpleJWTScheme):
+    target_class = 'rest_framework_simplejwt.authentication.JWTTokenUserAuthentication'
