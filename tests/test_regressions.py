@@ -1636,7 +1636,7 @@ def test_any_placeholder_on_request_response():
         custom_field = CustomField()
 
         def get_method_field(self, obj) -> typing.Any:
-            return
+            return  # pragma: no cover
 
     @extend_schema(request=typing.Any, responses=XSerializer)
     @api_view(['POST'])
@@ -1769,6 +1769,7 @@ def test_openapi_response_wrapper(no_warnings):
             'description': 'a list that actually returns numbers'
         }
     }
+    assert schema['paths']['/x/']['post']['description'] == 'creation description'
     assert schema['paths']['/x/']['post']['responses'] == {
         '201': {
             'content': {'application/json': {'schema': {'type': 'integer'}}},
