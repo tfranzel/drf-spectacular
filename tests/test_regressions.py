@@ -1835,6 +1835,7 @@ def test_nested_router_urls(no_warnings):
     datetime.datetime(year=2021, month=1, day=1),
     datetime.date(year=2021, month=1, day=1),
     datetime.time(),
+    datetime.timedelta(days=1),
     uuid.uuid4(),
     Decimal(),
     b'deadbeef'
