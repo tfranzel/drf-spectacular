@@ -1,4 +1,6 @@
+from datetime import time, timedelta
 from decimal import Decimal
+from uuid import UUID
 
 import yaml
 from rest_framework.exceptions import ErrorDetail
@@ -33,6 +35,18 @@ class OpenApiYamlRenderer(BaseRenderer):
             else:
                 return dumper.represent_scalar('tag:yaml.org,2002:int', value)
         Dumper.add_representer(Decimal, decimal_representer)
+
+        def timedelta_representer(dumper, data):
+            return dumper.represent_str(str(data.total_seconds()))
+        Dumper.add_representer(timedelta, timedelta_representer)
+
+        def time_representer(dumper, data):
+            return dumper.represent_str(data.isoformat())
+        Dumper.add_representer(time, time_representer)
+
+        def uuid_representer(dumper, data):
+            return dumper.represent_str(str(data))
+        Dumper.add_representer(UUID, uuid_representer)
 
         return yaml.dump(
             data,

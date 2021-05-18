@@ -1,3 +1,4 @@
+import datetime
 import typing
 import uuid
 from decimal import Decimal
@@ -19,7 +20,7 @@ from rest_framework.views import APIView
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.hooks import preprocess_exclude_path_format
 from drf_spectacular.openapi import AutoSchema
-from drf_spectacular.renderers import OpenApiYamlRenderer
+from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_field,
@@ -1827,3 +1828,18 @@ def test_nested_router_urls(no_warnings):
     assert operation['parameters'][0]['schema'] == {'format': 'uuid', 'type': 'string'}
     assert operation['parameters'][2]['name'] == 'maildrop_id'
     assert operation['parameters'][2]['schema'] == {'type': 'integer'}
+
+
+@pytest.mark.parametrize('value', [
+    datetime.datetime(year=2021, month=1, day=1),
+    datetime.date(year=2021, month=1, day=1),
+    datetime.time(),
+    uuid.uuid4(),
+    Decimal(),
+    b'deadbeef'
+])
+def test_yaml_encoder_parity(no_warnings, value):
+    # make sure our YAML renderer does not choke on objects that are fine with
+    # rest_framework.encoders.JSONEncoder
+    assert OpenApiJsonRenderer().render(value)
+    assert OpenApiYamlRenderer().render(value)
