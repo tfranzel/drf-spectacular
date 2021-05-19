@@ -18,12 +18,12 @@ def pytest_configure(config):
         'dj_rest_auth.registration',
         'allauth',
         'allauth.account',
-        'rest_framework_jwt',
         'oauth2_provider',
         'django_filters',
         # this is not strictly required and when added django-polymorphic
         # currently breaks the whole Django/DRF upstream testing.
         # 'polymorphic',
+        # 'rest_framework_jwt',
     ]
 
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

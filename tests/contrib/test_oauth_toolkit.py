@@ -6,9 +6,8 @@ from oauth2_provider.scopes import BaseScopes
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.authentication import BasicAuthentication
 
-from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.validation import validate_schema
-from tests import assert_schema
+from tests import assert_schema, generate_schema
 
 try:
     from oauth2_provider.contrib.rest_framework import (
@@ -85,8 +84,7 @@ def test_oauth2_toolkit(no_warnings):
         path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     ]
 
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
+    schema = generate_schema(None, patterns=urlpatterns)
 
     assert_schema(schema, 'tests/contrib/test_oauth_toolkit.yml')
 
@@ -117,8 +115,7 @@ def test_oauth2_toolkit_scopes_backend(no_warnings):
         path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     ]
 
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
+    schema = generate_schema(None, patterns=urlpatterns)
     validate_schema(schema)
 
     assert 'oauth2' in schema['components']['securitySchemes']

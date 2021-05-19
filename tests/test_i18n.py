@@ -9,11 +9,10 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient
 
-from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from tests import assert_schema
+from tests import assert_schema, generate_schema
 
 
 class I18nModel(models.Model):
@@ -61,8 +60,7 @@ urlpatterns = [
 )
 def test_i18n_strings(no_warnings):
     with translation.override('de-de'):
-        generator = SchemaGenerator(patterns=urlpatterns)
-        schema = generator.get_schema(request=None, public=True)
+        schema = generate_schema(None, patterns=urlpatterns)
         assert_schema(schema, 'tests/test_i18n.yml')
 
 

@@ -32,6 +32,32 @@ def test_serializer_field_extension(no_warnings):
     assert schema['components']['schemas']['X']['properties']['hash']['format'] == 'byte'
 
 
+class Base32Field(fields.Field):
+    pass  # pragma: no cover
+
+
+def test_serializer_field_extension_with_breakout(no_warnings):
+    class Base32FieldExtension(OpenApiSerializerFieldExtension):
+        target_class = 'tests.test_extensions.Base32Field'
+
+        def get_name(self):
+            return 'FieldComponentName'
+
+        def map_serializer_field(self, auto_schema, direction):
+            return build_basic_type(OpenApiTypes.BYTE)
+
+    class XSerializer(serializers.Serializer):
+        hash = Base32Field()
+
+    class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = XSerializer
+
+    schema = generate_schema('x', XViewset)
+    assert schema['components']['schemas']['FieldComponentName'] == {
+        'type': 'string', 'format': 'byte'
+    }
+
+
 class XView(APIView):
     """ underspecified library view """
     def get(self):

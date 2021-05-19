@@ -1,3 +1,4 @@
+import datetime
 import typing
 import uuid
 from decimal import Decimal
@@ -17,16 +18,14 @@ from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
 from drf_spectacular.extensions import OpenApiSerializerExtension
-from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.hooks import preprocess_exclude_path_format
 from drf_spectacular.openapi import AutoSchema
-from drf_spectacular.renderers import OpenApiYamlRenderer
+from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
-    OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
-    extend_schema_view, inline_serializer,
+    OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_field,
+    extend_schema_serializer, extend_schema_view, inline_serializer,
 )
-from drf_spectacular.validation import validate_schema
 from tests import generate_schema, get_request_schema, get_response_schema
 from tests.models import SimpleModel, SimpleSerializer
 
@@ -233,12 +232,10 @@ def test_free_form_responses(no_warnings):
         def get(self, request):
             pass  # pragma: no cover
 
-    generator = SchemaGenerator(patterns=[
+    generate_schema(None, patterns=[
         re_path(r'^x$', XAPIView.as_view(), name='x'),
         re_path(r'^y$', YAPIView.as_view(), name='y'),
     ])
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
 
 
 @mock.patch(
@@ -254,12 +251,10 @@ def test_append_extra_components(no_warnings):
         def get(self, request):
             pass  # pragma: no cover
 
-    generator = SchemaGenerator(patterns=[
+    schema = generate_schema(None, patterns=[
         re_path(r'^x$', XAPIView.as_view(), name='x'),
     ])
-    schema = generator.get_schema(request=None, public=True)
     assert len(schema['components']['schemas']) == 2
-    validate_schema(schema)
 
 
 def test_serializer_retrieval_from_view(no_warnings):
@@ -285,9 +280,7 @@ def test_serializer_retrieval_from_view(no_warnings):
     router = routers.SimpleRouter()
     router.register('x1', X1Viewset, basename='x1')
     router.register('x2', X2Viewset, basename='x2')
-    generator = SchemaGenerator(patterns=router.urls)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=router.urls)
     assert len(schema['components']['schemas']) == 2
     assert 'Unused' not in schema['components']['schemas']
 
@@ -493,9 +486,7 @@ def test_drf_format_suffix_parameter(no_warnings, allowed):
     ]
     urlpatterns = format_suffix_patterns(urlpatterns, allowed=allowed)
 
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=urlpatterns)
 
     # Only seven alternatives are created, as /pi/{format} would be
     # /pi/.json which is not supported.
@@ -535,9 +526,7 @@ def test_drf_format_suffix_parameter_exclude(no_warnings):
     urlpatterns = format_suffix_patterns([
         path('pi', view_func),
     ])
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=urlpatterns)
     assert list(schema['paths'].keys()) == ['/pi']
 
 
@@ -548,9 +537,7 @@ def test_regex_path_parameter_discovery(no_warnings):
         pass  # pragma: no cover
 
     urlpatterns = [re_path(r'^/pi/<int:precision>', pi)]
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=urlpatterns)
     parameter = schema['paths']['/pi/{precision}']['get']['parameters'][0]
     assert parameter['name'] == 'precision'
     assert parameter['in'] == 'path'
@@ -955,9 +942,7 @@ def test_schema_contains_only_urlpatterns_first_match(no_warnings):
         path('api/x/', XAPIView.as_view()),  # only first occurrence is used
         path('api/x/', YAPIView.as_view()),
     ]
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=urlpatterns)
     assert len(schema['components']['schemas']) == 1
     assert 'X' in schema['components']['schemas']
     operation = schema['paths']['/api/x/']['get']
@@ -1206,9 +1191,7 @@ def test_pagination_reusage(no_warnings):
     router = routers.SimpleRouter()
     router.register('x', XViewset, basename='x')
     router.register('y', YViewset, basename='y')
-    generator = SchemaGenerator(patterns=router.urls)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    generate_schema(None, patterns=router.urls)
 
 
 def test_pagination_disabled_on_action(no_warnings):
@@ -1225,7 +1208,7 @@ def test_pagination_disabled_on_action(no_warnings):
     class YViewset(XViewset):
         serializer_class = SimpleSerializer
 
-    schema = generate_schema('/x/', YViewset)
+    schema = generate_schema('x', YViewset)
     assert 'PaginatedSimpleList' in get_response_schema(schema['paths']['/x/']['get'])['$ref']
     assert 'Simple' in get_response_schema(
         schema['paths']['/x/custom_action/']['get']
@@ -1266,9 +1249,7 @@ def test_basic_viewset_without_queryset_with_explicit_pk_typing(no_warnings):
     urlpatterns = [
         path("api/<path:some_var>/<uuid:pk>/", XViewset.as_view({"get": "retrieve"}))
     ]
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
-    validate_schema(schema)
+    schema = generate_schema(None, patterns=urlpatterns)
     operation = schema['paths']['/api/{some_var}/{id}/']['get']
     assert operation['parameters'][0]['name'] == 'id'
     assert operation['parameters'][0]['schema']['format'] == 'uuid'
@@ -1452,8 +1433,8 @@ def test_nested_ro_serializer_has_required_fields_on_patch(no_warnings):
 
 
 @pytest.mark.parametrize('path', [
-    r'x/(?P<related_field>[0-9a-f-]{36})/',
-    r'x/<related_field>/',
+    r'x/(?P<related_field>[0-9a-f-]{36})',
+    r'x/<related_field>',
 ])
 def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, path):
     class M3(models.Model):
@@ -1472,7 +1453,7 @@ def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, 
     router = routers.SimpleRouter()
     router.register(path, XViewset)
 
-    schema = SchemaGenerator(patterns=router.urls).get_schema(request=None, public=True)
+    schema = generate_schema(None, patterns=router.urls)
     assert '/x/{related_field}/' in schema['paths']
     assert '/x/{related_field}/{id}/' in schema['paths']
 
@@ -1620,7 +1601,7 @@ def test_customized_parsers_and_renderers_on_viewset(no_warnings):
         def json_in_multi_out(self, request):
             pass  # pragma: no cover
 
-    schema = generate_schema('/x/', XViewset)
+    schema = generate_schema('x', XViewset)
 
     create_op = schema['paths']['/x/']['post']
     assert len(create_op['requestBody']['content']) == 1
@@ -1655,7 +1636,7 @@ def test_any_placeholder_on_request_response():
         custom_field = CustomField()
 
         def get_method_field(self, obj) -> typing.Any:
-            return
+            return  # pragma: no cover
 
     @extend_schema(request=typing.Any, responses=XSerializer)
     @api_view(['POST'])
@@ -1668,3 +1649,199 @@ def test_any_placeholder_on_request_response():
     properties = schema['components']['schemas']['X']['properties']
     assert properties['custom_field'] == {}
     assert properties['method_field'] == {'readOnly': True, 'description': 'Any'}
+
+
+def test_categorized_choices(no_warnings):
+    media_choices = [
+        ('Audio', (('vinyl', 'Vinyl'), ('cd', 'CD'))),
+        ('Video', (('vhs', 'VHS Tape'), ('dvd', 'DVD'))),
+        ('unknown', 'Unknown'),
+    ]
+    media_choices_audio = [
+        ('Audio', (('vinyl', 'Vinyl'), ('cd', 'CD'))),
+        ('unknown', 'Unknown'),
+    ]
+
+    class M6(models.Model):
+        cat_choice = models.CharField(max_length=10, choices=media_choices)
+
+    class M6Serializer(serializers.ModelSerializer):
+        audio_choice = serializers.ChoiceField(choices=media_choices_audio)
+
+        class Meta:
+            fields = '__all__'
+            model = M6
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = M6Serializer
+        queryset = M6.objects.none()
+
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
+        {'MediaEnum': media_choices}
+    ):
+        schema = generate_schema('x', XViewset)
+
+    # test base functionality of flattening categories
+    assert schema['components']['schemas']['AudioChoiceEnum']['enum'] == [
+        'vinyl', 'cd', 'unknown'
+    ]
+    # test override match works synchronously
+    assert schema['components']['schemas']['MediaEnum']['enum'] == [
+        'vinyl', 'cd', 'vhs', 'dvd', 'unknown'
+    ]
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX', '/api/v[0-9]/')
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX_TRIM', True)
+def test_schema_path_prefix_trim(no_warnings):
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/api/v1/x/', view_function=view_func)
+    assert '/x/' in schema['paths']
+
+
+def test_nameless_root_endpoint(no_warnings):
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/', view_function=view_func)
+    assert schema['paths']['/']['post']['operationId'] == 'root_create'
+
+
+def test_list_and_pagination_on_non_2XX_schemas(no_warnings):
+    @extend_schema_view(
+        list=extend_schema(responses={
+            200: SimpleSerializer,
+            400: {'type': 'object', 'properties': {'code': {'type': 'string'}}},
+            403: OpenApiTypes.OBJECT
+        })
+    )
+    class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+        pagination_class = pagination.LimitOffsetPagination
+
+    schema = generate_schema('x', XViewset)
+    assert get_response_schema(schema['paths']['/x/']['get']) == {
+        '$ref': '#/components/schemas/PaginatedSimpleList'
+    }
+    assert get_response_schema(schema['paths']['/x/']['get'], '400') == {
+        'type': 'object', 'properties': {'code': {'type': 'string'}}
+    }
+    assert get_response_schema(schema['paths']['/x/']['get'], '403') == {
+        'type': 'object', 'additionalProperties': {}
+    }
+
+
+def test_openapi_response_wrapper(no_warnings):
+    @extend_schema_view(
+        create=extend_schema(description='creation description', responses={
+            201: OpenApiResponse(response=int, description='creation with int response.'),
+            222: OpenApiResponse(description='creation with no response.'),
+            223: None,
+            224: int,
+        }),
+        list=extend_schema(responses=OpenApiResponse(
+            response=OpenApiTypes.INT,
+            description='a list that actually returns numbers',
+            examples=[OpenApiExample('One', 1), OpenApiExample('Two', 2)],
+        )),
+    )
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/']['get']['responses'] == {
+        '200': {
+            'content': {
+                'application/json': {
+                    'schema': {'type': 'integer'},
+                    'examples': {'One': {'value': 1}, 'Two': {'value': 2}}
+                }
+            },
+            'description': 'a list that actually returns numbers'
+        }
+    }
+    assert schema['paths']['/x/']['post']['description'] == 'creation description'
+    assert schema['paths']['/x/']['post']['responses'] == {
+        '201': {
+            'content': {'application/json': {'schema': {'type': 'integer'}}},
+            'description': 'creation with int response.'
+        },
+        '222': {'description': 'creation with no response.'},
+        '223': {'description': 'No response body'},
+        '224': {'content': {'application/json': {'schema': {'type': 'integer'}}}, 'description': ''}
+    }
+
+
+def test_prefix_estimation_with_re_special_chars_as_literals_in_path(no_warnings):
+    # make sure prefix estimation logic does not choke on reserved RE chars
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func1(request, format=None):
+        pass  # pragma: no cover
+
+    @extend_schema(request=typing.Any, responses=typing.Any)
+    @api_view(['POST'])
+    def view_func2(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema(None, patterns=[
+        path('/\\/x/', view_func1),
+        path('/\\/y/', view_func2)
+    ])
+    assert schema['paths']['/\\/x/']['post']['tags'] == ['x']
+
+
+def test_nested_router_urls(no_warnings):
+    # somewhat tailored to drf-nested-routers but also serves a generic purpose
+    # as "id" coercion also makes sense for "_pk" suffixes.
+    class RouteNestedMaildropModel(models.Model):
+        renamed_id = models.IntegerField(primary_key=True)
+
+    class RouteNestedClientModel(models.Model):
+        id = models.UUIDField(primary_key=True)
+
+    class RouteNestedModel(models.Model):
+        client = models.ForeignKey(RouteNestedClientModel, on_delete=models.CASCADE)
+        maildrop = models.ForeignKey(RouteNestedMaildropModel, on_delete=models.CASCADE)
+
+    class RouteNestedViewset(viewsets.ModelViewSet):
+        queryset = RouteNestedModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    urlpatterns = [
+        path(
+            '/clients/{client_pk}/maildrops/{maildrop_pk}/recipients/{pk}/',
+            RouteNestedViewset.as_view({'get': 'retrieve'})
+        ),
+    ]
+    schema = generate_schema(None, patterns=urlpatterns)
+    operation = schema['paths']['/clients/{client_id}/maildrops/{maildrop_id}/recipients/{id}/']['get']
+    assert operation['parameters'][0]['name'] == 'client_id'
+    assert operation['parameters'][0]['schema'] == {'format': 'uuid', 'type': 'string'}
+    assert operation['parameters'][2]['name'] == 'maildrop_id'
+    assert operation['parameters'][2]['schema'] == {'type': 'integer'}
+
+
+@pytest.mark.parametrize('value', [
+    datetime.datetime(year=2021, month=1, day=1),
+    datetime.date(year=2021, month=1, day=1),
+    datetime.time(),
+    datetime.timedelta(days=1),
+    uuid.uuid4(),
+    Decimal(),
+    b'deadbeef'
+])
+def test_yaml_encoder_parity(no_warnings, value):
+    # make sure our YAML renderer does not choke on objects that are fine with
+    # rest_framework.encoders.JSONEncoder
+    assert OpenApiJsonRenderer().render(value)
+    assert OpenApiYamlRenderer().render(value)

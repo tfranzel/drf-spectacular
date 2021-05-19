@@ -150,6 +150,7 @@ def preprocess_exclude_path_format(endpoints, **kwargs):
     """
     format_path = f'{{{api_settings.FORMAT_SUFFIX_KWARG}}}'
     return [
-        (path, path_regex, method, callback) for path, path_regex, method, callback in endpoints
+        (path, path_regex, method, callback)
+        for path, path_regex, method, callback in endpoints
         if not (path.endswith(format_path) or path.endswith(format_path + '/'))
     ]

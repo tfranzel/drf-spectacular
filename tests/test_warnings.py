@@ -1,3 +1,4 @@
+from typing import Union
 from unittest import mock
 
 import pytest
@@ -9,7 +10,6 @@ from rest_framework.decorators import action, api_view
 from rest_framework.schemas import AutoSchema as DRFAutoSchema
 from rest_framework.views import APIView
 
-from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema, extend_schema_view
 from tests import generate_schema
@@ -19,7 +19,6 @@ from tests.models import SimpleModel, SimpleSerializer
 def test_serializer_name_reuse(capsys):
     from rest_framework import routers
 
-    from drf_spectacular.generators import SchemaGenerator
     router = routers.SimpleRouter()
 
     def x1():
@@ -44,8 +43,7 @@ def test_serializer_name_reuse(capsys):
 
     router.register('x2', X2Viewset, basename='x2')
 
-    generator = SchemaGenerator(patterns=router.urls)
-    generator.get_schema(request=None, public=True)
+    generate_schema(None, patterns=router.urls)
 
     stderr = capsys.readouterr().err
     assert 'Encountered 2 components with identical names "X" and different classes' in stderr
@@ -209,6 +207,37 @@ def test_unable_to_derive_function_type_warning(capsys):
     assert 'XAPIView: XSerializer: unable to resolve type hint for function "get_y"' in stderr
 
 
+def test_unable_to_traverse_union_type_hint(capsys):
+    class Foo:
+        foo_value: int = 1
+
+    class Bar:
+        pass
+
+    class FailingFieldSourceTraversalModel3(models.Model):
+        @property
+        def foo_or_bar(self) -> Union[Foo, Bar]:
+            pass  # pragma: no cover
+
+    class XSerializer(serializers.ModelSerializer):
+        foo_value = serializers.ReadOnlyField(source='foo_or_bar.foo_value')
+
+        class Meta:
+            model = FailingFieldSourceTraversalModel3
+            fields = '__all__'
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('foo_value', view=XAPIView)
+    stderr = capsys.readouterr().err
+    assert 'could not traverse Union type' in stderr
+    assert 'Foo' in stderr
+    assert 'Bar' in stderr
+
+
 def test_operation_id_collision_resolution(capsys):
     @extend_schema(responses=OpenApiTypes.FLOAT)
     @api_view(['GET'])
@@ -219,8 +248,7 @@ def test_operation_id_collision_resolution(capsys):
         path('pi/<int:foo>', view_func),
         path('pi/', view_func),
     ]
-    generator = SchemaGenerator(patterns=urlpatterns)
-    schema = generator.get_schema(request=None, public=True)
+    schema = generate_schema(None, patterns=urlpatterns)
 
     assert schema['paths']['/pi/']['get']['operationId'] == 'pi_retrieve'
     assert schema['paths']['/pi/{foo}']['get']['operationId'] == 'pi_retrieve_2'

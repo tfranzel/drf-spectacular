@@ -7,7 +7,7 @@ import typing
 import urllib.parse
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
-from collections.abc import Hashable, Iterable
+from collections.abc import Hashable
 from decimal import Decimal
 from enum import Enum
 from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
@@ -50,10 +50,6 @@ T = TypeVar('T')
 
 class UnableToProceedError(Exception):
     pass
-
-
-def anyisinstance(obj, type_list):
-    return any([isinstance(obj, t) for t in type_list])
 
 
 def get_class(obj) -> type:
@@ -102,6 +98,12 @@ def is_patched_serializer(serializer, direction):
         and not serializer.read_only
         and not (spectacular_settings.COMPONENT_SPLIT_REQUEST and direction == 'response')
     )
+
+
+def is_trivial_string_variation(a: str, b: str):
+    a = (a or '').strip().lower().replace(' ', '_').replace('-', '_')
+    b = (b or '').strip().lower().replace(' ', '_').replace('-', '_')
+    return a == b
 
 
 def get_lib_doc_excludes():
@@ -306,13 +308,17 @@ def build_choice_field(field):
     return schema
 
 
-def build_root_object(paths, components):
+def build_root_object(paths, components, version):
     settings = spectacular_settings
+    if settings.VERSION and version:
+        version = f'{settings.VERSION} ({version})'
+    else:
+        version = settings.VERSION or version or ''
     root = {
         'openapi': '3.0.3',
         'info': {
             'title': settings.TITLE,
-            'version': settings.VERSION,
+            'version': version,
             **settings.EXTENSIONS_INFO,
         },
         'paths': {**paths, **settings.APPEND_PATHS},
@@ -385,11 +391,11 @@ def _follow_field_source(model, path: List[str]):
     else:
         if isinstance(field_or_property, (property, cached_property)) or callable(field_or_property):
             if isinstance(field_or_property, property):
-                target_model = typing.get_type_hints(field_or_property.fget).get('return')
+                target_model = _follow_return_type(field_or_property.fget)
             elif isinstance(field_or_property, cached_property):
-                target_model = typing.get_type_hints(field_or_property.func).get('return')
+                target_model = _follow_return_type(field_or_property.func)
             else:
-                target_model = typing.get_type_hints(field_or_property).get('return')
+                target_model = _follow_return_type(field_or_property)
             if not target_model:
                 raise UnableToProceedError(
                     f'could not follow field source through intermediate property "{path[0]}" '
@@ -400,6 +406,25 @@ def _follow_field_source(model, path: List[str]):
         else:
             target_model = model._meta.get_field(path[0]).related_model
             return _follow_field_source(target_model, path[1:])
+
+
+def _follow_return_type(a_callable):
+    target_type = typing.get_type_hints(a_callable).get('return')
+    if target_type is None:
+        return target_type
+    origin, args = _get_type_hint_origin(target_type)
+    if origin is typing.Union:
+        type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
+        if len(type_args) > 1:
+            warn(
+                f'could not traverse Union type, because we don\'t know which type to choose '
+                f'from {type_args}. Consider terminating "source" on a custom property '
+                f'that indicates the expected Optional/Union type. Defaulting to "string"'
+            )
+            return target_type
+        # Optional:
+        return type_args[0]
+    return target_type
 
 
 def follow_field_source(model, path):
@@ -602,9 +627,15 @@ def load_enum_name_overrides():
             choices = choices.choices
         if inspect.isclass(choices) and issubclass(choices, Enum):
             choices = [c.value for c in choices]
-        if isinstance(choices, Iterable) and isinstance(choices[0], str):
-            choices = [(c, c) for c in choices]
-        overrides[list_hash(list(dict(choices).keys()))] = name
+        normalized_choices = []
+        for choice in choices:
+            if isinstance(choice, str):
+                normalized_choices.append((choice, choice))  # simple choice list
+            elif isinstance(choice[1], (list, tuple)):
+                normalized_choices.extend(choice[1])  # categorized nested choices
+            else:
+                normalized_choices.append(choice)  # normal 2-tuple form
+        overrides[list_hash(list(dict(normalized_choices).keys()))] = name
 
     if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
         error(
@@ -704,6 +735,51 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
     return path
 
 
+def analyze_named_regex_pattern(path):
+    """ safely extract named groups and their pattern from given regex pattern """
+    result = {}
+    stack = 0
+    name_capture, name_buffer = False, ''
+    regex_capture, regex_buffer = False, ''
+    i = 0
+    while i < len(path):
+        # estimate state at position i
+        skip = False
+        if path[i] == '\\':
+            ff = 2
+        elif path[i:i + 4] == '(?P<':
+            skip = True
+            name_capture = True
+            ff = 4
+        elif path[i] in '(':
+            stack += 1
+            ff = 1
+        elif path[i] == '>' and name_capture:
+            assert name_buffer
+            name_capture = False
+            regex_capture = True
+            skip = True
+            ff = 1
+        elif path[i] in ')':
+            if regex_capture and not stack:
+                regex_capture = False
+                result[name_buffer] = regex_buffer
+                name_buffer, regex_buffer = '', ''
+            else:
+                stack -= 1
+            ff = 1
+        else:
+            ff = 1
+        # fill buffer based on state
+        if name_capture and not skip:
+            name_buffer += path[i:i + ff]
+        elif regex_capture and not skip:
+            regex_buffer += path[i:i + ff]
+        i += ff
+    assert not stack
+    return result
+
+
 def detype_pattern(pattern):
     """
     return an equivalent pattern that accepts arbitrary values for path parameters.
@@ -732,8 +808,14 @@ def detype_pattern(pattern):
             is_endpoint=pattern._is_endpoint
         )
     elif isinstance(pattern, RegexPattern):
+        detyped_regex = pattern._regex
+        for name, regex in analyze_named_regex_pattern(pattern._regex).items():
+            detyped_regex = detyped_regex.replace(
+                f'(?P<{name}>{regex})',
+                f'(?P<{name}>[^/]+)',
+            )
         return RegexPattern(
-            regex=re.sub(r'\(\?P<(\w+)>.+?\)', r'(?P<\1>[^/]+)', pattern._regex),
+            regex=detyped_regex,
             name=pattern.name,
             is_endpoint=pattern._is_endpoint
         )
@@ -790,8 +872,21 @@ def camelize_operation(path, operation):
 
 
 def build_mock_request(method, path, view, original_request, **kwargs):
+    """ build a mocked request and use original request as reference if available """
     request = getattr(APIRequestFactory(), method.lower())(path=path)
     request = view.initialize_request(request)
+    if original_request:
+        request.user = original_request.user
+        request.auth = original_request.auth
+        # ignore headers related to authorization as it has been handled above.
+        # also ignore ACCEPT as the MIME type refers to SpectacularAPIView and the
+        # version (if available) has already been processed by SpectacularAPIView.
+        for name, value in original_request.META.items():
+            if not name.startswith('HTTP_'):
+                continue
+            if name in ['HTTP_ACCEPT', 'HTTP_COOKIE', 'HTTP_AUTHORIZATION']:
+                continue
+            request.META[name] = value
     return request
 
 

@@ -161,7 +161,7 @@ I'm using ``@action(detail=False)`` but the response schema is not a list
 ``detail=True/False`` only specifies whether the action should be routed at ``x/{id}/action`` or ``x/action``.
 The ``detail`` parameter in itself makes no statement about the action's response. Also note that the default
 for underspecified endpoints is a non-list response. To signal a listed response, you can use
-``@extend_schema(response=XSerializer(many=True))``.
+``@extend_schema(responses=XSerializer(many=True))``.
 
 
 Using ``@extend_schema`` on ``APIView`` has no effect

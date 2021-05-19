@@ -40,7 +40,7 @@ def test_nested_partial_on_split_request_false(no_warnings):
     # without split request, PatchedY and Y have the same properties (minus required).
     # PATCH only modifies outermost serializer, nested serializers must stay unaffected.
     assert_schema(
-        generate_schema('/x/', XViewset), 'tests/test_split_request_false.yml'
+        generate_schema('x', XViewset), 'tests/test_split_request_false.yml'
     )
 
 
@@ -49,5 +49,5 @@ def test_nested_partial_on_split_request_true(no_warnings):
     # with split request, behaves like above, however response schemas are always unpatched.
     # nested request serializers are only affected by their manual partial flag and not due to PATCH.
     assert_schema(
-        generate_schema('/x/', XViewset), 'tests/test_split_request_true.yml'
+        generate_schema('x', XViewset), 'tests/test_split_request_true.yml'
     )

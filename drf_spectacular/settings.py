@@ -4,9 +4,16 @@ from django.conf import settings
 from rest_framework.settings import APISettings
 
 SPECTACULAR_DEFAULTS: Dict[str, Any] = {
-    # path prefix is used for tagging the discovered operations.
-    # use '/api/v[0-9]' for tagging apis like '/api/v1/albums' with ['albums']
-    'SCHEMA_PATH_PREFIX': r'',
+    # A regex specifying the common denominator for all operation paths. If
+    # SCHEMA_PATH_PREFIX is set to None, drf-spectacular will attempt to estimate
+    # a common prefix. use '' to disable.
+    # Mainly used for tag extraction, where paths like '/api/v1/albums' with
+    # a SCHEMA_PATH_PREFIX regex '/api/v[0-9]' would yield the tag 'albums'.
+    'SCHEMA_PATH_PREFIX': None,
+    # Remove matching SCHEMA_PATH_PREFIX from operation path. Usually used in
+    # conjunction with appended prefixes in SERVERS.
+    'SCHEMA_PATH_PREFIX_TRIM': False,
+
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
     # Schema generation parameters to influence how components are constructed.
@@ -38,6 +45,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     },
     'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.44.0',
     'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.44.0/favicon-32x32.png',
+
+    'REDOC_DIST': '//cdn.jsdelivr.net/npm/redoc@next',
 
     # Append OpenAPI objects to path and components in addition to the generated objects
     'APPEND_PATHS': {},
@@ -98,6 +107,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'CONTACT': {},
     # Optional: MUST contain "name", MAY contain URL
     'LICENSE': {},
+    # Statically set schema version. May also be an empty string. When used together with
+    # view versioning, will become '0.0.0 (v2)' for 'v2' versioned requests.
+    # Set VERSION to None if only the request version should be rendered.
     'VERSION': '0.0.0',
     # Optional list of servers.
     # Each entry MUST contain "url", MAY contain "description", "variables"
