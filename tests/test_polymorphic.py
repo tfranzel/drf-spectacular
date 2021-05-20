@@ -10,7 +10,7 @@ from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.utils import (
     OpenApiParameter, PolymorphicProxySerializer, extend_schema, extend_schema_field,
 )
-from tests import assert_schema, generate_schema
+from tests import assert_schema, generate_schema, get_request_schema, get_response_schema
 
 
 class LegalPerson2(models.Model):
@@ -173,3 +173,80 @@ def test_stripped_down_polymorphic_serializer(no_warnings):
         {'$ref': '#/components/schemas/LegalPerson'},
         {'$ref': '#/components/schemas/NaturalPerson'}
     ]}
+
+
+@pytest.mark.parametrize('explicit', [True, False])
+def test_many_polymorphic_serializer_extend_schema(no_warnings, explicit):
+    params = {
+        'component_name': 'MetaPerson',
+        'serializers': [LegalPersonSerializer, NaturalPersonSerializer],
+        'resource_type_field_name': 'type',
+    }
+    if explicit:
+        proxy_serializer = serializers.ListSerializer(child=PolymorphicProxySerializer(**params))
+    else:
+        proxy_serializer = PolymorphicProxySerializer(**params, many=True)
+
+    @extend_schema(request=proxy_serializer, responses=proxy_serializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert 'MetaPerson' in schema['components']['schemas']
+    op = schema['paths']['/x/']['post']
+    assert get_response_schema(op) == {
+        'type': 'array',
+        'items': {'$ref': '#/components/schemas/MetaPerson'}
+    }
+    assert get_request_schema(op) == {
+        'type': 'array',
+        'items': {'$ref': '#/components/schemas/MetaPerson'}
+    }
+
+
+@pytest.mark.parametrize('explicit', [True, False])
+def test_many_polymorphic_proxy_serializer_extend_schema_field(no_warnings, explicit):
+    params = {
+        'component_name': 'MetaPerson',
+        'serializers': [LegalPersonSerializer, NaturalPersonSerializer],
+        'resource_type_field_name': 'type',
+    }
+    if explicit:
+        proxy_serializer = serializers.ListField(child=PolymorphicProxySerializer(**params))
+    else:
+        proxy_serializer = PolymorphicProxySerializer(**params, many=True)
+
+    @extend_schema_field(proxy_serializer)
+    class XField(serializers.DictField):
+        pass  # pragma: no cover
+
+    class XSerializer(serializers.Serializer):
+        field = XField()
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert 'MetaPerson' in schema['components']['schemas']
+    assert schema['components']['schemas']['X'] == {
+        'type': 'object',
+        'properties': {
+            'field': {'type': 'array', 'items': {'$ref': '#/components/schemas/MetaPerson'}}
+        },
+        'required': ['field']
+    }
+    op = schema['paths']['/x/']['post']
+    assert get_request_schema(op) == {'$ref': '#/components/schemas/X'}
+    assert get_response_schema(op) == {'$ref': '#/components/schemas/X'}
+
+
+def test_polymorphic_proxy_serializer_misusage(no_warnings):
+    with pytest.raises(AssertionError):
+        PolymorphicProxySerializer(
+            component_name='MetaPerson',
+            serializers=[LegalPersonSerializer, NaturalPersonSerializer],
+            resource_type_field_name=None,
+        ).is_valid()

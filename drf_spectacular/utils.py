@@ -10,10 +10,10 @@ from drf_spectacular.drainage import error, get_view_methods, set_override, warn
 from drf_spectacular.types import OpenApiTypes
 
 _SerializerType = Union[Serializer, Type[Serializer]]
-_SerializerTypeVariations = Union[OpenApiTypes, 'PolymorphicProxySerializer', _SerializerType]
+_SerializerTypeVariations = Union[OpenApiTypes, _SerializerType]
 
 
-class PolymorphicProxySerializer:
+class PolymorphicProxySerializer(Serializer):
     """
     This class is to be used with :func:`@extend_schema <.extend_schema>` to
     signal a request/response might be polymorphic (accepts/returns data
@@ -33,10 +33,9 @@ class PolymorphicProxySerializer:
         def create(self, request, *args, **kwargs):
             return Response(...)
 
-    Beware that this is not a real serializer and therefore is not derived from
-    serializers.Serializer. It *cannot* be used in views as `serializer_class`
-    or as field in a actual serializer. You likely want to handle this in the
-    view method.
+    **Beware** that this is not a real serializer and it will raise an AssertionError
+    if used in that way. It **cannot** be used in views as `serializer_class`
+    or as field in an actual serializer. It is solely meant for annotation purposes.
 
     Also make sure that each sub-serializer has a field named after the value of
     ``resource_type_field_name`` (discriminator field). Generated clients will likely
@@ -56,12 +55,28 @@ class PolymorphicProxySerializer:
             component_name: str,
             serializers: Union[List[_SerializerType], Dict[str, _SerializerType]],
             resource_type_field_name: Optional[str],
+            many: bool = False,
     ):
         self.component_name = component_name
         self.serializers = serializers
         self.resource_type_field_name = resource_type_field_name
-        self.partial = False
-        self.read_only = False
+        super().__init__(many=many)
+
+    @property
+    def data(self):
+        self._trap()
+
+    def to_internal_value(self, data):
+        self._trap()
+
+    def to_representation(self, instance):
+        self._trap()
+
+    def _trap(self):
+        raise AssertionError(
+            "PolymorphicProxySerializer is an annotation helper and not supposed to "
+            "be used for real requests. See documentation for correct usage."
+        )
 
 
 class OpenApiSchemaBase:
