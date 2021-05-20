@@ -44,6 +44,13 @@ class NaturalPersonSerializer(serializers.ModelSerializer):
         return 'natural'
 
 
+PROXY_SERIALIZER_PARAMS = {
+    'component_name': 'MetaPerson',
+    'serializers': [LegalPersonSerializer, NaturalPersonSerializer],
+    'resource_type_field_name': 'type',
+}
+
+
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):
     implicit_poly_proxy = PolymorphicProxySerializer(
         component_name='MetaPerson',
@@ -177,15 +184,12 @@ def test_stripped_down_polymorphic_serializer(no_warnings):
 
 @pytest.mark.parametrize('explicit', [True, False])
 def test_many_polymorphic_serializer_extend_schema(no_warnings, explicit):
-    params = {
-        'component_name': 'MetaPerson',
-        'serializers': [LegalPersonSerializer, NaturalPersonSerializer],
-        'resource_type_field_name': 'type',
-    }
     if explicit:
-        proxy_serializer = serializers.ListSerializer(child=PolymorphicProxySerializer(**params))
+        proxy_serializer = serializers.ListSerializer(
+            child=PolymorphicProxySerializer(**PROXY_SERIALIZER_PARAMS)
+        )
     else:
-        proxy_serializer = PolymorphicProxySerializer(**params, many=True)
+        proxy_serializer = PolymorphicProxySerializer(**PROXY_SERIALIZER_PARAMS, many=True)
 
     @extend_schema(request=proxy_serializer, responses=proxy_serializer)
     @api_view(['POST'])
@@ -207,15 +211,12 @@ def test_many_polymorphic_serializer_extend_schema(no_warnings, explicit):
 
 @pytest.mark.parametrize('explicit', [True, False])
 def test_many_polymorphic_proxy_serializer_extend_schema_field(no_warnings, explicit):
-    params = {
-        'component_name': 'MetaPerson',
-        'serializers': [LegalPersonSerializer, NaturalPersonSerializer],
-        'resource_type_field_name': 'type',
-    }
     if explicit:
-        proxy_serializer = serializers.ListField(child=PolymorphicProxySerializer(**params))
+        proxy_serializer = serializers.ListField(
+            child=PolymorphicProxySerializer(**PROXY_SERIALIZER_PARAMS)
+        )
     else:
-        proxy_serializer = PolymorphicProxySerializer(**params, many=True)
+        proxy_serializer = PolymorphicProxySerializer(**PROXY_SERIALIZER_PARAMS, many=True)
 
     @extend_schema_field(proxy_serializer)
     class XField(serializers.DictField):
@@ -245,8 +246,10 @@ def test_many_polymorphic_proxy_serializer_extend_schema_field(no_warnings, expl
 
 def test_polymorphic_proxy_serializer_misusage(no_warnings):
     with pytest.raises(AssertionError):
-        PolymorphicProxySerializer(
-            component_name='MetaPerson',
-            serializers=[LegalPersonSerializer, NaturalPersonSerializer],
-            resource_type_field_name=None,
-        ).is_valid()
+        PolymorphicProxySerializer(**PROXY_SERIALIZER_PARAMS).data
+
+    with pytest.raises(AssertionError):
+        PolymorphicProxySerializer(**PROXY_SERIALIZER_PARAMS).to_representation(None)
+
+    with pytest.raises(AssertionError):
+        PolymorphicProxySerializer(**PROXY_SERIALIZER_PARAMS).to_internal_value(None)

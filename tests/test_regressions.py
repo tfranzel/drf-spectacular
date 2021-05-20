@@ -1871,3 +1871,45 @@ def test_serializer_extension_with_non_object_schema(no_warnings, comp_schema):
     operation = schema['paths']['/x']['post']
     assert get_request_schema(operation)['$ref'] == '#/components/schemas/X'
     assert schema['components']['schemas']['X'] == comp_schema
+
+
+def test_response_header_with_serializer_component(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+    @extend_schema(
+        request=OpenApiTypes.ANY,
+        responses=OpenApiTypes.ANY,
+        parameters=[OpenApiParameter(
+            name='test',
+            type=XSerializer,
+            location=OpenApiParameter.HEADER,
+            response=True,
+        )]
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert 'X' in schema['components']['schemas']
+    assert schema['paths']['/x']['post']['responses']['200']['headers'] == {
+        'test': {'schema': {'$ref': '#/components/schemas/X'}}
+    }
+
+
+def test_extend_schema_noop_request_content_type(no_warnings):
+    @extend_schema(
+        request={
+            'application/json': None,  # for completeness, not necessary
+            'application/pdf': OpenApiTypes.BINARY
+        },
+        responses=OpenApiTypes.ANY,
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert 'application/pdf' in schema['paths']['/x']['post']['requestBody']['content']
+    assert 'application/json' not in schema['paths']['/x']['post']['requestBody']['content']
