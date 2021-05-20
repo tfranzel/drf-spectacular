@@ -1179,16 +1179,15 @@ class AutoSchema(ViewInspector):
 
             self.registry.register(component)
             component.schema = self._map_serializer(serializer, direction)
-            # 4 cases:
-            #   1. polymorphic container component -> use
-            #   2. concrete component with properties -> use
-            #   3. concrete component without properties -> prob. transactional so discard
-            #   4. explicit list component -> demultiplexed at usage location so discard
-            keep_component = (
-                any(nest_tag in component.schema for nest_tag in ['oneOf', 'allOf', 'anyOf'])
-                or component.schema.get('properties', {})
+
+            discard_component = (
+                # components with empty schemas serve no purpose
+                not component.schema
+                # concrete component without properties are likely only transactional so discard
+                or (component.schema.get('type') == 'object' and not component.schema.get('properties'))
             )
-            if not keep_component:
+
+            if discard_component:
                 del self.registry[component]
                 return ResolvedComponent(None, None)  # sentinel
             return component

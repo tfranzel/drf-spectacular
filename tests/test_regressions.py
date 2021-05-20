@@ -864,7 +864,7 @@ def test_extension_subclass_discovery(no_warnings):
         pass
 
     class XSerializer(serializers.Serializer):
-        field = serializers.IntegerField
+        field = serializers.IntegerField()
 
     class XAPIView(APIView):
         authentication_classes = [CustomAuth]
@@ -1238,7 +1238,7 @@ def test_manual_security_method_addition(no_warnings):
 
 def test_basic_viewset_without_queryset_with_explicit_pk_typing(no_warnings):
     class XSerializer(serializers.Serializer):
-        field = fields.IntegerField()
+        field = serializers.IntegerField()
 
     class XViewset(viewsets.ViewSet):
         serializer_class = XSerializer
@@ -1845,3 +1845,29 @@ def test_yaml_encoder_parity(no_warnings, value):
     # rest_framework.encoders.JSONEncoder
     assert OpenApiJsonRenderer().render(value)
     assert OpenApiYamlRenderer().render(value)
+
+
+@pytest.mark.parametrize('comp_schema', [
+    {'type': 'number'},
+    {'type': 'array', 'items': {'type': 'number'}},
+])
+def test_serializer_extension_with_non_object_schema(no_warnings, comp_schema):
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+    class XExtension(OpenApiSerializerExtension):
+        target_class = XSerializer
+
+        def map_serializer(self, auto_schema, direction):
+            return comp_schema
+
+    class XAPIView(APIView):
+        @extend_schema(request=XSerializer, responses=XSerializer)
+        def post(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XAPIView)
+
+    operation = schema['paths']['/x']['post']
+    assert get_request_schema(operation)['$ref'] == '#/components/schemas/X'
+    assert schema['components']['schemas']['X'] == comp_schema
