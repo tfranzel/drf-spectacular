@@ -654,8 +654,11 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.ReadOnlyField):
             # direct source from the serializer
             assert field.source_attrs, f'ReadOnlyField "{field}" needs a proper source'
-            target = follow_field_source(field.parent.Meta.model, field.source_attrs)
-
+            if hasattr(field.parent, "Meta"):
+                target = follow_field_source(field.parent.Meta.model, field.source_attrs)
+            else:
+                if isinstance(field.parent, serializers.ListSerializer):
+                    return append_meta(build_array_type(build_basic_type(OpenApiTypes.OBJECT)), meta)
             if callable(target):
                 schema = self._map_response_type_hint(target)
             elif isinstance(target, models.Field):
