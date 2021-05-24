@@ -156,6 +156,8 @@ class AllFieldsSerializer(serializers.ModelSerializer):
 
     field_regex = serializers.RegexField(r'^[a-zA-z0-9]{10}\-[a-z]', label='A regex field')
 
+    field_hidden = serializers.HiddenField(default='')
+
     # composite fields
     field_list = serializers.ListField(
         child=serializers.FloatField(), min_length=3, max_length=100,

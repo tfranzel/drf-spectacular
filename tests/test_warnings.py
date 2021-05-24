@@ -11,7 +11,9 @@ from rest_framework.schemas import AutoSchema as DRFAutoSchema
 from rest_framework.views import APIView
 
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema, extend_schema_view
+from drf_spectacular.utils import (
+    OpenApiParameter, PolymorphicProxySerializer, extend_schema, extend_schema_view,
+)
 from tests import generate_schema
 from tests.models import SimpleModel, SimpleSerializer
 
@@ -323,3 +325,35 @@ def test_warning_request_body_not_resolvable(capsys):
     generate_schema('x', view_function=view_func)
     stderr = capsys.readouterr().err
     assert 'could not resolve request body for POST /x' in stderr
+
+
+def test_response_header_warnings(capsys):
+    @extend_schema(
+        request=OpenApiTypes.ANY,
+        responses=OpenApiTypes.ANY,
+        parameters=[OpenApiParameter(name='test', response=True)]
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('x', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'incompatible location type ignored' in stderr
+
+
+def test_unknown_base_field_warning(capsys):
+    class UnknownField(serializers.Field):
+        pass
+
+    class XSerializer(serializers.Serializer):
+        field = UnknownField()
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('x', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'could not resolve serializer field' in stderr

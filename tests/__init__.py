@@ -42,7 +42,7 @@ def assert_schema(schema, reference_filename, transforms=None):
 
 
 def assert_equal(a, b):
-    if not isinstance(a, str) or isinstance(b, str):
+    if not isinstance(a, str) or not isinstance(b, str):
         a = json.dumps(a, indent=4)
         b = json.dumps(b, indent=4)
     diff = difflib.unified_diff(

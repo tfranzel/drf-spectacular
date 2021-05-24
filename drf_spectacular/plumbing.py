@@ -446,7 +446,7 @@ def follow_field_source(model, path):
         )
 
     def dummy_property(obj) -> str:
-        pass
+        pass  # pragma: no cover
     return dummy_property
 
 
