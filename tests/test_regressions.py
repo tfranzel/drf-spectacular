@@ -1913,3 +1913,24 @@ def test_extend_schema_noop_request_content_type(no_warnings):
     schema = generate_schema('x', view_function=view_func)
     assert 'application/pdf' in schema['paths']['/x']['post']['requestBody']['content']
     assert 'application/json' not in schema['paths']['/x']['post']['requestBody']['content']
+
+
+def test_viewset_reverse_list_detection_override(no_warnings):
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+        @extend_schema(
+            # without explicit operation_id, this operation is detected as non-list and thus
+            # will be named "x_retrieve", which create a collision with the actual retrieve.
+            operation_id='x_list',
+            parameters=[OpenApiParameter("format")],
+            responses={(200, "*/*"): OpenApiTypes.STR},
+        )
+        def list(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/']['get']['parameters'][0]['name'] == 'format'
+    assert schema['paths']['/x/']['get']['operationId'] == 'x_list'
+    assert schema['paths']['/x/{id}/']['get']['operationId'] == 'x_retrieve'
