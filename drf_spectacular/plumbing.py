@@ -299,6 +299,10 @@ def build_choice_field(field):
         'enum': choices
     }
 
+    description = build_choices_description(field.choices.items())
+    if description:
+        schema['description'] = description
+
     # If We figured out `type` then and only then we should set it. It must be a string.
     # Ref: https://swagger.io/docs/specification/data-models/data-types/#mixed-type
     # It is optional but it can not be null.
@@ -969,3 +973,11 @@ def resolve_type_hint(hint):
         return schema
     else:
         raise UnableToProceedError()
+
+
+def build_choices_description(choices):
+    description = ''
+    for choice in choices:
+        print(choice)
+        description += f'* "{choice[0]}" - {choice[1]}\n'
+    return description

@@ -5,8 +5,8 @@ from django.db import models
 from drf_spectacular.drainage import warn
 from drf_spectacular.extensions import OpenApiFilterExtension
 from drf_spectacular.plumbing import (
-    build_array_type, build_basic_type, build_parameter_type, follow_field_source, get_view_model,
-    is_basic_type,
+    build_array_type, build_basic_type, build_choices_description, build_parameter_type, follow_field_source,
+    get_view_model, is_basic_type,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
@@ -120,6 +120,10 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             description = filter_field.extra['help_text']
         elif filter_field.label is not None:
             description = filter_field.label
+
+        if 'choices' in filter_field.extra:
+            description = (description + '\n') if description else ''
+            description += build_choices_description(filter_field.extra['choices'])
 
         # parameter style variations based on filter base class
         if isinstance(filter_field, filters.BaseCSVFilter):

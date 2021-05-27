@@ -20,7 +20,10 @@ paths:
           enum:
           - A
           - B
-        description: some category description
+        description: |
+          some category description
+          * "A" - aaa
+          * "B" - b
       - in: query
         name: custom_filter
         schema:
@@ -120,7 +123,12 @@ paths:
             - -price
             - in_stock
             - price
-        description: Ordering
+        description: |
+          Ordering
+          * "price" - Price
+          * "-price" - Price (descending)
+          * "in_stock" - in stock
+          * "-in_stock" - in stock (descending)
         explode: false
         style: form
       - in: query
