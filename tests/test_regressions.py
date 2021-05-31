@@ -1913,3 +1913,31 @@ def test_extend_schema_noop_request_content_type(no_warnings):
     schema = generate_schema('x', view_function=view_func)
     assert 'application/pdf' in schema['paths']['/x']['post']['requestBody']['content']
     assert 'application/json' not in schema['paths']['/x']['post']['requestBody']['content']
+
+
+def test_list_serializer_with_read_only_field_on_model_property(no_warnings):
+    class M7Model(models.Model):
+        @property
+        def all_groups(self) -> typing.List[int]:
+            return [1, 2, 3]
+
+    class XField(serializers.ReadOnlyField):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        groups = serializers.ListSerializer(source="all_groups", child=XField(), read_only=True)
+
+        class Meta:
+            model = M7Model
+            fields = '__all__'
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = M7Model.objects.none()
+        serializer_class = XSerializer
+
+    schema = generate_schema('x', XViewset)
+    assert schema['components']['schemas']['X']['properties']['groups'] == {
+        'type': 'array',
+        'items': {'type': 'array', 'items': {'type': 'integer'}, 'readOnly': True},
+        'readOnly': True
+    }
