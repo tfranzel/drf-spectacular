@@ -24,7 +24,8 @@ def custom_path_ordering(result, generator, **kwargs):
     for example: ['schema', 'ping', 'hello']
     would show in order 'schema', 'ping', 'hello', paths and then the rest
     for duplicate endpoints you'll need to be more specific on which path is to be sorted
-    spectacular_settings.CUSTOM_PATH_ORDERING = ['api/schema', 'api/ping', 'api/hello/read', ''api/hello/write']
+    It looks at the full path when checking
+    ['api/schema', 'api/ping', 'api/hello/read', ''api/hello/write']
     """
     assert 'config' in kwargs, 'custom_path_ordering hook expected config in kwargs: ' + str(kwargs)
     assert isinstance(kwargs['config'], list), 'custom_path_ordering hook expected a list of strings'
