@@ -10,6 +10,33 @@ from drf_spectacular.plumbing import (
 from drf_spectacular.settings import spectacular_settings
 
 
+def custom_path_ordering(result, generator, **kwargs):
+    """
+    passing in a list of strings to spectacular_settings.CUSTOM_PATH_ORDERING
+    The documentation will order based on the list, and then alphaetically for the rest
+    for example: spectacular_settings.CUSTOM_PATH_ORDERING = ['schema', 'ping', 'hello']
+    would show in order 'schema', 'ping', 'hello', paths and then the rest
+    for duplicate endpoints you'll need to be more specific on which path is to be sorted
+    spectacular_settings.CUSTOM_PATH_ORDERING = ['api/schema', 'api/ping', 'api/hello/read', ''api/hello/write']
+    """
+
+    special_ordering = spectacular_settings.CUSTOM_PATH_ORDERING
+    unordered = {}
+    the_rest = []
+    if 'paths' in result:
+        for key, value in result['paths'].items():
+            for x in special_ordering:
+                if x in key:
+                    unordered.update({x: (key, value)})
+                    break
+            else:
+                the_rest.append((key, value))
+        ordered = [unordered[x] for x in special_ordering]
+        result['paths'] = OrderedDict(ordered + the_rest)
+        return result
+    return result
+
+
 def postprocess_schema_enums(result, generator, **kwargs):
     """
     simple replacement of Enum/Choices that globally share the same name and have
