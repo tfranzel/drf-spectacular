@@ -61,7 +61,18 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Postprocessing functions that run at the end of schema generation.
     # must satisfy interface result = hook(generator, request, public, result)
     'POSTPROCESSING_HOOKS': [
-        'drf_spectacular.hooks.postprocess_schema_enums'
+        'drf_spectacular.hooks.postprocess_schema_enums',
+        # 'drf_spectacular.hooks.custom_path_ordering',
+        # 'your_module.hooks.something_special',
+
+    ],
+    # must match the number of  entries in POSTPROCESSING_HOOKS
+    # must satisfy interface result = hook(generator, request, public, result, config)
+    # where config matches what your hook is expecting
+    'POSTPROCESSING_HOOKS_CONFIGS': [
+        {},  # postprocess_schema_enums
+        # ['schema', 'ping'],  # custom_path_ordering
+        # True,  # something_special
     ],
 
     # Preprocessing functions that run before schema generation.

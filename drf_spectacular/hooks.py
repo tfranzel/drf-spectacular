@@ -1,5 +1,5 @@
 import re
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 from inflection import camelize
 from rest_framework.settings import api_settings
@@ -19,8 +19,9 @@ def custom_path_ordering(result, generator, **kwargs):
     for duplicate endpoints you'll need to be more specific on which path is to be sorted
     spectacular_settings.CUSTOM_PATH_ORDERING = ['api/schema', 'api/ping', 'api/hello/read', ''api/hello/write']
     """
-
-    special_ordering = spectacular_settings.CUSTOM_PATH_ORDERING
+    assert 'config' in kwargs, 'custom_path_ordering hook expected config in kwargs: ' + str(kwargs)
+    assert isinstance(kwargs['config'], list), 'custom_path_ordering hook expected a list of strings'
+    special_ordering = kwargs.get('config')
     unordered = {}
     the_rest = []
     if 'paths' in result:

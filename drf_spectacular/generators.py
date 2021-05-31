@@ -206,8 +206,8 @@ class SchemaGenerator(BaseSchemaGenerator):
                 )
             elif view.versioning_class:
                 version = (
-                    self.api_version  # explicit version from CLI, SpecView or SpecView request
-                    or view.versioning_class.default_version  # fallback
+                        self.api_version  # explicit version from CLI, SpecView or SpecView request
+                        or view.versioning_class.default_version  # fallback
                 )
                 if not version:
                     continue
@@ -251,7 +251,12 @@ class SchemaGenerator(BaseSchemaGenerator):
             components=self.registry.build(spectacular_settings.APPEND_COMPONENTS),
             version=self.api_version or getattr(request, 'version', None),
         )
-        for hook in spectacular_settings.POSTPROCESSING_HOOKS:
-            result = hook(result=result, generator=self, request=request, public=public)
+        if spectacular_settings.POSTPROCESSING_HOOKS:
+            for hook, config in zip(spectacular_settings.POSTPROCESSING_HOOKS, spectacular_settings.POSTPROCESSING_HOOKS_CONFIGS):
+                result = hook(result=result, generator=self, request=request, public=public, config=config)
+        else:
+            # default
+            for hook in spectacular_settings.POSTPROCESSING_HOOKS:
+                result = hook(result=result, generator=self, request=request, public=public)
 
         return sanitize_result_object(normalize_result_object(result))
