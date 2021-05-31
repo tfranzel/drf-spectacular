@@ -12,13 +12,9 @@ from drf_spectacular.settings import spectacular_settings
 
 def custom_path_ordering(result, generator, **kwargs):
     """
-    spectacular_settings.POSTPROCESSING_HOOKS_CONFIGS takes a list which zips together with the hooks
+    spectacular_settings.POSTPROCESSING_HOOKS_CONFIGS
 
-    spectacular_settings.POSTPROCESSING_HOOKS
-
-    zip(spectacular_settings.POSTPROCESSING_HOOKS, spectacular_settings.POSTPROCESSING_HOOKS_CONFIGS)
-
-    pass in a list of strings
+        use a list of strings for the config
 
     The documentation will order based on the list, and then alphaetically for the rest
     for example: ['schema', 'ping', 'hello']
