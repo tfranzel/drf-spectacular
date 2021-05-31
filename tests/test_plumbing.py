@@ -1,3 +1,4 @@
+import collections
 import json
 import re
 import sys
@@ -83,6 +84,11 @@ def test_detype_patterns_with_module_includes(no_warnings):
     )
 
 
+class NamedTupleB(typing.NamedTuple):
+    a: int
+    b: str
+
+
 TYPE_HINT_TEST_PARAMS = [
     (
         typing.Optional[int],
@@ -95,7 +101,20 @@ TYPE_HINT_TEST_PARAMS = [
         {'type': 'array', 'items': {'type': 'object', 'additionalProperties': {'type': 'integer'}}}
     ), (
         list,
-        {'type': 'array', 'items': {'type': 'object', 'additionalProperties': {}}}
+        {'type': 'array', 'items': {}}
+    ), (
+        typing.Iterable[collections.namedtuple("NamedTupleA", "a, b")],  # noqa
+        {
+            'type': 'array',
+            'items': {'type': 'object', 'properties': {'a': {}, 'b': {}}, 'required': ['a', 'b']}
+        }
+    ), (
+        NamedTupleB,
+        {
+            'type': 'object',
+            'properties': {'a': {'type': 'integer'}, 'b': {'type': 'string'}},
+            'required': ['a', 'b']
+        }
     ), (
         typing.Tuple[int, int, int],
         {'type': 'array', 'items': {'type': 'integer'}, 'minLength': 3, 'maxLength': 3}
