@@ -1562,6 +1562,29 @@ def test_parameter_sorting_setting(no_warnings, sorting, result):
         assert [p['name'] for p in parameters] == result
 
 
+@pytest.mark.parametrize(['sorting', 'result'], [
+    (True, ['/a/', '/b/', '/c/']),
+    (False, ['/c/', '/a/', '/b/']),
+    (lambda x: {'/c/': 1, '/b/': 2, '/a/': 3}.get(x[0]), ['/c/', '/b/', '/a/']),
+])
+def test_operation_sorting_setting(no_warnings, sorting, result):
+    @extend_schema(responses=OpenApiTypes.ANY)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    urlpatterns = [
+        path('/c/', view_func),
+        path('/a/', view_func),
+        path('/b/', view_func),
+    ]
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.SORT_OPERATIONS', sorting
+    ):
+        schema = generate_schema(None, patterns=urlpatterns)
+        assert list(schema['paths'].keys()) == result
+
+
 def test_response_headers_without_response_body(no_warnings):
     @extend_schema(
         responses={301: None},

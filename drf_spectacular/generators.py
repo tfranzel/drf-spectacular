@@ -30,7 +30,14 @@ class EndpointEnumerator(BaseEndpointEnumerator):
             if (path, method) not in api_endpoints_deduplicated:
                 api_endpoints_deduplicated[path, method] = (path, path_regex, method, callback)
 
-        return sorted(api_endpoints_deduplicated.values(), key=alpha_operation_sorter)
+        api_endpoints = list(api_endpoints_deduplicated.values())
+
+        if callable(spectacular_settings.SORT_OPERATIONS):
+            return sorted(api_endpoints, key=spectacular_settings.SORT_OPERATIONS)
+        elif spectacular_settings.SORT_OPERATIONS:
+            return sorted(api_endpoints, key=alpha_operation_sorter)
+        else:
+            return api_endpoints
 
     def _get_api_endpoints(self, patterns, prefix):
         """
