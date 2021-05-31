@@ -1,5 +1,5 @@
 import re
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 
 from inflection import camelize
 from rest_framework.settings import api_settings
