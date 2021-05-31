@@ -12,9 +12,16 @@ from drf_spectacular.settings import spectacular_settings
 
 def custom_path_ordering(result, generator, **kwargs):
     """
-    passing in a list of strings to spectacular_settings.CUSTOM_PATH_ORDERING
+    spectacular_settings.POSTPROCESSING_HOOKS_CONFIGS takes a list which zips together with the hooks
+
+    spectacular_settings.POSTPROCESSING_HOOKS
+
+    zip(spectacular_settings.POSTPROCESSING_HOOKS, spectacular_settings.POSTPROCESSING_HOOKS_CONFIGS)
+
+    pass in a list of strings
+
     The documentation will order based on the list, and then alphaetically for the rest
-    for example: spectacular_settings.CUSTOM_PATH_ORDERING = ['schema', 'ping', 'hello']
+    for example: ['schema', 'ping', 'hello']
     would show in order 'schema', 'ping', 'hello', paths and then the rest
     for duplicate endpoints you'll need to be more specific on which path is to be sorted
     spectacular_settings.CUSTOM_PATH_ORDERING = ['api/schema', 'api/ping', 'api/hello/read', ''api/hello/write']

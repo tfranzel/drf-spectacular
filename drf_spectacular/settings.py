@@ -69,6 +69,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # must match the number of  entries in POSTPROCESSING_HOOKS
     # must satisfy interface result = hook(generator, request, public, result, config)
     # where config matches what your hook is expecting
+    # zip(spectacular_settings.POSTPROCESSING_HOOKS, spectacular_settings.POSTPROCESSING_HOOKS_CONFIGS)
     'POSTPROCESSING_HOOKS_CONFIGS': [
         {},  # postprocess_schema_enums
         # ['schema', 'ping'],  # custom_path_ordering
