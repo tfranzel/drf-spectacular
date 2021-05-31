@@ -251,12 +251,12 @@ class SchemaGenerator(BaseSchemaGenerator):
             components=self.registry.build(spectacular_settings.APPEND_COMPONENTS),
             version=self.api_version or getattr(request, 'version', None),
         )
-        if spectacular_settings.POSTPROCESSING_HOOKS:
+        try:
             for hook, config in zip(spectacular_settings.POSTPROCESSING_HOOKS, spectacular_settings.POSTPROCESSING_HOOKS_CONFIGS):
                 result = hook(result=result, generator=self, request=request, public=public, config=config)
-        else:
+        except:
             # default
             for hook in spectacular_settings.POSTPROCESSING_HOOKS:
                 result = hook(result=result, generator=self, request=request, public=public)
-
+            pass
         return sanitize_result_object(normalize_result_object(result))
