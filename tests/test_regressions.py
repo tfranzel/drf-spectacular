@@ -1964,3 +1964,31 @@ def test_viewset_reverse_list_detection_override(no_warnings):
     assert schema['paths']['/x/']['get']['parameters'][0]['name'] == 'format'
     assert schema['paths']['/x/']['get']['operationId'] == 'x_list'
     assert schema['paths']['/x/{id}/']['get']['operationId'] == 'x_retrieve'
+
+
+def test_list_serializer_with_read_only_field_on_model_property(no_warnings):
+    class M7Model(models.Model):
+        @property
+        def all_groups(self) -> typing.List[int]:
+            return [1, 2, 3]
+
+    class XField(serializers.ReadOnlyField):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        groups = serializers.ListSerializer(source="all_groups", child=XField(), read_only=True)
+
+        class Meta:
+            model = M7Model
+            fields = '__all__'
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = M7Model.objects.none()
+        serializer_class = XSerializer
+
+    schema = generate_schema('x', XViewset)
+    assert schema['components']['schemas']['X']['properties']['groups'] == {
+        'type': 'array',
+        'items': {'type': 'array', 'items': {'type': 'integer'}, 'readOnly': True},
+        'readOnly': True
+    }
