@@ -1184,7 +1184,11 @@ class AutoSchema(ViewInspector):
                 # components with empty schemas serve no purpose
                 not component.schema
                 # concrete component without properties are likely only transactional so discard
-                or (component.schema.get('type') == 'object' and not component.schema.get('properties'))
+                or (
+                    component.schema.get('type') == 'object'
+                    and not component.schema.get('properties')
+                    and 'additionalProperties' not in component.schema
+                )
             )
 
             if discard_component:

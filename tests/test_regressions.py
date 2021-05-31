@@ -1870,11 +1870,15 @@ def test_yaml_encoder_parity(no_warnings, value):
     assert OpenApiYamlRenderer().render(value)
 
 
-@pytest.mark.parametrize('comp_schema', [
-    {'type': 'number'},
-    {'type': 'array', 'items': {'type': 'number'}},
+@pytest.mark.parametrize(['comp_schema', 'discarded'], [
+    ({'type': 'object'}, True),
+    ({'type': 'object', 'properties': {}}, True),
+    ({'type': 'object', 'additionalProperties': {}}, False),
+    ({'type': 'object', 'additionalProperties': {'type': 'number'}}, False),
+    ({'type': 'number'}, False),
+    ({'type': 'array', 'items': {'type': 'number'}}, False),
 ])
-def test_serializer_extension_with_non_object_schema(no_warnings, comp_schema):
+def test_serializer_extension_with_non_object_schema(no_warnings, comp_schema, discarded):
     class XSerializer(serializers.Serializer):
         field = serializers.CharField()
 
@@ -1892,8 +1896,11 @@ def test_serializer_extension_with_non_object_schema(no_warnings, comp_schema):
     schema = generate_schema('x', view=XAPIView)
 
     operation = schema['paths']['/x']['post']
-    assert get_request_schema(operation)['$ref'] == '#/components/schemas/X'
-    assert schema['components']['schemas']['X'] == comp_schema
+    if discarded:
+        assert 'requestBody' not in operation
+    else:
+        assert get_request_schema(operation)['$ref'] == '#/components/schemas/X'
+        assert schema['components']['schemas']['X'] == comp_schema
 
 
 def test_response_header_with_serializer_component(no_warnings):
