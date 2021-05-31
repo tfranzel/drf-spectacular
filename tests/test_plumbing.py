@@ -103,19 +103,6 @@ TYPE_HINT_TEST_PARAMS = [
         list,
         {'type': 'array', 'items': {}}
     ), (
-        typing.Iterable[collections.namedtuple("NamedTupleA", "a, b")],  # noqa
-        {
-            'type': 'array',
-            'items': {'type': 'object', 'properties': {'a': {}, 'b': {}}, 'required': ['a', 'b']}
-        }
-    ), (
-        NamedTupleB,
-        {
-            'type': 'object',
-            'properties': {'a': {'type': 'integer'}, 'b': {'type': 'string'}},
-            'required': ['a', 'b']
-        }
-    ), (
         typing.Tuple[int, int, int],
         {'type': 'array', 'items': {'type': 'integer'}, 'minLength': 3, 'maxLength': 3}
     ), (
@@ -147,6 +134,23 @@ TYPE_HINT_TEST_PARAMS = [
         {'oneOf': [{'type': 'string'}, {'type': 'integer'}], 'nullable': True}
     )
 ]
+
+if sys.version_info >= (3, 7):
+    TYPE_HINT_TEST_PARAMS.append((
+        typing.Iterable[collections.namedtuple("NamedTupleA", "a, b")],  # noqa
+        {
+            'type': 'array',
+            'items': {'type': 'object', 'properties': {'a': {}, 'b': {}}, 'required': ['a', 'b']}
+        }
+    ))
+    TYPE_HINT_TEST_PARAMS.append((
+        NamedTupleB,
+        {
+            'type': 'object',
+            'properties': {'a': {'type': 'integer'}, 'b': {'type': 'string'}},
+            'required': ['a', 'b']
+        }
+    ))
 
 if sys.version_info >= (3, 8):
     TYPE_HINT_TEST_PARAMS.append((
