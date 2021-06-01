@@ -47,16 +47,17 @@ version = get_version(package)
 if sys.argv[-1] == 'publish':
     if os.system("pip freeze | grep twine"):
         print("twine not installed.\nUse `pip install twine`.\nExiting.")
-        sys.exit()
+        sys.exit(1)
     os.system("python setup.py sdist bdist_wheel")
     if os.system("twine check dist/*"):
         print("twine check failed. Packages might be outdated.")
         print("Try using `pip install -U twine wheel`.\nExiting.")
-        sys.exit()
-    os.system("twine upload dist/*")
-    print("You probably want to also tag the version now:")
-    print("  git tag -a %s -m 'version %s'" % (version, version))
-    print("  git push --tags")
+        sys.exit(1)
+    if os.system("twine upload dist/*"):
+        print("failed to upload package")
+        sys.exit(1)
+    os.system(f"git tag -a {version} -m 'version {version}'")
+    os.system("git push --tags")
     shutil.rmtree('dist')
     shutil.rmtree('build')
     shutil.rmtree('drf_spectacular.egg-info')
