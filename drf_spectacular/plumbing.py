@@ -1,3 +1,4 @@
+import collections
 import hashlib
 import inspect
 import json
@@ -7,7 +8,6 @@ import typing
 import urllib.parse
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
-from collections.abc import Hashable
 from decimal import Decimal
 from enum import Enum
 from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
@@ -84,7 +84,7 @@ def is_field(obj):
 
 
 def is_basic_type(obj, allow_none=True):
-    if not isinstance(obj, Hashable):
+    if not isinstance(obj, collections.abc.Hashable):
         return False
     if not allow_none and (obj is None or obj is OpenApiTypes.NONE):
         return False
@@ -927,9 +927,16 @@ def resolve_type_hint(hint):
 
     if origin is None and is_basic_type(hint, allow_none=False):
         return build_basic_type(hint)
+    elif origin is None and inspect.isclass(hint) and issubclass(hint, tuple):
+        # a convoluted way to catch NamedTuple. suggestions welcome.
+        if typing.get_type_hints(hint):
+            properties = {k: resolve_type_hint(v) for k, v in typing.get_type_hints(hint).items()}
+        else:
+            properties = {k: build_basic_type(OpenApiTypes.ANY) for k in hint._fields}
+        return build_object_type(properties=properties, required=properties.keys())
     elif origin is list or hint is list:
         return build_array_type(
-            resolve_type_hint(args[0]) if args else build_basic_type(OpenApiTypes.OBJECT)
+            resolve_type_hint(args[0]) if args else build_basic_type(OpenApiTypes.ANY)
         )
     elif origin is tuple:
         return build_array_type(
@@ -967,5 +974,7 @@ def resolve_type_hint(hint):
         if type(None) in args:
             schema['nullable'] = True
         return schema
+    elif origin is collections.abc.Iterable:
+        return build_array_type(resolve_type_hint(args[0]))
     else:
         raise UnableToProceedError()

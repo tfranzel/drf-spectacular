@@ -1562,6 +1562,29 @@ def test_parameter_sorting_setting(no_warnings, sorting, result):
         assert [p['name'] for p in parameters] == result
 
 
+@pytest.mark.parametrize(['sorting', 'result'], [
+    (True, ['/a/', '/b/', '/c/']),
+    (False, ['/c/', '/a/', '/b/']),
+    (lambda x: {'/c/': 1, '/b/': 2, '/a/': 3}.get(x[0]), ['/c/', '/b/', '/a/']),
+])
+def test_operation_sorting_setting(no_warnings, sorting, result):
+    @extend_schema(responses=OpenApiTypes.ANY)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    urlpatterns = [
+        path('/c/', view_func),
+        path('/a/', view_func),
+        path('/b/', view_func),
+    ]
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.SORT_OPERATIONS', sorting
+    ):
+        schema = generate_schema(None, patterns=urlpatterns)
+        assert list(schema['paths'].keys()) == result
+
+
 def test_response_headers_without_response_body(no_warnings):
     @extend_schema(
         responses={301: None},
@@ -1847,11 +1870,15 @@ def test_yaml_encoder_parity(no_warnings, value):
     assert OpenApiYamlRenderer().render(value)
 
 
-@pytest.mark.parametrize('comp_schema', [
-    {'type': 'number'},
-    {'type': 'array', 'items': {'type': 'number'}},
+@pytest.mark.parametrize(['comp_schema', 'discarded'], [
+    ({'type': 'object'}, True),
+    ({'type': 'object', 'properties': {}}, True),
+    ({'type': 'object', 'additionalProperties': {}}, False),
+    ({'type': 'object', 'additionalProperties': {'type': 'number'}}, False),
+    ({'type': 'number'}, False),
+    ({'type': 'array', 'items': {'type': 'number'}}, False),
 ])
-def test_serializer_extension_with_non_object_schema(no_warnings, comp_schema):
+def test_serializer_extension_with_non_object_schema(no_warnings, comp_schema, discarded):
     class XSerializer(serializers.Serializer):
         field = serializers.CharField()
 
@@ -1869,8 +1896,11 @@ def test_serializer_extension_with_non_object_schema(no_warnings, comp_schema):
     schema = generate_schema('x', view=XAPIView)
 
     operation = schema['paths']['/x']['post']
-    assert get_request_schema(operation)['$ref'] == '#/components/schemas/X'
-    assert schema['components']['schemas']['X'] == comp_schema
+    if discarded:
+        assert 'requestBody' not in operation
+    else:
+        assert get_request_schema(operation)['$ref'] == '#/components/schemas/X'
+        assert schema['components']['schemas']['X'] == comp_schema
 
 
 def test_response_header_with_serializer_component(no_warnings):
@@ -1934,3 +1964,31 @@ def test_viewset_reverse_list_detection_override(no_warnings):
     assert schema['paths']['/x/']['get']['parameters'][0]['name'] == 'format'
     assert schema['paths']['/x/']['get']['operationId'] == 'x_list'
     assert schema['paths']['/x/{id}/']['get']['operationId'] == 'x_retrieve'
+
+
+def test_list_serializer_with_read_only_field_on_model_property(no_warnings):
+    class M7Model(models.Model):
+        @property
+        def all_groups(self) -> typing.List[int]:
+            return [1, 2, 3]
+
+    class XField(serializers.ReadOnlyField):
+        pass
+
+    class XSerializer(serializers.ModelSerializer):
+        groups = serializers.ListSerializer(source="all_groups", child=XField(), read_only=True)
+
+        class Meta:
+            model = M7Model
+            fields = '__all__'
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = M7Model.objects.none()
+        serializer_class = XSerializer
+
+    schema = generate_schema('x', XViewset)
+    assert schema['components']['schemas']['X']['properties']['groups'] == {
+        'type': 'array',
+        'items': {'type': 'array', 'items': {'type': 'integer'}, 'readOnly': True},
+        'readOnly': True
+    }

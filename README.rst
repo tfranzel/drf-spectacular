@@ -87,7 +87,7 @@ and finally register our spectacular AutoSchema with DRF.
 
 drf-spectacular ships with sane `default settings <https://drf-spectacular.readthedocs.io/en/latest/settings.html>`_
 that should work reasonably well out of the box. It is not necessary to
-specify any settings, but we comment to specify at least some metadata.
+specify any settings, but we recommend to specify at least some metadata.
 
 .. code:: python
 

@@ -6,7 +6,6 @@ from oauth2_provider.scopes import BaseScopes
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.authentication import BasicAuthentication
 
-from drf_spectacular.validation import validate_schema
 from tests import assert_schema, generate_schema
 
 try:
@@ -116,7 +115,6 @@ def test_oauth2_toolkit_scopes_backend(no_warnings):
     ]
 
     schema = generate_schema(None, patterns=urlpatterns)
-    validate_schema(schema)
 
     assert 'oauth2' in schema['components']['securitySchemes']
     oauth2 = schema['components']['securitySchemes']['oauth2']

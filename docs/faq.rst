@@ -174,10 +174,31 @@ in fact have a ``list`` method (via mixin), but the actual entrypoint is still t
 call is proxied through the entrypoint.
 
 
-Where should i put my extensions? / my extensions are not detected
+Where should I put my extensions? / my extensions are not detected
 ------------------------------------------------------------------
 
 The extensions register themselves automatically. Just be sure that the python interpreter sees them at least once.
 To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your ``PROJECT/__init__.py``
 (same directory as ``settings.py`` and ``urls.py``) with ``import PROJECT.schema``. Please do not import the file in
 ``settings.py`` as this may potentially lead to cyclic import issues.
+
+
+My ``@action`` is erroneously paginated or has filter parameters that I do not want
+-----------------------------------------------------------------------------------
+
+This usually happens when ``@extend_schema(responses=XSerializer(many=True))`` is used. Actions inherit filter
+and pagination classes from their ``ViewSet``. If the response is then marked as a list, the ``pagination_class``
+kicks in. Since actions are handled manually by the user, this behavior is usually not immediately obvious.
+To make make your intentions clear to `drf-spectacular`, you need to clear the offening classes in the action
+decorator, e.g. setting ``pagination_class=None``.
+
+.. code-block:: python
+
+    class XViewset(viewsets.ModelViewSet):
+        queryset = SimpleModel.objects.all()
+        pagination_class = pagination.LimitOffsetPagination
+
+        @extend_schema(responses=SimpleSerializer(many=True))
+        @action(methods=['GET'], detail=False, pagination_class=None)
+        def custom_action(self):
+            pass

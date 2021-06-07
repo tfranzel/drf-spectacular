@@ -1,6 +1,30 @@
 Changelog
 =========
 
+
+0.17.0 (2021-06-01)
+-------------------
+
+- improve type hint detection for Iterable and NamedTuple `#404 <https://github.com/tfranzel/drf-spectacular/issues/404>`_
+- bugfix ReadOnlyField when used as ListSerlializer child `#404 <https://github.com/tfranzel/drf-spectacular/issues/404>`_
+- improve component discard logic `#395 <https://github.com/tfranzel/drf-spectacular/issues/395>`_
+- allow disabling operation sorting for sorting in PREPROCESSIN_HOOKS `#410 <https://github.com/tfranzel/drf-spectacular/issues/410>`_
+- add regression test for `#407 <https://github.com/tfranzel/drf-spectacular/issues/407>`_
+- fix error on read-only serializer [Matthieu Treussart]
+- invert component exclusion logic (OpenApiSerializerExtension) `#351 <https://github.com/tfranzel/drf-spectacular/issues/351>`_ `#391 <https://github.com/tfranzel/drf-spectacular/issues/391>`_
+- add many=True support to PolymorphicProxySerializer `#382 <https://github.com/tfranzel/drf-spectacular/issues/382>`_
+- improve documentation, remove py2 wheel tag, mark as mypy-enabled
+- bugfix YAML serialization errors that are ok with JSON `#388 <https://github.com/tfranzel/drf-spectacular/issues/388>`_
+- bugfix missing auth extension for JWTTokenUserAuthentication `#387 <https://github.com/tfranzel/drf-spectacular/issues/387>`_
+- Rename MethodSerializerField -> SerializerMethodField in README [Christoph Krybus]
+
+Breaking changes / important additions:
+
+- Quite a few small improvements. The biggest change is the inversion of the component discard logic.
+  This should have no negative impact, but to be on the safe side we'll opt for a y-stream release.
+- The package is now marked as being typed, which should get picked up natively by mypy
+
+
 0.16.0 (2021-05-10)
 -------------------
 

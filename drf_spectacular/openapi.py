@@ -683,8 +683,15 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.ReadOnlyField):
             # direct source from the serializer
             assert field.source_attrs, f'ReadOnlyField "{field}" needs a proper source'
-            target = follow_field_source(field.parent.Meta.model, field.source_attrs)
+            # when field is nested inside a ListSerializer, the Meta class is 2 steps removed
+            if is_list_serializer(field.parent):
+                model = field.parent.parent.Meta.model
+                source = field.parent.source_attrs
+            else:
+                model = field.parent.Meta.model
+                source = field.source_attrs
 
+            target = follow_field_source(model, source)
             if callable(target):
                 schema = self._map_response_type_hint(target)
             elif isinstance(target, models.Field):
@@ -1213,7 +1220,11 @@ class AutoSchema(ViewInspector):
                 # components with empty schemas serve no purpose
                 not component.schema
                 # concrete component without properties are likely only transactional so discard
-                or (component.schema.get('type') == 'object' and not component.schema.get('properties'))
+                or (
+                    component.schema.get('type') == 'object'
+                    and not component.schema.get('properties')
+                    and 'additionalProperties' not in component.schema
+                )
             )
 
             if discard_component:

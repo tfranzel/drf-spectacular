@@ -70,6 +70,12 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Example: 'drf_spectacular.hooks.preprocess_exclude_path_format'
     'PREPROCESSING_HOOKS': [],
 
+    # Determines how operations should be sorted. If you intend to do sorting with a
+    # PREPROCESSING_HOOKS, be sure to disable this setting. If configured, the sorting
+    # is applied after the PREPROCESSING_HOOKS. Accepts either
+    # True (drf-spectacular's alpha-sorter), False, or a callable for sort's key arg.
+    'SORT_OPERATIONS': True,
+
     # enum name overrides. dict with keys "YourEnum" and their choice values "field.choices"
     'ENUM_NAME_OVERRIDES': {},
     # Adds "blank" and "null" enum choices where appropriate. disable on client generation issues
@@ -141,6 +147,7 @@ IMPORT_STRINGS = [
     'PREPROCESSING_HOOKS',
     'GET_LIB_DOC_EXCLUDES',
     'GET_MOCK_REQUEST',
+    'SORT_OPERATIONS',
     'SORT_OPERATION_PARAMETERS',
 ]
 

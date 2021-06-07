@@ -184,7 +184,7 @@ class OpenApiResponse(OpenApiSchemaBase):
 
 def extend_schema(
         operation_id: Optional[str] = None,
-        parameters: Optional[List[OpenApiParameter]] = None,
+        parameters: Optional[List[Union[OpenApiParameter, _SerializerType]]] = None,
         request: Any = empty,
         responses: Any = empty,
         auth: Optional[List[str]] = None,
@@ -366,7 +366,7 @@ def extend_schema(
 
 
 def extend_schema_field(
-        field: Union[_SerializerTypeVariations, Dict],
+        field: Union[_SerializerTypeVariations, Field, Dict],
         component_name: Optional[str] = None
 ):
     """
