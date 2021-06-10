@@ -6,6 +6,10 @@ from uuid import UUID
 
 from drf_spectacular.settings import spectacular_settings
 
+_KnownPythonTypes = typing.Type[
+    typing.Union[str, float, bool, bytes, int, UUID, Decimal, datetime, date, dict],
+]
+
 
 class OpenApiTypes(enum.Enum):
     """
@@ -81,7 +85,6 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.ANY: {},
     OpenApiTypes.NONE: None,
 }
-
 
 PYTHON_TYPE_MAPPING = {
     str: OpenApiTypes.STR,

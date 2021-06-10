@@ -15,13 +15,13 @@ try:
         NumericRangeFilter, OrderingFilter, RangeFilter, UUIDFilter,
     )
 except ImportError:
-    class DjangoFilterBackend:
+    class DjangoFilterBackend:  # type: ignore
         pass
 
-    class FilterSet:
+    class FilterSet:  # type: ignore
         pass
 
-    class NumberFilter:
+    class NumberFilter:  # type: ignore
         def init(self, **kwargs):
             pass
 

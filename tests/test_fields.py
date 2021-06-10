@@ -69,7 +69,7 @@ class AllFields(models.Model):
     if models.IPAddressField in serializers.ModelSerializer.serializer_field_mapping:
         field_ip = models.IPAddressField()
     else:
-        field_ip = models.GenericIPAddressField(protocol='ipv6')
+        field_ip = models.GenericIPAddressField(protocol='ipv6')  # type: ignore
     field_ip_generic = models.GenericIPAddressField(protocol='ipv6')
     field_decimal = models.DecimalField(max_digits=6, decimal_places=3)
     field_file = models.FileField(storage=fs)
@@ -83,7 +83,7 @@ class AllFields(models.Model):
     if DJANGO_VERSION > '3.1':
         field_nullbool = models.BooleanField(null=True)
     else:
-        field_nullbool = models.NullBooleanField()
+        field_nullbool = models.NullBooleanField()  # type: ignore
     field_time = models.TimeField()
     field_duration = models.DurationField()
 
@@ -170,13 +170,13 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     # extra related fields
     field_related_slug = serializers.SlugRelatedField(
         read_only=True, source='field_foreign', slug_field='id'
-    )
+    )  # type: ignore
     field_related_string = serializers.StringRelatedField(
         source='field_foreign'
-    )
+    )  # type: ignore
     field_related_hyperlink = serializers.HyperlinkedRelatedField(
         read_only=True, source='field_foreign', view_name='aux-detail'
-    )
+    )  # type: ignore
     field_identity_hyperlink = serializers.HyperlinkedIdentityField(
         read_only=True, view_name='allfields-detail'
     )

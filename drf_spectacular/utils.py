@@ -7,10 +7,9 @@ from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import error, get_view_methods, set_override, warn
-from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 
 _SerializerType = Union[Serializer, Type[Serializer]]
-_SerializerTypeVariations = Union[OpenApiTypes, _SerializerType]
 
 
 class PolymorphicProxySerializer(Serializer):
@@ -134,7 +133,7 @@ class OpenApiParameter(OpenApiSchemaBase):
     def __init__(
             self,
             name: str,
-            type: Any = str,
+            type: Union[_SerializerType, _KnownPythonTypes, OpenApiTypes, dict] = str,
             location: str = QUERY,
             required: bool = False,
             description: str = '',
@@ -366,7 +365,7 @@ def extend_schema(
 
 
 def extend_schema_field(
-        field: Union[_SerializerTypeVariations, Field, Dict],
+        field: Union[_SerializerType, Field, OpenApiTypes, Dict],
         component_name: Optional[str] = None
 ):
     """

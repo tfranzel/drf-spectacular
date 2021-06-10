@@ -661,10 +661,10 @@ def test_follow_field_source_through_intermediate_property_or_function(no_warnin
     class FieldSourceTraversalModel1(models.Model):
         @property
         def prop(self) -> FieldSourceTraversalModel2:  # property is required for traversal
-            return  # pragma: no cover
+            return  # type: ignore # pragma: no cover
 
         def func(self) -> FieldSourceTraversalModel2:  # property is required for traversal
-            return  # pragma: no cover
+            return  # type: ignore # pragma: no cover
 
     class XSerializer(serializers.ModelSerializer):
         prop = serializers.ReadOnlyField(source='prop.x')
