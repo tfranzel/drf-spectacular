@@ -1970,7 +1970,7 @@ def test_list_serializer_with_read_only_field_on_model_property(no_warnings):
     class M7Model(models.Model):
         @property
         def all_groups(self) -> typing.List[int]:
-            return [1, 2, 3]
+            return [1, 2, 3]  # pragma: no cover
 
     class XField(serializers.ReadOnlyField):
         pass
