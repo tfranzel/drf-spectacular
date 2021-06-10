@@ -1992,3 +1992,21 @@ def test_list_serializer_with_read_only_field_on_model_property(no_warnings):
         'items': {'type': 'array', 'items': {'type': 'integer'}, 'readOnly': True},
         'readOnly': True
     }
+
+
+def test_extend_schema_serializer_field_deprecation(no_warnings):
+    @extend_schema_serializer(deprecate_fields=['old'])
+    class XSerializer(serializers.Serializer):
+        old = serializers.IntegerField()
+        new = serializers.IntegerField()
+
+    class XView(generics.ListCreateAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    assert schema['components']['schemas']['X']['properties']['new'] == {
+        'type': 'integer',
+    }
+    assert schema['components']['schemas']['X']['properties']['old'] == {
+        'type': 'integer', 'deprecated': True
+    }

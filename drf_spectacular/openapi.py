@@ -771,6 +771,9 @@ class AutoSchema(ViewInspector):
 
             self._map_field_validators(field, schema)
 
+            if field.field_name in get_override(serializer, 'deprecate_fields', []):
+                schema['deprecated'] = True
+
             properties[field.field_name] = safe_ref(schema)
 
         if is_patched_serializer(serializer, direction):
