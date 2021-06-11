@@ -2010,3 +2010,17 @@ def test_extend_schema_serializer_field_deprecation(no_warnings):
     assert schema['components']['schemas']['X']['properties']['old'] == {
         'type': 'integer', 'deprecated': True
     }
+
+
+def test_paginated_list_serializer_with_dict_field(no_warnings):
+    class XAPIView(generics.ListAPIView):
+        pagination_class = pagination.LimitOffsetPagination
+
+        @extend_schema(responses=serializers.ListSerializer(child=serializers.DictField()))
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view=XAPIView)
+    assert get_response_schema(schema['paths']['/x/']['get'])['properties']['results'] == {
+        'type': 'array', 'items': {'type': 'object', 'additionalProperties': {}}
+    }

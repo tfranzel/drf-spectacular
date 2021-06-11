@@ -1074,7 +1074,11 @@ class AutoSchema(ViewInspector):
             schema = build_array_type(schema)
             paginator = self._get_paginator()
 
-            if paginator and is_serializer(serializer):
+            if (
+                paginator
+                and is_serializer(serializer)
+                and (not is_list_serializer(serializer) or is_serializer(serializer.child))
+            ):
                 paginated_name = f'Paginated{self._get_serializer_name(serializer, "response")}List'
                 component = ResolvedComponent(
                     name=paginated_name,
