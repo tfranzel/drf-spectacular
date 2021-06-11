@@ -225,3 +225,35 @@ def test_through_model_multi_choice_filter(no_warnings):
         filter_class = MyFilter
 
     generate_schema('x', TestViewSet)
+
+
+def test_boolean_filter_subclassing_in_different_import_path(no_warnings):
+    # this import is important as there is a override via subclassing
+    # happening in django_filter.rest_framework.filters
+    import django_filters
+
+    class DjangoFilterDummyModel(models.Model):
+        seen = models.DateTimeField(null=True)
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = DjangoFilterDummyModel
+            fields = "__all__"
+
+    class XFilterSet(FilterSet):
+        class Meta:
+            model = DjangoFilterDummyModel
+            fields = []
+
+        seen = django_filters.BooleanFilter(field_name="seen", lookup_expr="isnull")
+
+    class XViewSet(viewsets.ModelViewSet):
+        queryset = DjangoFilterDummyModel.objects.all()
+        serializer_class = XSerializer
+        filterset_class = XFilterSet
+        filter_backends = [DjangoFilterBackend]
+
+    schema = generate_schema('/x', XViewSet)
+    assert schema['paths']['/x/']['get']['parameters'] == [
+        {'in': 'query', 'name': 'seen', 'schema': {'type': 'boolean'}}
+    ]
