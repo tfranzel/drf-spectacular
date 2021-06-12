@@ -2,6 +2,24 @@ Changelog
 =========
 
 
+0.17.1 (2021-06-12)
+-------------------
+
+- bugfix 201 response for (List)CreateAPIVIew `#428 <https://github.com/tfranzel/drf-spectacular/issues/428>`_
+- support paginated ListSerializer with field child `#413 <https://github.com/tfranzel/drf-spectacular/issues/413>`_
+- fix django-filter.BooleanFilter subclass issue `#317 <https://github.com/tfranzel/drf-spectacular/issues/317>`_
+- serializer field deprecation `#415 <https://github.com/tfranzel/drf-spectacular/issues/415>`_
+- improve extension documentation `#426 <https://github.com/tfranzel/drf-spectacular/issues/426>`_
+- improve type hints and fix mypy issues on tests.
+- add missing usage case to type hints `#418 <https://github.com/tfranzel/drf-spectacular/issues/418>`_
+- Typo(?) README fix [Jan Jurec]
+
+Breaking changes / important additions:
+
+- This release is mainly for fixing incomplete type hints which mypy will potentially complain about.
+- A few small fixes that should either have no or a very small impact in schemas.
+
+
 0.17.0 (2021-06-01)
 -------------------
 
