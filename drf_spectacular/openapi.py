@@ -27,9 +27,9 @@ from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta, build_array_type,
     build_basic_type, build_choice_field, build_examples_list, build_media_type_object,
     build_object_type, build_parameter_type, error, follow_field_source, force_instance, get_doc,
-    get_view_model, is_basic_type, is_field, is_list_serializer, is_patched_serializer,
-    is_serializer, is_trivial_string_variation, resolve_regex_path_parameter, resolve_type_hint,
-    safe_ref, warn,
+    get_view_model, is_basic_type, is_create_operation, is_field, is_list_serializer,
+    is_patched_serializer, is_serializer, is_trivial_string_variation, resolve_regex_path_parameter,
+    resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes, build_generic_type
@@ -999,7 +999,7 @@ class AutoSchema(ViewInspector):
         ):
             if self.method == 'DELETE':
                 return {'204': {'description': _('No response body')}}
-            if self.method == 'POST' and getattr(self.view, 'action', None) == 'create':
+            if is_create_operation(self.method, self.view):
                 return {'201': self._get_response_for_code(response_serializers, '201')}
             return {'200': self._get_response_for_code(response_serializers, '200')}
         elif isinstance(response_serializers, dict):
