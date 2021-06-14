@@ -1,11 +1,11 @@
 from abc import abstractmethod
 from typing import TYPE_CHECKING, List, Optional, Type
 
-from rest_framework.views import APIView
-
 from drf_spectacular.plumbing import OpenApiGeneratorExtension
 
 if TYPE_CHECKING:
+    from rest_framework.views import APIView
+
     from drf_spectacular.openapi import AutoSchema
 
 
@@ -97,7 +97,7 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
             cls.target_class = cls.target_class.cls
 
     @abstractmethod
-    def view_replacement(self) -> Type[APIView]:
+    def view_replacement(self) -> 'Type[APIView]':
         pass  # pragma: no cover
 
 
