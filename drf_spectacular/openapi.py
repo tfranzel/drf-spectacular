@@ -9,7 +9,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework import permissions, renderers, serializers
 from rest_framework.fields import _UnvalidatedField, empty
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView, ListCreateAPIView
 from rest_framework.mixins import ListModelMixin
 from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description  # type: ignore
@@ -27,9 +27,9 @@ from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta, build_array_type,
     build_basic_type, build_choice_field, build_examples_list, build_media_type_object,
     build_object_type, build_parameter_type, error, follow_field_source, force_instance, get_doc,
-    get_view_model, is_basic_type, is_create_operation, is_field, is_list_serializer,
-    is_patched_serializer, is_serializer, is_trivial_string_variation, resolve_regex_path_parameter,
-    resolve_type_hint, safe_ref, warn,
+    get_view_model, is_basic_type, is_field, is_list_serializer, is_patched_serializer,
+    is_serializer, is_trivial_string_variation, resolve_regex_path_parameter, resolve_type_hint,
+    safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes, build_generic_type
@@ -116,6 +116,15 @@ class AutoSchema(ViewInspector):
             if lookup_url_kwarg in uritemplate.variables(self.path):
                 return False
 
+        return False
+
+    def _is_create_operation(self):
+        if self.method != 'POST':
+            return False
+        if getattr(self.view, 'action', None) == 'create':
+            return True
+        if isinstance(self.view, (ListCreateAPIView, CreateAPIView)):
+            return True
         return False
 
     def get_override_parameters(self):
@@ -999,7 +1008,7 @@ class AutoSchema(ViewInspector):
         ):
             if self.method == 'DELETE':
                 return {'204': {'description': _('No response body')}}
-            if is_create_operation(self.method, self.view):
+            if self._is_create_operation():
                 return {'201': self._get_response_for_code(response_serializers, '201')}
             return {'200': self._get_response_for_code(response_serializers, '200')}
         elif isinstance(response_serializers, dict):

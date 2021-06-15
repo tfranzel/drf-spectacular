@@ -26,7 +26,7 @@ from django.urls.resolvers import (  # type: ignore
 )
 from django.utils.functional import Promise, cached_property
 from django.utils.module_loading import import_string
-from rest_framework import exceptions, fields, generics, mixins, serializers, versioning
+from rest_framework import exceptions, fields, mixins, serializers, versioning
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
@@ -104,16 +104,6 @@ def is_trivial_string_variation(a: str, b: str):
     a = (a or '').strip().lower().replace(' ', '_').replace('-', '_')
     b = (b or '').strip().lower().replace(' ', '_').replace('-', '_')
     return a == b
-
-
-def is_create_operation(method, view):
-    if method != 'POST':
-        return False
-    if getattr(view, 'action', None) == 'create':
-        return True
-    if isinstance(view, (generics.ListCreateAPIView, generics.CreateAPIView)):
-        return True
-    return False
 
 
 def get_lib_doc_excludes():
