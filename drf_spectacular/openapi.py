@@ -9,7 +9,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework import permissions, renderers, serializers
 from rest_framework.fields import _UnvalidatedField, empty
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView, ListCreateAPIView
 from rest_framework.mixins import ListModelMixin
 from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description  # type: ignore
@@ -116,6 +116,15 @@ class AutoSchema(ViewInspector):
             if lookup_url_kwarg in uritemplate.variables(self.path):
                 return False
 
+        return False
+
+    def _is_create_operation(self):
+        if self.method != 'POST':
+            return False
+        if getattr(self.view, 'action', None) == 'create':
+            return True
+        if isinstance(self.view, (ListCreateAPIView, CreateAPIView)):
+            return True
         return False
 
     def get_override_parameters(self):
@@ -468,7 +477,7 @@ class AutoSchema(ViewInspector):
             )
             return build_basic_type(OpenApiTypes.STR)
 
-    def _map_serializer_field(self, field, direction):
+    def _map_serializer_field(self, field, direction, bypass_extensions=False):
         meta = self._get_serializer_field_meta(field)
 
         if has_override(field, 'field'):
@@ -496,7 +505,7 @@ class AutoSchema(ViewInspector):
                 return append_meta(schema, meta)
 
         serializer_field_extension = OpenApiSerializerFieldExtension.get_match(field)
-        if serializer_field_extension:
+        if serializer_field_extension and not bypass_extensions:
             schema = serializer_field_extension.map_serializer_field(self, direction)
             if serializer_field_extension.get_name():
                 component = ResolvedComponent(
@@ -715,11 +724,11 @@ class AutoSchema(ViewInspector):
         if field.min_value:
             content['minimum'] = field.min_value
 
-    def _map_serializer(self, serializer, direction):
+    def _map_serializer(self, serializer, direction, bypass_extensions=False):
         serializer = force_instance(serializer)
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
 
-        if serializer_extension:
+        if serializer_extension and not bypass_extensions:
             schema = serializer_extension.map_serializer(self, direction)
         else:
             schema = self._map_basic_serializer(serializer, direction)
@@ -799,6 +808,9 @@ class AutoSchema(ViewInspector):
                 required.add(field.field_name)
 
             self._map_field_validators(field, schema)
+
+            if field.field_name in get_override(serializer, 'deprecate_fields', []):
+                schema['deprecated'] = True
 
             properties[field.field_name] = safe_ref(schema)
 
@@ -1025,7 +1037,7 @@ class AutoSchema(ViewInspector):
         ):
             if self.method == 'DELETE':
                 return {'204': {'description': _('No response body')}}
-            if self.method == 'POST' and getattr(self.view, 'action', None) == 'create':
+            if self._is_create_operation():
                 return {'201': self._get_response_for_code(response_serializers, '201')}
             return {'200': self._get_response_for_code(response_serializers, '200')}
         elif isinstance(response_serializers, dict):
@@ -1100,7 +1112,11 @@ class AutoSchema(ViewInspector):
             schema = build_array_type(schema)
             paginator = self._get_paginator()
 
-            if paginator and is_serializer(serializer):
+            if (
+                paginator
+                and is_serializer(serializer)
+                and (not is_list_serializer(serializer) or is_serializer(serializer.child))
+            ):
                 paginated_name = f'Paginated{self._get_serializer_name(serializer, "response")}List'
                 component = ResolvedComponent(
                     name=paginated_name,

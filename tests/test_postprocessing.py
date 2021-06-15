@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 try:
     from django.db.models.enums import Choices
 except ImportError:
-    Choices = object  # django < 3.0 handling
+    Choices = object  # type: ignore  # django < 3.0 handling
 
 from drf_spectacular.plumbing import list_hash, load_enum_name_overrides
 from drf_spectacular.utils import OpenApiParameter, extend_schema

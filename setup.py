@@ -56,8 +56,13 @@ if sys.argv[-1] == 'publish':
     if os.system("twine upload dist/*"):
         print("failed to upload package")
         sys.exit(1)
+    if os.environ.get('CI'):
+        os.system("git config user.name github-actions")
+        os.system("git config user.email github-actions@github.com")
     os.system(f"git tag -a {version} -m 'version {version}'")
-    os.system("git push --tags")
+    if os.system("git push --tags"):
+        print("failed pushing release tag")
+        sys.exit(1)
     shutil.rmtree('dist')
     shutil.rmtree('build')
     shutil.rmtree('drf_spectacular.egg-info')

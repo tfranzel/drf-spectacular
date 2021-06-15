@@ -661,10 +661,10 @@ def test_follow_field_source_through_intermediate_property_or_function(no_warnin
     class FieldSourceTraversalModel1(models.Model):
         @property
         def prop(self) -> FieldSourceTraversalModel2:  # property is required for traversal
-            return  # pragma: no cover
+            return  # type: ignore # pragma: no cover
 
         def func(self) -> FieldSourceTraversalModel2:  # property is required for traversal
-            return  # pragma: no cover
+            return  # type: ignore # pragma: no cover
 
     class XSerializer(serializers.ModelSerializer):
         prop = serializers.ReadOnlyField(source='prop.x')
@@ -1970,7 +1970,7 @@ def test_list_serializer_with_read_only_field_on_model_property(no_warnings):
     class M7Model(models.Model):
         @property
         def all_groups(self) -> typing.List[int]:
-            return [1, 2, 3]
+            return [1, 2, 3]  # pragma: no cover
 
     class XField(serializers.ReadOnlyField):
         pass
@@ -1991,4 +1991,36 @@ def test_list_serializer_with_read_only_field_on_model_property(no_warnings):
         'type': 'array',
         'items': {'type': 'array', 'items': {'type': 'integer'}, 'readOnly': True},
         'readOnly': True
+    }
+
+
+def test_extend_schema_serializer_field_deprecation(no_warnings):
+    @extend_schema_serializer(deprecate_fields=['old'])
+    class XSerializer(serializers.Serializer):
+        old = serializers.IntegerField()
+        new = serializers.IntegerField()
+
+    class XView(generics.ListCreateAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    assert schema['components']['schemas']['X']['properties']['new'] == {
+        'type': 'integer',
+    }
+    assert schema['components']['schemas']['X']['properties']['old'] == {
+        'type': 'integer', 'deprecated': True
+    }
+
+
+def test_paginated_list_serializer_with_dict_field(no_warnings):
+    class XAPIView(generics.ListAPIView):
+        pagination_class = pagination.LimitOffsetPagination
+
+        @extend_schema(responses=serializers.ListSerializer(child=serializers.DictField()))
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view=XAPIView)
+    assert get_response_schema(schema['paths']['/x/']['get'])['properties']['results'] == {
+        'type': 'array', 'items': {'type': 'object', 'additionalProperties': {}}
     }

@@ -120,7 +120,7 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         for marker in item.own_markers:
             if marker.name == 'contrib' and config.getoption("--skip-missing-contrib"):
-                if not all([module_available(module_str) for module_str in marker.args]):
+                if not all([module_available(module_str) for module_str in marker.args]):  # pragma: no cover
                     item.add_marker(skip_missing_contrib)
             if marker.name == 'contrib' and config.getoption("--allow-contrib-fail"):
                 item.add_marker(allow_contrib_fail)

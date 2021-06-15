@@ -7,10 +7,9 @@ from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import error, get_view_methods, set_override, warn
-from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 
 _SerializerType = Union[Serializer, Type[Serializer]]
-_SerializerTypeVariations = Union[OpenApiTypes, _SerializerType]
 
 
 class PolymorphicProxySerializer(Serializer):
@@ -134,7 +133,7 @@ class OpenApiParameter(OpenApiSchemaBase):
     def __init__(
             self,
             name: str,
-            type: Any = str,
+            type: Union[_SerializerType, _KnownPythonTypes, OpenApiTypes, dict] = str,
             location: str = QUERY,
             required: bool = False,
             description: str = '',
@@ -366,7 +365,7 @@ def extend_schema(
 
 
 def extend_schema_field(
-        field: Union[_SerializerTypeVariations, Field, Dict],
+        field: Union[_SerializerType, Field, OpenApiTypes, Dict],
         component_name: Optional[str] = None
 ):
     """
@@ -393,6 +392,7 @@ def extend_schema_field(
 def extend_schema_serializer(
         many: Optional[bool] = None,
         exclude_fields: Optional[List[str]] = None,
+        deprecate_fields: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
 ):
     """
@@ -403,6 +403,7 @@ def extend_schema_serializer(
         heuristic to acknowledge a non-list serializer.
     :param exclude_fields: fields to ignore while processing the serializer. only affects the
         schema. fields will still be exposed through the API.
+    :param deprecate_fields: fields to mark as deprecated while processing the serializer.
     :param examples: define example data to serializer.
     """
     def decorator(klass):
@@ -410,6 +411,8 @@ def extend_schema_serializer(
             set_override(klass, 'many', many)
         if exclude_fields:
             set_override(klass, 'exclude_fields', exclude_fields)
+        if deprecate_fields:
+            set_override(klass, 'deprecate_fields', deprecate_fields)
         if examples:
             set_override(klass, 'examples', examples)
         return klass

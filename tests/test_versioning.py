@@ -1,3 +1,4 @@
+# type: ignore
 import re
 from unittest import mock
 

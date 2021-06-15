@@ -47,7 +47,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         return result
 
     def resolve_filter_field(self, auto_schema, model, filterset_class, field_name, filter_field):
-        from django_filters.rest_framework import filters
+        from django_filters import filters
 
         unambiguous_mapping = {
             filters.CharFilter: OpenApiTypes.STR,

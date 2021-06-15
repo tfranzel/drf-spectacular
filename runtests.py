@@ -14,7 +14,7 @@ PYTEST_ARGS = {
 
 FLAKE8_ARGS = ['drf_spectacular', 'tests']
 
-MYPY_ARGS = ['--config-file=tox.ini', 'drf_spectacular']
+MYPY_ARGS = ['--config-file=tox.ini', 'drf_spectacular', 'tests']
 
 ISORT_ARGS = ['--check', '--diff', '.']
 
