@@ -53,7 +53,7 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
 
     def map_serializer(self, auto_schema: 'AutoSchema', direction):
         """ override for customized serializer mapping """
-        return auto_schema._map_basic_serializer(self.target_class, direction)
+        return auto_schema._map_serializer(self.target_class, direction, bypass_extensions=True)
 
 
 class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializerFieldExtension']):
@@ -61,8 +61,9 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
     Extension for replacing an insufficient or specifying an unknown SerializerField schema.
 
     To augment the default schema, you can get what `drf-spectacular` would generate with
-    ``auto_schema._map_serializer_field(self.target, direction)``. Beware that this may
-    still emit warnings, in which case manual construction is advisable.
+    ``auto_schema._map_serializer_field(self.target, direction, bypass_extensions=True)``.
+    and edit the returned schema at your discretion. Beware that this may still emit
+    warnings, in which case manual construction is advisable.
 
     ``map_serializer_field()`` is expected to return a valid `OpenAPI schema object
     <https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schema-object>`_.

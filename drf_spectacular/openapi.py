@@ -448,7 +448,7 @@ class AutoSchema(ViewInspector):
             )
             return build_basic_type(OpenApiTypes.STR)
 
-    def _map_serializer_field(self, field, direction):
+    def _map_serializer_field(self, field, direction, bypass_extensions=False):
         meta = self._get_serializer_field_meta(field)
 
         if has_override(field, 'field'):
@@ -476,7 +476,7 @@ class AutoSchema(ViewInspector):
                 return append_meta(schema, meta)
 
         serializer_field_extension = OpenApiSerializerFieldExtension.get_match(field)
-        if serializer_field_extension:
+        if serializer_field_extension and not bypass_extensions:
             schema = serializer_field_extension.map_serializer_field(self, direction)
             if serializer_field_extension.get_name():
                 component = ResolvedComponent(
@@ -695,11 +695,11 @@ class AutoSchema(ViewInspector):
         if field.min_value:
             content['minimum'] = field.min_value
 
-    def _map_serializer(self, serializer, direction):
+    def _map_serializer(self, serializer, direction, bypass_extensions=False):
         serializer = force_instance(serializer)
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
 
-        if serializer_extension:
+        if serializer_extension and not bypass_extensions:
             schema = serializer_extension.map_serializer(self, direction)
         else:
             schema = self._map_basic_serializer(serializer, direction)
