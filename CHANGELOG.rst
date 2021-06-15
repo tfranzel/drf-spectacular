@@ -2,6 +2,19 @@ Changelog
 =========
 
 
+0.17.2 (2021-06-15)
+-------------------
+
+- prevent endless loop in extensions when augmenting schema `#426 <https://github.com/tfranzel/drf-spectacular/issues/426>`_
+- bugfix secondary import cycle (generics.APIView) `#430 <https://github.com/tfranzel/drf-spectacular/issues/430>`_
+- fix: avoid circular import of/via rest_framework's APIView [Daniel Hahler]
+
+Breaking changes / important additions:
+
+- Hotfix release that addresses a carelessly added import in `0.17.1`. In certain use-cases,
+  this may have led to an import cycle inside DRF.
+
+
 0.17.1 (2021-06-12)
 -------------------
 
