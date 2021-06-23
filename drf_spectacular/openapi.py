@@ -99,6 +99,9 @@ class AutoSchema(ViewInspector):
             serializer = {str(code): s for code, s in serializer.items()}
             serializer = serializer[min(serializer)]
 
+        method = self.method.lower()
+        if method == 'get' and not self.view.detail:
+            return True
         if is_list_serializer(serializer):
             return True
         if is_basic_type(serializer):
@@ -106,7 +109,7 @@ class AutoSchema(ViewInspector):
         if hasattr(self.view, 'action'):
             return self.view.action == 'list'
         # list responses are "usually" only returned by GET
-        if self.method.lower() != 'get':
+        if method != 'get':
             return False
         if isinstance(self.view, ListModelMixin):
             return True
