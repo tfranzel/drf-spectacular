@@ -16,3 +16,7 @@ const ui = SwaggerUIBundle({
   },
   ...swagger_settings
 })
+
+{% if ouath2_config %}
+ui.initOAuth({{oauth2_config|safe}})
+{% endif %}

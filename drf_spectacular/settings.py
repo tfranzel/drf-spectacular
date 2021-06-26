@@ -38,11 +38,17 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # None will default to DRF's AUTHENTICATION_CLASSES
     'SERVE_AUTHENTICATION': None,
 
-    # Dictionary of configurations to pass to the SwaggerUI({ ... })
+    # Dictionary of general configuration to pass to the SwaggerUI({ ... })
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
     },
+    # Initialize SwaggerUI with additional OAuth2 configuration.
+    # https://swagger.io/docs/open-source-tools/swagger-ui/usage/oauth2/
+    'SWAGGER_UI_OAUTH2_CONFIG': {},
+
+    # CDNs for for swagger and redoc. You can change the version or even host your
+    # own depending on your requirements.
     'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.44.0',
     'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.44.0/favicon-32x32.png',
 

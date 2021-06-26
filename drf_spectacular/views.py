@@ -103,6 +103,7 @@ class SpectacularSwaggerView(APIView):
                     lang=request.GET.get('lang')
                 ),
                 'settings': json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS),
+                'oauth2_config': json.dumps(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
                 'template_name_js': self.template_name_js
             },
             template_name=self.template_name,
@@ -127,6 +128,7 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
                         lang=request.GET.get('lang')
                     ),
                     'settings': json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS),
+                    'oauth2_config': json.dumps(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
                 },
                 template_name=self.template_name_js,
                 content_type='application/javascript',
