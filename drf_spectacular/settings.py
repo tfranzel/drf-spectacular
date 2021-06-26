@@ -49,8 +49,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # CDNs for for swagger and redoc. You can change the version or even host your
     # own depending on your requirements.
-    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.44.0',
-    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.44.0/favicon-32x32.png',
+    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.51.0',
+    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.51.0/favicon-32x32.png',
 
     'REDOC_DIST': '//cdn.jsdelivr.net/npm/redoc@next',
 
