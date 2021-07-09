@@ -121,7 +121,7 @@ On rare occasions (e.g. envelope serializers), overriding list detection with ``
                 summary='short summary',
                 description='longer description',
                 value={
-                    'songs': {'top10': True}
+                    'songs': {'top10': True},
                     'single': {'top10': True}
                 },
                 request_only=True, # signal that example only applies to requests
