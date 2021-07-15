@@ -1,4 +1,5 @@
 import contextlib
+import functools
 import sys
 from collections import defaultdict
 from typing import DefaultDict
@@ -70,6 +71,8 @@ def _get_current_trace():
 
 
 def has_override(obj, prop):
+    if isinstance(obj, functools.partial):
+        obj = obj.func
     if not hasattr(obj, '_spectacular_annotation'):
         return False
     if prop not in obj._spectacular_annotation:
@@ -78,6 +81,8 @@ def has_override(obj, prop):
 
 
 def get_override(obj, prop, default=None):
+    if isinstance(obj, functools.partial):
+        obj = obj.func
     if not has_override(obj, prop):
         return default
     return obj._spectacular_annotation[prop]

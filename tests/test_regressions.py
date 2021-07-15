@@ -2,6 +2,7 @@ import datetime
 import typing
 import uuid
 from decimal import Decimal
+from functools import partialmethod
 from unittest import mock
 
 import pytest
@@ -2023,4 +2024,31 @@ def test_paginated_list_serializer_with_dict_field(no_warnings):
     schema = generate_schema('/x/', view=XAPIView)
     assert get_response_schema(schema['paths']['/x/']['get'])['properties']['results'] == {
         'type': 'array', 'items': {'type': 'object', 'additionalProperties': {}}
+    }
+
+
+def test_serializer_method_field_with_functools_partial():
+    class XSerializer(serializers.Serializer):
+        foo = serializers.SerializerMethodField()
+        bar = serializers.SerializerMethodField()
+
+        @extend_schema_field(OpenApiTypes.DATE)
+        def _private_method_foo(self, field, extra_param):
+            return 'foo'  # pragma: no cover
+
+        def _private_method_bar(self, field, extra_param) -> int:
+            return 1  # pragma: no cover
+
+        get_foo = partialmethod(_private_method_foo, extra_param='foo')
+        get_bar = partialmethod(_private_method_bar, extra_param='bar')
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'foo': {'type': 'string', 'format': 'date', 'readOnly': True},
+        'bar': {'type': 'integer', 'readOnly': True}
     }

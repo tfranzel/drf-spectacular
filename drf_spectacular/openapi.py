@@ -27,9 +27,9 @@ from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta, build_array_type,
     build_basic_type, build_choice_field, build_examples_list, build_media_type_object,
     build_object_type, build_parameter_type, error, follow_field_source, force_instance, get_doc,
-    get_view_model, is_basic_type, is_field, is_list_serializer, is_patched_serializer,
-    is_serializer, is_trivial_string_variation, resolve_regex_path_parameter, resolve_type_hint,
-    safe_ref, warn,
+    get_type_hints, get_view_model, is_basic_type, is_field, is_list_serializer,
+    is_patched_serializer, is_serializer, is_trivial_string_variation, resolve_regex_path_parameter,
+    resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes, build_generic_type
@@ -828,7 +828,7 @@ class AutoSchema(ViewInspector):
                     schema['minimum'] = -schema['maximum']
 
     def _map_response_type_hint(self, method):
-        hint = get_override(method, 'field') or typing.get_type_hints(method).get('return')
+        hint = get_override(method, 'field') or get_type_hints(method).get('return')
 
         if is_serializer(hint) or is_field(hint):
             return self._map_serializer_field(force_instance(hint), 'response')

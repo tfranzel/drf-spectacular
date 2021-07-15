@@ -1,12 +1,10 @@
-import typing
-
 from django.db import models
 
 from drf_spectacular.drainage import warn
 from drf_spectacular.extensions import OpenApiFilterExtension
 from drf_spectacular.plumbing import (
-    build_array_type, build_basic_type, build_parameter_type, follow_field_source, get_view_model,
-    is_basic_type,
+    build_array_type, build_basic_type, build_parameter_type, follow_field_source, get_type_hints,
+    get_view_model, is_basic_type,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
@@ -167,7 +165,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             filter_method = getattr(filterset_class, filter_field.method)
 
         try:
-            filter_method_hints = typing.get_type_hints(filter_method)
+            filter_method_hints = get_type_hints(filter_method)
         except:  # noqa: E722
             filter_method_hints = {}
 
