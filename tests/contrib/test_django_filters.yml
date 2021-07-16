@@ -139,6 +139,24 @@ paths:
           type: number
           format: float
       - in: query
+        name: price_range_vat_decorated_max
+        schema:
+          type: integer
+      - in: query
+        name: price_range_vat_decorated_min
+        schema:
+          type: integer
+      - in: query
+        name: price_range_vat_max
+        schema:
+          type: number
+          format: float
+      - in: query
+        name: price_range_vat_min
+        schema:
+          type: number
+          format: float
+      - in: query
         name: sub
         schema:
           type: integer

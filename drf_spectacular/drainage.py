@@ -92,6 +92,7 @@ def set_override(obj, prop, value):
     if not hasattr(obj, '_spectacular_annotation'):
         obj._spectacular_annotation = {}
     obj._spectacular_annotation[prop] = value
+    return obj
 
 
 def get_view_methods(view, schema=None):

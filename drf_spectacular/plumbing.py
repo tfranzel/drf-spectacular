@@ -435,7 +435,7 @@ def _follow_return_type(a_callable):
     return target_type
 
 
-def follow_field_source(model, path):
+def follow_field_source(model, path, emit_warnings=True):
     """
     a model traversal chain "foreignkey.foreignkey.value" can either end with an actual model field
     instance "value" or a model property function named "value". differentiate the cases.
@@ -445,13 +445,15 @@ def follow_field_source(model, path):
     try:
         return _follow_field_source(model, path)
     except UnableToProceedError as e:
-        warn(e)
+        if emit_warnings:
+            warn(e)
     except Exception as exc:
-        warn(
-            f'could not resolve field on model {model} with path "{".".join(path)}". '
-            f'This is likely a custom field that does some unknown magic. Maybe '
-            f'consider annotating the field/property? Defaulting to "string". (Exception: {exc})'
-        )
+        if emit_warnings:
+            warn(
+                f'could not resolve field on model {model} with path "{".".join(path)}". '
+                f'This is likely a custom field that does some unknown magic. Maybe '
+                f'consider annotating the field/property? Defaulting to "string". (Exception: {exc})'
+            )
 
     def dummy_property(obj) -> str:
         pass  # pragma: no cover
