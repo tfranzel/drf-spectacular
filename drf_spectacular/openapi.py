@@ -271,11 +271,11 @@ class AutoSchema(ViewInspector):
             auths.append({})
         return auths
 
-    def get_request_serializer(self):
+    def get_request_serializer(self) -> typing.Any:
         """ override this for custom behaviour """
         return self._get_serializer()
 
-    def get_response_serializers(self):
+    def get_response_serializers(self) -> typing.Any:
         """ override this for custom behaviour """
         return self._get_serializer()
 
