@@ -44,3 +44,10 @@ drf\_spectacular\.openapi
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+drf\_spectacular\.contrib\.django_filters
+-----------------------------------------
+.. automodule:: drf_spectacular.contrib.django_filters
+    :members:
+    :show-inheritance:

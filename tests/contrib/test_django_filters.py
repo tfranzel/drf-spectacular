@@ -2,10 +2,13 @@ import uuid
 
 import pytest
 from django.db import models
+from django.db.models import F
 from django.urls import include, path
 from rest_framework import routers, serializers, viewsets
 from rest_framework.test import APIClient
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from tests import assert_schema, generate_schema
 
 try:
@@ -107,6 +110,11 @@ class ProductFilter(FilterSet):
         queryset=OtherSubProduct.objects.all()
     )
 
+    price_range_vat = RangeFilter(field_name='price_vat')
+    price_range_vat_decorated = extend_schema_field(OpenApiTypes.INT)(
+        RangeFilter(field_name='price_vat')
+    )
+
     class Meta:
         model = Product
         fields = [
@@ -126,6 +134,11 @@ class ProductViewset(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProductSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = ProductFilter
+
+    def get_queryset(self):
+        return Product.objects.all().annotate(
+            price_vat=F('price') * 1.19
+        )
 
 
 @pytest.mark.contrib('django_filter')
