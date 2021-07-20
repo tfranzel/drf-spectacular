@@ -60,7 +60,7 @@ discovered in the introspection.
 
         class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             @extend_schema(description='text')
-            def list(self, request, *args, **kwargs)
+            def list(self, request, *args, **kwargs):
                 return super().list(request, *args, **kwargs)
 
   is equivalent to
