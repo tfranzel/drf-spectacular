@@ -114,7 +114,7 @@ On rare occasions (e.g. envelope serializers), overriding list detection with ``
 .. code:: python
 
     @extend_schema_serializer(
-        exclude_fields=('single',) # schema ignore these fields
+        exclude_fields=('single',), # schema ignore these fields
         examples = [
              OpenApiExample(
                 'Valid example 1',
