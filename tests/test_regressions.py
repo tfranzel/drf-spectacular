@@ -2027,7 +2027,7 @@ def test_paginated_list_serializer_with_dict_field(no_warnings):
     }
 
 
-def test_serializer_method_field_with_functools_partial():
+def test_serializer_method_field_with_functools_partial(no_warnings):
     class XSerializer(serializers.Serializer):
         foo = serializers.SerializerMethodField()
         bar = serializers.SerializerMethodField()
@@ -2051,4 +2051,28 @@ def test_serializer_method_field_with_functools_partial():
     assert schema['components']['schemas']['X']['properties'] == {
         'foo': {'type': 'string', 'format': 'date', 'readOnly': True},
         'bar': {'type': 'integer', 'readOnly': True}
+    }
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.ENABLE_LIST_MECHANICS_ON_NON_2XX', True
+)
+def test_disable_list_mechanics_on_non_2XX(no_warnings):
+    @extend_schema(
+        request=SimpleSerializer,
+        responses={
+            200: SimpleSerializer(many=True),
+            400: SimpleSerializer(many=True),
+        }
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert get_response_schema(schema['paths']['/x/']['post'], status='200') == {
+        'type': 'array', 'items': {'$ref': '#/components/schemas/Simple'}
+    }
+    assert get_response_schema(schema['paths']['/x/']['post'], status='400') == {
+        'type': 'array', 'items': {'$ref': '#/components/schemas/Simple'}
     }

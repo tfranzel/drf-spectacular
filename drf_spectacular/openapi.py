@@ -1078,7 +1078,7 @@ class AutoSchema(ViewInspector):
         if (
             self._is_list_view(serializer)
             and get_override(serializer, 'many') is not False
-            and '200' <= status_code < '300'
+            and ('200' <= status_code < '300' or spectacular_settings.ENABLE_LIST_MECHANICS_ON_NON_2XX)
         ):
             schema = build_array_type(schema)
             paginator = self._get_paginator()
