@@ -2,6 +2,26 @@ Changelog
 =========
 
 
+0.17.3 (2021-07-26)
+-------------------
+
+- port custom "Bearer" bugfix/workaround to simplejwt `#467 <https://github.com/tfranzel/drf-spectacular/issues/467>`_
+- add setting for listing/paginating/filtering on non-2XX `#402 <https://github.com/tfranzel/drf-spectacular/issues/402>`_ `#277 <https://github.com/tfranzel/drf-spectacular/issues/277>`_
+- fix Typo [Eunsub LEE]
+- nit typofix [adamsteele-city]
+- Add a few return type annotations [Nikhil Benesch]
+- add django-filter queryset annotation and ``extend_schema_field`` support
+- account for functools.partial wrapped type hints `#451 <https://github.com/tfranzel/drf-spectacular/issues/451>`_
+- Update swagger_ui.js [Jordan Facibene]
+- Update customization.rst to fix example typo [Atsuo Shiraki]
+- update swagger-ui version
+- add oauth2 config for swagger ui `#438 <https://github.com/tfranzel/drf-spectacular/issues/438>`_
+
+Breaking changes / important additions:
+
+- Just a few bugfixes and some small features with minimal impact on existing schema
+
+
 0.17.2 (2021-06-15)
 -------------------
 
