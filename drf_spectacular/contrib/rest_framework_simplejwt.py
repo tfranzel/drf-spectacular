@@ -61,9 +61,11 @@ class SimpleJWTScheme(OpenApiAuthenticationExtension):
                 f'OpenAPI3 can only have one "bearerFormat". JWT Settings specify '
                 f'{api_settings.AUTH_HEADER_TYPES}. Using the first one.'
             )
+        header_name = getattr(api_settings, 'AUTH_HEADER_NAME', 'HTTP_AUTHORIZATION')
+
         if (
             api_settings.AUTH_HEADER_TYPES[0] == 'Bearer'
-            and api_settings.AUTH_HEADER_NAME == 'HTTP_AUTHORIZATION'
+            and header_name == 'HTTP_AUTHORIZATION'
         ):
             return {
                 'type': 'http',
@@ -71,14 +73,13 @@ class SimpleJWTScheme(OpenApiAuthenticationExtension):
                 'bearerFormat': "JWT",
             }
         else:
-            header = api_settings.AUTH_HEADER_NAME
-            if header.startswith('HTTP_'):
-                header = header[5:]
-            header = header.capitalize()
+            if header_name.startswith('HTTP_'):
+                header_name = header_name[5:]
+            header_name = header_name.capitalize()
             return {
                 'type': 'apiKey',
                 'in': 'header',
-                'name': header,
+                'name': header_name,
                 'description': _(
                     'Token-based authentication with required prefix "%s"'
                 ) % api_settings.AUTH_HEADER_TYPES[0]
