@@ -208,6 +208,7 @@ the sky is the limit.
                 ...
             ],
         )
+        @extend_schema(description='Override a specific method', methods=["POST"])
         def list(self, request):
             # your non-standard behaviour
             return super().list(request)
