@@ -164,4 +164,4 @@ components:
     jwtAuth:
       type: http
       scheme: bearer
-      bearerFormat: Bearer
+      bearerFormat: JWT
