@@ -240,6 +240,12 @@ class AutoSchema(ViewInspector):
         auths = []
 
         for authenticator in self.view.get_authenticators():
+            if (
+                spectacular_settings.AUTHENTICATION_WHITELIST
+                and authenticator.__class__ not in spectacular_settings.AUTHENTICATION_WHITELIST
+            ):
+                continue
+
             scheme = OpenApiAuthenticationExtension.get_match(authenticator)
             if not scheme:
                 warn(

@@ -14,7 +14,7 @@ from rest_framework import (
     filters, generics, mixins, pagination, parsers, renderers, routers, serializers, views,
     viewsets,
 )
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
@@ -2076,3 +2076,17 @@ def test_disable_list_mechanics_on_non_2XX(no_warnings):
     assert get_response_schema(schema['paths']['/x/']['post'], status='400') == {
         'type': 'array', 'items': {'$ref': '#/components/schemas/Simple'}
     }
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.AUTHENTICATION_WHITELIST', [TokenAuthentication]
+)
+def test_authentication_whitelist(no_warnings):
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+        authentication_classes = [BasicAuthentication, TokenAuthentication]
+
+    schema = generate_schema('/x', XViewset)
+    assert list(schema['components']['securitySchemes']) == ['tokenAuth']
+    assert schema['paths']['/x/']['get']['security'] == [{'tokenAuth': []}, {}]

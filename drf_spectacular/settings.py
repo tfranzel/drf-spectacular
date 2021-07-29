@@ -113,6 +113,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # list responses with ListSerializers/many=True irrespective of the status code.
     'ENABLE_LIST_MECHANICS_ON_NON_2XX': False,
 
+    # Controls which authentication methods are exposed in the schema. If not empty, will hide
+    # authentication classes that are not contained in the whitelist. Use full import paths
+    # like ['rest_framework.authentication.TokenAuthentication', ...]
+    'AUTHENTICATION_WHITELIST': [],
+
     # Option for turning off error and warn messages
     'DISABLE_ERRORS_AND_WARNINGS': False,
 
@@ -161,6 +166,7 @@ IMPORT_STRINGS = [
     'GET_MOCK_REQUEST',
     'SORT_OPERATIONS',
     'SORT_OPERATION_PARAMETERS',
+    'AUTHENTICATION_WHITELIST',
 ]
 
 spectacular_settings = APISettings(
