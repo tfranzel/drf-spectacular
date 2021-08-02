@@ -107,6 +107,17 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # the order they arrived. Accepts either True, False, or a callable for sort's key arg.
     'SORT_OPERATION_PARAMETERS': True,
 
+    # @extend_schema allows to specify status codes besides 200. This functionality is usually used
+    # to describe error responses, which rarely make use of list mechanics. Therefore, we suppress
+    # listing (pagination and filtering) on non-2XX status codes by default. Toggle this to enable
+    # list responses with ListSerializers/many=True irrespective of the status code.
+    'ENABLE_LIST_MECHANICS_ON_NON_2XX': False,
+
+    # Controls which authentication methods are exposed in the schema. If not empty, will hide
+    # authentication classes that are not contained in the whitelist. Use full import paths
+    # like ['rest_framework.authentication.TokenAuthentication', ...]
+    'AUTHENTICATION_WHITELIST': [],
+
     # Option for turning off error and warn messages
     'DISABLE_ERRORS_AND_WARNINGS': False,
 
@@ -155,6 +166,7 @@ IMPORT_STRINGS = [
     'GET_MOCK_REQUEST',
     'SORT_OPERATIONS',
     'SORT_OPERATION_PARAMETERS',
+    'AUTHENTICATION_WHITELIST',
 ]
 
 spectacular_settings = APISettings(

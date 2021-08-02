@@ -60,7 +60,7 @@ discovered in the introspection.
 
         class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             @extend_schema(description='text')
-            def list(self, request, *args, **kwargs)
+            def list(self, request, *args, **kwargs):
                 return super().list(request, *args, **kwargs)
 
   is equivalent to
@@ -114,7 +114,7 @@ On rare occasions (e.g. envelope serializers), overriding list detection with ``
 .. code:: python
 
     @extend_schema_serializer(
-        exclude_fields=('single',) # schema ignore these fields
+        exclude_fields=('single',), # schema ignore these fields
         examples = [
              OpenApiExample(
                 'Valid example 1',

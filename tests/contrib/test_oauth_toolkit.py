@@ -11,13 +11,14 @@ from tests import assert_schema, generate_schema
 try:
     from oauth2_provider.contrib.rest_framework import (
         IsAuthenticatedOrTokenHasScope, OAuth2Authentication, TokenHasReadWriteScope,
-        TokenHasResourceScope,
+        TokenHasResourceScope, TokenMatchesOASRequirements,
     )
 except ImportError:
     IsAuthenticatedOrTokenHasScope = None
     OAuth2Authentication = None
     TokenHasReadWriteScope = None
     TokenHasResourceScope = None
+    TokenMatchesOASRequirements = None
 
 
 class XSerializer(serializers.Serializer):
@@ -43,6 +44,16 @@ class IsAuthenticatedOrTokenHasScopeViewset(mixins.ListModelMixin, viewsets.Gene
     authentication_classes = [OAuth2Authentication, BasicAuthentication]
     permission_classes = [IsAuthenticatedOrTokenHasScope]
     required_scopes = ['extra_scope']
+
+
+class OASRequirementsViewset(mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = XSerializer
+    authentication_classes = [OAuth2Authentication]
+    permission_classes = [TokenMatchesOASRequirements]
+    required_alternate_scopes = {
+        'GET': [['read']],
+        'POST': [['create1', 'scope2'], ['alt-scope3'], ['alt-scope4', 'alt-scope5']],
+    }
 
 
 class TestScopesBackend(BaseScopes):
@@ -77,6 +88,7 @@ def test_oauth2_toolkit(no_warnings):
     router.register('TokenHasReadWriteScope', TokenHasReadWriteScopeViewset, basename="x1")
     router.register('TokenHasResourceScope', TokenHasResourceScopeViewset, basename="x2")
     router.register('IsAuthenticatedOrTokenHasScope', IsAuthenticatedOrTokenHasScopeViewset, basename="x3")
+    router.register('OASRequirements', OASRequirementsViewset, basename="x4")
 
     urlpatterns = [
         *router.urls,

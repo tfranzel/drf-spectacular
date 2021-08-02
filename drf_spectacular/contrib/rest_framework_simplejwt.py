@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from drf_spectacular.drainage import warn
@@ -60,11 +61,29 @@ class SimpleJWTScheme(OpenApiAuthenticationExtension):
                 f'OpenAPI3 can only have one "bearerFormat". JWT Settings specify '
                 f'{api_settings.AUTH_HEADER_TYPES}. Using the first one.'
             )
-        return {
-            'type': 'http',
-            'scheme': 'bearer',
-            'bearerFormat': api_settings.AUTH_HEADER_TYPES[0],
-        }
+        header_name = getattr(api_settings, 'AUTH_HEADER_NAME', 'HTTP_AUTHORIZATION')
+
+        if (
+            api_settings.AUTH_HEADER_TYPES[0] == 'Bearer'
+            and header_name == 'HTTP_AUTHORIZATION'
+        ):
+            return {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': "JWT",
+            }
+        else:
+            if header_name.startswith('HTTP_'):
+                header_name = header_name[5:]
+            header_name = header_name.capitalize()
+            return {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': header_name,
+                'description': _(
+                    'Token-based authentication with required prefix "%s"'
+                ) % api_settings.AUTH_HEADER_TYPES[0]
+            }
 
 
 class SimpleJWTTokenUserScheme(SimpleJWTScheme):

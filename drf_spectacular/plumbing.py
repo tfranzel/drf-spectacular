@@ -1,4 +1,5 @@
 import collections
+import functools
 import hashlib
 import inspect
 import json
@@ -162,6 +163,13 @@ def get_doc(obj):
             doc = '\n'.join(line.rstrip() for line in doc.rstrip().split('\n'))
             return doc
     return ''
+
+
+def get_type_hints(obj):
+    """ unpack wrapped partial object and use actual func object """
+    if isinstance(obj, functools.partial):
+        obj = obj.func
+    return typing.get_type_hints(obj)
 
 
 def build_basic_type(obj):
@@ -409,7 +417,7 @@ def _follow_field_source(model, path: List[str]):
 
 
 def _follow_return_type(a_callable):
-    target_type = typing.get_type_hints(a_callable).get('return')
+    target_type = get_type_hints(a_callable).get('return')
     if target_type is None:
         return target_type
     origin, args = _get_type_hint_origin(target_type)
@@ -427,7 +435,7 @@ def _follow_return_type(a_callable):
     return target_type
 
 
-def follow_field_source(model, path):
+def follow_field_source(model, path, emit_warnings=True):
     """
     a model traversal chain "foreignkey.foreignkey.value" can either end with an actual model field
     instance "value" or a model property function named "value". differentiate the cases.
@@ -437,13 +445,15 @@ def follow_field_source(model, path):
     try:
         return _follow_field_source(model, path)
     except UnableToProceedError as e:
-        warn(e)
+        if emit_warnings:
+            warn(e)
     except Exception as exc:
-        warn(
-            f'could not resolve field on model {model} with path "{".".join(path)}". '
-            f'This is likely a custom field that does some unknown magic. Maybe '
-            f'consider annotating the field/property? Defaulting to "string". (Exception: {exc})'
-        )
+        if emit_warnings:
+            warn(
+                f'could not resolve field on model {model} with path "{".".join(path)}". '
+                f'This is likely a custom field that does some unknown magic. Maybe '
+                f'consider annotating the field/property? Defaulting to "string". (Exception: {exc})'
+            )
 
     def dummy_property(obj) -> str:
         pass  # pragma: no cover
@@ -929,8 +939,8 @@ def resolve_type_hint(hint):
         return build_basic_type(hint)
     elif origin is None and inspect.isclass(hint) and issubclass(hint, tuple):
         # a convoluted way to catch NamedTuple. suggestions welcome.
-        if typing.get_type_hints(hint):
-            properties = {k: resolve_type_hint(v) for k, v in typing.get_type_hints(hint).items()}
+        if get_type_hints(hint):
+            properties = {k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()}
         else:
             properties = {k: build_basic_type(OpenApiTypes.ANY) for k in hint._fields}
         return build_object_type(properties=properties, required=properties.keys())
@@ -962,7 +972,7 @@ def resolve_type_hint(hint):
     elif hasattr(typing, 'TypedDict') and isinstance(hint, typing._TypedDictMeta):
         return build_object_type(
             properties={
-                k: resolve_type_hint(v) for k, v in typing.get_type_hints(hint).items()
+                k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()
             }
         )
     elif origin is typing.Union:

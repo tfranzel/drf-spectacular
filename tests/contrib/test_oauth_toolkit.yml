@@ -22,6 +22,55 @@ paths:
                 items:
                   $ref: '#/components/schemas/X'
           description: ''
+  /OASRequirements/:
+    get:
+      operationId: OASRequirements_list
+      description: ''
+      tags:
+      - OASRequirements
+      security:
+      - oauth2:
+        - read
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/X'
+          description: ''
+    post:
+      operationId: OASRequirements_create
+      description: ''
+      tags:
+      - OASRequirements
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/X'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/X'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/X'
+        required: true
+      security:
+      - oauth2:
+        - create1
+        - scope2
+        - alt-scope3
+        - alt-scope4
+        - alt-scope5
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/X'
+          description: ''
   /TokenHasReadWriteScope/:
     get:
       operationId: TokenHasReadWriteScope_list

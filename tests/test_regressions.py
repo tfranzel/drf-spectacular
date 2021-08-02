@@ -2,6 +2,7 @@ import datetime
 import typing
 import uuid
 from decimal import Decimal
+from functools import partialmethod
 from unittest import mock
 
 import pytest
@@ -13,7 +14,7 @@ from rest_framework import (
     filters, generics, mixins, pagination, parsers, renderers, routers, serializers, views,
     viewsets,
 )
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
@@ -2024,3 +2025,68 @@ def test_paginated_list_serializer_with_dict_field(no_warnings):
     assert get_response_schema(schema['paths']['/x/']['get'])['properties']['results'] == {
         'type': 'array', 'items': {'type': 'object', 'additionalProperties': {}}
     }
+
+
+def test_serializer_method_field_with_functools_partial(no_warnings):
+    class XSerializer(serializers.Serializer):
+        foo = serializers.SerializerMethodField()
+        bar = serializers.SerializerMethodField()
+
+        @extend_schema_field(OpenApiTypes.DATE)
+        def _private_method_foo(self, field, extra_param):
+            return 'foo'  # pragma: no cover
+
+        def _private_method_bar(self, field, extra_param) -> int:
+            return 1  # pragma: no cover
+
+        get_foo = partialmethod(_private_method_foo, extra_param='foo')
+        get_bar = partialmethod(_private_method_bar, extra_param='bar')
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'foo': {'type': 'string', 'format': 'date', 'readOnly': True},
+        'bar': {'type': 'integer', 'readOnly': True}
+    }
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.ENABLE_LIST_MECHANICS_ON_NON_2XX', True
+)
+def test_disable_list_mechanics_on_non_2XX(no_warnings):
+    @extend_schema(
+        request=SimpleSerializer,
+        responses={
+            200: SimpleSerializer(many=True),
+            400: SimpleSerializer(many=True),
+        }
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert get_response_schema(schema['paths']['/x/']['post'], status='200') == {
+        'type': 'array', 'items': {'$ref': '#/components/schemas/Simple'}
+    }
+    assert get_response_schema(schema['paths']['/x/']['post'], status='400') == {
+        'type': 'array', 'items': {'$ref': '#/components/schemas/Simple'}
+    }
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.AUTHENTICATION_WHITELIST', [TokenAuthentication]
+)
+def test_authentication_whitelist(no_warnings):
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+        authentication_classes = [BasicAuthentication, TokenAuthentication]
+
+    schema = generate_schema('/x', XViewset)
+    assert list(schema['components']['securitySchemes']) == ['tokenAuth']
+    assert schema['paths']['/x/']['get']['security'] == [{'tokenAuth': []}, {}]

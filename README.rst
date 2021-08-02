@@ -215,8 +215,10 @@ the sky is the limit.
         @extend_schema(
             request=AlbumLikeSerializer
             responses={204: None},
+            methods=["POST"]
         )
-        @action(detail=True, methods=['post'])
+        @extend_schema(description='Override a specific method', methods=["GET"])
+        @action(detail=True, methods=['post', 'get'])
         def set_password(self, request, pk=None):
             # your action behaviour
 
