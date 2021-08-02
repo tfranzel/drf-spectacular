@@ -75,7 +75,7 @@ class SimpleJWTScheme(OpenApiAuthenticationExtension):
         else:
             if header_name.startswith('HTTP_'):
                 header_name = header_name[5:]
-            header_name = header_name.capitalize()
+            header_name = header_name.replace('_', '-').capitalize()
             return {
                 'type': 'apiKey',
                 'in': 'header',
