@@ -65,7 +65,11 @@ def test_simplejwt_non_bearer_keyword(no_warnings):
 
 
 @pytest.mark.contrib('rest_framework_simplejwt')
-@mock.patch('rest_framework_simplejwt.settings.api_settings.AUTH_HEADER_NAME', 'HTTP_X_TOKEN')
+@mock.patch(
+    'rest_framework_simplejwt.settings.api_settings.AUTH_HEADER_NAME',
+    'HTTP_X_TOKEN',
+    create=True,
+)
 def test_simplejwt_non_std_header_name(no_warnings):
     schema = generate_schema('/x', XViewset)
     assert schema['components']['securitySchemes'] == {
