@@ -156,6 +156,8 @@ class SpectacularRedocView(APIView):
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/redoc.html'
+    title = spectacular_settings.TITLE
+    version = spectacular_settings.VERSION
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
@@ -165,6 +167,8 @@ class SpectacularRedocView(APIView):
             data={
                 'dist': spectacular_settings.REDOC_DIST,
                 'schema_url': schema_url,
+                'title': self.title,
+                'version': self.version,
             },
             template_name=self.template_name
         )
