@@ -2090,3 +2090,22 @@ def test_authentication_whitelist(no_warnings):
     schema = generate_schema('/x', XViewset)
     assert list(schema['components']['securitySchemes']) == ['tokenAuth']
     assert schema['paths']['/x/']['get']['security'] == [{'tokenAuth': []}, {}]
+
+
+def test_request_response_raw_schema_annotation(no_warnings):
+    @extend_schema(
+        request={'application/pdf': {'type': 'string', 'format': 'binary'}},
+        responses={(200, 'application/pdf'): {'type': 'string', 'format': 'binary'}}
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    op = schema['paths']['/x/']['post']
+    assert op['requestBody']['content']['application/pdf']['schema'] == {
+        'type': 'string', 'format': 'binary'
+    }
+    assert op['responses']['200']['content']['application/pdf']['schema'] == {
+        'type': 'string', 'format': 'binary'
+    }

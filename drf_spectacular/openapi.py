@@ -994,6 +994,10 @@ class AutoSchema(ViewInspector):
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
             request_body_required = False
+        elif isinstance(serializer, dict):
+            # bypass processing and use given schema directly
+            schema = serializer
+            request_body_required = False
         else:
             warn(
                 f'could not resolve request body for {self.method} {self.path}. Defaulting to generic '
