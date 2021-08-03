@@ -189,6 +189,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/Token'
           description: ''
+  /rest-auth/registration/resend-email/:
+    post:
+      operationId: rest_auth_registration_resend_email_create
+      description: ''
+      tags:
+      - rest-auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendEmailVerification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResendEmailVerification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResendEmailVerification'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestAuthDetail'
+          description: ''
   /rest-auth/registration/verify-email/:
     post:
       operationId: rest_auth_registration_verify_email_create
@@ -410,6 +438,12 @@ components:
       - password1
       - password2
       - username
+    ResendEmailVerification:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
     RestAuthDetail:
       type: object
       properties:
