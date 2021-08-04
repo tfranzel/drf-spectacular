@@ -24,7 +24,7 @@ class Person(PolymorphicModel):
 
 class LegalPerson(Person):
     company_name = models.CharField(max_length=30)
-    board = models.ManyToManyField('Person', blank=True, null=True)
+    board = models.ManyToManyField('Person', blank=True, related_name='board')
 
 
 class NaturalPerson(Person):

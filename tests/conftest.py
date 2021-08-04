@@ -89,7 +89,9 @@ def pytest_configure(config):
         REST_FRAMEWORK={
             'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
             'PAGE_SIZE': 10,
-        }
+        },
+        DEFAULT_AUTO_FIELD='django.db.models.AutoField',
+        SILENCED_SYSTEM_CHECKS=['rest_framework.W001', 'fields.E210'],
     )
 
     django.setup()

@@ -235,7 +235,7 @@ def test_through_model_multi_choice_filter(no_warnings):
         serializer_class = TestSerializer
 
         filter_backends = [DjangoFilterBackend]
-        filter_class = MyFilter
+        filterset_class = MyFilter
 
     generate_schema('x', TestViewSet)
 
