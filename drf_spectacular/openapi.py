@@ -279,7 +279,7 @@ class AutoSchema(ViewInspector):
 
     def get_request_serializer(self) -> typing.Any:
         """ override this for custom behaviour """
-        return self._get_serializer()
+        return self._get_request_serializer() if self._get_request_serializer() else self._get_serializer()
 
     def get_response_serializers(self) -> typing.Any:
         """ override this for custom behaviour """
@@ -883,6 +883,39 @@ class AutoSchema(ViewInspector):
                     return view.get_serializer_class()()
                 elif hasattr(view, 'serializer_class'):
                     return view.serializer_class
+                else:
+                    error(
+                        'unable to guess serializer. This is graceful '
+                        'fallback handling for APIViews. Consider using GenericAPIView as view base '
+                        'class, if view is under your control. Ignoring view for now. '
+                    )
+            else:
+                error('Encountered unknown view base class. Please report this issue. Ignoring for now')
+        except Exception as exc:
+            error(
+                f'exception raised while getting serializer. Hint: '
+                f'Is get_serializer_class() returning None or is get_queryset() not working without '
+                f'a request? Ignoring the view for now. (Exception: {exc})'
+            )
+
+    def _get_request_serializer(self):
+        view = self.view
+        try:
+            if isinstance(view, GenericAPIView):
+                # try to circumvent queryset issues with calling get_serializer. if view has NOT
+                # overridden get_serializer, its safe to use get_serializer_class.
+                if view.__class__.get_request_serializer == GenericAPIView.get_request_serializer():
+                    return view.get_request_serializer_class()()
+                return view.get_request_serializer()
+            elif isinstance(view, APIView):
+                # APIView does not implement the required interface, but be lenient and make
+                # good guesses before giving up and emitting a warning.
+                if callable(getattr(view, 'get_request_serializer', None)):
+                    return view.get_request_serializer()
+                elif callable(getattr(view, 'get_request_serializer_class', None)):
+                    return view.get_request_serializer_class()()
+                elif hasattr(view, 'request_serializer_class'):
+                    return view.request_serializer_class
                 else:
                     error(
                         'unable to guess serializer. This is graceful '
