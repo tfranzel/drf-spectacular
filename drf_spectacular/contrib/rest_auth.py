@@ -78,6 +78,10 @@ class RestAuthVerifyEmailView(RestAuthDefaultResponseView):
     target_class = 'dj_rest_auth.registration.views.VerifyEmailView'
 
 
+class RestAuthResendEmailVerificationView(RestAuthDefaultResponseView):
+    target_class = 'dj_rest_auth.registration.views.ResendEmailVerificationView'
+
+
 class RestAuthJWTSerializer(OpenApiSerializerExtension):
     target_class = 'dj_rest_auth.serializers.JWTSerializer'
 

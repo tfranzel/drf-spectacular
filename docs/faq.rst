@@ -192,6 +192,9 @@ kicks in. Since actions are handled manually by the user, this behavior is usual
 To make make your intentions clear to `drf-spectacular`, you need to clear the offening classes in the action
 decorator, e.g. setting ``pagination_class=None``.
 
+Users of ``django-filter`` might also see unwanted query parameters. Since the same mechanics apply here too,
+you can remove those parameters by resetting the filter backends with ``@action(...,filter_backends=[])``.
+
 .. code-block:: python
 
     class XViewset(viewsets.ModelViewSet):
