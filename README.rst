@@ -32,7 +32,7 @@ Features
     - Vendor specification extensions (``x-*``) in info, operations, parameters, components, and security schemes
     - Sane fallbacks
     - Sane ``operation_id`` naming (based on path)
-    - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)
+    - Schema serving with ``SpectacularAPIView`` (RapiDoc, Redoc and Swagger-UI views are also available)
     - Optional input/output serializer component split
     - Included support for:
         - `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_
@@ -106,8 +106,8 @@ Self-contained UI installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Certain environments have no direct access to the internet and as such are unable
-to retrieve Swagger UI or Redoc from CDNs. `drf-spectacular-sidecar`_ provides
-these static files as a separate optional package. Usage is as follows:
+to retrieve Swagger UI, RapiDoc, or Redoc from CDNs. `drf-spectacular-sidecar`_
+provides these static files as a separate optional package. Usage is as follows:
 
 .. code:: bash
 
@@ -123,6 +123,7 @@ these static files as a separate optional package. Usage is as follows:
     SPECTACULAR_SETTINGS = {
         'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
         'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+        'RAPIDOC_DIST': 'SIDECAR',
         'REDOC_DIST': 'SIDECAR',
         # OTHER SETTINGS
     }
@@ -155,16 +156,20 @@ Generate your schema with the CLI:
     $ docker run -p 80:8080 -e SWAGGER_JSON=/schema.yml -v ${PWD}/schema.yml:/schema.yml swaggerapi/swagger-ui
 
 If you also want to validate your schema add the `--validate` flag. Or serve your schema directly
-from your API. We also provide convenience wrappers for `swagger-ui` or `redoc`.
+from your API. We also provide convenience wrappers for Swagger UI, RapiDoc, Redoc.
 
 .. code:: python
 
-    from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+    from drf_spectacular.views import (
+        SpectacularAPIView, SpectacularRapiDocView, SpectacularRapiDocView, SpectacularRedocView,
+        SpectacularSwaggerView,
+    )
     urlpatterns = [
         # YOUR PATTERNS
         path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
         # Optional UI:
         path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+        path('api/schema/rapidoc/', SpectacularRapiDocView.as_view(url_name='schema'), name='rapidoc'),
         path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     ]
 

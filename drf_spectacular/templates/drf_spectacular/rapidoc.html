@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{% if title %}{{ title }}{% else %}RapiDoc{% endif %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <rapi-doc spec-url="{{ schema_url }}"></rapi-doc>
+    <script src="{{ dist }}/dist/rapidoc-min.js"></script>
+  </body>
+</html>

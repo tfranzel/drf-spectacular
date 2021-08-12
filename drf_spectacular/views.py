@@ -194,10 +194,38 @@ class SpectacularRedocView(APIView):
                 'dist': self._redoc_dist(),
                 'schema_url': schema_url,
             },
-            template_name=self.template_name
+            template_name=self.template_name,
         )
 
     def _redoc_dist(self):
         if spectacular_settings.REDOC_DIST == 'SIDECAR':
             return _get_sidecar_url('redoc')
         return spectacular_settings.REDOC_DIST
+
+
+class SpectacularRapiDocView(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
+    permission_classes = spectacular_settings.SERVE_PERMISSIONS
+    authentication_classes = AUTHENTICATION_CLASSES
+    url_name = 'schema'
+    url = None
+    template_name = 'drf_spectacular/rapidoc.html'
+    title = spectacular_settings.TITLE
+
+    @extend_schema(exclude=True)
+    def get(self, request, *args, **kwargs):
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
+        schema_url = set_query_parameters(schema_url, lang=request.GET.get('lang'))
+        return Response(
+            data={
+                'title': self.title,
+                'dist': self._rapidoc_dist(),
+                'schema_url': schema_url,
+            },
+            template_name=self.template_name,
+        )
+
+    def _rapidoc_dist(self):
+        if spectacular_settings.RAPIDOC_DIST == 'SIDECAR':
+            return _get_sidecar_url('rapidoc')
+        return spectacular_settings.RAPIDOC_DIST

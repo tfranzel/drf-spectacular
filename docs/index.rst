@@ -15,8 +15,8 @@ your schema and therefore your documentation & client will always stay close to 
 
 drf-spectacular works well out of the box, but also provides you with several easy ways
 to customize the generated OpenAPI 3 schema. It is explicitly designed to work well for
-documentation (`SwaggerUI <https://swagger.io/tools/swagger-ui>`_, `ReDoc <https://github.com/Redocly/redoc>`_)
-and automatic `client generation <https://openapi-generator.tech>`_.
+documentation (`SwaggerUI <https://swagger.io/tools/swagger-ui>`_, `ReDoc <https://github.com/Redocly/redoc>`_,
+`RapiDoc <https://mrin9.github.io/RapiDoc/>`_) and automatic `client generation <https://openapi-generator.tech>`_.
 
 Table of Contents
 -----------------

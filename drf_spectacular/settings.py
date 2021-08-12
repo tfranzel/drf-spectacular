@@ -54,10 +54,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/oauth2/
     'SWAGGER_UI_OAUTH2_CONFIG': {},
 
-    # CDNs for swagger and redoc. You can change the version or even host your
+    # CDNs for Swagger, RapiDoc, and Redoc. You can change the version or even host your
     # own depending on your requirements.
     'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest',
     'SWAGGER_UI_FAVICON_HREF': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/favicon-32x32.png',
+    'RAPIDOC_DIST': 'https://cdn.jsdelivr.net/npm/rapidoc@latest',
     'REDOC_DIST': 'https://cdn.jsdelivr.net/npm/redoc@latest',
 
     # Append OpenAPI objects to path and components in addition to the generated objects

@@ -11,7 +11,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
 from drf_spectacular.views import (
-    SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerSplitView, SpectacularSwaggerView,
+    SpectacularAPIView, SpectacularRapiDocView, SpectacularRedocView, SpectacularSwaggerSplitView,
+    SpectacularSwaggerView,
 )
 
 
@@ -32,6 +33,7 @@ urlpatterns_v2 = [
     path('api/v2/schema/swagger-ui/', SpectacularSwaggerView.as_view(), name='swagger'),
     path('api/v2/schema/swagger-ui-alt/', SpectacularSwaggerSplitView.as_view(), name='swagger-alt'),
     path('api/v2/schema/redoc/', SpectacularRedocView.as_view(), name='redoc'),
+    path('api/v2/schema/rapidoc/', SpectacularRapiDocView.as_view(), name='rapidoc'),
 ]
 urlpatterns_v2.append(
     path('api/v2/schema/', SpectacularAPIView.as_view(urlconf=urlpatterns_v2), name='schema'),
@@ -94,14 +96,17 @@ def test_spectacular_view_accept_unknown(no_warnings):
     )
 
 
-@pytest.mark.parametrize('ui', ['redoc', 'swagger-ui'])
+@pytest.mark.parametrize('ui', ['rapidoc', 'redoc', 'swagger-ui'])
 @pytest.mark.urls(__name__)
 def test_spectacular_ui_view(no_warnings, ui):
     from drf_spectacular.settings import spectacular_settings
     response = APIClient().get(f'/api/v2/schema/{ui}/')
     assert response.status_code == 200
     assert response.content.startswith(b'<!DOCTYPE html>')
-    if ui == 'redoc':
+    if ui == 'rapidoc':
+        assert b'<title>RapiDoc</title>' in response.content
+        assert spectacular_settings.RAPIDOC_DIST.encode() in response.content
+    elif ui == 'redoc':
         assert b'<title>Redoc</title>' in response.content
         assert spectacular_settings.REDOC_DIST.encode() in response.content
     else:
