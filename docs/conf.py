@@ -13,7 +13,7 @@
 import os
 import sys
 
-from django.conf import settings  # noqa: E402
+from django.conf import settings
 
 settings.configure(USE_I18N=False, USE_L10N=False)
 
@@ -25,6 +25,7 @@ project = 'drf-spectacular'
 copyright = '2020, T. Franzel'
 author = 'T. Franzel'
 
+needs_sphinx = '4.1'
 
 # -- General configuration ---------------------------------------------------
 
@@ -33,6 +34,7 @@ author = 'T. Franzel'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -43,6 +45,24 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+nitpicky = True
+
+nitpick_ignore_regex = [
+    # Unresolvable type hinting forward references.
+    ('py:class', r'(?:APIView|AutoSchema|OpenApiFilterExtension)'),
+    # Unresolvable type hinting references to packages without intersphinx support.
+    ('py:class', r'rest_framework\..+'),
+    # Internal undocumented objects.
+    ('py:class', r'drf_spectacular\.generators\..+'),
+    ('py:class', r'drf_spectacular\.plumbing\..+'),
+    ('py:class', r'drf_spectacular\.utils\.F'),
+]
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'django': ('https://docs.djangoproject.com/en/stable/', 'https://docs.djangoproject.com/en/stable/_objects/'),
+    'drf-yasg': ('https://drf-yasg.readthedocs.io/en/stable/', None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 

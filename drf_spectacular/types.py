@@ -12,39 +12,75 @@ _KnownPythonTypes = typing.Type[
 
 
 class OpenApiTypes(enum.Enum):
-    """
-    Basic types known to the OpenApi specification or at least
-    common format extension of it.
-
-    - Use BYTE for base64 encoded data wrapped in a string
-    - Use BINARY for raw binary data
-    - Use OBJECT for arbitrary free-form object (usually a dict)
-
-    """
+    """Basic types known to the OpenAPI specification or at least common format extension of it."""
+    #: Converted to ``{"type": "number"}``.
     NUMBER = enum.auto()
+    #: Converted to ``{"type": "number", "format": "float"}``.
+    #: Equivalent to :py:class:`float`.
     FLOAT = enum.auto()
+    #: Converted to ``{"type": "number", "format": "double"}``.
     DOUBLE = enum.auto()
+    #: Converted to ``{"type": "boolean"}``.
+    #: Equivalent to :py:class:`bool`.
     BOOL = enum.auto()
+    #: Converted to ``{"type": "string"}``.
+    #: Equivalent to :py:class:`str`.
     STR = enum.auto()
-    BYTE = enum.auto()  # base64 encoded
+    #: Converted to ``{"type": "string", "format": "byte"}``.
+    #: Use this for base64-encoded data wrapped in a string.
+    BYTE = enum.auto()
+    #: Converted to ``{"type": "string", "format": "binary"}``.
+    #: Equivalent to :py:class:`bytes`.
+    #: Use this for raw binary data.
     BINARY = enum.auto()
+    #: Converted to ``{"type": "string", "format": "password"}``.
     PASSWORD = enum.auto()
+    #: Converted to ``{"type": "integer"}``.
+    #: Equivalent to :py:class:`int`.
     INT = enum.auto()
+    #: Converted to ``{"type": "integer", "format": "int32"}``.
     INT32 = enum.auto()
+    #: Converted to ``{"type": "integer", "format": "int64"}``.
     INT64 = enum.auto()
+    #: Converted to ``{"type": "string", "format": "uuid"}``.
+    #: Equivalent to :py:class:`~uuid.UUID`.
     UUID = enum.auto()
+    #: Converted to ``{"type": "string", "format": "uri"}``.
     URI = enum.auto()
+    #: Converted to ``{"type": "string", "format": "ipv4"}``.
     IP4 = enum.auto()
+    #: Converted to ``{"type": "string", "format": "ipv6"}``.
     IP6 = enum.auto()
+    #: Converted to ``{"type": "string", "format": "hostname"}``.
     HOSTNAME = enum.auto()
+    #: Converted to ``{"type": "number", "format": "double"}``.
+    #: The same as :py:attr:`~drf_spectacular.types.OpenApiTypes.DOUBLE`.
+    #: Equivalent to :py:class:`~decimal.Decimal`.
     DECIMAL = enum.auto()
+    #: Converted to ``{"type": "string", "format": "date-time"}``.
+    #: Equivalent to :py:class:`~datetime.datetime`.
     DATETIME = enum.auto()
+    #: Converted to ``{"type": "string", "format": "date"}``.
+    #: Equivalent to :py:class:`~datetime.date`.
     DATE = enum.auto()
+    #: Converted to ``{"type": "string", "format": "time"}``.
+    #: Equivalent to :py:class:`~datetime.time`.
     TIME = enum.auto()
+    #: Converted to ``{"type": "string", "format": "duration"}``.
+    #: Equivalent to :py:class:`~datetime.timedelta`.
+    #: Expressed according to ISO 8601.
     DURATION = enum.auto()
+    #: Converted to ``{"type": "string", "format": "email"}``.
     EMAIL = enum.auto()
+    #: Converted to ``{"type": "object", ...}``.
+    #: Use this for arbitrary free-form objects (usually a :py:class:`dict`).
+    #: The ``additionalProperties`` item is added depending on the ``GENERIC_ADDITIONAL_PROPERTIES`` setting.
     OBJECT = enum.auto()
+    #: Converted to ``None``.
+    #: Equivalent to :py:data:`None`.
     NONE = enum.auto()
+    #: Converted to ``{}`` which sets no type and format.
+    #: Equivalent to :py:class:`typing.Any`.
     ANY = enum.auto()
 
 

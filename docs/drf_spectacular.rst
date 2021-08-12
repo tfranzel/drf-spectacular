@@ -1,24 +1,22 @@
 Package overview
-========================
-
+================
 
 drf\_spectacular\.utils
--------------------------
+-----------------------
 .. automodule:: drf_spectacular.utils
     :members:
     :undoc-members:
     :show-inheritance:
 
-
 drf\_spectacular\.types
--------------------------
+-----------------------
 .. autoclass:: drf_spectacular.types.OpenApiTypes
     :members:
     :undoc-members:
-
+    :member-order: bysource
 
 drf\_spectacular\.views
--------------------------
+-----------------------
 .. automodule:: drf_spectacular.views
     :members:
     :undoc-members:
@@ -32,7 +30,7 @@ drf\_spectacular\.extensions
     :show-inheritance:
 
 drf\_spectacular\.hooks
-----------------------------
+-----------------------
 .. automodule:: drf_spectacular.hooks
     :members:
     :undoc-members:
@@ -44,7 +42,6 @@ drf\_spectacular\.openapi
     :members:
     :undoc-members:
     :show-inheritance:
-
 
 drf\_spectacular\.contrib\.django_filters
 -----------------------------------------
