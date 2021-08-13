@@ -842,11 +842,15 @@ class AutoSchema(ViewInspector):
         try:
             return resolve_type_hint(hint)
         except UnableToProceedError:
-            warn(
-                f'unable to resolve type hint for function "{method.__name__}". Consider '
-                f'using a type hint or @extend_schema_field. Defaulting to string.'
-            )
-            return build_basic_type(OpenApiTypes.STR)
+            if type(hint) is dict:
+                # if raw schema is passed for a field, @extend_schema_field({'type': 'array', 'items': {'ref': '#/components/schemas/MyRecursiveComponent'}})
+                return hint
+            else:
+                warn(
+                    f'unable to resolve type hint for function "{method.__name__}". Consider '
+                    f'using a type hint or @extend_schema_field. Defaulting to string.'
+                )
+                return build_basic_type(OpenApiTypes.STR)
 
     def _get_paginator(self):
         pagination_class = getattr(self.view, 'pagination_class', None)
