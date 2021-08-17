@@ -1,8 +1,10 @@
 import tempfile
+from unittest import mock
 
 import pytest
 import yaml
 from django.core import management
+from django.core.management.base import SystemCheckError
 from django.urls import path
 from rest_framework.decorators import api_view
 
@@ -33,14 +35,6 @@ def test_command_parameterized(capsys):
     assert 'paths' in schema
 
 
-@api_view(['GET'])
-def func(request):
-    pass  # pragma: no cover
-
-
-urlpatterns = [path('func', func)]
-
-
 def test_command_fail(capsys):
     with pytest.raises(RuntimeError):
         management.call_command(
@@ -51,3 +45,27 @@ def test_command_fail(capsys):
     stderr = capsys.readouterr().err
     assert 'Error #0: func: unable to guess serializer' in stderr
     assert 'Schema generation summary:' in stderr
+
+
+def test_command_check(capsys):
+    management.call_command('check')
+    stdout = capsys.readouterr().out
+    assert 'System check identified no issues' in stdout
+
+
+@api_view(['GET'])
+def func(request):
+    pass  # pragma: no cover
+
+
+urlpatterns = [path('func', func)]
+
+
+@mock.patch('tests.urls.urlpatterns', [path('api/endpoint/', func)])
+def test_command_check_fail(capsys):
+    with pytest.raises(SystemCheckError):
+        management.call_command('check', '--fail-level', 'WARNING')
+    management.call_command('check')
+    stdout = capsys.readouterr().err
+    assert 'System check identified some issues' in stdout
+    assert 'drf_spectacular.W002' in stdout

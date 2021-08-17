@@ -11,25 +11,34 @@ class GeneratorStats:
     _warn_cache: DefaultDict[str, int] = defaultdict(int)
     _error_cache: DefaultDict[str, int] = defaultdict(int)
 
+    def __init__(self):
+        self.silent = spectacular_settings.DISABLE_ERRORS_AND_WARNINGS
+
     def __bool__(self):
         return bool(self._warn_cache or self._error_cache)
+
+    @contextlib.contextmanager
+    def silence(self):
+        self.silent, tmp = True, self.silent
+        try:
+            yield
+        finally:
+            self.silent = tmp
 
     def reset(self):
         self._warn_cache.clear()
         self._error_cache.clear()
 
     def emit(self, msg, severity):
-        if spectacular_settings.DISABLE_ERRORS_AND_WARNINGS:
-            return
         assert severity in ['warning', 'error']
         msg = _get_current_trace() + str(msg)
         cache = self._warn_cache if severity == 'warning' else self._error_cache
-        if msg not in cache:
+        if not self.silent and msg not in cache:
             print(f'{severity.capitalize()} #{len(cache)}: {msg}', file=sys.stderr)
         cache[msg] += 1
 
     def emit_summary(self):
-        if self._warn_cache or self._error_cache:
+        if not self.silent and (self._warn_cache or self._error_cache):
             print(
                 f'\nSchema generation summary:\n'
                 f'Warnings: {sum(self._warn_cache.values())} ({len(self._warn_cache)} unique)\n'
