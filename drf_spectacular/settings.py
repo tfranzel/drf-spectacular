@@ -40,6 +40,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # Dictionary of general configuration to pass to the SwaggerUI({ ... })
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+    # The settings are serialized with json.dumps(). If you need customized JS, use a
+    # string instead. The string must then contain valid JS and is passed unchanged.
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
     },
