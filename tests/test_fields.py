@@ -66,10 +66,6 @@ class AllFields(models.Model):
     field_email = models.EmailField()
     field_uuid = models.UUIDField()
     field_url = models.URLField()
-    if models.IPAddressField in serializers.ModelSerializer.serializer_field_mapping:
-        field_ip = models.IPAddressField()
-    else:
-        field_ip = models.GenericIPAddressField(protocol='ipv6')  # type: ignore
     field_ip_generic = models.GenericIPAddressField(protocol='ipv6')
     field_decimal = models.DecimalField(max_digits=6, decimal_places=3)
     field_file = models.FileField(storage=fs)
@@ -88,9 +84,15 @@ class AllFields(models.Model):
     field_duration = models.DurationField()
 
     # relations
-    field_foreign = models.ForeignKey(Aux, on_delete=models.CASCADE, help_text='main aux object')
-    field_m2m = models.ManyToManyField(Aux, help_text='set of related aux objects')
-    field_o2o = models.OneToOneField(Aux, on_delete=models.CASCADE, help_text='bound aux object')
+    field_foreign = models.ForeignKey(
+        Aux, on_delete=models.CASCADE, help_text='main aux object', related_name='ff'
+    )
+    field_m2m = models.ManyToManyField(
+        Aux, help_text='set of related aux objects', related_name='fm'
+    )
+    field_o2o = models.OneToOneField(
+        Aux, on_delete=models.CASCADE, help_text='bound aux object', related_name='fo'
+    )
     # overrides
     field_regex = models.CharField(max_length=50)
     field_bool_override = models.BooleanField()
@@ -275,7 +277,6 @@ def test_model_setup_is_valid():
         field_email='test@example.com',
         field_uuid='00000000-00000000-00000000-00000000',
         field_url='https://github.com/tfranzel/drf-spectacular',
-        field_ip='127.0.0.1',
         field_ip_generic='2001:db8::8a2e:370:7334',
         field_decimal=Decimal('666.333'),
         field_file=None,

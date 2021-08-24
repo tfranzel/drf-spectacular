@@ -228,8 +228,6 @@ components:
           type: string
           format: uri
           maxLength: 200
-        field_ip:
-          type: string
         field_ip_generic:
           type: string
         field_decimal:
@@ -296,7 +294,6 @@ components:
       - field_identity_hyperlink
       - field_img
       - field_int
-      - field_ip
       - field_ip_generic
       - field_json
       - field_list
