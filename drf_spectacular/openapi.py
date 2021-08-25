@@ -667,15 +667,21 @@ class AutoSchema(ViewInspector):
             return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
         if isinstance(field, serializers.ReadOnlyField):
-            # direct source from the serializer
-            assert field.source_attrs, f'ReadOnlyField "{field}" needs a proper source'
             # when field is nested inside a ListSerializer, the Meta class is 2 steps removed
             if is_list_serializer(field.parent):
-                model = field.parent.parent.Meta.model
+                model = getattr(getattr(field.parent.parent, 'Meta', None), 'model', None)
                 source = field.parent.source_attrs
             else:
-                model = field.parent.Meta.model
+                model = getattr(getattr(field.parent, 'Meta', None), 'model', None)
                 source = field.source_attrs
+
+            if model is None:
+                warn(
+                    f'Could not derive type for ReadOnlyField "{field.field_name}" because the '
+                    f'serializer class has no associated model (Meta class). Consider using some '
+                    f'other field like CharField(read_only=True) instead. defaulting to string.'
+                )
+                return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
             target = follow_field_source(model, source)
             if callable(target):

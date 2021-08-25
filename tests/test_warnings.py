@@ -357,3 +357,20 @@ def test_unknown_base_field_warning(capsys):
     generate_schema('x', view_function=view_func)
     stderr = capsys.readouterr().err
     assert 'could not resolve serializer field' in stderr
+
+
+def test_warning_read_only_field_on_non_model_serializer(capsys):
+    class XSerializer(serializers.Serializer):
+        field = serializers.ReadOnlyField()
+
+    class XViewSet(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+
+    # test validity of serializer construction
+    serializer = XSerializer(instance={'field': 1})
+    serializer.data
+
+    generate_schema('x', XViewSet)
+    stderr = capsys.readouterr().err
+    assert 'Could not derive type for ReadOnlyField "field"' in stderr
