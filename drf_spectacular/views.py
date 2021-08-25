@@ -102,12 +102,15 @@ class SpectacularSwaggerView(APIView):
                     url=schema_url,
                     lang=request.GET.get('lang')
                 ),
-                'settings': json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS),
-                'oauth2_config': json.dumps(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
+                'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
+                'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
                 'template_name_js': self.template_name_js
             },
             template_name=self.template_name,
         )
+
+    def _dump(self, data):
+        return data if isinstance(data, str) else json.dumps(data)
 
 
 class SpectacularSwaggerSplitView(SpectacularSwaggerView):
@@ -127,8 +130,8 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
                         url=schema_url,
                         lang=request.GET.get('lang')
                     ),
-                    'settings': json.dumps(spectacular_settings.SWAGGER_UI_SETTINGS),
-                    'oauth2_config': json.dumps(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
+                    'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
+                    'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
                 },
                 template_name=self.template_name_js,
                 content_type='application/javascript',

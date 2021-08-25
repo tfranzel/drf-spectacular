@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 import yaml
 from django.urls import path
@@ -112,3 +114,14 @@ def test_spectacular_swagger_ui_alternate(no_warnings):
     response = APIClient().get('/api/v2/schema/swagger-ui-alt/?script=')
     assert response.status_code == 200
     assert b'"/api/v2/schema/"' in response.content
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.SWAGGER_UI_SETTINGS',
+    '{"deepLinking": true}'
+)
+@pytest.mark.urls(__name__)
+def test_spectacular_ui_with_raw_settings(no_warnings):
+    response = APIClient().get('/api/v2/schema/swagger-ui/')
+    assert response.status_code == 200
+    assert b'const swagger_settings  = {"deepLinking": true}\n\n' in response.content
