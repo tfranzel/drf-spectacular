@@ -8,6 +8,8 @@
     <link rel="icon" type="image/png" href="{{favicon_href}}"/>
     {% endif %}
     <link rel="stylesheet" type="text/css" href="{{dist}}/swagger-ui.css" />
+    {% block custom_head %}
+    {% endblock %}
   </head>
   <body>
     <div id="swagger-ui"></div>
@@ -19,5 +21,7 @@
     {% include template_name_js %}
     </script>
     {% endif %}
+    {% block custom_scripts %}
+    {% endblock %}
   </body>
 </html>
