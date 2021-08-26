@@ -48,9 +48,9 @@ def test_command_fail(capsys):
 
 
 def test_command_check(capsys):
-    management.call_command('check')
-    stdout = capsys.readouterr().out
-    assert 'System check identified no issues' in stdout
+    management.call_command('check', '--deploy')
+    stderr = capsys.readouterr().err
+    assert not stderr
 
 
 @api_view(['GET'])
@@ -64,8 +64,8 @@ urlpatterns = [path('func', func)]
 @mock.patch('tests.urls.urlpatterns', [path('api/endpoint/', func)])
 def test_command_check_fail(capsys):
     with pytest.raises(SystemCheckError):
-        management.call_command('check', '--fail-level', 'WARNING')
-    management.call_command('check')
+        management.call_command('check', '--fail-level', 'WARNING', '--deploy')
+    management.call_command('check', '--deploy')
     stdout = capsys.readouterr().err
     assert 'System check identified some issues' in stdout
     assert 'drf_spectacular.W002' in stdout

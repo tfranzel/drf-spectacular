@@ -123,6 +123,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Option for turning off error and warn messages
     'DISABLE_ERRORS_AND_WARNINGS': False,
 
+    # Runs exemplary schema generation and emits warnings as part of "./manage.py check --deploy"
+    'ENABLE_DJANGO_DEPLOY_CHECK': True,
+
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
     'TITLE': '',
