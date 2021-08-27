@@ -1,6 +1,29 @@
 Changelog
 =========
 
+0.18.0 (2021-08-25)
+-------------------
+
+- prevent exception and warn when ReadOnlyField is used with non-ModelSerializer `#432 <https://github.com/tfranzel/drf-spectacular/issues/432>`_
+- allow raw JS in Swagger settings `#457 <https://github.com/tfranzel/drf-spectacular/issues/457>`_
+- add support for check framework `#477 <https://github.com/tfranzel/drf-spectacular/issues/477>`_
+- improve common FAQ @action question `#399 <https://github.com/tfranzel/drf-spectacular/issues/399>`_
+- update @extend_schema doc `#476 <https://github.com/tfranzel/drf-spectacular/issues/476>`_
+- adapt to changes in iMerica/dj-rest-auth 2.1.10 (ResendEmailVerification)
+- add raw schema to @extend_schema(request={MIME: RAW}) `#476 <https://github.com/tfranzel/drf-spectacular/issues/476>`_
+- bugfix test case for 3.6 `#474 <https://github.com/tfranzel/drf-spectacular/issues/474>`_
+- bugfix header underscore handling for simplejwt `#474 <https://github.com/tfranzel/drf-spectacular/issues/474>`_
+- properly parse TokenMatchesOASRequirements (oauth toolkit) `#469 <https://github.com/tfranzel/drf-spectacular/issues/469>`_
+- add whitelist setting to manage auth method exposure `#326 <https://github.com/tfranzel/drf-spectacular/issues/326>`_ `#471 <https://github.com/tfranzel/drf-spectacular/issues/471>`_
+- Update set_password instead of list [Greg Campion]
+- Update documentation to illustrate how to override a specific method [Greg Campion]
+
+Breaking changes / important additions:
+
+- This is a y-stream release because we added `Django checks <https://docs.djangoproject.com/en/3.2/topics/checks/>`_
+  which might emit warnings and subsequently break CI. This can be easily suppressed with Django's `SILENCED_SYSTEM_CHECKS`.
+- Several small fixes and features that should not have a big impact.
+
 
 0.17.3 (2021-07-26)
 -------------------

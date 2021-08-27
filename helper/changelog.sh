@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 last_ver=$(git describe --tags --abbrev=0)
-next_ver=$(cat drf_spectacular/__init__.py | sed "s/__version__ = '\\(.*\\)'/\\1/g")
+next_ver=$(head -n1 drf_spectacular/__init__.py | sed "s/__version__ = '\\(.*\\)'/\\1/g")
 
 echo
 echo "$next_ver ($(date "+%Y-%m-%d"))"
@@ -10,6 +10,7 @@ echo
 
 git log ${last_ver}..origin/master --pretty=format:"- %s [%an]" --no-merges  \
     | sed 's/\[T. Franzel\]//g' \
-    | sed 's|\#\([0-9]\+\)|`#\1 <https://github.com/tfranzel/drf-spectacular/issues/\1>`_|g'
+    | sed 's|\#\([0-9]\+\)|`#\1 <https://github.com/tfranzel/drf-spectacular/issues/\1>`_|g' \
+    | sed 's/[ \t]*$//'
 
 echo
