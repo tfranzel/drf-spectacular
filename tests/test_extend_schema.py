@@ -57,6 +57,7 @@ class ErrorDetailSerializer(serializers.Serializer):
     field_j = serializers.SerializerMethodField()
     field_k = serializers.SerializerMethodField()
     field_l = serializers.SerializerMethodField()
+    field_m = serializers.SerializerMethodField()
 
     @extend_schema_field(OpenApiTypes.DATETIME)
     def get_field_i(self, object):
@@ -73,6 +74,10 @@ class ErrorDetailSerializer(serializers.Serializer):
     @extend_schema_field(serializers.ChoiceField(choices=['a', 'b']))
     def get_field_l(self, object):
         return object.some_choice  # pragma: no cover
+
+    @extend_schema_field({'type': 'array', 'items': {'type': 'integer'}})
+    def get_field_m(self, object):
+        return [1, 2, 3]  # pragma: no cover
 
 
 with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', AutoSchema):

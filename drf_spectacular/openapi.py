@@ -844,6 +844,8 @@ class AutoSchema(ViewInspector):
 
         if is_serializer(hint) or is_field(hint):
             return self._map_serializer_field(force_instance(hint), 'response')
+        if isinstance(hint, dict):
+            return hint
 
         try:
             return resolve_type_hint(hint)

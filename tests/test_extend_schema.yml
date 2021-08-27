@@ -353,11 +353,17 @@ components:
           allOf:
           - $ref: '#/components/schemas/FieldLEnum'
           readOnly: true
+        field_m:
+          type: array
+          items:
+            type: integer
+          readOnly: true
       required:
       - field_i
       - field_j
       - field_k
       - field_l
+      - field_m
     FieldLEnum:
       enum:
       - a
