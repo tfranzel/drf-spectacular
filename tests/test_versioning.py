@@ -214,6 +214,7 @@ urlpatterns = [
     ('/api/pv/v1/schema/', 8),  # v1 nv + v1 pv + v1 ahv + unversioned
     ('/api/schema-v2/', 8),  # v2 nv + v2 pv + v2 ahv + unversioned
     ('/api/schema/', 2),  # unversioned schema
+    ('/api/schema/?version=v2', 8),  # versioned with query param
 ])
 @pytest.mark.urls(__name__)
 def test_spectacular_view_versioning(no_warnings, url, path_count):
