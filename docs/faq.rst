@@ -63,15 +63,29 @@ disappear.
 
 I get warnings regarding my ``Enum`` or  my ``Enum`` names have a weird suffix
 -------------------------------------------------------------------------------
-This is because the ``Enum`` postprocessing hook is activated by default. Enum suffixes like
-``LanguageCa22Enum`` mean that there was a naming collision that got resolved. Other
-warnings might indicate that you use one and the same choice set under different names.
+This is because the ``Enum`` postprocessing hook is activated by default, which
+attempts to find a name for a set of enum choices.
 
-The naming mechanism will handle all encountered issues automatically, but also notify you of
-potential problems. You can resolve (or silence) enum issues by adding an entry to the
+The naming mechanism uses the name of the field and possibly the name of the
+component, followed by a suffix if necessary if there are clashes (if there are
+two enum fields with the same name but different set of choices). This will
+handle all encountered issues automatically, but also notify you of potential
+problems, of two kinds:
+
+* multiple names being produced for the same set of values, due to different
+  field names (e.g. if you have a single currency enum used by distinct fields
+  named like ``payment_currency`` and ``preferred_currency``, the naming
+  mechanism will by default treat this as two different enums but emit a
+  warning).
+* clashes that result in a suffix being needed, as above.
+
+You can resolve (or silence) enum issues by adding an entry to the
 ``ENUM_NAME_OVERRIDES`` setting. Values can take the form of choices (list of tuples), value lists
 (list of strings), or import strings. Django's ``models.Choices`` and Python's ``Enum`` classes
-are supported as well.
+are supported as well. The key is a string that you choose as a name to give to
+this set of values.
+
+For example:
 
 .. code-block:: python
 
@@ -83,6 +97,9 @@ are supported as well.
         # choices is an attribute of class CurrencyContainer containing a list of tuples
         'CurrencyEnum': 'import_path.CurrencyContainer.choices',
     }
+
+If you have multiple semantically distinct enums that happen to have the same
+set of values, and you want different names for them, this mechanism won't work.
 
 
 My endpoints use different serializers depending on the situation
