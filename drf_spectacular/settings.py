@@ -51,8 +51,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # CDNs for for swagger and redoc. You can change the version or even host your
     # own depending on your requirements.
-    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.51.0',
-    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.51.0/favicon-32x32.png',
+    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.52.0',
+    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.52.0/favicon-32x32.png',
 
     'REDOC_DIST': '//cdn.jsdelivr.net/npm/redoc@next',
 
@@ -122,6 +122,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # Option for turning off error and warn messages
     'DISABLE_ERRORS_AND_WARNINGS': False,
+
+    # Runs exemplary schema generation and emits warnings as part of "./manage.py check --deploy"
+    'ENABLE_DJANGO_DEPLOY_CHECK': True,
 
     # General schema metadata. Refer to spec for valid inputs
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object

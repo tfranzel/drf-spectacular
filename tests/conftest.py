@@ -91,7 +91,10 @@ def pytest_configure(config):
             'PAGE_SIZE': 10,
         },
         DEFAULT_AUTO_FIELD='django.db.models.AutoField',
-        SILENCED_SYSTEM_CHECKS=['rest_framework.W001', 'fields.E210'],
+        SILENCED_SYSTEM_CHECKS=[
+            'rest_framework.W001', 'fields.E210', 'security.W001', 'security.W002',
+            'security.W003', 'security.W009', 'security.W012'
+        ],
     )
 
     django.setup()
