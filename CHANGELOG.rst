@@ -1,6 +1,23 @@
 Changelog
 =========
 
+0.18.1 (2021-08-31)
+-------------------
+
+- Improved docs regarding how ENUM_NAME_OVERRIDES works [Luke Plant]
+- bugfix raw schema handling for @extend_schema_field on SerializerMethodField method 481
+- load common SwaggerUI dep SwaggerUIStandalonePreset `#483 <https://github.com/tfranzel/drf-spectacular/issues/483>`_
+- allow versioning of SpectacularAPIView via query `#483 <https://github.com/tfranzel/drf-spectacular/issues/483>`_
+- update swagger UI
+- move checks to "--deploy" section, bugfix public=True `#487 <https://github.com/tfranzel/drf-spectacular/issues/487>`_
+
+Breaking changes / important additions:
+
+- This is a hotfix release as the newly introduced Django check was executing the wrong code path.
+- Check also moved into the ``--deploy`` section to prevent double execution. This can be disabled with ``ENABLE_DJANGO_DEPLOY_CHECK``
+- Facitities added to utilize SwaggerUI Topbar for versioning.
+
+
 0.18.0 (2021-08-25)
 -------------------
 
