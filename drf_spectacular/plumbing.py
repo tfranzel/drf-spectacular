@@ -27,6 +27,7 @@ from django.urls.resolvers import (  # type: ignore
 )
 from django.utils.functional import Promise, cached_property
 from django.utils.module_loading import import_string
+from django.utils.version import PY38
 from rest_framework import exceptions, fields, mixins, serializers, versioning
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
@@ -45,6 +46,11 @@ try:
 except ImportError:
     class Choices:  # type: ignore
         pass
+
+if PY38:
+    CACHED_PROPERTY_FUNCS = (functools.cached_property, cached_property)  # type: ignore
+else:
+    CACHED_PROPERTY_FUNCS = (cached_property,)  # type: ignore
 
 T = TypeVar('T')
 
@@ -373,7 +379,7 @@ def _follow_field_source(model, path: List[str]):
         # end of traversal
         if isinstance(field_or_property, property):
             return field_or_property.fget
-        elif isinstance(field_or_property, cached_property):
+        elif isinstance(field_or_property, CACHED_PROPERTY_FUNCS):
             return field_or_property.func
         elif callable(field_or_property):
             return field_or_property
@@ -397,10 +403,13 @@ def _follow_field_source(model, path: List[str]):
             else:
                 return field
     else:
-        if isinstance(field_or_property, (property, cached_property)) or callable(field_or_property):
+        if (
+            isinstance(field_or_property, (property,) + CACHED_PROPERTY_FUNCS)
+            or callable(field_or_property)
+        ):
             if isinstance(field_or_property, property):
                 target_model = _follow_return_type(field_or_property.fget)
-            elif isinstance(field_or_property, cached_property):
+            elif isinstance(field_or_property, CACHED_PROPERTY_FUNCS):
                 target_model = _follow_return_type(field_or_property.func)
             else:
                 target_model = _follow_return_type(field_or_property)

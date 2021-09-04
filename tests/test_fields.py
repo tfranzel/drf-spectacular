@@ -1,3 +1,4 @@
+import functools
 import tempfile
 import uuid
 from datetime import date, datetime, timedelta
@@ -112,6 +113,10 @@ class AllFields(models.Model):
     def field_model_cached_property_float(self) -> float:
         return 1.337
 
+    @functools.cached_property  # type: ignore
+    def field_model_py_cached_property_float(self) -> float:
+        return 1.337
+
     @property
     def field_list(self):
         return [1.1, 2.2, 3.3]
@@ -132,6 +137,10 @@ class AllFields(models.Model):
 
     @cached_property
     def sub_object_cached(self) -> SubObject:
+        return SubObject(self)
+
+    @functools.cached_property  # type: ignore
+    def sub_object_py_cached(self) -> SubObject:
         return SubObject(self)
 
     @property
@@ -199,6 +208,8 @@ class AllFieldsSerializer(serializers.ModelSerializer):
 
     field_model_cached_property_float = serializers.ReadOnlyField()
 
+    field_model_py_cached_property_float = serializers.ReadOnlyField()
+
     field_dict_int = serializers.DictField(
         child=serializers.IntegerField(),
         source='field_json',
@@ -216,6 +227,14 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     field_sub_object_cached_calculated = serializers.ReadOnlyField(source='sub_object_cached.calculated')
     field_sub_object_cached_nested_calculated = serializers.ReadOnlyField(source='sub_object_cached.nested.calculated')
     field_sub_object_cached_model_int = serializers.ReadOnlyField(source='sub_object_cached.model_instance.field_int')
+
+    field_sub_object_py_cached_calculated = serializers.ReadOnlyField(source='sub_object_py_cached.calculated')
+    field_sub_object_py_cached_nested_calculated = serializers.ReadOnlyField(
+        source='sub_object_py_cached.nested.calculated',
+    )
+    field_sub_object_py_cached_model_int = serializers.ReadOnlyField(
+        source='sub_object_py_cached.model_instance.field_int',
+    )
 
     # typing.Optional
     field_optional_sub_object_calculated = serializers.ReadOnlyField(

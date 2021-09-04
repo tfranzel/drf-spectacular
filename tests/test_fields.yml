@@ -167,6 +167,10 @@ components:
           type: number
           format: float
           readOnly: true
+        field_model_py_cached_property_float:
+          type: number
+          format: float
+          readOnly: true
         field_dict_int:
           type: object
           additionalProperties:
@@ -190,6 +194,15 @@ components:
           type: integer
           readOnly: true
         field_sub_object_cached_model_int:
+          type: integer
+          readOnly: true
+        field_sub_object_py_cached_calculated:
+          type: integer
+          readOnly: true
+        field_sub_object_py_cached_nested_calculated:
+          type: integer
+          readOnly: true
+        field_sub_object_py_cached_model_int:
           type: integer
           readOnly: true
         field_optional_sub_object_calculated:
@@ -303,6 +316,7 @@ components:
       - field_method_object
       - field_model_cached_property_float
       - field_model_property_float
+      - field_model_py_cached_property_float
       - field_o2o
       - field_optional_sub_object_calculated
       - field_posint
@@ -324,6 +338,9 @@ components:
       - field_sub_object_model_int
       - field_sub_object_nested_calculated
       - field_sub_object_optional_int
+      - field_sub_object_py_cached_calculated
+      - field_sub_object_py_cached_model_int
+      - field_sub_object_py_cached_nested_calculated
       - field_text
       - field_time
       - field_url
