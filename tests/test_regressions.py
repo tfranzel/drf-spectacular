@@ -1650,7 +1650,7 @@ def test_technically_unnecessary_serializer_patch(no_warnings):
     assert 'No response' in schema['paths']['/x/']['delete']['responses']['204']['description']
 
 
-def test_any_placeholder_on_request_response():
+def test_any_placeholder_on_request_response(no_warnings):
     @extend_schema_field(OpenApiTypes.ANY)
     class CustomField(serializers.IntegerField):
         pass  # pragma: no cover
@@ -2108,4 +2108,28 @@ def test_request_response_raw_schema_annotation(no_warnings):
     }
     assert op['responses']['200']['content']['application/pdf']['schema'] == {
         'type': 'string', 'format': 'binary'
+    }
+
+
+def test_serializer_modelfield_with_default_value(no_warnings):
+    class M8Model(models.Model):
+        field = models.IntegerField()
+
+    class XSerializer(serializers.ModelSerializer):
+        field = serializers.ModelField(
+            model_field=M8Model()._meta.get_field('field'),
+            default=3
+        )
+
+        class Meta:
+            model = M8Model
+            fields = '__all__'
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = M8Model.objects.all()
+
+    schema = generate_schema('x', XViewset)
+    assert schema['components']['schemas']['X']['properties']['field'] == {
+        'type': 'integer', 'default': 3
     }
