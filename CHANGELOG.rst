@@ -1,6 +1,19 @@
 Changelog
 =========
 
+0.18.2 (2021-09-04)
+-------------------
+
+- fix default value handling for custom ModelField `#422 <https://github.com/tfranzel/drf-spectacular/issues/422>`_
+- fill html title with title from settings `#491 <https://github.com/tfranzel/drf-spectacular/issues/491>`_
+- add Enum support in type hints `#492 <https://github.com/tfranzel/drf-spectacular/issues/492>`_
+- Move system check registration to AppConfig [Jameel Al-Aziz]
+
+Breaking changes / important additions:
+
+- Primarily ironing out another issue with the Django check and some minor improvements
+
+
 0.18.1 (2021-08-31)
 -------------------
 
