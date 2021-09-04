@@ -100,6 +100,10 @@ def test_spectacular_ui_view(no_warnings, ui):
     response = APIClient().get(f'/api/v2/schema/{ui}/')
     assert response.status_code == 200
     assert response.content.startswith(b'<!DOCTYPE html>')
+    if ui == 'redoc':
+        assert b'<title>ReDoc</title>' in response.content
+    else:
+        assert b'<title>Swagger</title>' in response.content
     assert b'"/api/v2/schema/"' in response.content
 
 
