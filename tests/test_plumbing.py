@@ -4,6 +4,7 @@ import re
 import sys
 import typing
 from datetime import datetime
+from enum import Enum
 
 import pytest
 from django import __version__ as DJANGO_VERSION
@@ -90,6 +91,11 @@ class NamedTupleB(typing.NamedTuple):
     b: str
 
 
+class LanguageEnum(str, Enum):
+    EN = 'en'
+    DE = 'de'
+
+
 TYPE_HINT_TEST_PARAMS = [
     (
         typing.Optional[int],
@@ -135,6 +141,11 @@ TYPE_HINT_TEST_PARAMS = [
         {'oneOf': [{'type': 'string'}, {'type': 'integer'}], 'nullable': True}
     )
 ]
+
+TYPE_HINT_TEST_PARAMS.append((
+    LanguageEnum,
+    {'enum': ['en', 'de'], 'type': 'string'}
+))
 
 if DJANGO_VERSION > '3':
     from django.db.models.enums import TextChoices  # only available in Django>3
