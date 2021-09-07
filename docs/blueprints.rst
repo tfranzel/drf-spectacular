@@ -62,3 +62,20 @@ this shortcoming, you can manually add the appropriate security scheme.
         "SECURITY": [{"ApiKeyAuth": [], }],
          ...
     }
+
+
+Polymorphic models
+------------------
+
+Using polymorphic models/serializers unfortunately yields flat serializers due to the way
+the serializers are constructed. This means the polymorphic serializers have no inheritance
+hierarchy that represents common functionality. These extensions retroactively build a
+hierarchy by rolling up the "common denominator" fields into the base components, and
+importing those into the sub-components via ``allOf``. This results in components that better
+represent the structure of the underlying serializers/models from which they originated.
+
+The components work perfectly fine without this extension, but in some cases generated
+client code has a hard time with the disjunctive nature of the unmodified components.
+This blueprint is designed to fix that issue.
+
+.. literalinclude:: blueprints/rollup.py
