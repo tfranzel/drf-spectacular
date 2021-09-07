@@ -26,10 +26,10 @@ from drf_spectacular.extensions import (
 from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta, build_array_type,
     build_basic_type, build_choice_field, build_examples_list, build_media_type_object,
-    build_object_type, build_parameter_type, error, follow_field_source, force_instance, get_doc,
-    get_type_hints, get_view_model, is_basic_type, is_field, is_list_serializer,
-    is_patched_serializer, is_serializer, is_trivial_string_variation, resolve_regex_path_parameter,
-    resolve_type_hint, safe_ref, warn,
+    build_object_type, build_parameter_type, error, follow_field_source, follow_model_field_lookup,
+    force_instance, get_doc, get_type_hints, get_view_model, is_basic_type, is_field,
+    is_list_serializer, is_patched_serializer, is_serializer, is_trivial_string_variation,
+    resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes, build_generic_type
@@ -342,7 +342,7 @@ class AutoSchema(ViewInspector):
                 schema = resolved_parameter['schema']
             elif get_view_model(self.view) is None:
                 warn(
-                    f'could not derive type of path parameter "{variable}" because because it '
+                    f'could not derive type of path parameter "{variable}" because it '
                     f'is untyped and obtaining queryset from the viewset failed. '
                     f'Consider adding a type to the path (e.g. <int:{variable}>) or annotating '
                     f'the parameter type with @extend_schema. Defaulting to "string".'
@@ -350,14 +350,14 @@ class AutoSchema(ViewInspector):
             else:
                 try:
                     model = get_view_model(self.view)
-                    model_field = model._meta.get_field(variable)
+                    model_field = follow_model_field_lookup(model, variable)
                     schema = self._map_model_field(model_field, direction=None)
                     if 'description' not in schema and model_field.primary_key:
                         description = get_pk_description(model, model_field)
-                except django_exceptions.FieldDoesNotExist:
+                except django_exceptions.FieldError:
                     warn(
                         f'could not derive type of path parameter "{variable}" because '
-                        f'model "{model}" did contain no such field. Consider annotating '
+                        f'model "{model.__module__}.{model.__name__}" contained no such field. Consider annotating '
                         f'parameter with @extend_schema. Defaulting to "string".'
                     )
 
