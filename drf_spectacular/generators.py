@@ -39,6 +39,12 @@ class EndpointEnumerator(BaseEndpointEnumerator):
         else:
             return api_endpoints
 
+    def get_path_from_regex(self, path_regex):
+        path = super().get_path_from_regex(path_regex)
+        # bugfix oversight in DRF regex stripping
+        path = path.replace('\\.', '.')
+        return path
+
     def _get_api_endpoints(self, patterns, prefix):
         """
         Return a list of all available API endpoints by inspecting the URL conf.

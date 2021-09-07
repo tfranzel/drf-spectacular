@@ -2133,3 +2133,22 @@ def test_serializer_modelfield_with_default_value(no_warnings):
     assert schema['components']['schemas']['X']['properties']['field'] == {
         'type': 'integer', 'default': 3
     }
+
+
+def test_literal_dot_in_regex_path(no_warnings):
+    @extend_schema(
+        responses=OpenApiTypes.ANY,
+        parameters=[
+            OpenApiParameter('filename', str, OpenApiParameter.PATH),
+            OpenApiParameter('ext', str, OpenApiParameter.PATH)
+        ]
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    urlpatterns = [
+        re_path('^file/(?P<filename>.*)\\.(?P<ext>\\w+)$', view_func)
+    ]
+    schema = generate_schema(None, patterns=urlpatterns)
+    assert '/file/{filename}.{ext}' in schema['paths']
