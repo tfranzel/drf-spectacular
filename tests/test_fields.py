@@ -19,6 +19,14 @@ from rest_framework.test import APIClient
 from drf_spectacular.generators import SchemaGenerator
 from tests import assert_schema
 
+try:
+    functools_cached_property = functools.cached_property  # type: ignore
+except AttributeError:
+    # functools.cached_property is only available in Python 3.8+.
+    # We re-use Django's cached_property when it's not avaiable to
+    # keep tests unified across Python versions.
+    functools_cached_property = cached_property
+
 fs = FileSystemStorage(location=tempfile.gettempdir())
 
 
@@ -113,7 +121,7 @@ class AllFields(models.Model):
     def field_model_cached_property_float(self) -> float:
         return 1.337
 
-    @functools.cached_property  # type: ignore
+    @functools_cached_property
     def field_model_py_cached_property_float(self) -> float:
         return 1.337
 
@@ -139,7 +147,7 @@ class AllFields(models.Model):
     def sub_object_cached(self) -> SubObject:
         return SubObject(self)
 
-    @functools.cached_property  # type: ignore
+    @functools_cached_property
     def sub_object_py_cached(self) -> SubObject:
         return SubObject(self)
 
