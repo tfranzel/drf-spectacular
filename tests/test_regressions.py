@@ -545,6 +545,51 @@ def test_regex_path_parameter_discovery(no_warnings):
     assert parameter['schema']['type'] == 'integer'
 
 
+def test_regex_path_parameter_discovery_with_custom_converter(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request, foo):
+        pass  # pragma: no cover
+
+    @extend_schema_field(OpenApiTypes.INT)
+    class CustomNumberConverter:
+        regex = '\\d+'
+
+        def to_python(self, value):
+            return int(value)
+
+        def to_url(self, value):
+            return '%d' % value
+
+    from django.urls import register_converter
+    register_converter(CustomNumberConverter, 'number')
+
+    urlpatterns = [re_path(r'^/pi/<number:precision>', pi)]
+    schema = generate_schema(None, patterns=urlpatterns)
+    parameter = schema['paths']['/pi/{precision}']['get']['parameters'][0]
+    assert parameter['name'] == 'precision'
+    assert parameter['in'] == 'path'
+    assert parameter['schema']['type'] == 'integer'
+
+    class CustomDateConverter:
+        regex = '\\d{4}-\\d{2}-\\d{2}'
+
+        def to_python(self, value):
+            return int(value)
+
+        def to_url(self, value):
+            return '%d' % value
+
+    register_converter(CustomDateConverter, 'date')
+    urlpatterns = [re_path(r'^/pi/<date:from_date>', pi)]
+    schema = generate_schema(None, patterns=urlpatterns)
+    parameter = schema['paths']['/pi/{from_date}']['get']['parameters'][0]
+    assert parameter['name'] == 'from_date'
+    assert parameter['in'] == 'path'
+    assert parameter['schema']['type'] == 'string'
+    assert parameter['schema']['pattern'] == '\\d{4}-\\d{2}-\\d{2}'
+
+
 def test_lib_serializer_naming_collision_resolution(no_warnings):
     """ parity test in tests.test_warnings.test_serializer_name_reuse """
     def x_lib1():

@@ -21,6 +21,7 @@ from django.db.models.fields.related_descriptors import (
     ReverseOneToOneDescriptor,
 )
 from django.db.models.fields.reverse_related import ForeignObjectRel
+from django.urls.converters import get_converter as django_get_converter
 from django.urls.resolvers import (  # type: ignore
     _PATH_PARAMETER_COMPONENT_RE, RegexPattern, Resolver404, RoutePattern, URLPattern, URLResolver,
     get_resolver,
@@ -33,7 +34,7 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
 from uritemplate import URITemplate
 
-from drf_spectacular.drainage import error, warn
+from drf_spectacular.drainage import error, warn, has_override, get_override
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
     DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,
@@ -680,13 +681,34 @@ def resolve_regex_path_parameter(path_regex, variable, available_formats):
         if api_settings.SCHEMA_COERCE_PATH_PK and parameter == 'pk':
             parameter = 'id'
 
-        if parameter == variable and converter in DJANGO_PATH_CONVERTER_MAPPING:
-            return build_parameter_type(
-                name=parameter,
-                schema=build_basic_type(DJANGO_PATH_CONVERTER_MAPPING[converter]),
-                location=OpenApiParameter.PATH,
-                enum=enum_values,
-            )
+        if converter and parameter == variable:
+            if converter in DJANGO_PATH_CONVERTER_MAPPING:
+                return build_parameter_type(
+                    name=parameter,
+                    schema=build_basic_type(DJANGO_PATH_CONVERTER_MAPPING[converter]),
+                    location=OpenApiParameter.PATH,
+                    enum=enum_values,
+                )
+            else:
+                django_converter = django_get_converter(converter)
+                if django_converter:
+                    converter_schema = None
+                    converter_regex = getattr(django_converter, 'regex')
+                    if has_override(django_converter, 'field'):
+                        annotation = get_override(django_converter, 'field')
+                        converter_schema = build_basic_type(annotation) if is_basic_type(annotation) else annotation
+                    elif converter_regex:
+                        converter_schema = {
+                            'type': 'string',
+                            'pattern': converter_regex
+                        }
+                    if converter_schema:
+                        return build_parameter_type(
+                            name=parameter,
+                            schema=converter_schema,
+                            location=OpenApiParameter.PATH,
+                            enum=enum_values,
+                        )
 
     return None
 
