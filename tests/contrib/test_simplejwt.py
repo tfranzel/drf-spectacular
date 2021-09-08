@@ -78,7 +78,7 @@ def test_simplejwt_non_std_header_name(no_warnings, prefix):
             'jwtAuth': {
                 'type': 'apiKey',
                 'in': 'header',
-                'name': 'X-token',
+                'name': 'X-Token',
                 'description': f'Token-based authentication with required prefix "{prefix}"',
             }
         }
