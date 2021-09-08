@@ -51,32 +51,34 @@ def test_simplejwt(no_warnings, view):
 
 
 @pytest.mark.contrib('rest_framework_simplejwt')
-@mock.patch('rest_framework_simplejwt.settings.api_settings.AUTH_HEADER_TYPES', ('JWT',))
-def test_simplejwt_non_bearer_keyword(no_warnings):
-    schema = generate_schema('/x', XViewset)
-    assert schema['components']['securitySchemes'] == {
-        'jwtAuth': {
-            'type': 'apiKey',
-            'in': 'header',
-            'name': 'Authorization',
-            'description': 'Token-based authentication with required prefix "JWT"'
+@pytest.mark.parametrize('prefix', ['Bearer', 'JWT'])
+def test_simplejwt_header_prefix(no_warnings, prefix):
+    with mock.patch('rest_framework_simplejwt.settings.api_settings.AUTH_HEADER_TYPES', [prefix]):
+        schema = generate_schema('/x', XViewset)
+        assert schema['components']['securitySchemes'] == {
+            'jwtAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': prefix,
+            }
         }
-    }
 
 
 @pytest.mark.contrib('rest_framework_simplejwt')
+@pytest.mark.parametrize('prefix', ['Bearer', 'JWT'])
 @mock.patch(
     'rest_framework_simplejwt.settings.api_settings.AUTH_HEADER_NAME',
     'HTTP_X_TOKEN',
     create=True,
 )
-def test_simplejwt_non_std_header_name(no_warnings):
-    schema = generate_schema('/x', XViewset)
-    assert schema['components']['securitySchemes'] == {
-        'jwtAuth': {
-            'type': 'apiKey',
-            'in': 'header',
-            'name': 'X-token',
-            'description': 'Token-based authentication with required prefix "Bearer"'
+def test_simplejwt_non_std_header_name(no_warnings, prefix):
+    with mock.patch('rest_framework_simplejwt.settings.api_settings.AUTH_HEADER_TYPES', [prefix]):
+        schema = generate_schema('/x', XViewset)
+        assert schema['components']['securitySchemes'] == {
+            'jwtAuth': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'X-token',
+                'description': f'Token-based authentication with required prefix "{prefix}"',
+            }
         }
-    }
