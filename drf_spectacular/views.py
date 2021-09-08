@@ -96,12 +96,14 @@ class SpectacularSwaggerView(APIView):
     url = None
     template_name = 'drf_spectacular/swagger_ui.html'
     template_name_js = 'drf_spectacular/swagger_ui.js'
+    title = spectacular_settings.TITLE
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
         schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
         return Response(
             data={
+                'title': self.title,
                 'dist': spectacular_settings.SWAGGER_UI_DIST,
                 'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
                 'schema_url': set_query_parameters(
@@ -146,6 +148,7 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
             script_url = self.url_self or request.get_full_path()
             return Response(
                 data={
+                    'title': self.title,
                     'dist': spectacular_settings.SWAGGER_UI_DIST,
                     'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
                     'script_url': set_query_parameters(
@@ -165,6 +168,7 @@ class SpectacularRedocView(APIView):
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/redoc.html'
+    title = spectacular_settings.TITLE
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
@@ -172,6 +176,7 @@ class SpectacularRedocView(APIView):
         schema_url = set_query_parameters(schema_url, lang=request.GET.get('lang'))
         return Response(
             data={
+                'title': self.title,
                 'dist': spectacular_settings.REDOC_DIST,
                 'schema_url': schema_url,
             },

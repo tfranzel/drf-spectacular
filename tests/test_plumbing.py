@@ -6,6 +6,7 @@ import typing
 from datetime import datetime
 
 import pytest
+from django import __version__ as DJANGO_VERSION
 from django.conf.urls import include
 from django.db import models
 from django.urls import re_path
@@ -134,6 +135,18 @@ TYPE_HINT_TEST_PARAMS = [
         {'oneOf': [{'type': 'string'}, {'type': 'integer'}], 'nullable': True}
     )
 ]
+
+if DJANGO_VERSION > '3':
+    from django.db.models.enums import TextChoices  # only available in Django>3
+
+    class LanguageChoices(TextChoices):
+        EN = 'en'
+        DE = 'de'
+
+    TYPE_HINT_TEST_PARAMS.append((
+        LanguageChoices,
+        {'enum': ['en', 'de'], 'type': 'string'}
+    ))
 
 if sys.version_info >= (3, 7):
     TYPE_HINT_TEST_PARAMS.append((

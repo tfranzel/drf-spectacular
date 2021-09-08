@@ -82,6 +82,7 @@ class AllFields(models.Model):
         field_nullbool = models.NullBooleanField()  # type: ignore
     field_time = models.TimeField()
     field_duration = models.DurationField()
+    field_binary = models.BinaryField()
 
     # relations
     field_foreign = models.ForeignKey(
@@ -290,6 +291,7 @@ def test_model_setup_is_valid():
         field_nullbool=None,
         field_time='00:05:23.283',
         field_duration=timedelta(seconds=10),
+        field_binary=b'\xce\x9c\xce\xb9\xce\xb1',
         # relations
         field_foreign=aux,
         field_o2o=aux,

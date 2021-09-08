@@ -1,15 +1,17 @@
+import typing
 from enum import Enum
 from unittest import mock
 
+import pytest
 from django import __version__ as DJANGO_VERSION
 from rest_framework import generics, mixins, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 
 try:
-    from django.db.models.enums import Choices
+    from django.db.models.enums import TextChoices
 except ImportError:
-    Choices = object  # type: ignore  # django < 3.0 handling
+    TextChoices = object  # type: ignore  # django < 3.0 handling
 
 from drf_spectacular.plumbing import list_hash, load_enum_name_overrides
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -35,7 +37,7 @@ class LanguageEnum(Enum):
     EN = 'en'
 
 
-class LanguageChoices(Choices):
+class LanguageChoices(TextChoices):
     EN = 'en'
 
 
@@ -190,3 +192,29 @@ def test_enum_override_variations(no_warnings):
 def test_enum_override_loading_fail(capsys):
     load_enum_name_overrides()
     assert 'unable to load choice override for LanguageEnum' in capsys.readouterr().err
+
+
+@pytest.mark.skipif(DJANGO_VERSION < '3', reason='Not available before Django 3.0')
+def test_textchoice_annotation(no_warnings):
+    class QualityChoices(TextChoices):
+        GOOD = 'GOOD'
+        BAD = 'BAD'
+
+    class XSerializer(serializers.Serializer):
+        quality_levels = serializers.SerializerMethodField()
+
+        def get_quality_levels(self, obj) -> typing.List[QualityChoices]:
+            return [QualityChoices.GOOD, QualityChoices.BAD]  # pragma: no cover
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XAPIView)
+    assert 'QualityLevelsEnum' in schema['components']['schemas']
+    assert schema['components']['schemas']['X']['properties']['quality_levels'] == {
+        'type': 'array',
+        'items': {'$ref': '#/components/schemas/QualityLevelsEnum'},
+        'readOnly': True
+    }

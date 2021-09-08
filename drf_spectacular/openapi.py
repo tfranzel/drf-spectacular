@@ -464,6 +464,8 @@ class AutoSchema(ViewInspector):
         elif hasattr(models, 'JSONField') and isinstance(model_field, models.JSONField):
             # fix for DRF==3.11 with django>=3.1 as it is not yet represented in the field_mapping
             return build_basic_type(OpenApiTypes.OBJECT)
+        elif isinstance(model_field, models.BinaryField):
+            return build_basic_type(OpenApiTypes.BYTE)
         elif hasattr(models, model_field.get_internal_type()):
             # be graceful when the model field is not explicitly mapped to a serializer
             internal_type = getattr(models, model_field.get_internal_type())
@@ -786,7 +788,12 @@ class AutoSchema(ViewInspector):
         if field.allow_null:
             meta['nullable'] = True
         if field.default is not None and field.default != empty and not callable(field.default):
-            default = field.to_representation(field.default)
+            if isinstance(field, serializers.ModelField):
+                # Skip coercion for lack of a better solution. ModelField.to_representation() is special
+                # in that it requires a model instance (which we don't have) instead of a plain value.
+                default = field.default
+            else:
+                default = field.to_representation(field.default)
             if isinstance(default, set):
                 default = list(default)
             meta['default'] = default

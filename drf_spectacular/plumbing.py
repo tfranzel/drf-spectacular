@@ -969,6 +969,11 @@ def resolve_type_hint(hint):
         if all(type(args[0]) is type(choice) for choice in args):
             schema.update(build_basic_type(type(args[0])))
         return schema
+    elif inspect.isclass(hint) and issubclass(hint, Choices):
+        return {
+            'enum': [item.value for item in hint],
+            **build_basic_type([t for t in hint.__mro__ if is_basic_type(t)][0])
+        }
     elif hasattr(typing, 'TypedDict') and isinstance(hint, typing._TypedDictMeta):
         return build_object_type(
             properties={

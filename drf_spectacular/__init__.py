@@ -1,3 +1,3 @@
-__version__ = '0.18.1'
+__version__ = '0.18.2'
 
-import drf_spectacular.checks  # noqa: F401
+default_app_config = 'drf_spectacular.apps.SpectacularConfig'
