@@ -262,6 +262,10 @@ components:
           format: time
         field_duration:
           type: string
+        field_binary:
+          type: string
+          format: byte
+          readOnly: true
         field_foreign:
           type: string
           format: uuid
@@ -278,6 +282,7 @@ components:
           description: set of related aux objects
       required:
       - field_bigint
+      - field_binary
       - field_bool
       - field_bool_override
       - field_char
