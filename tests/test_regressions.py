@@ -545,6 +545,29 @@ def test_regex_path_parameter_discovery(no_warnings):
     assert parameter['schema']['type'] == 'integer'
 
 
+def test_regex_path_parameter_discovery_pattern(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request, foo):
+        pass  # pragma: no cover
+
+    urlpatterns = [re_path(r'^/pi/(?P<precision>\d+)', pi)]
+    schema = generate_schema(None, patterns=urlpatterns)
+    parameter = schema['paths']['/pi/{precision}']['get']['parameters'][0]
+    assert parameter['name'] == 'precision'
+    assert parameter['in'] == 'path'
+    assert parameter['schema']['type'] == 'string'
+    assert parameter['schema']['pattern'] == '\\d+'
+
+    urlpatterns = [re_path(r'^/pi/(?P<precision>(\d+)-[\w|\.]+(failed|success))', pi)]
+    schema = generate_schema(None, patterns=urlpatterns)
+    parameter = schema['paths']['/pi/{precision}']['get']['parameters'][0]
+    assert parameter['name'] == 'precision'
+    assert parameter['in'] == 'path'
+    assert parameter['schema']['type'] == 'string'
+    assert parameter['schema']['pattern'] == '(\\d+)-[\\w|\\.]+(failed|success)'
+
+
 def test_lib_serializer_naming_collision_resolution(no_warnings):
     """ parity test in tests.test_warnings.test_serializer_name_reuse """
     def x_lib1():

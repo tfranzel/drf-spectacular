@@ -485,3 +485,28 @@ def inline_serializer(name: str, fields: Dict[str, Field], **kwargs) -> Serializ
     """
     serializer_class = type(name, (Serializer,), fields)
     return serializer_class(**kwargs)
+
+
+def get_value_from_brackets(value, start_bracket_symbol="(", end_bracket_symbol=")"):
+    start_bracket_index = value.find(start_bracket_symbol)
+    start_bracket_count = 0 if start_bracket_index == -1 else 1
+    end_bracket_count = 0
+    index = start_bracket_index
+    while index != -1 and start_bracket_count != end_bracket_count:
+        index += 1
+        start_index = value.find(start_bracket_symbol, index)
+        end_index = value.find(end_bracket_symbol, index)
+        if start_index == -1 and end_index == -1:
+            index = -1
+            break
+        if start_index != -1 and end_index > start_index or end_index == -1:
+            start_bracket_count += 1
+            index = start_index
+            continue
+
+        if end_index != -1 and start_index > end_index or start_index == -1:
+            end_bracket_count += 1
+            index = end_index
+
+    if index != -1:
+        return value[start_bracket_index+1:index]
