@@ -5,6 +5,13 @@ import os
 from drf_spectacular.validation import validate_schema
 
 
+def build_absolute_file_path(relative_path):
+    return os.path.join(
+        os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+        relative_path
+    )
+
+
 def assert_schema(schema, reference_filename, transforms=None):
     from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
 
@@ -12,9 +19,7 @@ def assert_schema(schema, reference_filename, transforms=None):
     # render also a json and provoke serialization issues
     OpenApiJsonRenderer().render(schema, renderer_context={})
 
-    reference_filename = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.realpath(__file__))), reference_filename
-    )
+    reference_filename = build_absolute_file_path(reference_filename)
 
     with open(reference_filename.replace('.yml', '_out.yml'), 'wb') as fh:
         fh.write(schema_yml)
@@ -36,21 +41,22 @@ def assert_schema(schema, reference_filename, transforms=None):
     for t in transforms or []:
         generated = t(generated)
 
-    assert_equal(expected, generated)
+    assert_equal(generated, expected)
     # this is more a less a sanity check as checked-in schemas should be valid anyhow
     validate_schema(schema)
 
 
-def assert_equal(a, b):
-    if not isinstance(a, str) or not isinstance(b, str):
-        a = json.dumps(a, indent=4)
-        b = json.dumps(b, indent=4)
+def assert_equal(actual, expected):
+    if not isinstance(actual, str):
+        actual = json.dumps(actual, indent=4)
+    if not isinstance(expected, str):
+        expected = json.dumps(expected, indent=4)
     diff = difflib.unified_diff(
-        a.splitlines(True),
-        b.splitlines(True),
+        expected.splitlines(True),
+        actual.splitlines(True),
     )
     diff = ''.join(diff)
-    assert a == b and not diff, diff
+    assert actual == expected and not diff, diff
 
 
 def generate_schema(route, viewset=None, view=None, view_function=None, patterns=None):

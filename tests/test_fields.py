@@ -1,7 +1,8 @@
 import functools
+import json
 import tempfile
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 from typing import Optional
 
@@ -17,7 +18,7 @@ from rest_framework.routers import SimpleRouter
 from rest_framework.test import APIClient
 
 from drf_spectacular.generators import SchemaGenerator
-from tests import assert_schema
+from tests import assert_equal, assert_schema, build_absolute_file_path
 
 try:
     functools_cached_property = functools.cached_property  # type: ignore
@@ -289,7 +290,7 @@ def test_fields(no_warnings):
 @pytest.mark.urls(__name__)
 @pytest.mark.django_db
 def test_model_setup_is_valid():
-    aux = Aux()
+    aux = Aux(id='0ac6930d-87f4-40e8-8242-10a3ed31a335')
     aux.save()
 
     m = AllFields(
@@ -308,8 +309,8 @@ def test_model_setup_is_valid():
         field_decimal=Decimal('666.333'),
         field_file=None,
         field_img=None,  # TODO fill with data below
-        field_date=date.today(),
-        field_datetime=datetime.now(),
+        field_date='2021-09-09',
+        field_datetime='2021-09-09T10:15:26.049862',
         field_bigint=11111111111111,
         field_smallint=111111,
         field_posint=123,
@@ -332,3 +333,13 @@ def test_model_setup_is_valid():
 
     response = APIClient().get(reverse('allfields-detail', args=(m.pk,)))
     assert response.status_code == 200
+
+    with open(build_absolute_file_path('tests/test_fields_response.json')) as fh:
+        expected = json.load(fh)
+
+    if DJANGO_VERSION < '3':
+        expected['field_file'] = f'http://testserver/allfields/1/{m.field_file.name}'
+    else:
+        expected['field_file'] = f'http://testserver/{m.field_file.name}'
+
+    assert_equal(json.loads(response.content), expected)
