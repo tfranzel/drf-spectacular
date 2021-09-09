@@ -1,6 +1,8 @@
+import functools
+import json
 import tempfile
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 from typing import Optional
 
@@ -16,7 +18,15 @@ from rest_framework.routers import SimpleRouter
 from rest_framework.test import APIClient
 
 from drf_spectacular.generators import SchemaGenerator
-from tests import assert_schema
+from tests import assert_equal, assert_schema, build_absolute_file_path
+
+try:
+    functools_cached_property = functools.cached_property  # type: ignore
+except AttributeError:
+    # functools.cached_property is only available in Python 3.8+.
+    # We re-use Django's cached_property when it's not avaiable to
+    # keep tests unified across Python versions.
+    functools_cached_property = cached_property
 
 fs = FileSystemStorage(location=tempfile.gettempdir())
 
@@ -113,6 +123,10 @@ class AllFields(models.Model):
     def field_model_cached_property_float(self) -> float:
         return 1.337
 
+    @functools_cached_property
+    def field_model_py_cached_property_float(self) -> float:
+        return 1.337
+
     @property
     def field_list(self):
         return [1.1, 2.2, 3.3]
@@ -133,6 +147,10 @@ class AllFields(models.Model):
 
     @cached_property
     def sub_object_cached(self) -> SubObject:
+        return SubObject(self)
+
+    @functools_cached_property
+    def sub_object_py_cached(self) -> SubObject:
         return SubObject(self)
 
     @property
@@ -200,6 +218,8 @@ class AllFieldsSerializer(serializers.ModelSerializer):
 
     field_model_cached_property_float = serializers.ReadOnlyField()
 
+    field_model_py_cached_property_float = serializers.ReadOnlyField()
+
     field_dict_int = serializers.DictField(
         child=serializers.IntegerField(),
         source='field_json',
@@ -217,6 +237,14 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     field_sub_object_cached_calculated = serializers.ReadOnlyField(source='sub_object_cached.calculated')
     field_sub_object_cached_nested_calculated = serializers.ReadOnlyField(source='sub_object_cached.nested.calculated')
     field_sub_object_cached_model_int = serializers.ReadOnlyField(source='sub_object_cached.model_instance.field_int')
+
+    field_sub_object_py_cached_calculated = serializers.ReadOnlyField(source='sub_object_py_cached.calculated')
+    field_sub_object_py_cached_nested_calculated = serializers.ReadOnlyField(
+        source='sub_object_py_cached.nested.calculated',
+    )
+    field_sub_object_py_cached_model_int = serializers.ReadOnlyField(
+        source='sub_object_py_cached.model_instance.field_int',
+    )
 
     # typing.Optional
     field_optional_sub_object_calculated = serializers.ReadOnlyField(
@@ -263,7 +291,7 @@ def test_fields(no_warnings):
 @pytest.mark.urls(__name__)
 @pytest.mark.django_db
 def test_model_setup_is_valid():
-    aux = Aux()
+    aux = Aux(id='0ac6930d-87f4-40e8-8242-10a3ed31a335')
     aux.save()
 
     m = AllFields(
@@ -282,8 +310,8 @@ def test_model_setup_is_valid():
         field_decimal=Decimal('666.333'),
         field_file=None,
         field_img=None,  # TODO fill with data below
-        field_date=date.today(),
-        field_datetime=datetime.now(),
+        field_date='2021-09-09',
+        field_datetime='2021-09-09T10:15:26.049862',
         field_bigint=11111111111111,
         field_smallint=111111,
         field_posint=123,
@@ -307,3 +335,13 @@ def test_model_setup_is_valid():
 
     response = APIClient().get(reverse('allfields-detail', args=(m.pk,)))
     assert response.status_code == 200
+
+    with open(build_absolute_file_path('tests/test_fields_response.json')) as fh:
+        expected = json.load(fh)
+
+    if DJANGO_VERSION < '3':
+        expected['field_file'] = f'http://testserver/allfields/1/{m.field_file.name}'
+    else:
+        expected['field_file'] = f'http://testserver/{m.field_file.name}'
+
+    assert_equal(json.loads(response.content), expected)
