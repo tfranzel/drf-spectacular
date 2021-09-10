@@ -507,6 +507,5 @@ def get_value_from_brackets(value, start_bracket_symbol="(", end_bracket_symbol=
         if end_index != -1 and start_index > end_index or start_index == -1:
             end_bracket_count += 1
             index = end_index
-
     if index != -1:
-        return value[start_bracket_index+1:index]
+        return value[start_bracket_index + 1:index]
