@@ -38,7 +38,7 @@ from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
     DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,
 )
-from drf_spectacular.utils import OpenApiParameter, get_value_from_brackets
+from drf_spectacular.utils import OpenApiParameter
 
 try:
     from django.db.models.enums import Choices  # only available in Django>3
@@ -665,7 +665,10 @@ def resolve_regex_path_parameter(path_regex, variable, available_formats):
     TODO also try to handle regular grouped regex parameters
     """
     for match in _PATH_PARAMETER_COMPONENT_RE.finditer(path_regex):
-        converter, parameter = match.group('converter'), match.group('parameter')
+        converter, param = match.group('converter'), match.group('parameter')
+        enum_values = None
+        parameter = param
+
         if api_settings.SCHEMA_COERCE_PATH_PK and parameter == 'pk':
             parameter = 'id'
 
@@ -673,27 +676,24 @@ def resolve_regex_path_parameter(path_regex, variable, available_formats):
             continue
 
         if not converter:
-            index = match.start() - 3
-            if index < 0:
+            if param == 'pk':
                 return None
-            part_path_regex = path_regex[index:]
-            if part_path_regex.startswith("(?P"):
-                raw_pattern = get_value_from_brackets(part_path_regex)
-                if raw_pattern:
-                    param_pattern = '?P<%s>' % parameter
-                    if len(param_pattern) < len(raw_pattern):
-                        pattern = raw_pattern[len(param_pattern):]
-                        return build_parameter_type(
-                            name=parameter,
-                            schema={
-                                'type': 'string',
-                                'pattern': pattern
-                            },
-                            location=OpenApiParameter.PATH,
-                        )
+            for name, regex in analyze_named_regex_pattern(path_regex).items():
+                if name == param:
+                    if regex == '':
+                        return None
+                    return build_parameter_type(
+                        name=parameter,
+                        schema={
+                            'type': 'string',
+                            'pattern': regex
+                        },
+                        location=OpenApiParameter.PATH,
+                        enum=enum_values,
+                    )
+            return None
 
-        enum_values = None
-        if converter and converter.startswith('drf_format_suffix_'):
+        if converter.startswith('drf_format_suffix_'):
             explicit_formats = converter[len('drf_format_suffix_'):].split('_')
             enum_values = [
                 f'.{suffix}' for suffix in explicit_formats if suffix in available_formats

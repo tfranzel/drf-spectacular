@@ -103,16 +103,16 @@ def test_namespace_versioning(no_warnings, viewset_cls, version):
     assert_schema(schema, f'tests/test_versioning_{version}.yml')
 
 
-@pytest.mark.parametrize(['path_func', 'path_str', 'pattern', ], [
-    (path, '{id}/', '<int:pk>/'),
-    (path, '{id}/', '<pk>/'),
-    (re_path, '{id}/', r'(?P<pk>[0-9A-Fa-f-]+)/'),
-    (re_path, '{id}/', r'(?P<pk>[^/]+)/$'),
-    (re_path, '{id}/', r'(?P<pk>[a-z]{2}(-[a-z]{2})?)/'),
-    (re_path, '{field}/t/{id}/', r'^(?P<field>[^/.]+)/t/(?P<pk>[^/.]+)/'),
-    (re_path, '{field}/t/{id}/', r'^(?P<field>[A-Z\(\)]+)/t/(?P<pk>[^/.]+)/'),
+@pytest.mark.parametrize(['path_func', 'path_str', 'pattern', 'param_types'], [
+    (path, '{id}/', '<int:pk>/', {'id': 'integer'}),
+    (path, '{id}/', '<pk>/', {'id': 'integer'}),
+    (re_path, '{id}/', r'(?P<pk>[0-9A-Fa-f-]+)/', {'id': 'integer'}),
+    (re_path, '{id}/', r'(?P<pk>[^/]+)/$', {'id': 'integer'}),
+    (re_path, '{id}/', r'(?P<pk>[a-z]{2}(-[a-z]{2})?)/', {'id': 'integer'}),
+    (re_path, '{field}/t/{id}/', r'^(?P<field>[^/.]+)/t/(?P<pk>[^/.]+)/', {'id': 'integer', 'field': 'string'}),
+    (re_path, '{field}/t/{id}/', r'^(?P<field>[A-Z\(\)]+)/t/(?P<pk>[^/.]+)/', {'id': 'integer', 'field': 'string'}),
 ])
-def test_namespace_versioning_urlpatterns_simplification(no_warnings, path_func, path_str, pattern):
+def test_namespace_versioning_urlpatterns_simplification(no_warnings, path_func, path_str, pattern, param_types):
     class LookupModel(models.Model):
         field = models.IntegerField()
 
@@ -139,7 +139,10 @@ def test_namespace_versioning_urlpatterns_simplification(no_warnings, path_func,
 
     parameters = schema['paths']['/v1/{some_param}/' + path_str]['get']['parameters']
     for p in parameters:
-        assert p['schema']['type'] == 'integer'
+        if p['name'] in param_types:
+            assert p['schema']['type'] == param_types[p['name']]
+        else:
+            assert p['schema']['type'] == 'integer'
 
 
 @pytest.mark.parametrize('viewset_cls', [AcceptHeaderVersioningViewset, AcceptHeaderVersioningViewset2])

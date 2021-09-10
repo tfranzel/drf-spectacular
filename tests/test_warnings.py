@@ -87,7 +87,7 @@ def test_path_param_not_in_model(capsys):
         serializer_class = SimpleSerializer
         queryset = SimpleModel.objects.none()
 
-        @action(detail=True, url_path='meta/(?P<ephemeral>[^/.]+)', methods=['POST'])
+        @action(detail=True, url_path='meta/(?P<ephemeral>)', methods=['POST'])
         def meta_param(self, request, ephemeral, pk):
             pass  # pragma: no cover
 
