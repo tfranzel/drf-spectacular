@@ -1459,6 +1459,130 @@ def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, 
     assert '/x/{related_field}/{id}/' in schema['paths']
 
 
+def test_path_parameter_with_relationships(no_warnings):
+    class PathParamParent(models.Model):
+        pass
+
+    class PathParamChild(models.Model):
+        parent = models.ForeignKey(PathParamParent, on_delete=models.CASCADE)
+
+    class PathParamGrandChild(models.Model):
+        parent = models.ForeignKey(PathParamChild, on_delete=models.CASCADE)
+
+    class PathParamChildSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = PathParamChild
+
+    class XViewset1(viewsets.ModelViewSet):
+        serializer_class = PathParamChildSerializer
+        queryset = PathParamChild.objects.none()
+        lookup_field = 'id'
+
+    class XViewset2(viewsets.ModelViewSet):
+        serializer_class = PathParamChildSerializer
+        queryset = PathParamChild.objects.none()
+        lookup_field = 'parent'
+
+    class XViewset3(viewsets.ModelViewSet):
+        serializer_class = PathParamChildSerializer
+        queryset = PathParamChild.objects.none()
+        lookup_field = 'parent__id'  # Functionally the same as above
+
+    class PathParamGrandChildSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = PathParamGrandChild
+
+    class XViewset4(viewsets.ModelViewSet):
+        serializer_class = PathParamGrandChildSerializer
+        queryset = PathParamGrandChild.objects.none()
+        lookup_field = 'parent__parent'
+
+    class XViewset5(viewsets.ModelViewSet):
+        serializer_class = PathParamGrandChildSerializer
+        queryset = PathParamGrandChild.objects.none()
+        lookup_field = 'parent__parent__id'
+
+    router = routers.SimpleRouter()
+    router.register('child_by_id', XViewset1)
+    router.register('child_by_parent_id', XViewset2)
+    router.register('child_by_parent_id_alt', XViewset3)
+    router.register('grand_child_by_grand_parent_id', XViewset4)
+    router.register('grand_child_by_grand_parent_id_alt', XViewset5)
+
+    schema = generate_schema(None, patterns=router.urls)
+
+    # Basic cases:
+    assert schema['paths']['/child_by_id/{id}/']['get']['parameters'][0] == {
+        'description': 'A unique integer value identifying this path param child.',
+        'in': 'path',
+        'name': 'id',
+        'schema': {'type': 'integer'},
+        'required': True
+    }
+    assert schema['paths']['/child_by_parent_id/{parent}/']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'parent',
+        'schema': {'type': 'integer'},
+        'required': True
+    }
+
+    # Can we traverse relationships?
+    assert schema['paths']['/grand_child_by_grand_parent_id/{parent__parent}/']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'parent__parent',
+        'schema': {'type': 'integer'},
+        'required': True
+    }
+
+    # Explicit `__id` handling:
+    assert schema['paths']['/grand_child_by_grand_parent_id_alt/{parent__parent__id}/']['get']['parameters'][0] == {
+        'description': 'A unique integer value identifying this path param grand child.',
+        'in': 'path',
+        'name': 'parent__parent__id',
+        'schema': {'type': 'integer'},
+        'required': True
+    }
+    assert schema['paths']['/child_by_parent_id_alt/{parent__id}/']['get']['parameters'][0] == {
+        'description': 'A unique integer value identifying this path param child.',
+        'in': 'path',
+        'name': 'parent__id',
+        'schema': {'type': 'integer'},
+        'required': True
+    }
+
+
+def test_path_parameter_with_lookups(no_warnings):
+    class JournalEntry(models.Model):
+        recorded_at = models.DateTimeField()
+
+    class JournalEntrySerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = JournalEntry
+
+    class JournalEntryViewset(viewsets.ModelViewSet):
+        serializer_class = JournalEntrySerializer
+        queryset = JournalEntry.objects.none()
+        lookup_field = 'recorded_at__date'
+
+    router = routers.SimpleRouter()
+    router.register('journal', JournalEntryViewset)
+
+    schema = generate_schema(None, patterns=router.urls)
+
+    # TODO this is not 100% correct since "__date" transforms datetime to date,
+    #  but most SQL modifiers don't change the type and we will tolerate that
+    #  slight problem for now.
+    assert schema['paths']['/journal/{recorded_at__date}/']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'recorded_at__date',
+        'required': True,
+        'schema': {'format': 'date-time', 'type': 'string'},
+    }
+
+
 @pytest.mark.contrib('psycopg2')
 def test_multiple_choice_enum(no_warnings):
     from django.contrib.postgres.fields import ArrayField

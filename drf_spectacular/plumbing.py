@@ -16,11 +16,13 @@ from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 import inflection
 import uritemplate
 from django.apps import apps
+from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields.related_descriptors import (
     ForwardManyToOneDescriptor, ManyToManyDescriptor, ReverseManyToOneDescriptor,
     ReverseOneToOneDescriptor,
 )
 from django.db.models.fields.reverse_related import ForeignObjectRel
+from django.db.models.sql.query import Query
 from django.urls.resolvers import (  # type: ignore
     _PATH_PARAMETER_COMPONENT_RE, RegexPattern, Resolver404, RoutePattern, URLPattern, URLResolver,
     get_resolver,
@@ -467,6 +469,17 @@ def follow_field_source(model, path, emit_warnings=True):
     def dummy_property(obj) -> str:
         pass  # pragma: no cover
     return dummy_property
+
+
+def follow_model_field_lookup(model, lookup):
+    """
+    Follow a model lookup `foreignkey__foreignkey__field` in the same
+    way that Django QuerySet.filter() does, returning the final models.Field.
+    """
+    query = Query(model)
+    lookup_splitted = lookup.split(LOOKUP_SEP)
+    _, field, _, _ = query.names_to_path(lookup_splitted, query.get_meta())
+    return field
 
 
 def alpha_operation_sorter(endpoint):

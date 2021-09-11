@@ -374,3 +374,17 @@ def test_warning_read_only_field_on_non_model_serializer(capsys):
     generate_schema('x', XViewSet)
     stderr = capsys.readouterr().err
     assert 'Could not derive type for ReadOnlyField "field"' in stderr
+
+
+def test_warning_missing_lookup_field_on_model_serializer(capsys):
+    class XViewSet(viewsets.ModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.all()
+        lookup_field = 'non_existent_field'
+
+    generate_schema('x', XViewSet)
+    stderr = capsys.readouterr().err
+    assert (
+        'could not derive type of path parameter "non_existent_field" because model '
+        '"tests.models.SimpleModel" contained no such field.'
+    ) in stderr
