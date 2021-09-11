@@ -1572,6 +1572,9 @@ def test_path_parameter_with_lookups(no_warnings):
 
     schema = generate_schema(None, patterns=router.urls)
 
+    # TODO this is not 100% correct since "__date" transforms datetime to date,
+    #  but most SQL modifiers don't change the type and we will tolerate that
+    #  slight problem for now.
     assert schema['paths']['/journal/{recorded_at__date}/']['get']['parameters'][0] == {
         'in': 'path',
         'name': 'recorded_at__date',

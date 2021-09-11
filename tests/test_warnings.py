@@ -384,5 +384,7 @@ def test_warning_missing_lookup_field_on_model_serializer(capsys):
 
     generate_schema('x', XViewSet)
     stderr = capsys.readouterr().err
-    assert ('could not derive type of path parameter "non_existent_field" because model '
-            '"tests.models.SimpleModel" contained no such field.') in stderr
+    assert (
+        'could not derive type of path parameter "non_existent_field" because model '
+        '"tests.models.SimpleModel" contained no such field.'
+    ) in stderr
