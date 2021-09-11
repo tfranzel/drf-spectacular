@@ -129,7 +129,7 @@ def get_lib_doc_excludes():
     ]
 
 
-def get_view_model(view):
+def get_view_model(view, emit_warnings=True):
     """
     obtain model from view via view's queryset. try safer view attribute first
     before going through get_queryset(), which may perform arbitrary operations.
@@ -142,12 +142,13 @@ def get_view_model(view):
     try:
         return view.get_queryset().model
     except Exception as exc:
-        warn(
-            f'failed to obtain model through view\'s queryset due to raised exception. '
-            f'Prevent this either by setting "queryset = Model.objects.none()" on the view, '
-            f'having an empty fallback in get_queryset() or by using @extend_schema. '
-            f'(Exception: {exc})'
-        )
+        if emit_warnings:
+            warn(
+                f'Failed to obtain model through view\'s queryset due to raised exception. '
+                f'Prevent this either by setting "queryset = Model.objects.none()" on the '
+                f'view, checking for "getattr(self, "swagger_fake_view", False)" in '
+                f'get_queryset() or by simply using @extend_schema. (Exception: {exc})'
+            )
 
 
 def get_doc(obj):

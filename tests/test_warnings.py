@@ -79,7 +79,7 @@ def test_no_queryset_warn(capsys):
     generate_schema('x1', X1Viewset)
     stderr = capsys.readouterr().err
     assert 'obtaining queryset from' in stderr  # warning 1
-    assert 'X1Viewset: failed to obtain model through view\'s queryset' in stderr  # warning 2
+    assert 'X1Viewset: Failed to obtain model through view\'s queryset' in stderr  # warning 2
 
 
 def test_path_param_not_in_model(capsys):

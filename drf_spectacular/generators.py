@@ -13,7 +13,7 @@ from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, error,
     get_class, is_versioning_supported, modify_for_versioning, normalize_result_object,
-    operation_matches_version, sanitize_result_object, warn,
+    operation_matches_version, sanitize_result_object, warn, get_view_model,
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -97,7 +97,7 @@ class SchemaGenerator(BaseSchemaGenerator):
         of nested routers.
         """
         path = super().coerce_path(path, method, view)  # take care of {pk}
-        model = getattr(getattr(view, 'queryset', None), 'model', None)
+        model = get_view_model(view, emit_warnings=False)
         if not self.coerce_path_pk or not model:
             return path
         for match in re.findall(r'{(\w+)_pk}', path):
