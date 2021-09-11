@@ -349,8 +349,12 @@ class AutoSchema(ViewInspector):
                 )
             else:
                 try:
+                    if getattr(self.view, 'lookup_url_kwarg', None) == variable:
+                        model_field_name = getattr(self.view, 'lookup_field', variable)
+                    else:
+                        model_field_name = variable
                     model = get_view_model(self.view)
-                    model_field = follow_model_field_lookup(model, variable)
+                    model_field = follow_model_field_lookup(model, model_field_name)
                     schema = self._map_model_field(model_field, direction=None)
                     if 'description' not in schema and model_field.primary_key:
                         description = get_pk_description(model, model_field)

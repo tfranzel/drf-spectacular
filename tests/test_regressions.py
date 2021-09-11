@@ -2276,3 +2276,19 @@ def test_literal_dot_in_regex_path(no_warnings):
     ]
     schema = generate_schema(None, patterns=urlpatterns)
     assert '/file/{filename}.{ext}' in schema['paths']
+
+
+def test_customized_lookup_url_kwarg(no_warnings):
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.all()
+        lookup_url_kwarg = 'custom_name'
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/{custom_name}/']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'custom_name',
+        'schema': {'type': 'integer'},
+        'description': 'A unique integer value identifying this simple model.',
+        'required': True
+    }
