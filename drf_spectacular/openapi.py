@@ -29,7 +29,7 @@ from drf_spectacular.plumbing import (
     build_object_type, build_parameter_type, error, follow_field_source, follow_model_field_lookup,
     force_instance, get_doc, get_type_hints, get_view_model, is_basic_type, is_field,
     is_list_serializer, is_patched_serializer, is_serializer, is_trivial_string_variation,
-    resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
+    resolve_django_path_parameter, resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes, build_generic_type
@@ -329,18 +329,22 @@ class AutoSchema(ViewInspector):
         return [t for t in path if t]
 
     def _resolve_path_parameters(self, variables):
+        model = get_view_model(self.view, emit_warnings=False)
+
         parameters = []
         for variable in variables:
             schema = build_basic_type(OpenApiTypes.STR)
             description = ''
 
-            resolved_parameter = resolve_regex_path_parameter(
+            resolved_parameter = resolve_django_path_parameter(
                 self.path_regex, variable, self.map_renderers('format'),
             )
+            if not resolved_parameter:
+                resolved_parameter = resolve_regex_path_parameter(model, self.path_regex, variable)
 
             if resolved_parameter:
                 schema = resolved_parameter['schema']
-            elif get_view_model(self.view) is None:
+            elif model is None:
                 warn(
                     f'could not derive type of path parameter "{variable}" because it '
                     f'is untyped and obtaining queryset from the viewset failed. '
@@ -353,16 +357,15 @@ class AutoSchema(ViewInspector):
                         model_field_name = getattr(self.view, 'lookup_field', variable)
                     else:
                         model_field_name = variable
-                    model = get_view_model(self.view)
                     model_field = follow_model_field_lookup(model, model_field_name)
                     schema = self._map_model_field(model_field, direction=None)
                     if 'description' not in schema and model_field.primary_key:
                         description = get_pk_description(model, model_field)
                 except django_exceptions.FieldError:
                     warn(
-                        f'could not derive type of path parameter "{variable}" because '
-                        f'model "{model.__module__}.{model.__name__}" contained no such field. Consider annotating '
-                        f'parameter with @extend_schema. Defaulting to "string".'
+                        f'could not derive type of path parameter "{variable}" because model '
+                        f'"{model.__module__}.{model.__name__}" contained no such field. Consider '
+                        f'annotating parameter with @extend_schema. Defaulting to "string".'
                     )
 
             parameters.append(build_parameter_type(

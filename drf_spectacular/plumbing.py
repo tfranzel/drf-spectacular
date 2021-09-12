@@ -56,6 +56,8 @@ else:
 
 T = TypeVar('T')
 
+RELATED_MODEL_PARAMETER_RE = re.compile(r'{(\w+)_pk}')
+
 
 class UnableToProceedError(Exception):
     pass
@@ -682,10 +684,9 @@ def list_hash(lst):
     return hashlib.sha256(json.dumps(list(lst), sort_keys=True).encode()).hexdigest()
 
 
-def resolve_regex_path_parameter(path_regex, variable, available_formats):
+def resolve_django_path_parameter(path_regex, variable, available_formats):
     """
     convert django style path parameters to OpenAPI parameters.
-    TODO also try to handle regular grouped regex parameters
     """
     for match in _PATH_PARAMETER_COMPONENT_RE.finditer(path_regex):
         converter, parameter = match.group('converter'), match.group('parameter')
@@ -711,6 +712,35 @@ def resolve_regex_path_parameter(path_regex, variable, available_formats):
                 enum=enum_values,
             )
 
+    return None
+
+
+def resolve_regex_path_parameter(model, path_regex, variable):
+    """
+    convert regex path parameter to OpenAPI parameter, if pattern is
+    explicitly chosen and not the generic non-empty default '[^/.]+'.
+    """
+    if api_settings.SCHEMA_COERCE_PATH_PK:
+        coercion_mapping = {
+            f'{match}_id': f'{match}_pk'
+            for match in RELATED_MODEL_PARAMETER_RE.findall(path_regex)
+            if hasattr(model, match)
+        }
+        coercion_mapping['id'] = 'pk'
+        parameter = coercion_mapping.get(variable, variable)
+    else:
+        parameter = variable
+
+    regex_groups = analyze_named_regex_pattern(path_regex)
+    if parameter in regex_groups and regex_groups[parameter] != '[^/.]+':
+        return build_parameter_type(
+            name=variable,
+            schema={
+                **build_basic_type(OpenApiTypes.STR),
+                'pattern': regex_groups[parameter]
+            },
+            location=OpenApiParameter.PATH,
+        )
     return None
 
 

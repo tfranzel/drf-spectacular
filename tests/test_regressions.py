@@ -1,4 +1,5 @@
 import datetime
+import re
 import typing
 import uuid
 from decimal import Decimal
@@ -6,6 +7,7 @@ from functools import partialmethod
 from unittest import mock
 
 import pytest
+from django import __version__ as DJANGO_VERSION
 from django.core import validators
 from django.db import models
 from django.db.models import fields
@@ -2292,3 +2294,63 @@ def test_customized_lookup_url_kwarg(no_warnings):
         'description': 'A unique integer value identifying this simple model.',
         'required': True
     }
+
+
+@pytest.mark.skipif(DJANGO_VERSION < '3', reason='Bug in Django\'s simplify_regex()')
+def test_regex_path_parameter_discovery_pattern(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request, foo):
+        pass  # pragma: no cover
+
+    urlpatterns = [
+        re_path(r'^/pi/(?P<precision>(\d+)-[\w|\.]+(failed|success))', pi)
+    ]
+    schema = generate_schema(None, patterns=urlpatterns)
+
+    assert schema['paths']['/pi/{precision}']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'precision',
+        'schema': {'type': 'string', 'pattern': '(\\d+)-[\\w|\\.]+(failed|success)'},
+        'required': True
+    }
+
+
+@pytest.mark.parametrize(['path_func', 'path_str', 'pattern', 'parameter_types'], [
+    # django typed -> use
+    (path, '/{id}/', '<int:pk>/', ['integer']),
+    # untyped -> get from model
+    (path, '/{id}/', '<pk>/', ['integer']),
+    # non-default pattern -> use
+    (re_path, '/{id}/', r'(?P<pk>[a-z]{2}(-[a-z]{2})?)/', ['string']),
+    # default pattern -> get from model
+    (re_path, '/{id}/', r'(?P<pk>[^/.]+)/$', ['integer']),
+    # same mechanics for non-pk field discovery from model
+    (re_path, '/{field}/t/{id}/', r'^(?P<field>[^/.]+)/t/(?P<pk>[a-z]+)/', ['integer', 'string']),
+    (re_path, '/{field}/t/{id}/', r'^(?P<field>[A-Z\(\)]+)/t/(?P<pk>[^/.]+)/', ['string', 'integer']),
+])
+def test_path_parameter_priority_matching(no_warnings, path_func, path_str, pattern, parameter_types):
+    class PathParameterLookupModel(models.Model):
+        field = models.IntegerField()
+
+    class LookupSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = PathParameterLookupModel
+            fields = '__all__'
+
+    class XAPIView(generics.RetrieveAPIView):
+        serializer_class = LookupSerializer
+        queryset = PathParameterLookupModel.objects.all()
+
+    # make sure regex are valid
+    if path_func == re_path:
+        re.compile(pattern)
+
+    urlpatterns = [path_func(pattern, XAPIView.as_view())]
+    schema = generate_schema(None, patterns=urlpatterns)
+    parameters = schema['paths'][path_str]['get']['parameters']
+
+    assert len(parameters) == len(parameter_types)
+    for parameter_type, parameter in zip(parameter_types, parameters):
+        assert parameter['schema']['type'] == parameter_type
+        assert parameter_type != 'string' or 'pattern' in parameter['schema']

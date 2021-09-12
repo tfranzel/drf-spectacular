@@ -1,7 +1,7 @@
 import pytest
 from django.db import models
-from django.urls import include, re_path, path
-from rest_framework import viewsets, serializers, routers
+from django.urls import include, path, re_path
+from rest_framework import routers, serializers, viewsets
 from rest_framework.routers import SimpleRouter
 
 from tests import assert_schema, generate_schema
