@@ -49,6 +49,16 @@ class TokenRefreshSerializerExtension(OpenApiSerializerExtension):
         return auto_schema._map_serializer(Fixed, direction)
 
 
+class TokenVerifySerializerExtension(OpenApiSerializerExtension):
+    target_class = 'rest_framework_simplejwt.serializers.TokenVerifySerializer'
+
+    def map_serializer(self, auto_schema, direction):
+        Fixed = inline_serializer('Fixed', fields={
+            'token': serializers.CharField(write_only=True),
+        })
+        return auto_schema._map_serializer(Fixed, direction)
+
+
 class SimpleJWTScheme(OpenApiAuthenticationExtension):
     target_class = 'rest_framework_simplejwt.authentication.JWTAuthentication'
     name = 'jwtAuth'

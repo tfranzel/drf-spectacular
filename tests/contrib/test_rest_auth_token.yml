@@ -537,6 +537,7 @@ components:
       properties:
         token:
           type: string
+          writeOnly: true
       required:
       - token
     UserDetails:
