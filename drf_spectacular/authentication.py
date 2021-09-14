@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
@@ -12,7 +13,7 @@ class SessionScheme(OpenApiAuthenticationExtension):
         return {
             'type': 'apiKey',
             'in': 'cookie',
-            'name': 'Session',
+            'name': settings.SESSION_COOKIE_NAME,
         }
 
 
