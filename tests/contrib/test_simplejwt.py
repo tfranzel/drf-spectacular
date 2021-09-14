@@ -11,7 +11,7 @@ try:
         JWTAuthentication, JWTTokenUserAuthentication,
     )
     from rest_framework_simplejwt.views import (
-        TokenObtainPairView, TokenObtainSlidingView, TokenRefreshView,
+        TokenObtainPairView, TokenObtainSlidingView, TokenRefreshView, TokenVerifyView,
     )
 except ImportError:
     JWTAuthentication = None
@@ -44,6 +44,7 @@ def test_simplejwt(no_warnings, view):
         path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
         path('token-sliding/', TokenObtainSlidingView.as_view(), name='token_obtain_sliding'),
         path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+        path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     ]
 
     schema = generate_schema(None, patterns=urlpatterns)

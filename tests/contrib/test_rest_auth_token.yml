@@ -537,6 +537,7 @@ components:
       properties:
         token:
           type: string
+          writeOnly: true
       required:
       - token
     UserDetails:
@@ -582,4 +583,4 @@ components:
     cookieAuth:
       type: apiKey
       in: cookie
-      name: Session
+      name: sessionid

@@ -24,6 +24,7 @@ from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.hooks import preprocess_exclude_path_format
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
+from drf_spectacular.settings import IMPORT_STRINGS, SPECTACULAR_DEFAULTS
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_field,
@@ -2354,3 +2355,8 @@ def test_path_parameter_priority_matching(no_warnings, path_func, path_str, patt
     for parameter_type, parameter in zip(parameter_types, parameters):
         assert parameter['schema']['type'] == parameter_type
         assert parameter_type != 'string' or 'pattern' in parameter['schema']
+
+
+@pytest.mark.parametrize('import_string', IMPORT_STRINGS)
+def test_import_strings_in_default_settings(import_string):
+    assert import_string in SPECTACULAR_DEFAULTS
