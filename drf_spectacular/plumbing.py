@@ -721,12 +721,13 @@ def resolve_regex_path_parameter(model, path_regex, variable):
     explicitly chosen and not the generic non-empty default '[^/.]+'.
     """
     if api_settings.SCHEMA_COERCE_PATH_PK:
-        coercion_mapping = {
-            f'{match}_id': f'{match}_pk'
-            for match in RELATED_MODEL_PARAMETER_RE.findall(path_regex)
-            if hasattr(model, match)
-        }
-        coercion_mapping['id'] = 'pk'
+        coercion_mapping = {'id': 'pk'}
+        if spectacular_settings.SCHEMA_COERCE_PATH_PK_NESTED:
+            coercion_mapping.update({
+                f'{match}_id': f'{match}_pk'
+                for match in RELATED_MODEL_PARAMETER_RE.findall(path_regex)
+                if hasattr(model, match)
+            })
         parameter = coercion_mapping.get(variable, variable)
     else:
         parameter = variable

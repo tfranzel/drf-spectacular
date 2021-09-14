@@ -98,6 +98,8 @@ class SchemaGenerator(BaseSchemaGenerator):
         of nested routers.
         """
         path = super().coerce_path(path, method, view)  # take care of {pk}
+        if not spectacular_settings.SCHEMA_COERCE_PATH_PK_NESTED:
+            return path
         model = get_view_model(view, emit_warnings=False)
         if not self.coerce_path_pk or not model:
             return path

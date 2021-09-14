@@ -34,6 +34,19 @@ from tests import generate_schema, get_request_schema, get_response_schema
 from tests.models import SimpleModel, SimpleSerializer
 
 
+class RouteNestedMaildropModel(models.Model):
+    renamed_id = models.IntegerField(primary_key=True)
+
+
+class RouteNestedClientModel(models.Model):
+    id = models.UUIDField(primary_key=True)
+
+
+class RouteNestedModel(models.Model):
+    client = models.ForeignKey(RouteNestedClientModel, on_delete=models.CASCADE)
+    maildrop = models.ForeignKey(RouteNestedMaildropModel, on_delete=models.CASCADE)
+
+
 def test_primary_key_read_only_queryset_not_found(no_warnings):
     # the culprit - looks like a feature not a bug.
     # https://github.com/encode/django-rest-framework/blame/4d9f9eb192c5c1ffe4fa9210b90b9adbb00c3fdd/rest_framework/utils/field_mapping.py#L271
@@ -1951,19 +1964,10 @@ def test_prefix_estimation_with_re_special_chars_as_literals_in_path(no_warnings
     assert schema['paths']['/\\/x/']['post']['tags'] == ['x']
 
 
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_COERCE_PATH_PK_NESTED', True)
 def test_nested_router_urls(no_warnings):
     # somewhat tailored to drf-nested-routers but also serves a generic purpose
     # as "id" coercion also makes sense for "_pk" suffixes.
-    class RouteNestedMaildropModel(models.Model):
-        renamed_id = models.IntegerField(primary_key=True)
-
-    class RouteNestedClientModel(models.Model):
-        id = models.UUIDField(primary_key=True)
-
-    class RouteNestedModel(models.Model):
-        client = models.ForeignKey(RouteNestedClientModel, on_delete=models.CASCADE)
-        maildrop = models.ForeignKey(RouteNestedMaildropModel, on_delete=models.CASCADE)
-
     class RouteNestedViewset(viewsets.ModelViewSet):
         queryset = RouteNestedModel.objects.all()
         serializer_class = SimpleSerializer
@@ -1979,6 +1983,32 @@ def test_nested_router_urls(no_warnings):
     assert operation['parameters'][0]['name'] == 'client_id'
     assert operation['parameters'][0]['schema'] == {'format': 'uuid', 'type': 'string'}
     assert operation['parameters'][2]['name'] == 'maildrop_id'
+    assert operation['parameters'][2]['schema'] == {'type': 'integer'}
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_COERCE_PATH_PK_NESTED', False)
+def test_nested_router_urls_disable_coerce_nested_pks(no_warnings):
+    @extend_schema_view(
+        retrieve=extend_schema(parameters=[
+            OpenApiParameter('client_pk', OpenApiTypes.UUID, OpenApiParameter.PATH),
+            OpenApiParameter('maildrop_pk', OpenApiTypes.INT, OpenApiParameter.PATH),
+        ]),
+    )
+    class RouteNestedViewset(viewsets.ModelViewSet):
+        queryset = RouteNestedModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    urlpatterns = [
+        path(
+            '/clients/{client_pk}/maildrops/{maildrop_pk}/recipients/{pk}/',
+            RouteNestedViewset.as_view({'get': 'retrieve'})
+        ),
+    ]
+    schema = generate_schema(None, patterns=urlpatterns)
+    operation = schema['paths']['/clients/{client_pk}/maildrops/{maildrop_pk}/recipients/{id}/']['get']
+    assert operation['parameters'][0]['name'] == 'client_pk'
+    assert operation['parameters'][0]['schema'] == {'format': 'uuid', 'type': 'string'}
+    assert operation['parameters'][2]['name'] == 'maildrop_pk'
     assert operation['parameters'][2]['schema'] == {'type': 'integer'}
 
 
