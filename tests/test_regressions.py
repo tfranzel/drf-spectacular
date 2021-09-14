@@ -22,6 +22,7 @@ from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.hooks import preprocess_exclude_path_format
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
+from drf_spectacular.settings import IMPORT_STRINGS, SPECTACULAR_DEFAULTS
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_field,
@@ -2276,3 +2277,8 @@ def test_literal_dot_in_regex_path(no_warnings):
     ]
     schema = generate_schema(None, patterns=urlpatterns)
     assert '/file/{filename}.{ext}' in schema['paths']
+
+
+@pytest.mark.parametrize('import_string', IMPORT_STRINGS)
+def test_import_strings_in_default_settings(import_string):
+    assert import_string in SPECTACULAR_DEFAULTS
