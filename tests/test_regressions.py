@@ -1436,15 +1436,16 @@ def test_nested_ro_serializer_has_required_fields_on_patch(no_warnings):
     assert 'required' in schema['components']['schemas']['X']
 
 
+class M3(models.Model):
+    related_field = models.ForeignKey(SimpleModel, on_delete=models.PROTECT, editable=False)
+    many_related = models.ManyToManyField(SimpleModel, related_name='+')
+
+
 @pytest.mark.parametrize('path', [
     r'x/(?P<related_field>[0-9a-f-]{36})',
     r'x/<related_field>',
 ])
 def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, path):
-    class M3(models.Model):
-        related_field = models.ForeignKey(SimpleModel, on_delete=models.PROTECT, editable=False)
-        many_related = models.ManyToManyField(SimpleModel)
-
     class M3Serializer(serializers.ModelSerializer):
         class Meta:
             fields = '__all__'
@@ -1813,19 +1814,19 @@ def test_categorized_choices(no_warnings):
         ('unknown', 'Unknown'),
     ]
 
-    class M6(models.Model):
+    class M9(models.Model):
         cat_choice = models.CharField(max_length=10, choices=media_choices)
 
-    class M6Serializer(serializers.ModelSerializer):
+    class M9Serializer(serializers.ModelSerializer):
         audio_choice = serializers.ChoiceField(choices=media_choices_audio)
 
         class Meta:
             fields = '__all__'
-            model = M6
+            model = M9
 
     class XViewset(viewsets.ModelViewSet):
-        serializer_class = M6Serializer
-        queryset = M6.objects.none()
+        serializer_class = M9Serializer
+        queryset = M9.objects.none()
 
     with mock.patch(
         'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
@@ -2317,6 +2318,10 @@ def test_regex_path_parameter_discovery_pattern(no_warnings):
     }
 
 
+class PathParameterLookupModel(models.Model):
+    field = models.IntegerField()
+
+
 @pytest.mark.parametrize(['path_func', 'path_str', 'pattern', 'parameter_types'], [
     # django typed -> use
     (path, '/{id}/', '<int:pk>/', ['integer']),
@@ -2331,9 +2336,6 @@ def test_regex_path_parameter_discovery_pattern(no_warnings):
     (re_path, '/{field}/t/{id}/', r'^(?P<field>[A-Z\(\)]+)/t/(?P<pk>[^/.]+)/', ['string', 'integer']),
 ])
 def test_path_parameter_priority_matching(no_warnings, path_func, path_str, pattern, parameter_types):
-    class PathParameterLookupModel(models.Model):
-        field = models.IntegerField()
-
     class LookupSerializer(serializers.ModelSerializer):
         class Meta:
             model = PathParameterLookupModel

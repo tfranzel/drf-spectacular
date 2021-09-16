@@ -103,6 +103,10 @@ def test_namespace_versioning(no_warnings, viewset_cls, version):
     assert_schema(schema, f'tests/test_versioning_{version}.yml')
 
 
+class LookupModel(models.Model):
+    field = models.IntegerField()
+
+
 @pytest.mark.parametrize(['path_func', 'path_str', 'pattern', ], [
     (path, '{id}/', '<int:pk>/'),
     (path, '{id}/', '<pk>/'),
@@ -113,9 +117,6 @@ def test_namespace_versioning(no_warnings, viewset_cls, version):
     (re_path, '{field}/t/{id}/', r'^(?P<field>[A-Z\(\)]+)/t/(?P<pk>[^/.]+)/'),
 ])
 def test_namespace_versioning_urlpatterns_simplification(no_warnings, path_func, path_str, pattern):
-    class LookupModel(models.Model):
-        field = models.IntegerField()
-
     class LookupSerializer(serializers.ModelSerializer):
         class Meta:
             model = LookupModel
