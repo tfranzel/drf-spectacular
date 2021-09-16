@@ -104,6 +104,7 @@ def test_namespace_versioning(no_warnings, viewset_cls, version):
 
 
 class LookupModel(models.Model):
+    """ test_namespace_versioning_urlpatterns_simplification """
     field = models.IntegerField()
 
 

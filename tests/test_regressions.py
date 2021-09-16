@@ -1437,6 +1437,7 @@ def test_nested_ro_serializer_has_required_fields_on_patch(no_warnings):
 
 
 class M3(models.Model):
+    """ test_path_param_from_related_model_pk_without_primary_key_true """
     related_field = models.ForeignKey(SimpleModel, on_delete=models.PROTECT, editable=False)
     many_related = models.ManyToManyField(SimpleModel, related_name='+')
 
@@ -2319,6 +2320,7 @@ def test_regex_path_parameter_discovery_pattern(no_warnings):
 
 
 class PathParameterLookupModel(models.Model):
+    """ test_path_parameter_priority_matching """
     field = models.IntegerField()
 
 
