@@ -69,7 +69,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Gamma'
+                $ref: '#/components/schemas/GammaEpsilon'
           description: ''
         '500':
           headers:
@@ -369,7 +369,7 @@ components:
       - a
       - b
       type: string
-    Gamma:
+    GammaEpsilon:
       type: object
       properties:
         encoding:

@@ -402,6 +402,7 @@ def extend_schema_serializer(
         exclude_fields: Optional[List[str]] = None,
         deprecate_fields: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
+        component_name: Optional[str] = None,
 ) -> Callable[[F], F]:
     """
     Decorator for the "serializer" kind. Intended for overriding default serializer behaviour that
@@ -413,6 +414,7 @@ def extend_schema_serializer(
         schema. fields will still be exposed through the API.
     :param deprecate_fields: fields to mark as deprecated while processing the serializer.
     :param examples: define example data to serializer.
+    :param component_name: override default class name extraction.
     """
     def decorator(klass):
         if many is not None:
@@ -423,6 +425,8 @@ def extend_schema_serializer(
             set_override(klass, 'deprecate_fields', deprecate_fields)
         if examples:
             set_override(klass, 'examples', examples)
+        if component_name:
+            set_override(klass, 'component_name', component_name)
         return klass
 
     return decorator

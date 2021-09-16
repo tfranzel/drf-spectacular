@@ -1194,6 +1194,8 @@ class AutoSchema(ViewInspector):
         if serializer_extension and serializer_extension.get_name():
             # library override mechanisms
             name = serializer_extension.get_name()
+        elif has_override(serializer, 'component_name'):
+            name = get_override(serializer, 'component_name')
         elif getattr(getattr(serializer, 'Meta', None), 'ref_name', None) is not None:
             # local override mechanisms. for compatibility with drf-yasg we support meta ref_name,
             # though we do not support the serializer inlining feature.
