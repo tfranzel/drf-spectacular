@@ -2240,7 +2240,7 @@ def test_request_response_raw_schema_annotation(no_warnings):
     }
 
 
-def test_serializer_modelfield_with_default_value(no_warnings):
+def test_serializer_modelfield_and_methodfield_with_default_value(no_warnings):
     class M8Model(models.Model):
         field = models.IntegerField()
 
@@ -2249,6 +2249,10 @@ def test_serializer_modelfield_with_default_value(no_warnings):
             model_field=M8Model()._meta.get_field('field'),
             default=3
         )
+        field_smf = serializers.SerializerMethodField(default=4)
+
+        def get_field_smf(self, obj) -> int:
+            return 0  # pragma: no cover
 
         class Meta:
             model = M8Model
@@ -2261,6 +2265,9 @@ def test_serializer_modelfield_with_default_value(no_warnings):
     schema = generate_schema('x', XViewset)
     assert schema['components']['schemas']['X']['properties']['field'] == {
         'type': 'integer', 'default': 3
+    }
+    assert schema['components']['schemas']['X']['properties']['field_smf'] == {
+        'type': 'integer', 'readOnly': True, 'default': 4
     }
 
 

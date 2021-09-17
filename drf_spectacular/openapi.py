@@ -766,9 +766,10 @@ class AutoSchema(ViewInspector):
         if field.allow_null:
             meta['nullable'] = True
         if field.default is not None and field.default != empty and not callable(field.default):
-            if isinstance(field, serializers.ModelField):
-                # Skip coercion for lack of a better solution. ModelField.to_representation() is special
-                # in that it requires a model instance (which we don't have) instead of a plain value.
+            if isinstance(field, (serializers.ModelField, serializers.SerializerMethodField)):
+                # Skip coercion for lack of a better solution. ModelField.to_representation()
+                # and SerializerMethodField.to_representation() are special in that they require
+                # a model instance or object (which we don't have) instead of a plain value.
                 default = field.default
             else:
                 default = field.to_representation(field.default)
