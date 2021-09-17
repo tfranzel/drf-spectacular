@@ -342,6 +342,7 @@ class AutoSchema(ViewInspector):
             if not resolved_parameter:
                 resolved_parameter = resolve_regex_path_parameter(model, self.path_regex, variable)
 
+            parameter_name = variable
             if resolved_parameter:
                 schema = resolved_parameter['schema']
             elif model is None:
@@ -353,10 +354,13 @@ class AutoSchema(ViewInspector):
                 )
             else:
                 try:
-                    if getattr(self.view, 'lookup_url_kwarg', None) == variable:
+                    lookup_url_kwarg = getattr(self.view, 'lookup_url_kwarg', None)
+                    if lookup_url_kwarg == variable:
                         model_field_name = getattr(self.view, 'lookup_field', variable)
+                        parameter_name = lookup_url_kwarg
                     else:
                         model_field_name = variable
+                        parameter_name = variable
                     model_field = follow_model_field_lookup(model, model_field_name)
                     schema = self._map_model_field(model_field, direction=None)
                     if 'description' not in schema and model_field.primary_key:
@@ -369,7 +373,7 @@ class AutoSchema(ViewInspector):
                     )
 
             parameters.append(build_parameter_type(
-                name=variable,
+                name=parameter_name,
                 location=OpenApiParameter.PATH,
                 description=description,
                 schema=schema
