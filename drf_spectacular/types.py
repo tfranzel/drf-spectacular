@@ -1,12 +1,13 @@
 import enum
-import typing
-from datetime import date, datetime
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
+from ipaddress import IPv4Address, IPv6Address
+from typing import Any, Type, Union
 from uuid import UUID
 
-_KnownPythonTypes = typing.Type[
-    typing.Union[str, float, bool, bytes, int, UUID, Decimal, datetime, date, dict],
-]
+_KnownPythonTypes = Type[Union[
+    str, float, bool, bytes, int, UUID, Decimal, datetime, date, time, timedelta, IPv4Address, IPv6Address, dict, Any,
+]]
 
 
 class OpenApiTypes(enum.Enum):
@@ -52,8 +53,10 @@ class OpenApiTypes(enum.Enum):
     #: Converted to ``{"type": "string", "format": "uri"}``.
     URI = enum.auto()
     #: Converted to ``{"type": "string", "format": "ipv4"}``.
+    #: Equivalent to :py:class:`~ipaddress.IPv4Address`.
     IP4 = enum.auto()
     #: Converted to ``{"type": "string", "format": "ipv6"}``.
+    #: Equivalent to :py:class:`~ipaddress.IPv6Address`.
     IP6 = enum.auto()
     #: Converted to ``{"type": "string", "format": "hostname"}``.
     HOSTNAME = enum.auto()
@@ -84,7 +87,7 @@ class OpenApiTypes(enum.Enum):
     #: This signals that the request or response is empty.
     NONE = enum.auto()
     #: Converted to ``{}`` which sets no type and format.
-    #: Equivalent to :py:class:`typing.Any`.
+    #: Equivalent to :py:class:`~typing.Any`.
     ANY = enum.auto()
 
 
@@ -127,8 +130,12 @@ PYTHON_TYPE_MAPPING = {
     Decimal: OpenApiTypes.DECIMAL,
     datetime: OpenApiTypes.DATETIME,
     date: OpenApiTypes.DATE,
+    time: OpenApiTypes.TIME,
+    timedelta: OpenApiTypes.DURATION,
+    IPv4Address: OpenApiTypes.IP4,
+    IPv6Address: OpenApiTypes.IP6,
     dict: OpenApiTypes.OBJECT,
-    typing.Any: OpenApiTypes.ANY,
+    Any: OpenApiTypes.ANY,
     None: OpenApiTypes.NONE,
 }
 
