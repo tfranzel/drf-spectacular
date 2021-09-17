@@ -103,9 +103,9 @@ provides the :py:class:`~drf_spectacular.types.OpenApiTypes` enum:
 - :py:data:`~drf_yasg.openapi.TYPE_STRING` with :py:data:`~drf_yasg.openapi.FORMAT_EMAIL` is called
   :py:attr:`~drf_spectacular.types.OpenApiTypes.EMAIL`
 - :py:data:`~drf_yasg.openapi.TYPE_STRING` with :py:data:`~drf_yasg.openapi.FORMAT_IPV4` is called
-  :py:attr:`~drf_spectacular.types.OpenApiTypes.IP4`
+  :py:attr:`~drf_spectacular.types.OpenApiTypes.IP4`, but you can use :py:class:`ipaddress.IPv4Address`.
 - :py:data:`~drf_yasg.openapi.TYPE_STRING` with :py:data:`~drf_yasg.openapi.FORMAT_IPV6` is called
-  :py:attr:`~drf_spectacular.types.OpenApiTypes.IP6`
+  :py:attr:`~drf_spectacular.types.OpenApiTypes.IP6`, but you can use :py:class:`ipaddress.IPv6Address`.
 - :py:data:`~drf_yasg.openapi.TYPE_STRING` with :py:data:`~drf_yasg.openapi.FORMAT_PASSWORD` is called
   :py:attr:`~drf_spectacular.types.OpenApiTypes.PASSWORD`
 - :py:data:`~drf_yasg.openapi.TYPE_STRING` with :py:data:`~drf_yasg.openapi.FORMAT_URI` is called
@@ -120,10 +120,10 @@ provides the :py:class:`~drf_spectacular.types.OpenApiTypes` enum:
 - The following additional types are also available:
 
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.ANY` for which you can use :py:class:`typing.Any`.
-  - :py:attr:`~drf_spectacular.types.OpenApiTypes.DURATION`
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.DURATION` for which you can use :py:class:`datetime.timedelta`.
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.HOSTNAME`
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.NONE` for which you can use :py:data:`None`.
-  - :py:attr:`~drf_spectacular.types.OpenApiTypes.TIME`
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.TIME` for which you can use :py:class:`datetime.time`.
 
 Parameter Location
 ------------------

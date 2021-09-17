@@ -1,7 +1,8 @@
 import enum
 import typing
-from datetime import date, datetime
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
+from ipaddress import IPv4Address, IPv6Address
 from uuid import UUID
 
 _KnownPythonTypes = typing.Type[
@@ -52,8 +53,10 @@ class OpenApiTypes(enum.Enum):
     #: Converted to ``{"type": "string", "format": "uri"}``.
     URI = enum.auto()
     #: Converted to ``{"type": "string", "format": "ipv4"}``.
+    #: Equivalent to :py:class:`~ipaddress.IPv4Address`.
     IP4 = enum.auto()
     #: Converted to ``{"type": "string", "format": "ipv6"}``.
+    #: Equivalent to :py:class:`~ipaddress.IPv6Address`.
     IP6 = enum.auto()
     #: Converted to ``{"type": "string", "format": "hostname"}``.
     HOSTNAME = enum.auto()
@@ -127,6 +130,10 @@ PYTHON_TYPE_MAPPING = {
     Decimal: OpenApiTypes.DECIMAL,
     datetime: OpenApiTypes.DATETIME,
     date: OpenApiTypes.DATE,
+    time: OpenApiTypes.TIME,
+    timedelta: OpenApiTypes.DURATION,
+    IPv4Address: OpenApiTypes.IP4,
+    IPv6Address: OpenApiTypes.IP6,
     dict: OpenApiTypes.OBJECT,
     typing.Any: OpenApiTypes.ANY,
     None: OpenApiTypes.NONE,
