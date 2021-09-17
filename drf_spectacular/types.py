@@ -3,6 +3,7 @@ import typing
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from ipaddress import IPv4Address, IPv6Address
+from re import Pattern
 from uuid import UUID
 
 _KnownPythonTypes = typing.Type[
@@ -52,6 +53,14 @@ class OpenApiTypes(enum.Enum):
     UUID = enum.auto()
     #: Converted to ``{"type": "string", "format": "uri"}``.
     URI = enum.auto()
+    #: Converted to ``{"type": "string", "format": "uri-reference"}``.
+    URI_REF = enum.auto()
+    #: Converted to ``{"type": "string", "format": "uri-template"}``.
+    URI_TPL = enum.auto()
+    #: Converted to ``{"type": "string", "format": "iri"}``.
+    IRI = enum.auto()
+    #: Converted to ``{"type": "string", "format": "iri-reference"}``.
+    IRI_REF = enum.auto()
     #: Converted to ``{"type": "string", "format": "ipv4"}``.
     #: Equivalent to :py:class:`~ipaddress.IPv4Address`.
     IP4 = enum.auto()
@@ -60,6 +69,8 @@ class OpenApiTypes(enum.Enum):
     IP6 = enum.auto()
     #: Converted to ``{"type": "string", "format": "hostname"}``.
     HOSTNAME = enum.auto()
+    #: Converted to ``{"type": "string", "format": "idn-hostname"}``.
+    IDN_HOSTNAME = enum.auto()
     #: Converted to ``{"type": "number", "format": "double"}``.
     #: The same as :py:attr:`~drf_spectacular.types.OpenApiTypes.DOUBLE`.
     #: Equivalent to :py:class:`~decimal.Decimal`.
@@ -79,6 +90,15 @@ class OpenApiTypes(enum.Enum):
     DURATION = enum.auto()
     #: Converted to ``{"type": "string", "format": "email"}``.
     EMAIL = enum.auto()
+    #: Converted to ``{"type": "string", "format": "idn-email"}``.
+    IDN_EMAIL = enum.auto()
+    #: Converted to ``{"type": "string", "format": "json-pointer"}``.
+    JSON_PTR = enum.auto()
+    #: Converted to ``{"type": "string", "format": "relative-json-pointer"}``.
+    JSON_PTR_REL = enum.auto()
+    #: Converted to ``{"type": "string", "format": "regex"}``.
+    #: Equivalent to :py:class:`~re.Pattern`.
+    REGEX = enum.auto()
     #: Converted to ``{"type": "object", ...}``.
     #: Use this for arbitrary free-form objects (usually a :py:class:`dict`).
     #: The ``additionalProperties`` item is added depending on the ``GENERIC_ADDITIONAL_PROPERTIES`` setting.
@@ -106,15 +126,24 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.INT64: {'type': 'integer', 'format': 'int64'},
     OpenApiTypes.UUID: {'type': 'string', 'format': 'uuid'},
     OpenApiTypes.URI: {'type': 'string', 'format': 'uri'},
+    OpenApiTypes.URI_REF: {'type': 'string', 'format': 'uri-reference'},
+    OpenApiTypes.URI_TPL: {'type': 'string', 'format': 'uri-template'},
+    OpenApiTypes.IRI: {'type': 'string', 'format': 'iri'},
+    OpenApiTypes.IRI_REF: {'type': 'string', 'format': 'iri-reference'},
     OpenApiTypes.IP4: {'type': 'string', 'format': 'ipv4'},
     OpenApiTypes.IP6: {'type': 'string', 'format': 'ipv6'},
     OpenApiTypes.HOSTNAME: {'type': 'string', 'format': 'hostname'},
+    OpenApiTypes.IDN_HOSTNAME: {'type': 'string', 'format': 'idn-hostname'},
     OpenApiTypes.DECIMAL: {'type': 'number', 'format': 'double'},
     OpenApiTypes.DATETIME: {'type': 'string', 'format': 'date-time'},
     OpenApiTypes.DATE: {'type': 'string', 'format': 'date'},
     OpenApiTypes.TIME: {'type': 'string', 'format': 'time'},
     OpenApiTypes.DURATION: {'type': 'string', 'format': 'duration'},  # ISO 8601
     OpenApiTypes.EMAIL: {'type': 'string', 'format': 'email'},
+    OpenApiTypes.IDN_EMAIL: {'type': 'string', 'format': 'idn-email'},
+    OpenApiTypes.JSON_PTR: {'type': 'string', 'format': 'json-pointer'},
+    OpenApiTypes.JSON_PTR_REL: {'type': 'string', 'format': 'relative-json-pointer'},
+    OpenApiTypes.REGEX: {'type': 'string', 'format': 'regex'},
     OpenApiTypes.ANY: {},
     OpenApiTypes.NONE: None,
     # OpenApiTypes.OBJECT is inserted at runtime due to dependency on settings
@@ -134,6 +163,7 @@ PYTHON_TYPE_MAPPING = {
     timedelta: OpenApiTypes.DURATION,
     IPv4Address: OpenApiTypes.IP4,
     IPv6Address: OpenApiTypes.IP6,
+    Pattern: OpenApiTypes.REGEX,
     dict: OpenApiTypes.OBJECT,
     typing.Any: OpenApiTypes.ANY,
     None: OpenApiTypes.NONE,

@@ -122,8 +122,17 @@ provides the :py:class:`~drf_spectacular.types.OpenApiTypes` enum:
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.ANY` for which you can use :py:class:`typing.Any`.
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.DURATION` for which you can use :py:class:`datetime.timedelta`.
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.HOSTNAME`
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.IDN_EMAIL`
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.IDN_HOSTNAME`
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.IRI_REF`
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.IRI`
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.JSON_PTR_REL`
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.JSON_PTR`
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.NONE` for which you can use :py:data:`None`.
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.REGEX` for which you can use :py:class:`re.Pattern`.
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.TIME` for which you can use :py:class:`datetime.time`.
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.URI_REF`
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.URI_TPL`
 
 Parameter Location
 ------------------
