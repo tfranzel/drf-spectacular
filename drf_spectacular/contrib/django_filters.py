@@ -199,5 +199,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             return build_basic_type(OpenApiTypes.STR)
 
     def _get_model_field(self, filter_field, model):
+        if not filter_field.field_name:
+            return None
         path = filter_field.field_name.split('__')
         return follow_field_source(model, path, emit_warnings=False)
