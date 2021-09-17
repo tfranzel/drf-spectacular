@@ -1,7 +1,7 @@
 from django.conf import settings
-from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
+from drf_spectacular.plumbing import build_bearer_security_scheme_object
 
 
 class SessionScheme(OpenApiAuthenticationExtension):
@@ -36,17 +36,7 @@ class TokenScheme(OpenApiAuthenticationExtension):
     priority = -1
 
     def get_security_definition(self, auto_schema):
-        if self.target.keyword == 'Bearer':
-            return {
-                'type': 'http',
-                'scheme': 'bearer',
-            }
-        else:
-            return {
-                'type': 'apiKey',
-                'in': 'header',
-                'name': 'Authorization',
-                'description': _(
-                    'Token-based authentication with required prefix "%s"'
-                ) % self.target.keyword
-            }
+        return build_bearer_security_scheme_object(
+            header_name='Authorization',
+            token_prefix=self.target.keyword,
+        )

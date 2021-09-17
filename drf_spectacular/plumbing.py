@@ -29,6 +29,7 @@ from django.urls.resolvers import (  # type: ignore
 )
 from django.utils.functional import Promise, cached_property
 from django.utils.module_loading import import_string
+from django.utils.translation import gettext_lazy as _
 from django.utils.version import PY38
 from rest_framework import exceptions, fields, mixins, serializers, versioning
 from rest_framework.settings import api_settings
@@ -325,6 +326,30 @@ def build_choice_field(field):
     if type:
         schema['type'] = type
     return schema
+
+
+def build_bearer_security_scheme_object(header_name, token_prefix, bearer_format=None):
+    """ Either build a bearer scheme or a fallback due to OpenAPI 3.0.3 limitations """
+    # normalize Django header quirks
+    if header_name.startswith('HTTP_'):
+        header_name = header_name[5:]
+    header_name = header_name.replace('_', '-').capitalize()
+
+    if token_prefix == 'Bearer' and header_name == 'Authorization':
+        return {
+            'type': 'http',
+            'scheme': 'bearer',
+            **({'bearerFormat': bearer_format} if bearer_format else {}),
+        }
+    else:
+        return {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': header_name,
+            'description': _(
+                'Token-based authentication with required prefix "%s"'
+            ) % token_prefix
+        }
 
 
 def build_root_object(paths, components, version):
