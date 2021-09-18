@@ -17,9 +17,9 @@ Decorators
 
   - ``operation_description`` argument is called ``description``
   - ``operation_summary`` argument is called ``summary``
-  - ``manual_parameters`` argument is called ``parameters``
+  - ``manual_parameters`` and ``query_serializer`` arguments are merged into a single ``parameters`` argument
   - ``security`` argument is called ``auth``
-  - ``request_body`` and ``query_serializer`` arguments are merged into a single ``request`` argument
+  - ``request_body`` arguments is called ``request``
 
     - Use ``None`` instead of :py:class:`drf_yasg.utils.no_body`
 
@@ -128,13 +128,15 @@ provides the :py:class:`~drf_spectacular.types.OpenApiTypes` enum:
 Parameter Location
 ------------------
 
-``drf_yasg.openapi.IN_*`` constants are roughtly equivalent to constants defined on the :py:class:`~drf_spectacular.utils.OpenApiParameter` class:
+``drf_yasg.openapi.IN_*`` constants are roughtly equivalent to constants defined on the
+:py:class:`~drf_spectacular.utils.OpenApiParameter` class:
 
 - :py:data:`~drf_yasg.openapi.IN_PATH` is called :py:attr:`~drf_spectacular.utils.OpenApiParameter.PATH`
 - :py:data:`~drf_yasg.openapi.IN_QUERY` is called :py:attr:`~drf_spectacular.utils.OpenApiParameter.QUERY`
 - :py:data:`~drf_yasg.openapi.IN_HEADER` is called :py:attr:`~drf_spectacular.utils.OpenApiParameter.HEADER`
 - :py:data:`~drf_yasg.openapi.IN_BODY` and :py:data:`~drf_yasg.openapi.IN_FORM` have no direct equivalent.
-  Instead you can use ``@extend_schema(request={"<media-type>": ...})``.
+  Instead you can use ``@extend_schema(request={"<media-type>": ...})`` or
+  ``@extend_schema(request={("<status-code>", "<media-type"): ...})``.
 - :py:attr:`~drf_spectacular.utils.OpenApiParameter.COOKIE` is also available.
 
 Docstring Parsing
@@ -220,7 +222,7 @@ In ``drf-yasg`` it was necessary to :doc:`manually describe authentication schem
 In ``drf-spectacular`` there is support for auto-generating the security definitions for a number of authentication
 classes built in to DRF as well as other popular third-party packages.
 :py:class:`~drf_spectacular.extensions.OpenApiAuthenticationExtension` is available to help tie in custom
-authentication clasees -- see the :doc:`customization guide <customization>`.
+authentication clasees -- see the :ref:`customization guide <customization_authentication_extension>`.
 
 Compatibility
 -------------

@@ -176,6 +176,9 @@ the discovered class ``class Fixed(self.target_class)`` with a ``queryset`` or
 
 Specify authentication with :py:class:`OpenApiAuthenticationExtension <drf_spectacular.extensions.OpenApiAuthenticationExtension>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _customization_authentication_extension:
+
 Authentication classes that do not have 3rd party support will emit warnings and be ignored.
 Luckily authentication extensions are very easy to implement. Have a look at the
 `default authentication method extensions <https://github.com/tfranzel/drf-spectacular/blob/master/drf_spectacular/authentication.py>`_.

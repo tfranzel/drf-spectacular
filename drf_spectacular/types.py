@@ -12,7 +12,13 @@ _KnownPythonTypes = typing.Type[
 
 
 class OpenApiTypes(enum.Enum):
-    """Basic types known to the OpenAPI specification or at least common format extension of it."""
+    """
+    Basic types known to the OpenAPI specification or at least common format extension of it.
+
+    - Use ``BYTE`` for base64-encoded data wrapped in a string
+    - Use ``BINARY`` for raw binary data
+    - Use ``OBJECT`` for arbitrary free-form object (usually a :py:class:`dict`)
+    """
     #: Converted to ``{"type": "number"}``.
     NUMBER = enum.auto()
     #: Converted to ``{"type": "number", "format": "float"}``.
@@ -76,8 +82,8 @@ class OpenApiTypes(enum.Enum):
     #: Use this for arbitrary free-form objects (usually a :py:class:`dict`).
     #: The ``additionalProperties`` item is added depending on the ``GENERIC_ADDITIONAL_PROPERTIES`` setting.
     OBJECT = enum.auto()
-    #: Converted to ``None``.
     #: Equivalent to :py:data:`None`.
+    #: This signals that the request or response is empty.
     NONE = enum.auto()
     #: Converted to ``{}`` which sets no type and format.
     #: Equivalent to :py:class:`typing.Any`.
