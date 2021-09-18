@@ -4,15 +4,16 @@ import sys
 from collections import defaultdict
 from typing import DefaultDict
 
-from drf_spectacular.settings import spectacular_settings
-
 
 class GeneratorStats:
     _warn_cache: DefaultDict[str, int] = defaultdict(int)
     _error_cache: DefaultDict[str, int] = defaultdict(int)
 
-    def __init__(self):
-        self.silent = spectacular_settings.DISABLE_ERRORS_AND_WARNINGS
+    def __getattr__(self, name):
+        if not self.__dict__:
+            from drf_spectacular.settings import spectacular_settings
+            self.silent = spectacular_settings.DISABLE_ERRORS_AND_WARNINGS
+        return getattr(self, name)
 
     def __bool__(self):
         return bool(self._warn_cache or self._error_cache)
