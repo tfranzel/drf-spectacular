@@ -129,7 +129,7 @@ provides the :py:class:`~drf_spectacular.types.OpenApiTypes` enum:
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.JSON_PTR_REL`
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.JSON_PTR`
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.NONE` for which you can use :py:data:`None`.
-  - :py:attr:`~drf_spectacular.types.OpenApiTypes.REGEX` for which you can use :py:class:`re.Pattern`.
+  - :py:attr:`~drf_spectacular.types.OpenApiTypes.REGEX`
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.TIME` for which you can use :py:class:`datetime.time`.
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.URI_REF`
   - :py:attr:`~drf_spectacular.types.OpenApiTypes.URI_TPL`
