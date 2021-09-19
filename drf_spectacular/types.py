@@ -4,8 +4,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from drf_spectacular.settings import spectacular_settings
-
 _KnownPythonTypes = typing.Type[
     typing.Union[str, float, bool, bytes, int, UUID, Decimal, datetime, date, dict],
 ]
@@ -90,15 +88,6 @@ class OpenApiTypes(enum.Enum):
     ANY = enum.auto()
 
 
-def build_generic_type():
-    if spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES is None:
-        return {'type': 'object'}
-    elif spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES == 'bool':
-        return {'type': 'object', 'additionalProperties': True}
-    else:
-        return {'type': 'object', 'additionalProperties': {}}
-
-
 # make a copy with dict() before modifying returned dict
 OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.NUMBER: {'type': 'number'},
@@ -123,9 +112,9 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.TIME: {'type': 'string', 'format': 'time'},
     OpenApiTypes.DURATION: {'type': 'string', 'format': 'duration'},  # ISO 8601
     OpenApiTypes.EMAIL: {'type': 'string', 'format': 'email'},
-    OpenApiTypes.OBJECT: build_generic_type(),
     OpenApiTypes.ANY: {},
     OpenApiTypes.NONE: None,
+    # OpenApiTypes.OBJECT is inserted at runtime due to dependency on settings
 }
 
 PYTHON_TYPE_MAPPING = {

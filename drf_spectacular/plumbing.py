@@ -100,7 +100,7 @@ def is_basic_type(obj, allow_none=True):
         return False
     if not allow_none and (obj is None or obj is OpenApiTypes.NONE):
         return False
-    return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
+    return obj in get_openapi_type_mapping() or obj in PYTHON_TYPE_MAPPING
 
 
 def is_patched_serializer(serializer, direction):
@@ -184,19 +184,36 @@ def get_type_hints(obj):
     return typing.get_type_hints(obj)
 
 
+def get_openapi_type_mapping():
+    return {
+        **OPENAPI_TYPE_MAPPING,
+        OpenApiTypes.OBJECT: build_generic_type(),
+    }
+
+
+def build_generic_type():
+    if spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES is None:
+        return {'type': 'object'}
+    elif spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES == 'bool':
+        return {'type': 'object', 'additionalProperties': True}
+    else:
+        return {'type': 'object', 'additionalProperties': {}}
+
+
 def build_basic_type(obj):
     """
     resolve either enum or actual type and yield schema template for modification
     """
+    openapi_type_mapping = get_openapi_type_mapping()
     if obj is None or type(obj) is None or obj is OpenApiTypes.NONE:
         return None
-    elif obj in OPENAPI_TYPE_MAPPING:
-        return dict(OPENAPI_TYPE_MAPPING[obj])
+    elif obj in openapi_type_mapping:
+        return dict(openapi_type_mapping[obj])
     elif obj in PYTHON_TYPE_MAPPING:
-        return dict(OPENAPI_TYPE_MAPPING[PYTHON_TYPE_MAPPING[obj]])
+        return dict(openapi_type_mapping[PYTHON_TYPE_MAPPING[obj]])
     else:
         warn(f'could not resolve type for "{obj}". defaulting to "string"')
-        return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])
+        return dict(openapi_type_mapping[OpenApiTypes.STR])
 
 
 def build_array_type(schema, min_length=None, max_length=None):
