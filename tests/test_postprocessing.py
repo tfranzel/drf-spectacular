@@ -173,7 +173,7 @@ def test_enum_resolvable_collision_with_patched_and_request_splits():
     assert '/XFooEnum' in components['PatchedXRequest']['properties']['foo']['$ref']
 
 
-def test_enum_override_variations(no_warnings, clear_caches):
+def test_enum_override_variations(no_warnings):
     enum_override_variations = ['language_list', 'LanguageEnum']
     if DJANGO_VERSION > '3':
         enum_override_variations += ['LanguageChoices', 'LanguageChoices.choices']
@@ -183,6 +183,7 @@ def test_enum_override_variations(no_warnings, clear_caches):
             'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
             {'LanguageEnum': f'tests.test_postprocessing.{variation}'}
         ):
+            load_enum_name_overrides.cache_clear()
             assert list_hash(['en']) in load_enum_name_overrides()
 
 

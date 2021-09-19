@@ -14,8 +14,8 @@ from rest_framework import generics, serializers
 
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
-    analyze_named_regex_pattern, detype_pattern, follow_field_source, force_instance, is_field,
-    is_serializer, resolve_type_hint,
+    analyze_named_regex_pattern, build_basic_type, detype_pattern, follow_field_source,
+    force_instance, is_field, is_serializer, resolve_type_hint,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
@@ -244,3 +244,8 @@ def test_type_hint_extraction(no_warnings, type_hint, ref_schema):
 def test_analyze_named_regex_pattern(no_warnings, pattern, output):
     re.compile(pattern)  # check validity of regex
     assert analyze_named_regex_pattern(pattern) == output
+
+
+def test_unknown_basic_type(capsys):
+    build_basic_type(object)
+    assert 'could not resolve type for "<class \'object\'>' in capsys.readouterr().err
