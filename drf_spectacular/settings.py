@@ -105,6 +105,12 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # allowed values are 'dict', 'bool', None
     'GENERIC_ADDITIONAL_PROPERTIES': 'dict',
 
+    # Path converter schema overrides (e.g. <int:foo>). Can be used to either modify default
+    # behavior or provide a schema for custom converters registered with register_converter(...).
+    # Takes converter labels as keys and either basic python types, OpenApiType, or raw schemas
+    # as values. Example: {'aint': OpenApiTypes.INT, 'bint': str, 'cint': {'type': ...}}
+    'PATH_CONVERTER_OVERRIDES': {},
+
     # Determines whether operation parameters should be sorted alphanumerically or just in
     # the order they arrived. Accepts either True, False, or a callable for sort's key arg.
     'SORT_OPERATION_PARAMETERS': True,

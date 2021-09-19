@@ -23,6 +23,7 @@ from django.db.models.fields.related_descriptors import (
 )
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.db.models.sql.query import Query
+from django.urls.converters import get_converters
 from django.urls.resolvers import (  # type: ignore
     _PATH_PARAMETER_COMPONENT_RE, RegexPattern, Resolver404, RoutePattern, URLPattern, URLResolver,
     get_resolver,
@@ -733,11 +734,19 @@ def resolve_django_path_parameter(path_regex, variable, available_formats):
     """
     convert django style path parameters to OpenAPI parameters.
     """
+    registered_converters = get_converters()
     for match in _PATH_PARAMETER_COMPONENT_RE.finditer(path_regex):
         converter, parameter = match.group('converter'), match.group('parameter')
         enum_values = None
 
-        if converter and converter.startswith('drf_format_suffix_'):
+        if api_settings.SCHEMA_COERCE_PATH_PK and parameter == 'pk':
+            parameter = 'id'
+
+        if not converter or parameter != variable:
+            continue
+
+        # special handling for drf_format_suffix
+        if converter.startswith('drf_format_suffix_'):
             explicit_formats = converter[len('drf_format_suffix_'):].split('_')
             enum_values = [
                 f'.{suffix}' for suffix in explicit_formats if suffix in available_formats
@@ -746,16 +755,34 @@ def resolve_django_path_parameter(path_regex, variable, available_formats):
         elif converter == 'drf_format_suffix':
             enum_values = [f'.{suffix}' for suffix in available_formats]
 
-        if api_settings.SCHEMA_COERCE_PATH_PK and parameter == 'pk':
-            parameter = 'id'
+        if converter in spectacular_settings.PATH_CONVERTER_OVERRIDES:
+            override = spectacular_settings.PATH_CONVERTER_OVERRIDES[converter]
+            if is_basic_type(override):
+                schema = build_basic_type(override)
+            elif isinstance(override, dict):
+                schema = dict(override)
+            else:
+                warn(
+                    f'Unable to use path converter override for "{converter}". '
+                    f'Please refer to the documentation on how to use this.'
+                )
+                return None
+        elif converter in DJANGO_PATH_CONVERTER_MAPPING:
+            schema = build_basic_type(DJANGO_PATH_CONVERTER_MAPPING[converter])
+        elif converter in registered_converters:
+            # gracious fallback for custom converters that have no override specified.
+            schema = build_basic_type(OpenApiTypes.STR)
+            schema['pattern'] = registered_converters[converter].regex
+        else:
+            error(f'Encountered path converter "{converter}" that is unknown to Django.')
+            return None
 
-        if parameter == variable and converter in DJANGO_PATH_CONVERTER_MAPPING:
-            return build_parameter_type(
-                name=parameter,
-                schema=build_basic_type(DJANGO_PATH_CONVERTER_MAPPING[converter]),
-                location=OpenApiParameter.PATH,
-                enum=enum_values,
-            )
+        return build_parameter_type(
+            name=parameter,
+            schema=schema,
+            location=OpenApiParameter.PATH,
+            enum=enum_values,
+        )
 
     return None
 

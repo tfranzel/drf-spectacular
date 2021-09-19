@@ -11,7 +11,8 @@ from django import __version__ as DJANGO_VERSION
 from django.core import validators
 from django.db import models
 from django.db.models import fields
-from django.urls import path, re_path
+from django.urls import path, re_path, register_converter
+from django.urls.converters import StringConverter
 from rest_framework import (
     filters, generics, mixins, pagination, parsers, renderers, routers, serializers, views,
     viewsets,
@@ -2371,3 +2372,42 @@ def test_path_parameter_priority_matching(no_warnings, path_func, path_str, patt
 @pytest.mark.parametrize('import_string', IMPORT_STRINGS)
 def test_import_strings_in_default_settings(import_string):
     assert import_string in SPECTACULAR_DEFAULTS
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.PATH_CONVERTER_OVERRIDES', {
+        'int': str,  # override default behavior
+        'signed_int': {'type': 'integer', 'format': 'signed'},
+    }
+)
+def test_path_converter_override(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request, foo):
+        pass  # pragma: no cover
+
+    class SignedIntConverter(StringConverter):
+        regex = r'\-[0-9]+'
+
+    class HexConverter(StringConverter):
+        regex = r'[a-f0-9]+'
+
+    register_converter(SignedIntConverter, 'signed_int')
+    register_converter(HexConverter, 'hex')
+
+    urlpatterns = [
+        path('/a/<int:var>/', pi),
+        path('/b/<signed_int:var>/', pi),
+        path('/c/<hex:var>/', pi),
+    ]
+    schema = generate_schema(None, patterns=urlpatterns)
+
+    assert schema['paths']['/a/{var}/']['get']['parameters'][0]['schema'] == {
+        'type': 'string',
+    }
+    assert schema['paths']['/b/{var}/']['get']['parameters'][0]['schema'] == {
+        'type': 'integer', 'format': 'signed'
+    }
+    assert schema['paths']['/c/{var}/']['get']['parameters'][0]['schema'] == {
+        'type': 'string', 'pattern': '[a-f0-9]+'
+    }

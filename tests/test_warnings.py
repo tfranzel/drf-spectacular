@@ -390,3 +390,18 @@ def test_warning_missing_lookup_field_on_model_serializer(capsys):
         'could not derive type of path parameter "non_existent_field" because model '
         '"tests.models.SimpleModel" contained no such field.'
     ) in stderr
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.PATH_CONVERTER_OVERRIDES', {'int': object}
+)
+def test_invalid_path_converter_override(capsys):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request, foo):
+        pass  # pragma: no cover
+
+    urlpatterns = [path('/a/<int:var>/', pi)]
+    generate_schema(None, patterns=urlpatterns)
+    stderr = capsys.readouterr().err
+    assert 'Unable to use path converter override for "int".' in stderr
