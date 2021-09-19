@@ -3,12 +3,12 @@ import typing
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from ipaddress import IPv4Address, IPv6Address
-from re import Pattern
 from uuid import UUID
 
-_KnownPythonTypes = typing.Type[
-    typing.Union[str, float, bool, bytes, int, UUID, Decimal, datetime, date, dict],
-]
+_KnownPythonTypes = typing.Type[typing.Union[
+    str, float, bool, bytes, int, dict, UUID, Decimal, datetime, date, time,
+    timedelta, IPv4Address, IPv6Address,
+]]
 
 
 class OpenApiTypes(enum.Enum):
@@ -163,7 +163,6 @@ PYTHON_TYPE_MAPPING = {
     timedelta: OpenApiTypes.DURATION,
     IPv4Address: OpenApiTypes.IP4,
     IPv6Address: OpenApiTypes.IP6,
-    Pattern: OpenApiTypes.REGEX,
     dict: OpenApiTypes.OBJECT,
     typing.Any: OpenApiTypes.ANY,
     None: OpenApiTypes.NONE,
