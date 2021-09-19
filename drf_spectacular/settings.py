@@ -49,7 +49,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/oauth2/
     'SWAGGER_UI_OAUTH2_CONFIG': {},
 
-    # CDNs for for swagger and redoc. You can change the version or even host your
+    # CDNs for swagger and redoc. You can change the version or even host your
     # own depending on your requirements.
     'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.52.0',
     'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.52.0/favicon-32x32.png',
