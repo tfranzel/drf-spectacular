@@ -97,7 +97,6 @@ class OpenApiTypes(enum.Enum):
     #: Converted to ``{"type": "string", "format": "relative-json-pointer"}``.
     JSON_PTR_REL = enum.auto()
     #: Converted to ``{"type": "string", "format": "regex"}``.
-    #: Equivalent to :py:class:`~re.Pattern`.
     REGEX = enum.auto()
     #: Converted to ``{"type": "object", ...}``.
     #: Use this for arbitrary free-form objects (usually a :py:class:`dict`).
