@@ -114,3 +114,8 @@ def get_view_methods(view, schema=None):
             or hasattr(getattr(view, item), 'mapping')
         )
     ]
+
+
+def cache(user_function):
+    """ simple polyfill for python < 3.9 """
+    return functools.lru_cache(maxsize=None)(user_function)

@@ -148,6 +148,16 @@ def warnings(capsys):
     assert captured.err
 
 
+@pytest.fixture()
+def clear_caches():
+    from drf_spectacular.plumbing import get_openapi_type_mapping, load_enum_name_overrides
+    load_enum_name_overrides.cache_clear()
+    get_openapi_type_mapping.cache_clear()
+    yield
+    load_enum_name_overrides.cache_clear()
+    get_openapi_type_mapping.cache_clear()
+
+
 def module_available(module_str):
     try:
         import_module(module_str)

@@ -37,7 +37,7 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
 from uritemplate import URITemplate
 
-from drf_spectacular.drainage import error, warn
+from drf_spectacular.drainage import cache, error, warn
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
     DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,
@@ -118,6 +118,7 @@ def is_trivial_string_variation(a: str, b: str):
     return a == b
 
 
+@cache
 def get_lib_doc_excludes():
     # do not import on package level due to potential import recursion when loading
     # extensions as recommended:  USER's settings.py -> USER EXTENSIONS -> extensions.py
@@ -184,6 +185,7 @@ def get_type_hints(obj):
     return typing.get_type_hints(obj)
 
 
+@cache
 def get_openapi_type_mapping():
     return {
         **OPENAPI_TYPE_MAPPING,
@@ -689,6 +691,7 @@ def deep_import_string(string):
         pass
 
 
+@cache
 def load_enum_name_overrides():
     overrides = {}
     for name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items():

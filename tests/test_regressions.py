@@ -1804,7 +1804,7 @@ def test_any_placeholder_on_request_response(no_warnings):
     assert properties['method_field'] == {'readOnly': True, 'description': 'Any'}
 
 
-def test_categorized_choices(no_warnings):
+def test_categorized_choices(no_warnings, clear_caches):
     media_choices = [
         ('Audio', (('vinyl', 'Vinyl'), ('cd', 'CD'))),
         ('Video', (('vhs', 'VHS Tape'), ('dvd', 'DVD'))),
