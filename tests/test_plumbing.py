@@ -96,6 +96,13 @@ class LanguageEnum(str, Enum):
     DE = 'de'
 
 
+# Make sure we can deal with plain Enums that are not handled by DRF.
+# The second base class makes this work for DRF.
+class InvalidLanguageEnum(Enum):
+    EN = 'en'
+    DE = 'de'
+
+
 TYPE_HINT_TEST_PARAMS = [
     (
         typing.Optional[int],
@@ -139,13 +146,15 @@ TYPE_HINT_TEST_PARAMS = [
     ), (
         typing.Optional[typing.Union[str, int]],
         {'oneOf': [{'type': 'string'}, {'type': 'integer'}], 'nullable': True}
+    ), (
+        LanguageEnum,
+        {'enum': ['en', 'de'], 'type': 'string'}
+    ), (
+        InvalidLanguageEnum,
+        {'enum': ['en', 'de']}
     )
 ]
 
-TYPE_HINT_TEST_PARAMS.append((
-    LanguageEnum,
-    {'enum': ['en', 'de'], 'type': 'string'}
-))
 
 if DJANGO_VERSION > '3':
     from django.db.models.enums import TextChoices  # only available in Django>3
