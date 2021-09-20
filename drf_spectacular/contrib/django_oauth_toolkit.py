@@ -6,16 +6,11 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
     name = 'oauth2'
 
     def get_security_requirement(self, auto_schema):
-        # TODO generalize (will also be used in versioning)
-        from collections import namedtuple
-
         from oauth2_provider.contrib.rest_framework import (
             IsAuthenticatedOrTokenHasScope, TokenHasScope, TokenMatchesOASRequirements,
         )
-        Request = namedtuple('Request', ['method'])
-
         view = auto_schema.view
-        request = Request(auto_schema.method)
+        request = view.request
 
         for permission in auto_schema.view.get_permissions():
             if isinstance(permission, TokenMatchesOASRequirements):
