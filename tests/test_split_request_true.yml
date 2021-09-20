@@ -6,7 +6,6 @@ paths:
   /x/{id}/:
     put:
       operationId: x_update
-      description: ''
       parameters:
       - in: path
         name: id
@@ -35,7 +34,6 @@ paths:
           description: ''
     patch:
       operationId: x_partial_update
-      description: ''
       parameters:
       - in: path
         name: id

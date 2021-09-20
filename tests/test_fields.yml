@@ -6,7 +6,6 @@ paths:
   /allfields/:
     get:
       operationId: allfields_list
-      description: ''
       tags:
       - allfields
       security:
@@ -25,7 +24,6 @@ paths:
   /allfields/{id}/:
     get:
       operationId: allfields_retrieve
-      description: ''
       parameters:
       - in: path
         name: id
@@ -49,7 +47,6 @@ paths:
   /aux/:
     get:
       operationId: aux_list
-      description: ''
       tags:
       - aux
       security:
@@ -68,7 +65,6 @@ paths:
   /aux/{id}/:
     get:
       operationId: aux_retrieve
-      description: ''
       parameters:
       - in: path
         name: id

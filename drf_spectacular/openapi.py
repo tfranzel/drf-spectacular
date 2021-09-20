@@ -53,10 +53,11 @@ class AutoSchema(ViewInspector):
         self.path_prefix = path_prefix
         self.method = method
 
-        operation = {}
+        operation = {'operationId': self.get_operation_id()}
 
-        operation['operationId'] = self.get_operation_id()
-        operation['description'] = self.get_description()
+        description = self.get_description()
+        if description:
+            operation['description'] = description
 
         summary = self.get_summary()
         if summary:

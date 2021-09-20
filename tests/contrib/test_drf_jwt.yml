@@ -34,7 +34,6 @@ paths:
   /x/:
     get:
       operationId: x_list
-      description: ''
       tags:
       - x
       security:

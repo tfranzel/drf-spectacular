@@ -84,7 +84,6 @@ paths:
   /y/:
     get:
       operationId: y_list
-      description: ''
       tags:
       - y
       security:
@@ -102,7 +101,6 @@ paths:
           description: ''
     post:
       operationId: y_create
-      description: ''
       tags:
       - y
       requestBody:
@@ -130,7 +128,6 @@ paths:
   /y/{id}/:
     get:
       operationId: y_retrieve
-      description: ''
       parameters:
       - in: path
         name: id
@@ -153,7 +150,6 @@ paths:
           description: ''
     put:
       operationId: y_update
-      description: ''
       parameters:
       - in: path
         name: id
@@ -187,7 +183,6 @@ paths:
           description: ''
     patch:
       operationId: y_partial_update
-      description: ''
       parameters:
       - in: path
         name: id
@@ -221,7 +216,6 @@ paths:
           description: ''
     delete:
       operationId: y_destroy
-      description: ''
       parameters:
       - in: path
         name: id

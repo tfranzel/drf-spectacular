@@ -6,7 +6,6 @@ paths:
   /products/:
     get:
       operationId: products_list
-      description: ''
       parameters:
       - in: query
         name: all_values
@@ -183,7 +182,6 @@ paths:
   /products/{id}/:
     get:
       operationId: products_retrieve
-      description: ''
       parameters:
       - in: path
         name: id

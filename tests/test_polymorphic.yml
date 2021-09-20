@@ -6,7 +6,6 @@ paths:
   /persons/:
     post:
       operationId: persons_create
-      description: ''
       tags:
       - persons
       requestBody:
@@ -34,7 +33,6 @@ paths:
   /persons/{id}/:
     patch:
       operationId: persons_partial_update
-      description: ''
       parameters:
       - in: path
         name: id

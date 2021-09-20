@@ -84,7 +84,6 @@ paths:
   /doesitall/{id}/subscribe/:
     post:
       operationId: doesitall_subscribe_create
-      description: ''
       parameters:
       - in: path
         name: id
@@ -103,7 +102,6 @@ paths:
   /doesitall/callback/{ephemeral}/:
     post:
       operationId: doesitall_callback_create
-      description: ''
       parameters:
       - in: path
         name: ephemeral
@@ -137,7 +135,6 @@ paths:
   /doesitall/custom_request_override/:
     post:
       operationId: doesitall_custom_request_override_create
-      description: ''
       tags:
       - doesitall
       requestBody:
@@ -163,7 +160,6 @@ paths:
   /doesitall/document/:
     get:
       operationId: doesitall_document_retrieve
-      description: ''
       tags:
       - doesitall
       security:
@@ -200,7 +196,6 @@ paths:
   /doesitall/non_required_body/:
     post:
       operationId: doesitall_non_required_body_create
-      description: ''
       tags:
       - doesitall
       requestBody:
@@ -228,7 +223,6 @@ paths:
   /doesitall/only-response-override/:
     post:
       operationId: doesitall_only_response_override_create
-      description: ''
       tags:
       - doesitall
       requestBody:
@@ -253,7 +247,6 @@ paths:
   /doesitall/serializer-query/:
     get:
       operationId: doesitall_serializer_query_retrieve
-      description: ''
       parameters:
       - in: query
         name: contains

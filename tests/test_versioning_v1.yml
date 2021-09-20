@@ -6,7 +6,6 @@ paths:
   /v1/x/:
     get:
       operationId: v1_x_list
-      description: ''
       tags:
       - v1
       security:
@@ -25,7 +24,6 @@ paths:
   /v1/x/{id}/:
     get:
       operationId: v1_x_retrieve
-      description: ''
       parameters:
       - in: path
         name: id

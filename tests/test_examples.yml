@@ -6,7 +6,6 @@ paths:
   /schema/:
     get:
       operationId: schema_list
-      description: ''
       parameters:
       - in: query
         name: artist
@@ -44,7 +43,6 @@ paths:
           description: ''
     post:
       operationId: schema_create
-      description: ''
       tags:
       - schema
       requestBody:
@@ -110,7 +108,6 @@ paths:
   /schema/override_extend_schema_action/:
     post:
       operationId: schema_override_extend_schema_action_create
-      description: ''
       tags:
       - schema
       requestBody:
@@ -152,7 +149,6 @@ paths:
   /schema/raw_action/:
     get:
       operationId: schema_raw_action_retrieve
-      description: ''
       tags:
       - schema
       security:

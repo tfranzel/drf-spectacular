@@ -6,7 +6,6 @@ paths:
   /a/:
     get:
       operationId: a_list
-      description: ''
       tags:
       - a
       security:
@@ -25,7 +24,6 @@ paths:
   /a/selection/:
     get:
       operationId: a_selection_retrieve
-      description: ''
       tags:
       - a
       security:

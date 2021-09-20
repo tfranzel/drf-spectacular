@@ -6,7 +6,6 @@ paths:
   /nodes/{id}/:
     get:
       operationId: nodes_retrieve
-      description: ''
       parameters:
       - in: path
         name: id

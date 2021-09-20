@@ -6,7 +6,6 @@ paths:
   /root/:
     get:
       operationId: root_list
-      description: ''
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -22,7 +21,6 @@ paths:
           description: ''
     post:
       operationId: root_create
-      description: ''
       requestBody:
         content:
           application/json:
@@ -49,7 +47,6 @@ paths:
   /root/{parent_id}/child/:
     get:
       operationId: child_list
-      description: ''
       parameters:
       - in: path
         name: parent_id
@@ -73,7 +70,6 @@ paths:
           description: ''
     post:
       operationId: child_create
-      description: ''
       parameters:
       - in: path
         name: parent_id
@@ -108,7 +104,6 @@ paths:
   /root/{parent_id}/child/{id}/:
     get:
       operationId: child_retrieve
-      description: ''
       parameters:
       - in: path
         name: id
@@ -136,7 +131,6 @@ paths:
           description: ''
     put:
       operationId: child_update
-      description: ''
       parameters:
       - in: path
         name: id
@@ -176,7 +170,6 @@ paths:
           description: ''
     patch:
       operationId: child_partial_update
-      description: ''
       parameters:
       - in: path
         name: id
@@ -215,7 +208,6 @@ paths:
           description: ''
     delete:
       operationId: child_destroy
-      description: ''
       parameters:
       - in: path
         name: id
@@ -240,7 +232,6 @@ paths:
   /root/{id}/:
     get:
       operationId: root_retrieve
-      description: ''
       parameters:
       - in: path
         name: id
@@ -261,7 +252,6 @@ paths:
           description: ''
     put:
       operationId: root_update
-      description: ''
       parameters:
       - in: path
         name: id
@@ -294,7 +284,6 @@ paths:
           description: ''
     patch:
       operationId: root_partial_update
-      description: ''
       parameters:
       - in: path
         name: id
@@ -326,7 +315,6 @@ paths:
           description: ''
     delete:
       operationId: root_destroy
-      description: ''
       parameters:
       - in: path
         name: id

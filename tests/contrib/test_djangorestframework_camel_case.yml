@@ -6,7 +6,6 @@ paths:
   /a_b_c/:
     get:
       operationId: a_b_c_list
-      description: ''
       tags:
       - a_b_c
       security:
@@ -25,7 +24,6 @@ paths:
   /a_b_c/home/:
     get:
       operationId: a_b_c_home_retrieve
-      description: ''
       tags:
       - a_b_c
       security:

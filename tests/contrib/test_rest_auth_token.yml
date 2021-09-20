@@ -163,7 +163,6 @@ paths:
   /rest-auth/registration/:
     post:
       operationId: rest_auth_registration_create
-      description: ''
       tags:
       - rest-auth
       requestBody:
@@ -192,7 +191,6 @@ paths:
   /rest-auth/registration/resend-email/:
     post:
       operationId: rest_auth_registration_resend_email_create
-      description: ''
       tags:
       - rest-auth
       requestBody:
@@ -220,7 +218,6 @@ paths:
   /rest-auth/registration/verify-email/:
     post:
       operationId: rest_auth_registration_verify_email_create
-      description: ''
       tags:
       - rest-auth
       requestBody:

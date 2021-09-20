@@ -6,7 +6,6 @@ paths:
   /x/:
     get:
       operationId: x_list
-      description: ''
       tags:
       - x
       security:
@@ -25,7 +24,6 @@ paths:
   /x/{id}/:
     get:
       operationId: x_retrieve
-      description: ''
       parameters:
       - in: path
         name: id
