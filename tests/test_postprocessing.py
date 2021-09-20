@@ -37,6 +37,10 @@ class LanguageEnum(Enum):
     EN = 'en'
 
 
+class LanguageStrEnum(str, Enum):
+    EN = 'en'
+
+
 class LanguageChoices(TextChoices):
     EN = 'en'
 
@@ -174,7 +178,7 @@ def test_enum_resolvable_collision_with_patched_and_request_splits():
 
 
 def test_enum_override_variations(no_warnings):
-    enum_override_variations = ['language_list', 'LanguageEnum']
+    enum_override_variations = ['language_list', 'LanguageEnum', 'LanguageStrEnum']
     if DJANGO_VERSION > '3':
         enum_override_variations += ['LanguageChoices', 'LanguageChoices.choices']
 
