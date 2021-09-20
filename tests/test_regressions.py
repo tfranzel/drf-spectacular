@@ -1559,7 +1559,7 @@ def test_path_parameter_with_relationships(no_warnings):
     }
 
 
-def test_path_parameter_with_lookups(no_warnings):
+def test_path_parameter_with_lookup_field(no_warnings):
     class JournalEntry(models.Model):
         recorded_at = models.DateTimeField()
 
@@ -1573,8 +1573,15 @@ def test_path_parameter_with_lookups(no_warnings):
         queryset = JournalEntry.objects.none()
         lookup_field = 'recorded_at__date'
 
+    class JournalEntryAltViewset(viewsets.ModelViewSet):
+        serializer_class = JournalEntrySerializer
+        queryset = JournalEntry.objects.none()
+        lookup_field = 'recorded_at__date'
+        lookup_url_kwarg = 'on'
+
     router = routers.SimpleRouter()
     router.register('journal', JournalEntryViewset)
+    router.register('journal_alt', JournalEntryAltViewset)
 
     schema = generate_schema(None, patterns=router.urls)
 
@@ -1584,6 +1591,12 @@ def test_path_parameter_with_lookups(no_warnings):
     assert schema['paths']['/journal/{recorded_at__date}/']['get']['parameters'][0] == {
         'in': 'path',
         'name': 'recorded_at__date',
+        'required': True,
+        'schema': {'format': 'date-time', 'type': 'string'},
+    }
+    assert schema['paths']['/journal_alt/{on}/']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'on',
         'required': True,
         'schema': {'format': 'date-time', 'type': 'string'},
     }
