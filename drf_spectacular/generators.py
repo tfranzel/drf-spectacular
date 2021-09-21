@@ -11,10 +11,9 @@ from drf_spectacular.drainage import add_trace_message, reset_generator_stats
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
-    RELATED_MODEL_PARAMETER_RE, ComponentRegistry, alpha_operation_sorter, build_root_object,
-    camelize_operation, error, get_class, get_view_model, is_versioning_supported,
-    modify_for_versioning, normalize_result_object, operation_matches_version,
-    sanitize_result_object, warn,
+    ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, error,
+    get_class, is_versioning_supported, modify_for_versioning, normalize_result_object,
+    operation_matches_version, sanitize_result_object, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -98,12 +97,8 @@ class SchemaGenerator(BaseSchemaGenerator):
         of nested routers.
         """
         path = super().coerce_path(path, method, view)  # take care of {pk}
-        model = get_view_model(view, emit_warnings=False)
-        if not self.coerce_path_pk or not model:
-            return path
-        for match in RELATED_MODEL_PARAMETER_RE.findall(path):
-            if hasattr(model, match):
-                path = path.replace(f'{match}_pk', f'{match}_id')
+        if spectacular_settings.SCHEMA_COERCE_PATH_PK_SUFFIX:
+            path = re.sub(pattern=r'{(\w+)_pk}', repl=r'{\1_id}', string=path)
         return path
 
     def create_view(self, callback, method, request=None):

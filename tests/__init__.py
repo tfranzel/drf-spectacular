@@ -12,7 +12,7 @@ def build_absolute_file_path(relative_path):
     )
 
 
-def assert_schema(schema, reference_filename, transforms=None):
+def assert_schema(schema, reference_filename, transforms=None, reverse_transforms=None):
     from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
@@ -40,6 +40,8 @@ def assert_schema(schema, reference_filename, transforms=None):
     # discrepancies between Django, DRF and library versions.
     for t in transforms or []:
         generated = t(generated)
+    for t in reverse_transforms or []:
+        expected = t(expected)
 
     assert_equal(generated, expected)
     # this is more a less a sanity check as checked-in schemas should be valid anyhow

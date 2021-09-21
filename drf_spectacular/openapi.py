@@ -342,7 +342,7 @@ class AutoSchema(ViewInspector):
                 self.path_regex, variable, self.map_renderers('format'),
             )
             if not resolved_parameter:
-                resolved_parameter = resolve_regex_path_parameter(model, self.path_regex, variable)
+                resolved_parameter = resolve_regex_path_parameter(self.path_regex, variable)
 
             if resolved_parameter:
                 schema = resolved_parameter['schema']
@@ -357,6 +357,9 @@ class AutoSchema(ViewInspector):
                 try:
                     if getattr(self.view, 'lookup_url_kwarg', None) == variable:
                         model_field_name = getattr(self.view, 'lookup_field', variable)
+                    elif variable.endswith('_pk'):
+                        # Django naturally coins foreign keys *_id. improve chances to match a field
+                        model_field_name = f'{variable[:-3]}_id'
                     else:
                         model_field_name = variable
                     model_field = follow_model_field_lookup(model, model_field_name)

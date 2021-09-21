@@ -58,8 +58,6 @@ else:
 
 T = TypeVar('T')
 
-RELATED_MODEL_PARAMETER_RE = re.compile(r'{(\w+)_pk}')
-
 
 class UnableToProceedError(Exception):
     pass
@@ -741,9 +739,14 @@ def resolve_django_path_parameter(path_regex, variable, available_formats):
 
         if api_settings.SCHEMA_COERCE_PATH_PK and parameter == 'pk':
             parameter = 'id'
+        elif spectacular_settings.SCHEMA_COERCE_PATH_PK_SUFFIX and parameter.endswith('_pk'):
+            parameter = f'{parameter[:-3]}_id'
 
-        if not converter or parameter != variable:
+        if parameter != variable:
             continue
+        # RE also matches untyped patterns (e.g. "<id>")
+        if not converter:
+            return None
 
         # special handling for drf_format_suffix
         if converter.startswith('drf_format_suffix_'):
@@ -778,7 +781,7 @@ def resolve_django_path_parameter(path_regex, variable, available_formats):
             return None
 
         return build_parameter_type(
-            name=parameter,
+            name=variable,
             schema=schema,
             location=OpenApiParameter.PATH,
             enum=enum_values,
@@ -787,32 +790,29 @@ def resolve_django_path_parameter(path_regex, variable, available_formats):
     return None
 
 
-def resolve_regex_path_parameter(model, path_regex, variable):
+def resolve_regex_path_parameter(path_regex, variable):
     """
     convert regex path parameter to OpenAPI parameter, if pattern is
     explicitly chosen and not the generic non-empty default '[^/.]+'.
     """
-    if api_settings.SCHEMA_COERCE_PATH_PK:
-        coercion_mapping = {
-            f'{match}_id': f'{match}_pk'
-            for match in RELATED_MODEL_PARAMETER_RE.findall(path_regex)
-            if hasattr(model, match)
-        }
-        coercion_mapping['id'] = 'pk'
-        parameter = coercion_mapping.get(variable, variable)
-    else:
-        parameter = variable
+    for parameter, pattern in analyze_named_regex_pattern(path_regex).items():
+        if api_settings.SCHEMA_COERCE_PATH_PK and parameter == 'pk':
+            parameter = 'id'
+        elif spectacular_settings.SCHEMA_COERCE_PATH_PK_SUFFIX and parameter.endswith('_pk'):
+            parameter = f'{parameter[:-3]}_id'
 
-    regex_groups = analyze_named_regex_pattern(path_regex)
-    if parameter in regex_groups and regex_groups[parameter] != '[^/.]+':
+        if parameter != variable:
+            continue
+        # do not use default catch-all pattern and defer to model resolution
+        if pattern == '[^/.]+':
+            return None
+
         return build_parameter_type(
             name=variable,
-            schema={
-                **build_basic_type(OpenApiTypes.STR),
-                'pattern': regex_groups[parameter]
-            },
+            schema={**build_basic_type(OpenApiTypes.STR), 'pattern': pattern},
             location=OpenApiParameter.PATH,
         )
+
     return None
 
 

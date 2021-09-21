@@ -1991,10 +1991,10 @@ def test_nested_router_urls(no_warnings):
         ),
     ]
     schema = generate_schema(None, patterns=urlpatterns)
-    operation = schema['paths']['/clients/{client_id}/maildrops/{maildrop_id}/recipients/{id}/']['get']
-    assert operation['parameters'][0]['name'] == 'client_id'
+    operation = schema['paths']['/clients/{client_pk}/maildrops/{maildrop_pk}/recipients/{id}/']['get']
+    assert operation['parameters'][0]['name'] == 'client_pk'
     assert operation['parameters'][0]['schema'] == {'format': 'uuid', 'type': 'string'}
-    assert operation['parameters'][2]['name'] == 'maildrop_id'
+    assert operation['parameters'][2]['name'] == 'maildrop_pk'
     assert operation['parameters'][2]['schema'] == {'type': 'integer'}
 
 

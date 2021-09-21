@@ -14,6 +14,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # conjunction with appended prefixes in SERVERS.
     'SCHEMA_PATH_PREFIX_TRIM': False,
 
+    # Coercion of {pk} to {id} is controlled by SCHEMA_COERCE_PATH_PK. Additionally,
+    # some libraries (e.g. drf-nested-routers) use "_pk" suffixed path variables.
+    # This setting globally coerces path variables like "{user_pk}" to "{user_id}".
+    'SCHEMA_COERCE_PATH_PK_SUFFIX': False,
+
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
     # Schema generation parameters to influence how components are constructed.

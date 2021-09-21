@@ -1,13 +1,16 @@
+from unittest import mock
+
 import pytest
 from django.db import models
-from django.urls import include, path, re_path
-from rest_framework import routers, serializers, viewsets
+from django.urls import include, re_path
+from rest_framework import serializers, viewsets
 from rest_framework.routers import SimpleRouter
 
 from tests import assert_schema, generate_schema
 
 
 class Root(models.Model):
+    id = models.UUIDField(primary_key=True)
     name = models.CharField(max_length=255)
 
 
@@ -28,10 +31,28 @@ class ChildSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('name', 'parent',)
 
 
-@pytest.mark.contrib('drf_nested_routers')
-def test_drf_nested_routers_basic_example(no_warnings):
+def _generate_nested_routers_schema(root_viewset, child_viewset):
     from rest_framework_nested.routers import NestedSimpleRouter
 
+    router = SimpleRouter()
+    router.register('root', root_viewset, basename='root')
+
+    root_router = NestedSimpleRouter(router, r'root', lookup='parent')
+    root_router.register(r'child', child_viewset, basename='child')
+
+    urlpatterns = [
+        re_path(r'^', include(router.urls)),
+        re_path(r'^', include(root_router.urls)),
+    ]
+    return generate_schema(None, patterns=urlpatterns)
+
+
+@pytest.mark.contrib('drf_nested_routers')
+@pytest.mark.parametrize('coerce_suffix,transforms', [
+    (False, []),
+    (True, [lambda x: x.replace('parent_pk', 'parent_id')]),
+])
+def test_drf_nested_routers_basic_example(no_warnings, coerce_suffix, transforms):
     class RootViewSet(viewsets.ModelViewSet):
         serializer_class = RootSerializer
         queryset = Root.objects.all()
@@ -40,25 +61,19 @@ def test_drf_nested_routers_basic_example(no_warnings):
         serializer_class = ChildSerializer
         queryset = Child.objects.all()
 
-    router = SimpleRouter()
-    router.register('root', RootViewSet, basename='root')
-
-    root_router = NestedSimpleRouter(router, r'root', lookup='parent')
-    root_router.register(r'child', ChildViewSet, basename='child')
-
-    urlpatterns = [
-        re_path(r'^', include(router.urls)),
-        re_path(r'^', include(root_router.urls)),
-    ]
-    schema = generate_schema(None, patterns=urlpatterns)
-    assert_schema(schema, 'tests/contrib/test_drf_nested_routers.yml')
-    assert schema
+    with mock.patch(
+            'drf_spectacular.settings.spectacular_settings.SCHEMA_COERCE_PATH_PK_SUFFIX',
+            coerce_suffix
+    ):
+        assert_schema(
+            _generate_nested_routers_schema(RootViewSet, ChildViewSet),
+            'tests/contrib/test_drf_nested_routers.yml',
+            reverse_transforms=transforms
+        )
 
 
 @pytest.mark.contrib('rest_framework_nested')
 def test_drf_nested_routers_basic_example_variation(no_warnings):
-    from rest_framework_nested.routers import NestedSimpleRouter
-
     class RootViewSet(viewsets.ModelViewSet):
         queryset = Root.objects.all()
         serializer_class = RootSerializer
@@ -70,14 +85,11 @@ def test_drf_nested_routers_basic_example_variation(no_warnings):
         def get_queryset(self):
             return Child.objects.filter(id=self.kwargs.get("parent_pk"))
 
-    router = routers.SimpleRouter()
-    router.register('root', RootViewSet, basename='root')
-
-    root_router = NestedSimpleRouter(router, r'root', lookup='parent')
-    root_router.register(r'child', ChildViewSet, basename='child')
-
-    urlpatterns = [
-        path(r'', include(router.urls)),
-        path(r'', include(root_router.urls)),
-    ]
-    generate_schema(None, patterns=urlpatterns)
+    assert_schema(
+        _generate_nested_routers_schema(RootViewSet, ChildViewSet),
+        'tests/contrib/test_drf_nested_routers.yml',
+        reverse_transforms=[
+            lambda x: x.replace('format: uuid', 'pattern: \'[0-9]+\''),
+            lambda x: x.replace('\n        description: A UUID string identifying this root.', '')
+        ]
+    )

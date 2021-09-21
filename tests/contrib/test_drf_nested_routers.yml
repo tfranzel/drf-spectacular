@@ -44,14 +44,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/Root'
           description: ''
-  /root/{parent_id}/child/:
+  /root/{parent_pk}/child/:
     get:
       operationId: child_list
       parameters:
       - in: path
-        name: parent_id
+        name: parent_pk
         schema:
-          type: integer
+          type: string
+          format: uuid
         required: true
       tags:
       - child
@@ -72,9 +73,10 @@ paths:
       operationId: child_create
       parameters:
       - in: path
-        name: parent_id
+        name: parent_pk
         schema:
-          type: integer
+          type: string
+          format: uuid
         required: true
       tags:
       - child
@@ -101,7 +103,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Child'
           description: ''
-  /root/{parent_id}/child/{id}/:
+  /root/{parent_pk}/child/{id}/:
     get:
       operationId: child_retrieve
       parameters:
@@ -112,9 +114,10 @@ paths:
         description: A unique integer value identifying this child.
         required: true
       - in: path
-        name: parent_id
+        name: parent_pk
         schema:
-          type: integer
+          type: string
+          format: uuid
         required: true
       tags:
       - child
@@ -139,9 +142,10 @@ paths:
         description: A unique integer value identifying this child.
         required: true
       - in: path
-        name: parent_id
+        name: parent_pk
         schema:
-          type: integer
+          type: string
+          format: uuid
         required: true
       tags:
       - child
@@ -178,9 +182,10 @@ paths:
         description: A unique integer value identifying this child.
         required: true
       - in: path
-        name: parent_id
+        name: parent_pk
         schema:
-          type: integer
+          type: string
+          format: uuid
         required: true
       tags:
       - child
@@ -216,9 +221,10 @@ paths:
         description: A unique integer value identifying this child.
         required: true
       - in: path
-        name: parent_id
+        name: parent_pk
         schema:
-          type: integer
+          type: string
+          format: uuid
         required: true
       tags:
       - child
@@ -236,8 +242,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
-        description: A unique integer value identifying this root.
+          type: string
+          format: uuid
+        description: A UUID string identifying this root.
         required: true
       security:
       - cookieAuth: []
@@ -256,8 +263,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
-        description: A unique integer value identifying this root.
+          type: string
+          format: uuid
+        description: A UUID string identifying this root.
         required: true
       requestBody:
         content:
@@ -288,8 +296,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
-        description: A unique integer value identifying this root.
+          type: string
+          format: uuid
+        description: A UUID string identifying this root.
         required: true
       requestBody:
         content:
@@ -319,8 +328,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
-        description: A unique integer value identifying this root.
+          type: string
+          format: uuid
+        description: A UUID string identifying this root.
         required: true
       security:
       - cookieAuth: []
