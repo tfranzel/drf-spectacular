@@ -1,5 +1,6 @@
 import functools
 import json
+import sys
 import tempfile
 import uuid
 from datetime import timedelta
@@ -20,13 +21,13 @@ from rest_framework.test import APIClient
 from drf_spectacular.generators import SchemaGenerator
 from tests import assert_equal, assert_schema, build_absolute_file_path
 
-try:
-    functools_cached_property = functools.cached_property  # type: ignore
-except AttributeError:
-    # functools.cached_property is only available in Python 3.8+.
+if sys.version_info >= (3, 8):
+    functools_cached_property = functools.cached_property
+else:
     # We re-use Django's cached_property when it's not avaiable to
     # keep tests unified across Python versions.
     functools_cached_property = cached_property
+
 
 fs = FileSystemStorage(location=tempfile.gettempdir())
 

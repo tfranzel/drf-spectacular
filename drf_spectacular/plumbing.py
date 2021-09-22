@@ -13,6 +13,11 @@ from decimal import Decimal
 from enum import Enum
 from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 
+if sys.version_info >= (3, 8):
+    from typing import Literal, _TypedDictMeta  # type: ignore[attr-defined]
+else:
+    from typing_extensions import Literal, _TypedDictMeta  # type: ignore[attr-defined]
+
 import inflection
 import uritemplate
 from django.apps import apps
@@ -24,14 +29,13 @@ from django.db.models.fields.related_descriptors import (
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.db.models.sql.query import Query
 from django.urls.converters import get_converters
-from django.urls.resolvers import (  # type: ignore
+from django.urls.resolvers import (  # type: ignore[attr-defined]
     _PATH_PARAMETER_COMPONENT_RE, RegexPattern, Resolver404, RoutePattern, URLPattern, URLResolver,
     get_resolver,
 )
 from django.utils.functional import Promise, cached_property
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
-from django.utils.version import PY38
 from rest_framework import exceptions, fields, mixins, serializers, versioning
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
@@ -51,7 +55,7 @@ except ImportError:
     class Choices:  # type: ignore
         pass
 
-if PY38:
+if sys.version_info >= (3, 8):
     CACHED_PROPERTY_FUNCS = (functools.cached_property, cached_property)  # type: ignore
 else:
     CACHED_PROPERTY_FUNCS = (cached_property,)  # type: ignore
@@ -478,7 +482,7 @@ def _follow_return_type(a_callable):
     if target_type is None:
         return target_type
     origin, args = _get_type_hint_origin(target_type)
-    if origin is typing.Union:
+    if origin is Union:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
             warn(
@@ -1088,8 +1092,9 @@ def resolve_type_hint(hint):
         return build_array_type(resolve_type_hint(args[0]))
     elif origin is frozenset:
         return build_array_type(resolve_type_hint(args[0]))
-    elif hasattr(typing, 'Literal') and origin is typing.Literal:
-        # python >= 3.8
+    elif origin is Literal:
+        # Literal only works for python >= 3.8 despite typing_extensions, because it
+        # behaves slightly different w.r.t. __origin__
         schema = {'enum': list(args)}
         if all(type(args[0]) is type(choice) for choice in args):
             schema.update(build_basic_type(type(args[0])))
@@ -1100,13 +1105,13 @@ def resolve_type_hint(hint):
         if mixin_base_types:
             schema.update(build_basic_type(mixin_base_types[0]))
         return schema
-    elif hasattr(typing, 'TypedDict') and isinstance(hint, typing._TypedDictMeta):
+    elif isinstance(hint, _TypedDictMeta):
         return build_object_type(
             properties={
                 k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()
             }
         )
-    elif origin is typing.Union:
+    elif origin is Union:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
             schema = {'oneOf': [resolve_type_hint(arg) for arg in type_args]}

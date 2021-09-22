@@ -21,6 +21,11 @@ from drf_spectacular.plumbing import (
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
 
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
+
 
 def test_is_serializer():
     assert not is_serializer(serializers.SlugField)
@@ -86,6 +91,9 @@ def test_detype_patterns_with_module_includes(no_warnings):
     )
 
 
+NamedTupleA = collections.namedtuple("NamedTupleA", "a, b")
+
+
 class NamedTupleB(typing.NamedTuple):
     a: int
     b: str
@@ -101,6 +109,10 @@ class LanguageEnum(str, Enum):
 class InvalidLanguageEnum(Enum):
     EN = 'en'
     DE = 'de'
+
+
+TD1 = TypedDict('TD1', {"foo": int, "bar": typing.List[str]})
+TD2 = TypedDict('TD2', {"foo": str, "bar": typing.Dict[str, int]})
 
 
 TYPE_HINT_TEST_PARAMS = [
@@ -152,6 +164,34 @@ TYPE_HINT_TEST_PARAMS = [
     ), (
         InvalidLanguageEnum,
         {'enum': ['en', 'de']}
+    ), (
+        TD1,
+        {
+            'type': 'object',
+            'properties': {
+                'foo': {'type': 'integer'},
+                'bar': {'type': 'array', 'items': {'type': 'string'}}
+            }
+        }
+    ), (
+        typing.List[TD2],
+        {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'foo': {'type': 'string'},
+                    'bar': {'type': 'object', 'additionalProperties': {'type': 'integer'}}
+                }
+            }
+        }
+    ), (
+        NamedTupleB,
+        {
+            'type': 'object',
+            'properties': {'a': {'type': 'integer'}, 'b': {'type': 'string'}},
+            'required': ['a', 'b']
+        }
     )
 ]
 
@@ -170,50 +210,20 @@ if DJANGO_VERSION > '3':
 
 if sys.version_info >= (3, 7):
     TYPE_HINT_TEST_PARAMS.append((
-        typing.Iterable[collections.namedtuple("NamedTupleA", "a, b")],  # noqa
+        typing.Iterable[NamedTupleA],
         {
             'type': 'array',
             'items': {'type': 'object', 'properties': {'a': {}, 'b': {}}, 'required': ['a', 'b']}
         }
     ))
-    TYPE_HINT_TEST_PARAMS.append((
-        NamedTupleB,
-        {
-            'type': 'object',
-            'properties': {'a': {'type': 'integer'}, 'b': {'type': 'string'}},
-            'required': ['a', 'b']
-        }
-    ))
 
 if sys.version_info >= (3, 8):
+    # Literal only works for python >= 3.8 despite typing_extensions, because it
+    # behaves slightly different w.r.t. __origin__
     TYPE_HINT_TEST_PARAMS.append((
         typing.Literal['x', 'y'],
         {'enum': ['x', 'y'], 'type': 'string'}
     ))
-    TYPE_HINT_TEST_PARAMS.append((
-        typing.TypedDict('TD', foo=int, bar=typing.List[str]),
-        {
-            'type': 'object',
-            'properties': {
-                'foo': {'type': 'integer'},
-                'bar': {'type': 'array', 'items': {'type': 'string'}}
-            }
-        }
-    ))
-    TYPE_HINT_TEST_PARAMS.append((
-        typing.List[typing.TypedDict('TD', foo=str, bar=typing.Dict[str, int])],  # noqa: F821
-        {
-            'type': 'array',
-            'items': {
-                'type': 'object',
-                'properties': {
-                    'foo': {'type': 'string'},
-                    'bar': {'type': 'object', 'additionalProperties': {'type': 'integer'}}
-                }
-            }
-        }
-    ))
-
 
 if sys.version_info >= (3, 9):
     TYPE_HINT_TEST_PARAMS.append((

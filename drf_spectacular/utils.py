@@ -1,5 +1,6 @@
 import functools
 import inspect
+import sys
 from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
 
 from rest_framework.fields import Field, empty
@@ -9,7 +10,15 @@ from rest_framework.settings import api_settings
 from drf_spectacular.drainage import error, get_view_methods, set_override, warn
 from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 
+if sys.version_info >= (3, 8):
+    from typing import Final, Literal
+else:
+    from typing_extensions import Final, Literal
+
+
 _SerializerType = Union[Serializer, Type[Serializer]]
+
+_ParameterLocationType = Literal['query', 'path', 'header', 'cookie']
 
 
 class PolymorphicProxySerializer(Serializer):
@@ -125,16 +134,16 @@ class OpenApiParameter(OpenApiSchemaBase):
     For valid ``style`` choices please consult the
     `OpenAPI specification <https://swagger.io/specification/#style-values>`_.
     """
-    QUERY = 'query'
-    PATH = 'path'
-    HEADER = 'header'
-    COOKIE = 'cookie'
+    QUERY: Final = 'query'
+    PATH: Final = 'path'
+    HEADER: Final = 'header'
+    COOKIE: Final = 'cookie'
 
     def __init__(
             self,
             name: str,
             type: Union[_SerializerType, _KnownPythonTypes, OpenApiTypes, dict] = str,
-            location: str = QUERY,
+            location: _ParameterLocationType = QUERY,
             required: bool = False,
             description: str = '',
             enum: Optional[List[Any]] = None,
