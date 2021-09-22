@@ -139,8 +139,34 @@ components:
           pattern: ^P\d+Y$
           maxLength: 5
           minLength: 3
+        array_max_length:
+          type: array
+          items: {}
+          maxItems: 200
+        array_min_length:
+          type: array
+          items: {}
+          minItems: 100
+        ascii_username:
+          type: string
+          pattern: ^[\w.@+-]+$
+        unicode_username:
+          type: string
+          pattern: ^[\w.@+-]+$
+        file_extension:
+          type: string
+          pattern: (?:\.jpg|\.png)$
+        integer_string:
+          type: string
+          pattern: ^-?\d+$
+        integer_list:
+          type: string
+          pattern: ^\d+(?:,\d+)*$
       required:
       - age
+      - array_max_length
+      - array_min_length
+      - ascii_username
       - char_email
       - char_max_length
       - char_min_length
@@ -151,14 +177,18 @@ components:
       - decimal_min_value
       - dict_max_length
       - dict_min_length
+      - file_extension
       - float_decimal
       - float_max_value
       - float_min_value
       - integer_decimal
+      - integer_list
       - integer_max_value
       - integer_min_value
+      - integer_string
       - list_max_length
       - list_min_length
+      - unicode_username
     Y:
       type: object
       properties:

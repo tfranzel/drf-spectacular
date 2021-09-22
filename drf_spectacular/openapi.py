@@ -859,6 +859,8 @@ class AutoSchema(ViewInspector):
                     update_constraint(schema, 'maxLength', min, v.limit_value)
                 elif isinstance(v, validators.MinLengthValidator):
                     update_constraint(schema, 'minLength', max, v.limit_value)
+                elif isinstance(v, validators.FileExtensionValidator) and v.allowed_extensions:
+                    schema['pattern'] = '(?:%s)$' % '|'.join([re.escape(extn) for extn in v.allowed_extensions])
             elif schema_type in ('integer', 'number'):
                 if isinstance(v, validators.MaxValueValidator):
                     update_constraint(schema, 'maximum', min, v.limit_value)

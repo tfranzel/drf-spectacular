@@ -1,7 +1,10 @@
+import sys
 from datetime import timedelta
 from unittest import mock
 
 import pytest
+from django.contrib.auth import validators as auth_validators
+from django.contrib.postgres import validators as postgres_validators
 from django.core import validators
 from django.urls import path
 from rest_framework import serializers
@@ -65,6 +68,15 @@ def test_validators():
             validators.MaxLengthValidator(5),
             validators.MinLengthValidator(3),
         ])
+
+        # Tests for additional subclasses already handled by their superclass:
+        array_max_length = serializers.ListField(validators=[postgres_validators.ArrayMaxLengthValidator(200)])
+        array_min_length = serializers.ListField(validators=[postgres_validators.ArrayMinLengthValidator(100)])
+        ascii_username = serializers.CharField(validators=[auth_validators.ASCIIUsernameValidator()])
+        unicode_username = serializers.CharField(validators=[auth_validators.UnicodeUsernameValidator()])
+        file_extension = serializers.CharField(validators=[validators.FileExtensionValidator(['.jpg', '.png'])])
+        integer_string = serializers.CharField(validators=[validators.integer_validator])
+        integer_list = serializers.CharField(validators=[validators.validate_comma_separated_integer_list])
 
     class YSerializer(serializers.Serializer):
         # These validators are unsupported for the `string` type:
@@ -160,10 +172,14 @@ def test_validators():
     def view_func_y(request, format=None):
         pass  # pragma: no cover
 
-    assert_schema(
-        generate_schema(None, patterns=[path('x', view_func_x), path('y', view_func_y)]),
-        'tests/test_validators.yml'
-    )
+    schema = generate_schema(None, patterns=[path('x', view_func_x), path('y', view_func_y)])
+
+    if sys.version_info < (3, 7):
+        # In Python < 3.7, re.escape() escapes more characters than necessary.
+        field = schema['components']['schemas']['X']['properties']['integer_list']
+        field['pattern'] = field['pattern'].replace(r'\,', ',')
+
+    assert_schema(schema, 'tests/test_validators.yml')
 
 
 @pytest.mark.xfail
