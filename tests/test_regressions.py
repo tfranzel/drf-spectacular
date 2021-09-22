@@ -1347,7 +1347,7 @@ def test_exclude_parameter_from_customized_autoschema(no_warnings):
 def test_manual_decimal_validator():
     # manually test this validator as it is not part of the default workflow
     class XSerializer(serializers.Serializer):
-        field = serializers.CharField(
+        field = serializers.FloatField(
             validators=[validators.DecimalValidator(max_digits=4, decimal_places=2)]
         )
 
