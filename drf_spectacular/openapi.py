@@ -873,6 +873,11 @@ class AutoSchema(ViewInspector):
                     update_constraint(schema, 'maxItems', min, v.limit_value)
                 elif isinstance(v, validators.MinLengthValidator):
                     update_constraint(schema, 'minItems', max, v.limit_value)
+            elif schema_type == 'object':
+                if isinstance(v, validators.MaxLengthValidator):
+                    update_constraint(schema, 'maxProperties', min, v.limit_value)
+                elif isinstance(v, validators.MinLengthValidator):
+                    update_constraint(schema, 'minProperties', max, v.limit_value)
 
     def _map_response_type_hint(self, method):
         hint = get_override(method, 'field') or get_type_hints(method).get('return')

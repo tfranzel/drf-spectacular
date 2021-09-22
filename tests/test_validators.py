@@ -55,6 +55,10 @@ def test_validators():
         list_max_length = serializers.ListField(validators=[validators.MaxLengthValidator(200)])
         list_min_length = serializers.ListField(validators=[validators.MinLengthValidator(100)])
 
+        # The following only apply for `object` type:
+        dict_max_length = serializers.DictField(validators=[validators.MaxLengthValidator(200)])
+        dict_min_length = serializers.DictField(validators=[validators.MinLengthValidator(100)])
+
         # Explicit test for rest_framework.fields.DurationField:
         age = serializers.DurationField(validators=[
             validators.RegexValidator(r'^P\d+Y$'),
@@ -121,8 +125,6 @@ def test_validators():
         dict_email = serializers.DictField(validators=[validators.EmailValidator()])
         dict_url = serializers.DictField(validators=[validators.URLValidator()])
         dict_regex = serializers.DictField(validators=[validators.RegexValidator(r'\w+')])
-        dict_max_length = serializers.DictField(validators=[validators.MaxLengthValidator(200)])
-        dict_min_length = serializers.DictField(validators=[validators.MinLengthValidator(100)])
         dict_max_value = serializers.DictField(validators=[validators.MaxValueValidator(200)])
         dict_min_value = serializers.DictField(validators=[validators.MinValueValidator(100)])
         dict_decimal = serializers.DictField(
@@ -192,6 +194,10 @@ def test_nested_validators():
 
 
 @pytest.mark.parametrize('instance,expected', [
+    (serializers.DictField(validators=[validators.MaxLengthValidator(150), validators.MaxLengthValidator(200)]),
+     {'type': 'object', 'additionalProperties': {}, 'maxProperties': 150}),
+    (serializers.DictField(validators=[validators.MinLengthValidator(150), validators.MinLengthValidator(100)]),
+     {'type': 'object', 'additionalProperties': {}, 'minProperties': 150}),
     (serializers.ListField(max_length=150, validators=[validators.MaxLengthValidator(200)]),
      {'type': 'array', 'items': {}, 'maxItems': 150}),
     (serializers.ListField(min_length=150, validators=[validators.MinLengthValidator(100)]),

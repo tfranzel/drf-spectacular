@@ -126,6 +126,14 @@ components:
           type: array
           items: {}
           minItems: 100
+        dict_max_length:
+          type: object
+          additionalProperties: {}
+          maxProperties: 200
+        dict_min_length:
+          type: object
+          additionalProperties: {}
+          minProperties: 100
         age:
           type: string
           pattern: ^P\d+Y$
@@ -141,6 +149,8 @@ components:
       - decimal_decimal
       - decimal_max_value
       - decimal_min_value
+      - dict_max_length
+      - dict_min_length
       - float_decimal
       - float_max_value
       - float_min_value
@@ -235,12 +245,6 @@ components:
         dict_regex:
           type: object
           additionalProperties: {}
-        dict_max_length:
-          type: object
-          additionalProperties: {}
-        dict_min_length:
-          type: object
-          additionalProperties: {}
         dict_max_value:
           type: object
           additionalProperties: {}
@@ -291,9 +295,7 @@ components:
       - decimal_url
       - dict_decimal
       - dict_email
-      - dict_max_length
       - dict_max_value
-      - dict_min_length
       - dict_min_value
       - dict_regex
       - dict_url
