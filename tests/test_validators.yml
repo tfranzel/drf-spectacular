@@ -154,55 +154,43 @@ components:
       properties:
         char_max_value:
           type: string
-          maximum: 200
         char_min_value:
           type: string
-          minimum: 100
         char_decimal:
           type: string
-          maximum: 100
-          minimum: -100
         float_email:
           type: number
-          format: email
+          format: float
         float_url:
           type: number
-          format: uri
+          format: float
         float_regex:
           type: number
           format: float
-          pattern: \w+
         float_max_length:
           type: number
           format: float
-          maxLength: 200
         float_min_length:
           type: number
           format: float
-          minLength: 100
         integer_email:
           type: integer
-          format: email
         integer_url:
           type: integer
-          format: uri
         integer_regex:
           type: integer
-          pattern: \w+
         integer_max_length:
           type: integer
-          maxLength: 200
         integer_min_length:
           type: integer
-          minLength: 100
         decimal_email:
           type: number
-          format: email
+          format: double
           maximum: 1000
           minimum: -1000
         decimal_url:
           type: number
-          format: uri
+          format: double
           maximum: 1000
           minimum: -1000
         decimal_regex:
@@ -210,112 +198,80 @@ components:
           format: double
           maximum: 1000
           minimum: -1000
-          pattern: \w+
         decimal_max_length:
           type: number
           format: double
           maximum: 1000
           minimum: -1000
-          maxLength: 200
         decimal_min_length:
           type: number
           format: double
           maximum: 1000
           minimum: -1000
-          minLength: 100
         list_email:
           type: array
           items: {}
-          format: email
         list_url:
           type: array
           items: {}
-          format: uri
         list_regex:
           type: array
           items: {}
-          pattern: \w+
         list_max_value:
           type: array
           items: {}
-          maximum: 200
         list_min_value:
           type: array
           items: {}
-          minimum: 100
         list_decimal:
           type: array
           items: {}
-          maximum: 100
-          minimum: -100
         dict_email:
           type: object
           additionalProperties: {}
-          format: email
         dict_url:
           type: object
           additionalProperties: {}
-          format: uri
         dict_regex:
           type: object
           additionalProperties: {}
-          pattern: \w+
         dict_max_length:
           type: object
           additionalProperties: {}
-          maxLength: 200
         dict_min_length:
           type: object
           additionalProperties: {}
-          minLength: 100
         dict_max_value:
           type: object
           additionalProperties: {}
-          maximum: 200
         dict_min_value:
           type: object
           additionalProperties: {}
-          minimum: 100
         dict_decimal:
           type: object
           additionalProperties: {}
-          maximum: 100
-          minimum: -100
         boolean_email:
           type: boolean
-          format: email
         boolean_url:
           type: boolean
-          format: uri
         boolean_regex:
           type: boolean
-          pattern: \w+
         boolean_max_length:
           type: boolean
-          maxLength: 200
         boolean_min_length:
           type: boolean
-          minLength: 100
         boolean_max_value:
           type: boolean
-          maximum: 200
         boolean_min_value:
           type: boolean
-          minimum: 100
         boolean_decimal:
           type: boolean
-          maximum: 100
-          minimum: -100
         duration_max_value:
           type: string
-          maximum: 200
         duration_min_value:
           type: string
-          minimum: 100
         duration_decimal:
           type: string
-          maximum: 100
-          minimum: -100
       required:
       - boolean_decimal
       - boolean_email

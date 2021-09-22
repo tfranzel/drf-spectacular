@@ -1,7 +1,6 @@
 from datetime import timedelta
 from unittest import mock
 
-import jsonschema
 import pytest
 from django.core import validators
 from django.urls import path
@@ -204,8 +203,8 @@ def test_timedelta_in_validator():
         pass  # pragma: no cover
 
     # `DurationField` values and `timedelta` serialize to `string` type so `maximum` is invalid.
-    with pytest.raises(jsonschema.exceptions.ValidationError, match=r".* is not of type 'number'"):
-        generate_schema('x', view_function=view_func)
+    schema = generate_schema('x', view_function=view_func)
+    assert 'maximum' not in schema['components']['schemas']['X']['properties']['field']
 
 
 @pytest.mark.parametrize('pattern,expected', [
