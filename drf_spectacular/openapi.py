@@ -35,6 +35,9 @@ from drf_spectacular.plumbing import (
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse
+from rest_framework_gis.fields import GeometryField
+from rest_framework_gis.schema import GeoFeatureAutoSchema
+from rest_framework_gis.serializers import GeoFeatureModelListSerializer
 
 
 class AutoSchema(ViewInspector):
@@ -679,6 +682,10 @@ class AutoSchema(ViewInspector):
 
         if isinstance(field, serializers.CharField):
             return append_meta(build_basic_type(OpenApiTypes.STR), meta)
+
+        if isinstance(field, GeoFeatureModelListSerializer) or isinstance(field, GeometryField):
+            geo_schema = GeoFeatureAutoSchema()
+            return geo_schema.map_field(field)
 
         if isinstance(field, serializers.ReadOnlyField):
             # when field is nested inside a ListSerializer, the Meta class is 2 steps removed
