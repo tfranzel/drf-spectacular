@@ -835,6 +835,15 @@ class AutoSchema(ViewInspector):
 
     def _map_field_validators(self, field, schema):
         schema_type = schema.get('type')
+
+        def update_constraint(schema, key, function, value):
+            if callable(value):
+                value = value()
+            current_value = schema.get(key)
+            if current_value is not None:
+                value = function(current_value, value)
+            schema[key] = value
+
         for v in field.validators:
             if schema_type == 'string':
                 if isinstance(v, validators.EmailValidator):
@@ -847,26 +856,23 @@ class AutoSchema(ViewInspector):
                     pattern = pattern.replace(r'\Z', '$').replace(r'\A', '^')  # ECMA anchors
                     schema['pattern'] = pattern
                 elif isinstance(v, validators.MaxLengthValidator):
-                    schema['maxLength'] = v.limit_value() if callable(v.limit_value) else v.limit_value
+                    update_constraint(schema, 'maxLength', min, v.limit_value)
                 elif isinstance(v, validators.MinLengthValidator):
-                    schema['minLength'] = v.limit_value() if callable(v.limit_value) else v.limit_value
+                    update_constraint(schema, 'minLength', max, v.limit_value)
             elif schema_type in ('integer', 'number'):
                 if isinstance(v, validators.MaxValueValidator):
-                    schema['maximum'] = v.limit_value() if callable(v.limit_value) else v.limit_value
+                    update_constraint(schema, 'maximum', min, v.limit_value)
                 elif isinstance(v, validators.MinValueValidator):
-                    schema['minimum'] = v.limit_value() if callable(v.limit_value) else v.limit_value
-                elif isinstance(v, validators.DecimalValidator):
-                    if v.max_digits:
-                        digits = v.max_digits
-                        if v.decimal_places is not None and v.decimal_places > 0:
-                            digits -= v.decimal_places
-                        schema['maximum'] = int(digits * '9') + 1
-                        schema['minimum'] = -schema['maximum']
+                    update_constraint(schema, 'minimum', max, v.limit_value)
+                elif isinstance(v, validators.DecimalValidator) and v.max_digits:
+                    value = 10 ** (v.max_digits - (v.decimal_places or 0))
+                    update_constraint(schema, 'maximum', min, value)
+                    update_constraint(schema, 'minimum', max, -value)
             elif schema_type == 'array':
                 if isinstance(v, validators.MaxLengthValidator):
-                    schema['maxItems'] = v.limit_value() if callable(v.limit_value) else v.limit_value
+                    update_constraint(schema, 'maxItems', min, v.limit_value)
                 elif isinstance(v, validators.MinLengthValidator):
-                    schema['minItems'] = v.limit_value() if callable(v.limit_value) else v.limit_value
+                    update_constraint(schema, 'minItems', max, v.limit_value)
 
     def _map_response_type_hint(self, method):
         hint = get_override(method, 'field') or get_type_hints(method).get('return')
