@@ -1386,11 +1386,23 @@ def test_serialization_with_decimal_values(no_warnings):
 
     schema = generate_schema('/x/', view_function=view_func)
     field = schema['components']['schemas']['X']['properties']['field']
-    assert field['minimum'] and field['maximum']
+    assert 'pattern' not in field
+    assert field['maximum'] == Decimal('100.00')
+    assert field['minimum'] == Decimal('1')
+    assert 'exclusiveMaximum' not in field
+    assert 'exclusiveMinimum' not in field
+    field = schema['components']['schemas']['X']['properties']['field_coerced']
+    assert field['pattern'] == r'^\d{0,3}(?:\.\d{0,2})?$'
+    assert 'maximum' not in field
+    assert 'minimum' not in field
+    assert 'exclusiveMaximum' not in field
+    assert 'exclusiveMinimum' not in field
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
     assert b'maximum: 100.00\n' in schema_yml
     assert b'minimum: 1\n' in schema_yml
+    assert b'exclusiveMaximum: true' not in field
+    assert b'exclusiveMinimum: true' not in field
 
 
 def test_non_supported_http_verbs(no_warnings):

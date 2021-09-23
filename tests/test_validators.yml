@@ -112,11 +112,13 @@ components:
           format: double
           maximum: 200
           minimum: -1000
+          exclusiveMinimum: true
         decimal_min_value:
           type: number
           format: double
           maximum: 1000
           minimum: 100
+          exclusiveMaximum: true
         decimal_decimal:
           type: number
           format: double
@@ -234,26 +236,36 @@ components:
           format: double
           maximum: 1000
           minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
         decimal_url:
           type: number
           format: double
           maximum: 1000
           minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
         decimal_regex:
           type: number
           format: double
           maximum: 1000
           minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
         decimal_max_length:
           type: number
           format: double
           maximum: 1000
           minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
         decimal_min_length:
           type: number
           format: double
           maximum: 1000
           minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
         list_email:
           type: array
           items: {}

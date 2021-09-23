@@ -636,14 +636,19 @@ class AutoSchema(ViewInspector):
                 content = {**build_basic_type(OpenApiTypes.STR), 'format': 'decimal'}
                 if field.max_whole_digits:
                     content['pattern'] = (
-                        f'^\\d{{0,{field.max_whole_digits}}}'
-                        f'(\\.\\d{{0,{field.decimal_places}}})?$'
+                        fr'^\d{{0,{field.max_whole_digits}}}'
+                        fr'(?:\.\d{{0,{field.decimal_places}}})?$'
                     )
             else:
                 content = build_basic_type(OpenApiTypes.DECIMAL)
                 if field.max_whole_digits:
-                    content['maximum'] = int(field.max_whole_digits * '9') + 1
-                    content['minimum'] = -content['maximum']
+                    value = 10 ** field.max_whole_digits
+                    content.update({
+                        'maximum': value,
+                        'minimum': -value,
+                        'exclusiveMaximum': True,
+                        'exclusiveMinimum': True,
+                    })
                 self._map_min_max(field, content)
             return append_meta(content, meta)
 
@@ -725,8 +730,12 @@ class AutoSchema(ViewInspector):
     def _map_min_max(self, field, content):
         if field.max_value:
             content['maximum'] = field.max_value
+            if 'exclusiveMaximum' in content:
+                del content['exclusiveMaximum']
         if field.min_value:
             content['minimum'] = field.min_value
+            if 'exclusiveMinimum' in content:
+                del content['exclusiveMinimum']
 
     def _map_serializer(self, serializer, direction, bypass_extensions=False):
         serializer = force_instance(serializer)
