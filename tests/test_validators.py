@@ -260,16 +260,17 @@ def test_nested_validators():
      {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100}),
     (serializers.DecimalField(max_digits=4, decimal_places=1,
      validators=[validators.DecimalValidator(max_digits=3, decimal_places=1)]),
-     {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100}),
+     {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100,
+      'exclusiveMaximum': True, 'exclusiveMinimum': True}),
     (serializers.DecimalField(max_digits=3, decimal_places=1,
      validators=[validators.DecimalValidator(max_digits=4, decimal_places=1)]),
      {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100}),
     (serializers.DecimalField(max_digits=3, decimal_places=1,
      validators=[validators.DecimalValidator(max_digits=2, decimal_places=1), validators.MaxValueValidator(5)]),
-     {'type': 'number', 'format': 'double', 'maximum': 5, 'minimum': -10}),
+     {'type': 'number', 'format': 'double', 'maximum': 5, 'minimum': -10, 'exclusiveMinimum': True}),
     (serializers.DecimalField(max_digits=3, decimal_places=1,
      validators=[validators.DecimalValidator(max_digits=2, decimal_places=1), validators.MinValueValidator(-5)]),
-     {'type': 'number', 'format': 'double', 'maximum': 10, 'minimum': -5}),
+     {'type': 'number', 'format': 'double', 'maximum': 10, 'minimum': -5, 'exclusiveMaximum': True}),
 ])
 @mock.patch('rest_framework.settings.api_settings.COERCE_DECIMAL_TO_STRING', False)
 def test_validation_constrained(instance, expected):

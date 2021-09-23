@@ -836,13 +836,22 @@ class AutoSchema(ViewInspector):
     def _map_field_validators(self, field, schema):
         schema_type = schema.get('type')
 
-        def update_constraint(schema, key, function, value):
+        def update_constraint(schema, key, function, value, *, exclusive=False):
             if callable(value):
                 value = value()
             current_value = schema.get(key)
             if current_value is not None:
-                value = function(current_value, value)
-            schema[key] = value
+                new_value = function(current_value, value)
+            else:
+                new_value = value
+            schema[key] = new_value
+            if key in ('maximum', 'minimum'):
+                exclusive_key = f'exclusive{key.title()}'
+                if exclusive:
+                    if new_value != current_value:
+                        schema[exclusive_key] = True
+                elif exclusive_key in schema:
+                    del schema[exclusive_key]
 
         for v in field.validators:
             if schema_type == 'string':
@@ -868,8 +877,8 @@ class AutoSchema(ViewInspector):
                     update_constraint(schema, 'minimum', max, v.limit_value)
                 elif isinstance(v, validators.DecimalValidator) and v.max_digits:
                     value = 10 ** (v.max_digits - (v.decimal_places or 0))
-                    update_constraint(schema, 'maximum', min, value)
-                    update_constraint(schema, 'minimum', max, -value)
+                    update_constraint(schema, 'maximum', min, value, exclusive=True)
+                    update_constraint(schema, 'minimum', max, -value, exclusive=True)
             elif schema_type == 'array':
                 if isinstance(v, validators.MaxLengthValidator):
                     update_constraint(schema, 'maxItems', min, v.limit_value)

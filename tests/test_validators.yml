@@ -91,7 +91,9 @@ components:
           type: number
           format: float
           maximum: 100
+          exclusiveMaximum: true
           minimum: -100
+          exclusiveMinimum: true
         integer_max_value:
           type: integer
           maximum: 200
@@ -102,7 +104,9 @@ components:
           type: number
           format: float
           maximum: 100
+          exclusiveMaximum: true
           minimum: -100
+          exclusiveMinimum: true
         decimal_max_value:
           type: number
           format: double
@@ -118,6 +122,8 @@ components:
           format: double
           maximum: 100
           minimum: -100
+          exclusiveMaximum: true
+          exclusiveMinimum: true
         list_max_length:
           type: array
           items: {}
