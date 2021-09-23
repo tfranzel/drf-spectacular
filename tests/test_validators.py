@@ -182,7 +182,6 @@ def test_validators():
     assert_schema(schema, 'tests/test_validators.yml')
 
 
-@pytest.mark.xfail
 def test_nested_validators():
     class XSerializer(serializers.Serializer):
         list_field = serializers.ListField(

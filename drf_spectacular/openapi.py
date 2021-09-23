@@ -592,6 +592,7 @@ class AutoSchema(ViewInspector):
                 return append_meta(build_array_type(component.ref), meta) if component else None
             else:
                 schema = self._map_serializer_field(field.child, direction)
+                self._map_field_validators(field.child, schema)
                 # remove automatically attached but redundant title
                 if is_trivial_string_variation(field.field_name, schema.get('title')):
                     schema.pop('title', None)
@@ -687,6 +688,7 @@ class AutoSchema(ViewInspector):
             content = build_basic_type(OpenApiTypes.OBJECT)
             if not isinstance(field.child, _UnvalidatedField):
                 content['additionalProperties'] = self._map_serializer_field(field.child, direction)
+                self._map_field_validators(field.child, content['additionalProperties'])
             return append_meta(content, meta)
 
         if isinstance(field, serializers.CharField):
