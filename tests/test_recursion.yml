@@ -6,7 +6,6 @@ paths:
   /nodes/{id}/:
     get:
       operationId: nodes_retrieve
-      description: ''
       parameters:
       - in: path
         name: id
@@ -58,4 +57,4 @@ components:
     cookieAuth:
       type: apiKey
       in: cookie
-      name: Session
+      name: sessionid

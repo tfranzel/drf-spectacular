@@ -37,6 +37,10 @@ class LanguageEnum(Enum):
     EN = 'en'
 
 
+class LanguageStrEnum(str, Enum):
+    EN = 'en'
+
+
 class LanguageChoices(TextChoices):
     EN = 'en'
 
@@ -77,7 +81,7 @@ def test_no_blank_and_null_in_enum_choices(no_warnings):
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
     'LanguageEnum': 'tests.test_postprocessing.language_choices'
 })
-def test_global_enum_naming_override(no_warnings):
+def test_global_enum_naming_override(no_warnings, clear_caches):
     # the override will prevent the warning for multiple names
     class XSerializer(serializers.Serializer):
         foo = serializers.ChoiceField(choices=language_choices)
@@ -174,7 +178,7 @@ def test_enum_resolvable_collision_with_patched_and_request_splits():
 
 
 def test_enum_override_variations(no_warnings):
-    enum_override_variations = ['language_list', 'LanguageEnum']
+    enum_override_variations = ['language_list', 'LanguageEnum', 'LanguageStrEnum']
     if DJANGO_VERSION > '3':
         enum_override_variations += ['LanguageChoices', 'LanguageChoices.choices']
 
@@ -183,13 +187,14 @@ def test_enum_override_variations(no_warnings):
             'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
             {'LanguageEnum': f'tests.test_postprocessing.{variation}'}
         ):
+            load_enum_name_overrides.cache_clear()
             assert list_hash(['en']) in load_enum_name_overrides()
 
 
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
     'LanguageEnum': 'tests.test_postprocessing.NOTEXISTING'
 })
-def test_enum_override_loading_fail(capsys):
+def test_enum_override_loading_fail(capsys, clear_caches):
     load_enum_name_overrides()
     assert 'unable to load choice override for LanguageEnum' in capsys.readouterr().err
 

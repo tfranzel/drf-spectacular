@@ -13,27 +13,36 @@ from decimal import Decimal
 from enum import Enum
 from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
 
+if sys.version_info >= (3, 8):
+    from typing import Literal, _TypedDictMeta  # type: ignore[attr-defined]
+else:
+    from typing_extensions import Literal, _TypedDictMeta  # type: ignore[attr-defined]
+
 import inflection
 import uritemplate
 from django.apps import apps
+from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields.related_descriptors import (
     ForwardManyToOneDescriptor, ManyToManyDescriptor, ReverseManyToOneDescriptor,
     ReverseOneToOneDescriptor,
 )
 from django.db.models.fields.reverse_related import ForeignObjectRel
-from django.urls.resolvers import (  # type: ignore
+from django.db.models.sql.query import Query
+from django.urls.converters import get_converters
+from django.urls.resolvers import (  # type: ignore[attr-defined]
     _PATH_PARAMETER_COMPONENT_RE, RegexPattern, Resolver404, RoutePattern, URLPattern, URLResolver,
     get_resolver,
 )
 from django.utils.functional import Promise, cached_property
 from django.utils.module_loading import import_string
+from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, fields, mixins, serializers, versioning
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
 from uritemplate import URITemplate
 
-from drf_spectacular.drainage import error, warn
+from drf_spectacular.drainage import cache, error, warn
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
     DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,
@@ -45,6 +54,11 @@ try:
 except ImportError:
     class Choices:  # type: ignore
         pass
+
+if sys.version_info >= (3, 8):
+    CACHED_PROPERTY_FUNCS = (functools.cached_property, cached_property)  # type: ignore
+else:
+    CACHED_PROPERTY_FUNCS = (cached_property,)  # type: ignore
 
 T = TypeVar('T')
 
@@ -89,7 +103,7 @@ def is_basic_type(obj, allow_none=True):
         return False
     if not allow_none and (obj is None or obj is OpenApiTypes.NONE):
         return False
-    return obj in OPENAPI_TYPE_MAPPING or obj in PYTHON_TYPE_MAPPING
+    return obj in get_openapi_type_mapping() or obj in PYTHON_TYPE_MAPPING
 
 
 def is_patched_serializer(serializer, direction):
@@ -107,6 +121,7 @@ def is_trivial_string_variation(a: str, b: str):
     return a == b
 
 
+@cache
 def get_lib_doc_excludes():
     # do not import on package level due to potential import recursion when loading
     # extensions as recommended:  USER's settings.py -> USER EXTENSIONS -> extensions.py
@@ -121,7 +136,7 @@ def get_lib_doc_excludes():
     ]
 
 
-def get_view_model(view):
+def get_view_model(view, emit_warnings=True):
     """
     obtain model from view via view's queryset. try safer view attribute first
     before going through get_queryset(), which may perform arbitrary operations.
@@ -134,12 +149,13 @@ def get_view_model(view):
     try:
         return view.get_queryset().model
     except Exception as exc:
-        warn(
-            f'failed to obtain model through view\'s queryset due to raised exception. '
-            f'Prevent this either by setting "queryset = Model.objects.none()" on the view, '
-            f'having an empty fallback in get_queryset() or by using @extend_schema. '
-            f'(Exception: {exc})'
-        )
+        if emit_warnings:
+            warn(
+                f'Failed to obtain model through view\'s queryset due to raised exception. '
+                f'Prevent this either by setting "queryset = Model.objects.none()" on the '
+                f'view, checking for "getattr(self, "swagger_fake_view", False)" in '
+                f'get_queryset() or by simply using @extend_schema. (Exception: {exc})'
+            )
 
 
 def get_doc(obj):
@@ -172,19 +188,37 @@ def get_type_hints(obj):
     return typing.get_type_hints(obj)
 
 
+@cache
+def get_openapi_type_mapping():
+    return {
+        **OPENAPI_TYPE_MAPPING,
+        OpenApiTypes.OBJECT: build_generic_type(),
+    }
+
+
+def build_generic_type():
+    if spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES is None:
+        return {'type': 'object'}
+    elif spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES == 'bool':
+        return {'type': 'object', 'additionalProperties': True}
+    else:
+        return {'type': 'object', 'additionalProperties': {}}
+
+
 def build_basic_type(obj):
     """
     resolve either enum or actual type and yield schema template for modification
     """
+    openapi_type_mapping = get_openapi_type_mapping()
     if obj is None or type(obj) is None or obj is OpenApiTypes.NONE:
         return None
-    elif obj in OPENAPI_TYPE_MAPPING:
-        return dict(OPENAPI_TYPE_MAPPING[obj])
+    elif obj in openapi_type_mapping:
+        return dict(openapi_type_mapping[obj])
     elif obj in PYTHON_TYPE_MAPPING:
-        return dict(OPENAPI_TYPE_MAPPING[PYTHON_TYPE_MAPPING[obj]])
+        return dict(openapi_type_mapping[PYTHON_TYPE_MAPPING[obj]])
     else:
         warn(f'could not resolve type for "{obj}". defaulting to "string"')
-        return dict(OPENAPI_TYPE_MAPPING[OpenApiTypes.STR])
+        return dict(openapi_type_mapping[OpenApiTypes.STR])
 
 
 def build_array_type(schema, min_length=None, max_length=None):
@@ -316,6 +350,30 @@ def build_choice_field(field):
     return schema
 
 
+def build_bearer_security_scheme_object(header_name, token_prefix, bearer_format=None):
+    """ Either build a bearer scheme or a fallback due to OpenAPI 3.0.3 limitations """
+    # normalize Django header quirks
+    if header_name.startswith('HTTP_'):
+        header_name = header_name[5:]
+    header_name = header_name.replace('_', '-').capitalize()
+
+    if token_prefix == 'Bearer' and header_name == 'Authorization':
+        return {
+            'type': 'http',
+            'scheme': 'bearer',
+            **({'bearerFormat': bearer_format} if bearer_format else {}),
+        }
+    else:
+        return {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': header_name,
+            'description': _(
+                'Token-based authentication with required prefix "%s"'
+            ) % token_prefix
+        }
+
+
 def build_root_object(paths, components, version):
     settings = spectacular_settings
     if settings.VERSION and version:
@@ -373,7 +431,7 @@ def _follow_field_source(model, path: List[str]):
         # end of traversal
         if isinstance(field_or_property, property):
             return field_or_property.fget
-        elif isinstance(field_or_property, cached_property):
+        elif isinstance(field_or_property, CACHED_PROPERTY_FUNCS):
             return field_or_property.func
         elif callable(field_or_property):
             return field_or_property
@@ -397,10 +455,13 @@ def _follow_field_source(model, path: List[str]):
             else:
                 return field
     else:
-        if isinstance(field_or_property, (property, cached_property)) or callable(field_or_property):
+        if (
+            isinstance(field_or_property, (property,) + CACHED_PROPERTY_FUNCS)
+            or callable(field_or_property)
+        ):
             if isinstance(field_or_property, property):
                 target_model = _follow_return_type(field_or_property.fget)
-            elif isinstance(field_or_property, cached_property):
+            elif isinstance(field_or_property, CACHED_PROPERTY_FUNCS):
                 target_model = _follow_return_type(field_or_property.func)
             else:
                 target_model = _follow_return_type(field_or_property)
@@ -421,7 +482,7 @@ def _follow_return_type(a_callable):
     if target_type is None:
         return target_type
     origin, args = _get_type_hint_origin(target_type)
-    if origin is typing.Union:
+    if origin is Union:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
             warn(
@@ -458,6 +519,17 @@ def follow_field_source(model, path, emit_warnings=True):
     def dummy_property(obj) -> str:
         pass  # pragma: no cover
     return dummy_property
+
+
+def follow_model_field_lookup(model, lookup):
+    """
+    Follow a model lookup `foreignkey__foreignkey__field` in the same
+    way that Django QuerySet.filter() does, returning the final models.Field.
+    """
+    query = Query(model)
+    lookup_splitted = lookup.split(LOOKUP_SEP)
+    _, field, _, _ = query.names_to_path(lookup_splitted, query.get_meta())
+    return field
 
 
 def alpha_operation_sorter(endpoint):
@@ -622,6 +694,7 @@ def deep_import_string(string):
         pass
 
 
+@cache
 def load_enum_name_overrides():
     overrides = {}
     for name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items():
@@ -659,16 +732,28 @@ def list_hash(lst):
     return hashlib.sha256(json.dumps(list(lst), sort_keys=True).encode()).hexdigest()
 
 
-def resolve_regex_path_parameter(path_regex, variable, available_formats):
+def resolve_django_path_parameter(path_regex, variable, available_formats):
     """
     convert django style path parameters to OpenAPI parameters.
-    TODO also try to handle regular grouped regex parameters
     """
+    registered_converters = get_converters()
     for match in _PATH_PARAMETER_COMPONENT_RE.finditer(path_regex):
         converter, parameter = match.group('converter'), match.group('parameter')
         enum_values = None
 
-        if converter and converter.startswith('drf_format_suffix_'):
+        if api_settings.SCHEMA_COERCE_PATH_PK and parameter == 'pk':
+            parameter = 'id'
+        elif spectacular_settings.SCHEMA_COERCE_PATH_PK_SUFFIX and parameter.endswith('_pk'):
+            parameter = f'{parameter[:-3]}_id'
+
+        if parameter != variable:
+            continue
+        # RE also matches untyped patterns (e.g. "<id>")
+        if not converter:
+            return None
+
+        # special handling for drf_format_suffix
+        if converter.startswith('drf_format_suffix_'):
             explicit_formats = converter[len('drf_format_suffix_'):].split('_')
             enum_values = [
                 f'.{suffix}' for suffix in explicit_formats if suffix in available_formats
@@ -677,16 +762,60 @@ def resolve_regex_path_parameter(path_regex, variable, available_formats):
         elif converter == 'drf_format_suffix':
             enum_values = [f'.{suffix}' for suffix in available_formats]
 
+        if converter in spectacular_settings.PATH_CONVERTER_OVERRIDES:
+            override = spectacular_settings.PATH_CONVERTER_OVERRIDES[converter]
+            if is_basic_type(override):
+                schema = build_basic_type(override)
+            elif isinstance(override, dict):
+                schema = dict(override)
+            else:
+                warn(
+                    f'Unable to use path converter override for "{converter}". '
+                    f'Please refer to the documentation on how to use this.'
+                )
+                return None
+        elif converter in DJANGO_PATH_CONVERTER_MAPPING:
+            schema = build_basic_type(DJANGO_PATH_CONVERTER_MAPPING[converter])
+        elif converter in registered_converters:
+            # gracious fallback for custom converters that have no override specified.
+            schema = build_basic_type(OpenApiTypes.STR)
+            schema['pattern'] = registered_converters[converter].regex
+        else:
+            error(f'Encountered path converter "{converter}" that is unknown to Django.')
+            return None
+
+        return build_parameter_type(
+            name=variable,
+            schema=schema,
+            location=OpenApiParameter.PATH,
+            enum=enum_values,
+        )
+
+    return None
+
+
+def resolve_regex_path_parameter(path_regex, variable):
+    """
+    convert regex path parameter to OpenAPI parameter, if pattern is
+    explicitly chosen and not the generic non-empty default '[^/.]+'.
+    """
+    for parameter, pattern in analyze_named_regex_pattern(path_regex).items():
         if api_settings.SCHEMA_COERCE_PATH_PK and parameter == 'pk':
             parameter = 'id'
+        elif spectacular_settings.SCHEMA_COERCE_PATH_PK_SUFFIX and parameter.endswith('_pk'):
+            parameter = f'{parameter[:-3]}_id'
 
-        if parameter == variable and converter in DJANGO_PATH_CONVERTER_MAPPING:
-            return build_parameter_type(
-                name=parameter,
-                schema=build_basic_type(DJANGO_PATH_CONVERTER_MAPPING[converter]),
-                location=OpenApiParameter.PATH,
-                enum=enum_values,
-            )
+        if parameter != variable:
+            continue
+        # do not use default catch-all pattern and defer to model resolution
+        if pattern == '[^/.]+':
+            return None
+
+        return build_parameter_type(
+            name=variable,
+            schema={**build_basic_type(OpenApiTypes.STR), 'pattern': pattern},
+            location=OpenApiParameter.PATH,
+        )
 
     return None
 
@@ -963,24 +1092,26 @@ def resolve_type_hint(hint):
         return build_array_type(resolve_type_hint(args[0]))
     elif origin is frozenset:
         return build_array_type(resolve_type_hint(args[0]))
-    elif hasattr(typing, 'Literal') and origin is typing.Literal:
-        # python >= 3.8
+    elif origin is Literal:
+        # Literal only works for python >= 3.8 despite typing_extensions, because it
+        # behaves slightly different w.r.t. __origin__
         schema = {'enum': list(args)}
         if all(type(args[0]) is type(choice) for choice in args):
             schema.update(build_basic_type(type(args[0])))
         return schema
-    elif inspect.isclass(hint) and issubclass(hint, Choices):
-        return {
-            'enum': [item.value for item in hint],
-            **build_basic_type([t for t in hint.__mro__ if is_basic_type(t)][0])
-        }
-    elif hasattr(typing, 'TypedDict') and isinstance(hint, typing._TypedDictMeta):
+    elif inspect.isclass(hint) and issubclass(hint, Enum):
+        schema = {'enum': [item.value for item in hint]}
+        mixin_base_types = [t for t in hint.__mro__ if is_basic_type(t)]
+        if mixin_base_types:
+            schema.update(build_basic_type(mixin_base_types[0]))
+        return schema
+    elif isinstance(hint, _TypedDictMeta):
         return build_object_type(
             properties={
                 k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()
             }
         )
-    elif origin is typing.Union:
+    elif origin is Union:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
             schema = {'oneOf': [resolve_type_hint(arg) for arg in type_args]}

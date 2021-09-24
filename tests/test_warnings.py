@@ -78,8 +78,10 @@ def test_no_queryset_warn(capsys):
 
     generate_schema('x1', X1Viewset)
     stderr = capsys.readouterr().err
-    assert 'obtaining queryset from' in stderr  # warning 1
-    assert 'X1Viewset: failed to obtain model through view\'s queryset' in stderr  # warning 2
+    assert (
+        'could not derive type of path parameter "id" because it '
+        'is untyped and obtaining queryset from the viewset failed.'
+    ) in stderr
 
 
 def test_path_param_not_in_model(capsys):
@@ -374,3 +376,32 @@ def test_warning_read_only_field_on_non_model_serializer(capsys):
     generate_schema('x', XViewSet)
     stderr = capsys.readouterr().err
     assert 'Could not derive type for ReadOnlyField "field"' in stderr
+
+
+def test_warning_missing_lookup_field_on_model_serializer(capsys):
+    class XViewSet(viewsets.ModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.all()
+        lookup_field = 'non_existent_field'
+
+    generate_schema('x', XViewSet)
+    stderr = capsys.readouterr().err
+    assert (
+        'could not derive type of path parameter "non_existent_field" because model '
+        '"tests.models.SimpleModel" contained no such field.'
+    ) in stderr
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.PATH_CONVERTER_OVERRIDES', {'int': object}
+)
+def test_invalid_path_converter_override(capsys):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request, foo):
+        pass  # pragma: no cover
+
+    urlpatterns = [path('/a/<int:var>/', pi)]
+    generate_schema(None, patterns=urlpatterns)
+    stderr = capsys.readouterr().err
+    assert 'Unable to use path converter override for "int".' in stderr

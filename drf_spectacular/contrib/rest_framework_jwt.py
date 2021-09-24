@@ -1,4 +1,5 @@
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
+from drf_spectacular.plumbing import build_bearer_security_scheme_object
 
 
 class JWTScheme(OpenApiAuthenticationExtension):
@@ -8,8 +9,8 @@ class JWTScheme(OpenApiAuthenticationExtension):
     def get_security_definition(self, auto_schema):
         from rest_framework_jwt.settings import api_settings
 
-        return {
-            'type': 'http',
-            'scheme': 'bearer',
-            'bearerFormat': api_settings.JWT_AUTH_HEADER_PREFIX,
-        }
+        return build_bearer_security_scheme_object(
+            header_name='AUTHORIZATION',
+            token_prefix=api_settings.JWT_AUTH_HEADER_PREFIX,
+            bearer_format='JWT'
+        )

@@ -14,6 +14,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # conjunction with appended prefixes in SERVERS.
     'SCHEMA_PATH_PREFIX_TRIM': False,
 
+    # Coercion of {pk} to {id} is controlled by SCHEMA_COERCE_PATH_PK. Additionally,
+    # some libraries (e.g. drf-nested-routers) use "_pk" suffixed path variables.
+    # This setting globally coerces path variables like "{user_pk}" to "{user_id}".
+    'SCHEMA_COERCE_PATH_PK_SUFFIX': False,
+
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
 
     # Schema generation parameters to influence how components are constructed.
@@ -49,7 +54,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/oauth2/
     'SWAGGER_UI_OAUTH2_CONFIG': {},
 
-    # CDNs for for swagger and redoc. You can change the version or even host your
+    # CDNs for swagger and redoc. You can change the version or even host your
     # own depending on your requirements.
     'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.52.0',
     'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.52.0/favicon-32x32.png',
@@ -104,6 +109,12 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # code generator targets are sensitive to this. None disables generic 'additionalProperties'.
     # allowed values are 'dict', 'bool', None
     'GENERIC_ADDITIONAL_PROPERTIES': 'dict',
+
+    # Path converter schema overrides (e.g. <int:foo>). Can be used to either modify default
+    # behavior or provide a schema for custom converters registered with register_converter(...).
+    # Takes converter labels as keys and either basic python types, OpenApiType, or raw schemas
+    # as values. Example: {'aint': OpenApiTypes.INT, 'bint': str, 'cint': {'type': ...}}
+    'PATH_CONVERTER_OVERRIDES': {},
 
     # Determines whether operation parameters should be sorted alphanumerically or just in
     # the order they arrived. Accepts either True, False, or a callable for sort's key arg.
@@ -161,7 +172,6 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 }
 
 IMPORT_STRINGS = [
-    'SCHEMA_AUTHENTICATION_CLASSES',
     'DEFAULT_GENERATOR_CLASS',
     'SERVE_AUTHENTICATION',
     'SERVE_PERMISSIONS',

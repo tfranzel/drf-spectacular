@@ -97,12 +97,8 @@ class SchemaGenerator(BaseSchemaGenerator):
         of nested routers.
         """
         path = super().coerce_path(path, method, view)  # take care of {pk}
-        model = getattr(getattr(view, 'queryset', None), 'model', None)
-        if not self.coerce_path_pk or not model:
-            return path
-        for match in re.findall(r'{(\w+)_pk}', path):
-            if hasattr(model, match):
-                path = path.replace(f'{match}_pk', f'{match}_id')
+        if spectacular_settings.SCHEMA_COERCE_PATH_PK_SUFFIX:
+            path = re.sub(pattern=r'{(\w+)_pk}', repl=r'{\1_id}', string=path)
         return path
 
     def create_view(self, callback, method, request=None):

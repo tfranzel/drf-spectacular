@@ -1,6 +1,55 @@
 Changelog
 =========
 
+0.19.0 (2021-09-21)
+-------------------
+
+- fix/cleanup suffixed path variable coercion `#516 <https://github.com/tfranzel/drf-spectacular/issues/516>`_
+- remove superseded Request mock from oauth_toolkit
+- be gracious on Enums that are not recognized by DRF `#500 <https://github.com/tfranzel/drf-spectacular/issues/500>`_
+- remove non-required empty descriptions
+- added test case for lookup_field `#524 <https://github.com/tfranzel/drf-spectacular/issues/524>`_
+- Fix grammatical typo [johnthagen]
+- remove mapping for re.Pattern (no 3.6 and mypy issues) `#526 <https://github.com/tfranzel/drf-spectacular/issues/526>`_
+- Add missing types defined in specification. [Nick Pope]
+- Add type mappings for IP4, IP6, TIME & DURATION. [Nick Pope]
+- add support for custom converters and coverter override `#502 <https://github.com/tfranzel/drf-spectacular/issues/502>`_
+- cache static loading function calls
+- prevent settings loading in types, lazy load in plumbing instead
+- lazy settings loading in drainage
+- Improve guide for migration from drf-yasg. [Nick Pope]
+- handle default value for SerializerMethodField `#422 <https://github.com/tfranzel/drf-spectacular/issues/422>`_
+- consolidate bearer scheme generation & bugfix `#515 <https://github.com/tfranzel/drf-spectacular/issues/515>`_
+- prevent uncaught exception on modified django-filter `#519 <https://github.com/tfranzel/drf-spectacular/issues/519>`_
+- add decoupled model docstrings `#522 <https://github.com/tfranzel/drf-spectacular/issues/522>`_
+- Fix warnings raised during testing. [Nick Pope]
+- add name override to @extend_schema_serializer `#517 <https://github.com/tfranzel/drf-spectacular/issues/517>`_
+- Fix deprecation warning about default_app_config from Django 3.2+ [Janne Rönkkö]
+- Remove obsolete value from IMPORT_STRINGS. [Nick Pope]
+- Add extension for TokenVerifySerializer. [Nick Pope]
+- Use SESSION_COOKIE_NAME in SessionScheme. [Nick Pope]
+- add regex path parameter extraction for explicit cases `#510 <https://github.com/tfranzel/drf-spectacular/issues/510>`_
+- honor lookup_url_kwarg name customization `#509 <https://github.com/tfranzel/drf-spectacular/issues/509>`_
+- add contrib compat tests for drf-nested-routers
+- improve path coersion model resolution
+- add test_fields API response test `#501 <https://github.com/tfranzel/drf-spectacular/issues/501>`_
+- Handle 'lookup_field' containing relationships for path parameters [Luke Plant]
+- add BinaryField case to tests `#506 <https://github.com/tfranzel/drf-spectacular/issues/506>`_
+- fix: BinaryField's schema type should be string `#505 <https://github.com/tfranzel/drf-spectacular/issues/505>`_ (`#506 <https://github.com/tfranzel/drf-spectacular/issues/506>`_) [jtamm-red]
+- bugfix incomplete regex stripping for literal dots `#507 <https://github.com/tfranzel/drf-spectacular/issues/507>`_
+- Fix tests [Jameel Al-Aziz]
+- Fix type hint support for functools cached_property wrapped funcs [Jameel Al-Aziz]
+- Extend enum type hint support to more Enum subclasses [Jameel Al-Aziz]
+
+Breaking changes / important additions:
+
+- Severely improved path parameter detection for Django-style parameters, RE parameters, and custom converters
+- Significantly more defensive settings loading for safer project imports (less prone to import loops)
+- Improved type hint support for ``Enum`` and other native types
+- Explicit support for ``drf-nested-routers``
+- A lot more small improvements
+
+
 0.18.2 (2021-09-04)
 -------------------
 

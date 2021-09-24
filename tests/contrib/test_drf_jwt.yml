@@ -34,7 +34,6 @@ paths:
   /x/:
     get:
       operationId: x_list
-      description: ''
       tags:
       - x
       security:
@@ -85,4 +84,4 @@ components:
     jwtAuth:
       type: http
       scheme: bearer
-      bearerFormat: Bearer
+      bearerFormat: JWT

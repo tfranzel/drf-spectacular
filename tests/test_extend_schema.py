@@ -7,7 +7,9 @@ from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field
+from drf_spectacular.utils import (
+    OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
+)
 from tests import assert_schema, generate_schema, get_response_schema
 
 
@@ -31,6 +33,7 @@ class CustomField(serializers.Field):
         return urlsafe_base64_encode(b'\xf0\xf1\xf2')  # pragma: no cover
 
 
+@extend_schema_serializer(component_name='GammaEpsilon')
 class GammaSerializer(serializers.Serializer):
     encoding = serializers.CharField()
     image_data = CustomField()

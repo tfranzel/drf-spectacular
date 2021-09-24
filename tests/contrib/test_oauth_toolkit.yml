@@ -6,7 +6,6 @@ paths:
   /IsAuthenticatedOrTokenHasScope/:
     get:
       operationId: IsAuthenticatedOrTokenHasScope_list
-      description: ''
       tags:
       - IsAuthenticatedOrTokenHasScope
       security:
@@ -25,7 +24,6 @@ paths:
   /OASRequirements/:
     get:
       operationId: OASRequirements_list
-      description: ''
       tags:
       - OASRequirements
       security:
@@ -42,7 +40,6 @@ paths:
           description: ''
     post:
       operationId: OASRequirements_create
-      description: ''
       tags:
       - OASRequirements
       requestBody:
@@ -74,7 +71,6 @@ paths:
   /TokenHasReadWriteScope/:
     get:
       operationId: TokenHasReadWriteScope_list
-      description: ''
       tags:
       - TokenHasReadWriteScope
       security:
@@ -92,7 +88,6 @@ paths:
   /TokenHasResourceScope/:
     get:
       operationId: TokenHasResourceScope_list
-      description: ''
       tags:
       - TokenHasResourceScope
       security:

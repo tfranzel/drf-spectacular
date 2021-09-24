@@ -6,7 +6,6 @@ paths:
   /albums/:
     get:
       operationId: albums_list
-      description: ''
       tags:
       - albums
       security:
@@ -53,7 +52,6 @@ paths:
   /albums/{id}/:
     get:
       operationId: albums_retrieve
-      description: ''
       parameters:
       - in: path
         name: id
@@ -76,7 +74,6 @@ paths:
           description: ''
     put:
       operationId: albums_update
-      description: ''
       parameters:
       - in: path
         name: id
@@ -110,7 +107,6 @@ paths:
           description: ''
     patch:
       operationId: albums_partial_update
-      description: ''
       parameters:
       - in: path
         name: id
@@ -143,7 +139,6 @@ paths:
           description: ''
     delete:
       operationId: albums_destroy
-      description: ''
       parameters:
       - in: path
         name: id
@@ -162,7 +157,6 @@ paths:
   /albums/{id}/like/:
     post:
       operationId: albums_like_create
-      description: ''
       parameters:
       - in: path
         name: id

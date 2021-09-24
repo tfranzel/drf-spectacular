@@ -1,5 +1,6 @@
 import functools
 import inspect
+import sys
 from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
 
 from rest_framework.fields import Field, empty
@@ -9,7 +10,15 @@ from rest_framework.settings import api_settings
 from drf_spectacular.drainage import error, get_view_methods, set_override, warn
 from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 
+if sys.version_info >= (3, 8):
+    from typing import Final, Literal
+else:
+    from typing_extensions import Final, Literal
+
+
 _SerializerType = Union[Serializer, Type[Serializer]]
+
+_ParameterLocationType = Literal['query', 'path', 'header', 'cookie']
 
 
 class PolymorphicProxySerializer(Serializer):
@@ -125,16 +134,16 @@ class OpenApiParameter(OpenApiSchemaBase):
     For valid ``style`` choices please consult the
     `OpenAPI specification <https://swagger.io/specification/#style-values>`_.
     """
-    QUERY = 'query'
-    PATH = 'path'
-    HEADER = 'header'
-    COOKIE = 'cookie'
+    QUERY: Final = 'query'
+    PATH: Final = 'path'
+    HEADER: Final = 'header'
+    COOKIE: Final = 'cookie'
 
     def __init__(
             self,
             name: str,
             type: Union[_SerializerType, _KnownPythonTypes, OpenApiTypes, dict] = str,
-            location: str = QUERY,
+            location: _ParameterLocationType = QUERY,
             required: bool = False,
             description: str = '',
             enum: Optional[List[Any]] = None,
@@ -402,6 +411,7 @@ def extend_schema_serializer(
         exclude_fields: Optional[List[str]] = None,
         deprecate_fields: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
+        component_name: Optional[str] = None,
 ) -> Callable[[F], F]:
     """
     Decorator for the "serializer" kind. Intended for overriding default serializer behaviour that
@@ -413,6 +423,7 @@ def extend_schema_serializer(
         schema. fields will still be exposed through the API.
     :param deprecate_fields: fields to mark as deprecated while processing the serializer.
     :param examples: define example data to serializer.
+    :param component_name: override default class name extraction.
     """
     def decorator(klass):
         if many is not None:
@@ -423,6 +434,8 @@ def extend_schema_serializer(
             set_override(klass, 'deprecate_fields', deprecate_fields)
         if examples:
             set_override(klass, 'examples', examples)
+        if component_name:
+            set_override(klass, 'component_name', component_name)
         return klass
 
     return decorator

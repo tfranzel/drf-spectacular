@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 from django.urls import path
 from rest_framework import mixins, routers, serializers, viewsets
@@ -35,3 +37,17 @@ def test_drf_jwt(no_warnings):
     schema = generate_schema(None, patterns=urlpatterns)
 
     assert_schema(schema, 'tests/contrib/test_drf_jwt.yml')
+
+
+@pytest.mark.contrib('rest_framework_jwt')
+@mock.patch('rest_framework_jwt.settings.api_settings.JWT_AUTH_HEADER_PREFIX', 'JWT')
+def test_drf_jwt_non_bearer_keyword(no_warnings):
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['securitySchemes'] == {
+        'jwtAuth': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': 'Token-based authentication with required prefix "JWT"'
+        },
+    }

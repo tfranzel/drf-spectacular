@@ -4,6 +4,7 @@ import re
 import sys
 import typing
 from datetime import datetime
+from enum import Enum
 
 import pytest
 from django import __version__ as DJANGO_VERSION
@@ -14,11 +15,16 @@ from rest_framework import generics, serializers
 
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
-    analyze_named_regex_pattern, detype_pattern, follow_field_source, force_instance, is_field,
-    is_serializer, resolve_type_hint,
+    analyze_named_regex_pattern, build_basic_type, detype_pattern, follow_field_source,
+    force_instance, is_field, is_serializer, resolve_type_hint,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
+
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
 
 
 def test_is_serializer():
@@ -85,9 +91,28 @@ def test_detype_patterns_with_module_includes(no_warnings):
     )
 
 
+NamedTupleA = collections.namedtuple("NamedTupleA", "a, b")
+
+
 class NamedTupleB(typing.NamedTuple):
     a: int
     b: str
+
+
+class LanguageEnum(str, Enum):
+    EN = 'en'
+    DE = 'de'
+
+
+# Make sure we can deal with plain Enums that are not handled by DRF.
+# The second base class makes this work for DRF.
+class InvalidLanguageEnum(Enum):
+    EN = 'en'
+    DE = 'de'
+
+
+TD1 = TypedDict('TD1', {"foo": int, "bar": typing.List[str]})
+TD2 = TypedDict('TD2', {"foo": str, "bar": typing.Dict[str, int]})
 
 
 TYPE_HINT_TEST_PARAMS = [
@@ -133,8 +158,43 @@ TYPE_HINT_TEST_PARAMS = [
     ), (
         typing.Optional[typing.Union[str, int]],
         {'oneOf': [{'type': 'string'}, {'type': 'integer'}], 'nullable': True}
+    ), (
+        LanguageEnum,
+        {'enum': ['en', 'de'], 'type': 'string'}
+    ), (
+        InvalidLanguageEnum,
+        {'enum': ['en', 'de']}
+    ), (
+        TD1,
+        {
+            'type': 'object',
+            'properties': {
+                'foo': {'type': 'integer'},
+                'bar': {'type': 'array', 'items': {'type': 'string'}}
+            }
+        }
+    ), (
+        typing.List[TD2],
+        {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'foo': {'type': 'string'},
+                    'bar': {'type': 'object', 'additionalProperties': {'type': 'integer'}}
+                }
+            }
+        }
+    ), (
+        NamedTupleB,
+        {
+            'type': 'object',
+            'properties': {'a': {'type': 'integer'}, 'b': {'type': 'string'}},
+            'required': ['a', 'b']
+        }
     )
 ]
+
 
 if DJANGO_VERSION > '3':
     from django.db.models.enums import TextChoices  # only available in Django>3
@@ -150,50 +210,20 @@ if DJANGO_VERSION > '3':
 
 if sys.version_info >= (3, 7):
     TYPE_HINT_TEST_PARAMS.append((
-        typing.Iterable[collections.namedtuple("NamedTupleA", "a, b")],  # noqa
+        typing.Iterable[NamedTupleA],
         {
             'type': 'array',
             'items': {'type': 'object', 'properties': {'a': {}, 'b': {}}, 'required': ['a', 'b']}
         }
     ))
-    TYPE_HINT_TEST_PARAMS.append((
-        NamedTupleB,
-        {
-            'type': 'object',
-            'properties': {'a': {'type': 'integer'}, 'b': {'type': 'string'}},
-            'required': ['a', 'b']
-        }
-    ))
 
 if sys.version_info >= (3, 8):
+    # Literal only works for python >= 3.8 despite typing_extensions, because it
+    # behaves slightly different w.r.t. __origin__
     TYPE_HINT_TEST_PARAMS.append((
         typing.Literal['x', 'y'],
         {'enum': ['x', 'y'], 'type': 'string'}
     ))
-    TYPE_HINT_TEST_PARAMS.append((
-        typing.TypedDict('TD', foo=int, bar=typing.List[str]),
-        {
-            'type': 'object',
-            'properties': {
-                'foo': {'type': 'integer'},
-                'bar': {'type': 'array', 'items': {'type': 'string'}}
-            }
-        }
-    ))
-    TYPE_HINT_TEST_PARAMS.append((
-        typing.List[typing.TypedDict('TD', foo=str, bar=typing.Dict[str, int])],  # noqa: F821
-        {
-            'type': 'array',
-            'items': {
-                'type': 'object',
-                'properties': {
-                    'foo': {'type': 'string'},
-                    'bar': {'type': 'object', 'additionalProperties': {'type': 'integer'}}
-                }
-            }
-        }
-    ))
-
 
 if sys.version_info >= (3, 9):
     TYPE_HINT_TEST_PARAMS.append((
@@ -244,3 +274,8 @@ def test_type_hint_extraction(no_warnings, type_hint, ref_schema):
 def test_analyze_named_regex_pattern(no_warnings, pattern, output):
     re.compile(pattern)  # check validity of regex
     assert analyze_named_regex_pattern(pattern) == output
+
+
+def test_unknown_basic_type(capsys):
+    build_basic_type(object)
+    assert 'could not resolve type for "<class \'object\'>' in capsys.readouterr().err

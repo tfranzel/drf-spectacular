@@ -25,14 +25,15 @@ from drf_spectacular.extensions import (
 )
 from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta, build_array_type,
-    build_basic_type, build_choice_field, build_examples_list, build_media_type_object,
-    build_object_type, build_parameter_type, error, follow_field_source, force_instance, get_doc,
-    get_type_hints, get_view_model, is_basic_type, is_field, is_list_serializer,
-    is_patched_serializer, is_serializer, is_trivial_string_variation, resolve_regex_path_parameter,
+    build_basic_type, build_choice_field, build_examples_list, build_generic_type,
+    build_media_type_object, build_object_type, build_parameter_type, error, follow_field_source,
+    follow_model_field_lookup, force_instance, get_doc, get_type_hints, get_view_model,
+    is_basic_type, is_field, is_list_serializer, is_patched_serializer, is_serializer,
+    is_trivial_string_variation, resolve_django_path_parameter, resolve_regex_path_parameter,
     resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
-from drf_spectacular.types import OpenApiTypes, build_generic_type
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse
 
 
@@ -52,10 +53,11 @@ class AutoSchema(ViewInspector):
         self.path_prefix = path_prefix
         self.method = method
 
-        operation = {}
+        operation = {'operationId': self.get_operation_id()}
 
-        operation['operationId'] = self.get_operation_id()
-        operation['description'] = self.get_description()
+        description = self.get_description()
+        if description:
+            operation['description'] = description
 
         summary = self.get_summary()
         if summary:
@@ -358,36 +360,46 @@ class AutoSchema(ViewInspector):
         return [t for t in path if t]
 
     def _resolve_path_parameters(self, variables):
+        model = get_view_model(self.view, emit_warnings=False)
+
         parameters = []
         for variable in variables:
             schema = build_basic_type(OpenApiTypes.STR)
             description = ''
 
-            resolved_parameter = resolve_regex_path_parameter(
+            resolved_parameter = resolve_django_path_parameter(
                 self.path_regex, variable, self.map_renderers('format'),
             )
+            if not resolved_parameter:
+                resolved_parameter = resolve_regex_path_parameter(self.path_regex, variable)
 
             if resolved_parameter:
                 schema = resolved_parameter['schema']
-            elif get_view_model(self.view) is None:
+            elif model is None:
                 warn(
-                    f'could not derive type of path parameter "{variable}" because because it '
+                    f'could not derive type of path parameter "{variable}" because it '
                     f'is untyped and obtaining queryset from the viewset failed. '
                     f'Consider adding a type to the path (e.g. <int:{variable}>) or annotating '
                     f'the parameter type with @extend_schema. Defaulting to "string".'
                 )
             else:
                 try:
-                    model = get_view_model(self.view)
-                    model_field = model._meta.get_field(variable)
+                    if getattr(self.view, 'lookup_url_kwarg', None) == variable:
+                        model_field_name = getattr(self.view, 'lookup_field', variable)
+                    elif variable.endswith('_pk'):
+                        # Django naturally coins foreign keys *_id. improve chances to match a field
+                        model_field_name = f'{variable[:-3]}_id'
+                    else:
+                        model_field_name = variable
+                    model_field = follow_model_field_lookup(model, model_field_name)
                     schema = self._map_model_field(model_field, direction=None)
                     if 'description' not in schema and model_field.primary_key:
                         description = get_pk_description(model, model_field)
-                except django_exceptions.FieldDoesNotExist:
+                except django_exceptions.FieldError:
                     warn(
-                        f'could not derive type of path parameter "{variable}" because '
-                        f'model "{model}" did contain no such field. Consider annotating '
-                        f'parameter with @extend_schema. Defaulting to "string".'
+                        f'could not derive type of path parameter "{variable}" because model '
+                        f'"{model.__module__}.{model.__name__}" contained no such field. Consider '
+                        f'annotating parameter with @extend_schema. Defaulting to "string".'
                     )
 
             parameters.append(build_parameter_type(
@@ -788,9 +800,10 @@ class AutoSchema(ViewInspector):
         if field.allow_null:
             meta['nullable'] = True
         if field.default is not None and field.default != empty and not callable(field.default):
-            if isinstance(field, serializers.ModelField):
-                # Skip coercion for lack of a better solution. ModelField.to_representation() is special
-                # in that it requires a model instance (which we don't have) instead of a plain value.
+            if isinstance(field, (serializers.ModelField, serializers.SerializerMethodField)):
+                # Skip coercion for lack of a better solution. ModelField.to_representation()
+                # and SerializerMethodField.to_representation() are special in that they require
+                # a model instance or object (which we don't have) instead of a plain value.
                 default = field.default
             else:
                 default = field.to_representation(field.default)
@@ -1216,6 +1229,8 @@ class AutoSchema(ViewInspector):
         if serializer_extension and serializer_extension.get_name():
             # library override mechanisms
             name = serializer_extension.get_name()
+        elif has_override(serializer, 'component_name'):
+            name = get_override(serializer, 'component_name')
         elif getattr(getattr(serializer, 'Meta', None), 'ref_name', None) is not None:
             # local override mechanisms. for compatibility with drf-yasg we support meta ref_name,
             # though we do not support the serializer inlining feature.

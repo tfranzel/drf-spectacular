@@ -1,6 +1,7 @@
-from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
+from drf_spectacular.plumbing import build_bearer_security_scheme_object
 
 
 class SessionScheme(OpenApiAuthenticationExtension):
@@ -12,7 +13,7 @@ class SessionScheme(OpenApiAuthenticationExtension):
         return {
             'type': 'apiKey',
             'in': 'cookie',
-            'name': 'Session',
+            'name': settings.SESSION_COOKIE_NAME,
         }
 
 
@@ -35,8 +36,7 @@ class TokenScheme(OpenApiAuthenticationExtension):
     priority = -1
 
     def get_security_definition(self, auto_schema):
-        return {
-            'type': 'http',
-            'scheme': 'bearer',
-        }
-
+        return build_bearer_security_scheme_object(
+            header_name='Authorization',
+            token_prefix=self.target.keyword,
+        )

@@ -1,0 +1,79 @@
+{
+  "id": 1,
+  "field_decimal_uncoerced": 666.333,
+  "field_method_float": 1.3456,
+  "field_method_object": {
+    "key": "value"
+  },
+  "field_regex": "12345asdfg-a",
+  "field_list": [
+    1.1,
+    2.2,
+    3.3
+  ],
+  "field_list_serializer": [
+    {
+      "id": "0ac6930d-87f4-40e8-8242-10a3ed31a335",
+      "field_foreign": null
+    }
+  ],
+  "field_related_slug": "0ac6930d-87f4-40e8-8242-10a3ed31a335",
+  "field_related_string": "Aux object (0ac6930d-87f4-40e8-8242-10a3ed31a335)",
+  "field_related_hyperlink": "http://testserver/aux/0ac6930d-87f4-40e8-8242-10a3ed31a335/",
+  "field_identity_hyperlink": "http://testserver/allfields/1/",
+  "field_read_only_nav_uuid": "0ac6930d-87f4-40e8-8242-10a3ed31a335",
+  "field_read_only_nav_uuid_3steps": null,
+  "field_read_only_model_function_basic": true,
+  "field_read_only_model_function_model": "0ac6930d-87f4-40e8-8242-10a3ed31a335",
+  "field_bool_override": true,
+  "field_model_property_float": 1.337,
+  "field_model_cached_property_float": 1.337,
+  "field_model_py_cached_property_float": 1.337,
+  "field_dict_int": {
+    "A": 1,
+    "B": 2
+  },
+  "field_json": {
+    "A": 1,
+    "B": 2
+  },
+  "field_sub_object_calculated": 1,
+  "field_sub_object_nested_calculated": 1,
+  "field_sub_object_model_int": 1,
+  "field_sub_object_cached_calculated": 1,
+  "field_sub_object_cached_nested_calculated": 1,
+  "field_sub_object_cached_model_int": 1,
+  "field_sub_object_py_cached_calculated": 1,
+  "field_sub_object_py_cached_nested_calculated": 1,
+  "field_sub_object_py_cached_model_int": 1,
+  "field_optional_sub_object_calculated": 1,
+  "field_sub_object_optional_int": 1,
+  "field_int": 1,
+  "field_float": 1.25,
+  "field_bool": true,
+  "field_char": "char",
+  "field_text": "text",
+  "field_slug": "all_fields",
+  "field_email": "test@example.com",
+  "field_uuid": "00000000-0000-0000-0000-000000000000",
+  "field_url": "https://github.com/tfranzel/drf-spectacular",
+  "field_ip_generic": "2001:db8::8a2e:370:7334",
+  "field_decimal": "666.333",
+  "field_file": "http://testserver/hello_p8Eotwr.txt",
+  "field_img": null,
+  "field_date": "2021-09-09",
+  "field_datetime": "2021-09-09T10:15:26.049862",
+  "field_bigint": 11111111111111,
+  "field_smallint": 111111,
+  "field_posint": 123,
+  "field_possmallint": 1,
+  "field_nullbool": null,
+  "field_time": "00:05:23.283000",
+  "field_duration": "00:00:10",
+  "field_binary": "zpzOuc6x",
+  "field_foreign": "0ac6930d-87f4-40e8-8242-10a3ed31a335",
+  "field_o2o": "0ac6930d-87f4-40e8-8242-10a3ed31a335",
+  "field_m2m": [
+    "0ac6930d-87f4-40e8-8242-10a3ed31a335"
+  ]
+}

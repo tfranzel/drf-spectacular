@@ -1,4 +1,5 @@
 import datetime
+import re
 import typing
 import uuid
 from decimal import Decimal
@@ -6,10 +7,12 @@ from functools import partialmethod
 from unittest import mock
 
 import pytest
+from django import __version__ as DJANGO_VERSION
 from django.core import validators
 from django.db import models
 from django.db.models import fields
-from django.urls import path, re_path
+from django.urls import path, re_path, register_converter
+from django.urls.converters import StringConverter
 from rest_framework import (
     filters, generics, mixins, pagination, parsers, renderers, routers, serializers, views,
     viewsets,
@@ -22,6 +25,7 @@ from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.hooks import preprocess_exclude_path_format
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
+from drf_spectacular.settings import IMPORT_STRINGS, SPECTACULAR_DEFAULTS
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_field,
@@ -1433,15 +1437,17 @@ def test_nested_ro_serializer_has_required_fields_on_patch(no_warnings):
     assert 'required' in schema['components']['schemas']['X']
 
 
+class M3(models.Model):
+    """ test_path_param_from_related_model_pk_without_primary_key_true """
+    related_field = models.ForeignKey(SimpleModel, on_delete=models.PROTECT, editable=False)
+    many_related = models.ManyToManyField(SimpleModel, related_name='+')
+
+
 @pytest.mark.parametrize('path', [
     r'x/(?P<related_field>[0-9a-f-]{36})',
     r'x/<related_field>',
 ])
 def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, path):
-    class M3(models.Model):
-        related_field = models.ForeignKey(SimpleModel, on_delete=models.PROTECT, editable=False)
-        many_related = models.ManyToManyField(SimpleModel)
-
     class M3Serializer(serializers.ModelSerializer):
         class Meta:
             fields = '__all__'
@@ -1457,6 +1463,143 @@ def test_path_param_from_related_model_pk_without_primary_key_true(no_warnings, 
     schema = generate_schema(None, patterns=router.urls)
     assert '/x/{related_field}/' in schema['paths']
     assert '/x/{related_field}/{id}/' in schema['paths']
+
+
+def test_path_parameter_with_relationships(no_warnings):
+    class PathParamParent(models.Model):
+        pass
+
+    class PathParamChild(models.Model):
+        parent = models.ForeignKey(PathParamParent, on_delete=models.CASCADE)
+
+    class PathParamGrandChild(models.Model):
+        parent = models.ForeignKey(PathParamChild, on_delete=models.CASCADE)
+
+    class PathParamChildSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = PathParamChild
+
+    class XViewset1(viewsets.ModelViewSet):
+        serializer_class = PathParamChildSerializer
+        queryset = PathParamChild.objects.none()
+        lookup_field = 'id'
+
+    class XViewset2(viewsets.ModelViewSet):
+        serializer_class = PathParamChildSerializer
+        queryset = PathParamChild.objects.none()
+        lookup_field = 'parent'
+
+    class XViewset3(viewsets.ModelViewSet):
+        serializer_class = PathParamChildSerializer
+        queryset = PathParamChild.objects.none()
+        lookup_field = 'parent__id'  # Functionally the same as above
+
+    class PathParamGrandChildSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = PathParamGrandChild
+
+    class XViewset4(viewsets.ModelViewSet):
+        serializer_class = PathParamGrandChildSerializer
+        queryset = PathParamGrandChild.objects.none()
+        lookup_field = 'parent__parent'
+
+    class XViewset5(viewsets.ModelViewSet):
+        serializer_class = PathParamGrandChildSerializer
+        queryset = PathParamGrandChild.objects.none()
+        lookup_field = 'parent__parent__id'
+
+    router = routers.SimpleRouter()
+    router.register('child_by_id', XViewset1)
+    router.register('child_by_parent_id', XViewset2)
+    router.register('child_by_parent_id_alt', XViewset3)
+    router.register('grand_child_by_grand_parent_id', XViewset4)
+    router.register('grand_child_by_grand_parent_id_alt', XViewset5)
+
+    schema = generate_schema(None, patterns=router.urls)
+
+    # Basic cases:
+    assert schema['paths']['/child_by_id/{id}/']['get']['parameters'][0] == {
+        'description': 'A unique integer value identifying this path param child.',
+        'in': 'path',
+        'name': 'id',
+        'schema': {'type': 'integer'},
+        'required': True
+    }
+    assert schema['paths']['/child_by_parent_id/{parent}/']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'parent',
+        'schema': {'type': 'integer'},
+        'required': True
+    }
+
+    # Can we traverse relationships?
+    assert schema['paths']['/grand_child_by_grand_parent_id/{parent__parent}/']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'parent__parent',
+        'schema': {'type': 'integer'},
+        'required': True
+    }
+
+    # Explicit `__id` handling:
+    assert schema['paths']['/grand_child_by_grand_parent_id_alt/{parent__parent__id}/']['get']['parameters'][0] == {
+        'description': 'A unique integer value identifying this path param grand child.',
+        'in': 'path',
+        'name': 'parent__parent__id',
+        'schema': {'type': 'integer'},
+        'required': True
+    }
+    assert schema['paths']['/child_by_parent_id_alt/{parent__id}/']['get']['parameters'][0] == {
+        'description': 'A unique integer value identifying this path param child.',
+        'in': 'path',
+        'name': 'parent__id',
+        'schema': {'type': 'integer'},
+        'required': True
+    }
+
+
+def test_path_parameter_with_lookup_field(no_warnings):
+    class JournalEntry(models.Model):
+        recorded_at = models.DateTimeField()
+
+    class JournalEntrySerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = JournalEntry
+
+    class JournalEntryViewset(viewsets.ModelViewSet):
+        serializer_class = JournalEntrySerializer
+        queryset = JournalEntry.objects.none()
+        lookup_field = 'recorded_at__date'
+
+    class JournalEntryAltViewset(viewsets.ModelViewSet):
+        serializer_class = JournalEntrySerializer
+        queryset = JournalEntry.objects.none()
+        lookup_field = 'recorded_at__date'
+        lookup_url_kwarg = 'on'
+
+    router = routers.SimpleRouter()
+    router.register('journal', JournalEntryViewset)
+    router.register('journal_alt', JournalEntryAltViewset)
+
+    schema = generate_schema(None, patterns=router.urls)
+
+    # TODO this is not 100% correct since "__date" transforms datetime to date,
+    #  but most SQL modifiers don't change the type and we will tolerate that
+    #  slight problem for now.
+    assert schema['paths']['/journal/{recorded_at__date}/']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'recorded_at__date',
+        'required': True,
+        'schema': {'format': 'date-time', 'type': 'string'},
+    }
+    assert schema['paths']['/journal_alt/{on}/']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'on',
+        'required': True,
+        'schema': {'format': 'date-time', 'type': 'string'},
+    }
 
 
 @pytest.mark.contrib('psycopg2')
@@ -1675,7 +1818,7 @@ def test_any_placeholder_on_request_response(no_warnings):
     assert properties['method_field'] == {'readOnly': True, 'description': 'Any'}
 
 
-def test_categorized_choices(no_warnings):
+def test_categorized_choices(no_warnings, clear_caches):
     media_choices = [
         ('Audio', (('vinyl', 'Vinyl'), ('cd', 'CD'))),
         ('Video', (('vhs', 'VHS Tape'), ('dvd', 'DVD'))),
@@ -1686,19 +1829,19 @@ def test_categorized_choices(no_warnings):
         ('unknown', 'Unknown'),
     ]
 
-    class M6(models.Model):
+    class M9(models.Model):
         cat_choice = models.CharField(max_length=10, choices=media_choices)
 
-    class M6Serializer(serializers.ModelSerializer):
+    class M9Serializer(serializers.ModelSerializer):
         audio_choice = serializers.ChoiceField(choices=media_choices_audio)
 
         class Meta:
             fields = '__all__'
-            model = M6
+            model = M9
 
     class XViewset(viewsets.ModelViewSet):
-        serializer_class = M6Serializer
-        queryset = M6.objects.none()
+        serializer_class = M9Serializer
+        queryset = M9.objects.none()
 
     with mock.patch(
         'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
@@ -1848,10 +1991,10 @@ def test_nested_router_urls(no_warnings):
         ),
     ]
     schema = generate_schema(None, patterns=urlpatterns)
-    operation = schema['paths']['/clients/{client_id}/maildrops/{maildrop_id}/recipients/{id}/']['get']
-    assert operation['parameters'][0]['name'] == 'client_id'
+    operation = schema['paths']['/clients/{client_pk}/maildrops/{maildrop_pk}/recipients/{id}/']['get']
+    assert operation['parameters'][0]['name'] == 'client_pk'
     assert operation['parameters'][0]['schema'] == {'format': 'uuid', 'type': 'string'}
-    assert operation['parameters'][2]['name'] == 'maildrop_id'
+    assert operation['parameters'][2]['name'] == 'maildrop_pk'
     assert operation['parameters'][2]['schema'] == {'type': 'integer'}
 
 
@@ -2111,7 +2254,7 @@ def test_request_response_raw_schema_annotation(no_warnings):
     }
 
 
-def test_serializer_modelfield_with_default_value(no_warnings):
+def test_serializer_modelfield_and_methodfield_with_default_value(no_warnings):
     class M8Model(models.Model):
         field = models.IntegerField()
 
@@ -2120,6 +2263,10 @@ def test_serializer_modelfield_with_default_value(no_warnings):
             model_field=M8Model()._meta.get_field('field'),
             default=3
         )
+        field_smf = serializers.SerializerMethodField(default=4)
+
+        def get_field_smf(self, obj) -> int:
+            return 0  # pragma: no cover
 
         class Meta:
             model = M8Model
@@ -2132,6 +2279,9 @@ def test_serializer_modelfield_with_default_value(no_warnings):
     schema = generate_schema('x', XViewset)
     assert schema['components']['schemas']['X']['properties']['field'] == {
         'type': 'integer', 'default': 3
+    }
+    assert schema['components']['schemas']['X']['properties']['field_smf'] == {
+        'type': 'integer', 'readOnly': True, 'default': 4
     }
 
 
@@ -2152,3 +2302,125 @@ def test_literal_dot_in_regex_path(no_warnings):
     ]
     schema = generate_schema(None, patterns=urlpatterns)
     assert '/file/{filename}.{ext}' in schema['paths']
+
+
+def test_customized_lookup_url_kwarg(no_warnings):
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.all()
+        lookup_url_kwarg = 'custom_name'
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/{custom_name}/']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'custom_name',
+        'schema': {'type': 'integer'},
+        'description': 'A unique integer value identifying this simple model.',
+        'required': True
+    }
+
+
+@pytest.mark.skipif(DJANGO_VERSION < '3', reason='Bug in Django\'s simplify_regex()')
+def test_regex_path_parameter_discovery_pattern(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request, foo):
+        pass  # pragma: no cover
+
+    urlpatterns = [
+        re_path(r'^/pi/(?P<precision>(\d+)-[\w|\.]+(failed|success))', pi)
+    ]
+    schema = generate_schema(None, patterns=urlpatterns)
+
+    assert schema['paths']['/pi/{precision}']['get']['parameters'][0] == {
+        'in': 'path',
+        'name': 'precision',
+        'schema': {'type': 'string', 'pattern': '(\\d+)-[\\w|\\.]+(failed|success)'},
+        'required': True
+    }
+
+
+class PathParameterLookupModel(models.Model):
+    """ test_path_parameter_priority_matching """
+    field = models.IntegerField()
+
+
+@pytest.mark.parametrize(['path_func', 'path_str', 'pattern', 'parameter_types'], [
+    # django typed -> use
+    (path, '/{id}/', '<int:pk>/', ['integer']),
+    # untyped -> get from model
+    (path, '/{id}/', '<pk>/', ['integer']),
+    # non-default pattern -> use
+    (re_path, '/{id}/', r'(?P<pk>[a-z]{2}(-[a-z]{2})?)/', ['string']),
+    # default pattern -> get from model
+    (re_path, '/{id}/', r'(?P<pk>[^/.]+)/$', ['integer']),
+    # same mechanics for non-pk field discovery from model
+    (re_path, '/{field}/t/{id}/', r'^(?P<field>[^/.]+)/t/(?P<pk>[a-z]+)/', ['integer', 'string']),
+    (re_path, '/{field}/t/{id}/', r'^(?P<field>[A-Z\(\)]+)/t/(?P<pk>[^/.]+)/', ['string', 'integer']),
+])
+def test_path_parameter_priority_matching(no_warnings, path_func, path_str, pattern, parameter_types):
+    class LookupSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = PathParameterLookupModel
+            fields = '__all__'
+
+    class XAPIView(generics.RetrieveAPIView):
+        serializer_class = LookupSerializer
+        queryset = PathParameterLookupModel.objects.all()
+
+    # make sure regex are valid
+    if path_func == re_path:
+        re.compile(pattern)
+
+    urlpatterns = [path_func(pattern, XAPIView.as_view())]
+    schema = generate_schema(None, patterns=urlpatterns)
+    parameters = schema['paths'][path_str]['get']['parameters']
+
+    assert len(parameters) == len(parameter_types)
+    for parameter_type, parameter in zip(parameter_types, parameters):
+        assert parameter['schema']['type'] == parameter_type
+        assert parameter_type != 'string' or 'pattern' in parameter['schema']
+
+
+@pytest.mark.parametrize('import_string', IMPORT_STRINGS)
+def test_import_strings_in_default_settings(import_string):
+    assert import_string in SPECTACULAR_DEFAULTS
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.PATH_CONVERTER_OVERRIDES', {
+        'int': str,  # override default behavior
+        'signed_int': {'type': 'integer', 'format': 'signed'},
+    }
+)
+def test_path_converter_override(no_warnings):
+    @extend_schema(responses=OpenApiTypes.FLOAT)
+    @api_view(['GET'])
+    def pi(request, foo):
+        pass  # pragma: no cover
+
+    class SignedIntConverter(StringConverter):
+        regex = r'\-[0-9]+'
+
+    class HexConverter(StringConverter):
+        regex = r'[a-f0-9]+'
+
+    register_converter(SignedIntConverter, 'signed_int')
+    register_converter(HexConverter, 'hex')
+
+    urlpatterns = [
+        path('/a/<int:var>/', pi),
+        path('/b/<signed_int:var>/', pi),
+        path('/c/<hex:var>/', pi),
+    ]
+    schema = generate_schema(None, patterns=urlpatterns)
+
+    assert schema['paths']['/a/{var}/']['get']['parameters'][0]['schema'] == {
+        'type': 'string',
+    }
+    assert schema['paths']['/b/{var}/']['get']['parameters'][0]['schema'] == {
+        'type': 'integer', 'format': 'signed'
+    }
+    assert schema['paths']['/c/{var}/']['get']['parameters'][0]['schema'] == {
+        'type': 'string', 'pattern': '[a-f0-9]+'
+    }

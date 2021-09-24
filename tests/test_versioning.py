@@ -103,19 +103,21 @@ def test_namespace_versioning(no_warnings, viewset_cls, version):
     assert_schema(schema, f'tests/test_versioning_{version}.yml')
 
 
+class LookupModel(models.Model):
+    """ test_namespace_versioning_urlpatterns_simplification """
+    field = models.IntegerField()
+
+
 @pytest.mark.parametrize(['path_func', 'path_str', 'pattern', ], [
     (path, '{id}/', '<int:pk>/'),
     (path, '{id}/', '<pk>/'),
     (re_path, '{id}/', r'(?P<pk>[0-9A-Fa-f-]+)/'),
-    (re_path, '{id}/', r'(?P<pk>[^/]+)/$'),
+    (re_path, '{id}/', r'(?P<pk>[^/.]+)/$'),
     (re_path, '{id}/', r'(?P<pk>[a-z]{2}(-[a-z]{2})?)/'),
     (re_path, '{field}/t/{id}/', r'^(?P<field>[^/.]+)/t/(?P<pk>[^/.]+)/'),
     (re_path, '{field}/t/{id}/', r'^(?P<field>[A-Z\(\)]+)/t/(?P<pk>[^/.]+)/'),
 ])
 def test_namespace_versioning_urlpatterns_simplification(no_warnings, path_func, path_str, pattern):
-    class LookupModel(models.Model):
-        field = models.IntegerField()
-
     class LookupSerializer(serializers.ModelSerializer):
         class Meta:
             model = LookupModel
@@ -136,10 +138,7 @@ def test_namespace_versioning_urlpatterns_simplification(no_warnings, path_func,
         api_version='v1',
     )
     schema = generator.get_schema(request=None, public=True)
-
-    parameters = schema['paths']['/v1/{some_param}/' + path_str]['get']['parameters']
-    for p in parameters:
-        assert p['schema']['type'] == 'integer'
+    assert ('/v1/{some_param}/' + path_str) in schema['paths']
 
 
 @pytest.mark.parametrize('viewset_cls', [AcceptHeaderVersioningViewset, AcceptHeaderVersioningViewset2])
