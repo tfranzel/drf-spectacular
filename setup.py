@@ -83,6 +83,10 @@ setup(
     include_package_data=True,
     python_requires=">=3.6",
     install_requires=requirements,
+    extras_require={
+        "offline": ["drf_spectacular_sidecar"],
+        "sidecar": ["drf_spectacular_sidecar"],
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',

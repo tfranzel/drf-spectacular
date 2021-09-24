@@ -88,6 +88,10 @@ class SpectacularJSONAPIView(SpectacularAPIView):
     renderer_classes = [OpenApiJsonRenderer, OpenApiJsonRenderer2]
 
 
+def _get_sidecar_url(package):
+    return f'{settings.STATIC_URL}drf_spectacular_sidecar/{package}'
+
+
 class SpectacularSwaggerView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
@@ -104,8 +108,8 @@ class SpectacularSwaggerView(APIView):
         return Response(
             data={
                 'title': self.title,
-                'dist': spectacular_settings.SWAGGER_UI_DIST,
-                'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
+                'dist': self._swagger_ui_dist(),
+                'favicon_href': self._swagger_ui_favicon(),
                 'schema_url': set_query_parameters(
                     url=schema_url,
                     lang=request.GET.get('lang')
@@ -119,6 +123,16 @@ class SpectacularSwaggerView(APIView):
 
     def _dump(self, data):
         return data if isinstance(data, str) else json.dumps(data)
+
+    def _swagger_ui_dist(self):
+        if spectacular_settings.SWAGGER_UI_DIST == 'SIDECAR':
+            return _get_sidecar_url('swagger-ui-dist')
+        return spectacular_settings.SWAGGER_UI_DIST
+
+    def _swagger_ui_favicon(self):
+        if spectacular_settings.SWAGGER_UI_FAVICON_HREF == 'SIDECAR':
+            return _get_sidecar_url('swagger-ui-dist') + '/favicon-32x32.png'
+        return spectacular_settings.SWAGGER_UI_FAVICON_HREF
 
 
 class SpectacularSwaggerSplitView(SpectacularSwaggerView):
@@ -149,8 +163,8 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
             return Response(
                 data={
                     'title': self.title,
-                    'dist': spectacular_settings.SWAGGER_UI_DIST,
-                    'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
+                    'dist': self._swagger_ui_dist(),
+                    'favicon_href': self._swagger_ui_favicon(),
                     'script_url': set_query_parameters(
                         url=script_url,
                         lang=request.GET.get('lang'),
@@ -177,8 +191,13 @@ class SpectacularRedocView(APIView):
         return Response(
             data={
                 'title': self.title,
-                'dist': spectacular_settings.REDOC_DIST,
+                'dist': self._redoc_dist(),
                 'schema_url': schema_url,
             },
             template_name=self.template_name
         )
+
+    def _redoc_dist(self):
+        if spectacular_settings.REDOC_DIST == 'SIDECAR':
+            return _get_sidecar_url('redoc')
+        return spectacular_settings.SWAGGER_UI_DIST

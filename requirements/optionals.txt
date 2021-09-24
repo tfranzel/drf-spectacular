@@ -9,3 +9,4 @@ djangorestframework-camel-case>=1.1.2
 django-filter>=2.3.0
 psycopg2-binary>=2.7.3.2
 drf-nested-routers>=0.93.3
+drf_spectacular_sidecar

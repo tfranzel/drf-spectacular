@@ -99,6 +99,33 @@ specify any settings, but we recommend to specify at least some metadata.
         # OTHER SETTINGS
     }
 
+
+Self-contained UI installation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Certain environments have no direct access to the internet and as such are unable
+to retrieve Swagger UI or Redoc from CDNs. `drf-spectacular-sidecar`_ provides
+the these static files as a separate optional package. Usage is as follows:
+
+.. code:: bash
+
+    $ pip install drf-spectacular[sidecar]
+
+.. code:: python
+
+    INSTALLED_APPS = [
+        # ALL YOUR APPS
+        'drf_spectacular',
+        'drf_spectacular_sidecar,  # required for Django collectstatic discovery
+    ]
+    SPECTACULAR_SETTINGS = {
+        'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
+        'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+        'REDOC_DIST': 'SIDECAR',
+        # OTHER SETTINGS
+    }
+
+
 Release management
 ^^^^^^^^^^^^^^^^^^
 
@@ -254,6 +281,8 @@ globally, and then simply run:
     $ tox
 
 .. _tox: http://tox.readthedocs.org/en/latest/
+
+.. _drf-spectacular-sidecar: https://github.com/tfranzel/drf-spectacular-sidecar
 
 .. |build-status-image| image:: https://api.travis-ci.com/tfranzel/drf-spectacular.svg?branch=master
    :target: https://travis-ci.com/tfranzel/drf-spectacular?branch=master
