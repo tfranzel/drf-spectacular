@@ -99,7 +99,7 @@ specify any settings, but we recommend to specify at least some metadata.
         # OTHER SETTINGS
     }
 
-.. _sidecar:
+.. _self-contained-ui-installation:
 
 Self-contained UI installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
