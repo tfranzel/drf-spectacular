@@ -2,9 +2,9 @@
 drf-spectacular
 ===============
 
-|build-status-image| |codecov| |pypi-version| |docs|
+|build-status-image| |codecov| |docs| |pypi-version| |pypi-dl|
 
-Sane and flexible `OpenAPI 3.0 <https://github.com/OAI/OpenAPI-Specification>`_ schema generation for `Django REST framework <https://www.django-rest-framework.org/>`_.
+Sane and flexible `OpenAPI 3.0`_ schema generation for `Django REST framework`_.
 
 This project has 3 goals:
     1. Extract as much schema information from DRF as possible.
@@ -99,13 +99,14 @@ specify any settings, but we recommend to specify at least some metadata.
         # OTHER SETTINGS
     }
 
+.. _sidecar:
 
 Self-contained UI installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Certain environments have no direct access to the internet and as such are unable
 to retrieve Swagger UI or Redoc from CDNs. `drf-spectacular-sidecar`_ provides
-the these static files as a separate optional package. Usage is as follows:
+these static files as a separate optional package. Usage is as follows:
 
 .. code:: bash
 
@@ -280,8 +281,9 @@ globally, and then simply run:
 
     $ tox
 
+.. _Django REST framework: https://www.django-rest-framework.org/
+.. _OpenAPI 3.0: https://github.com/OAI/OpenAPI-Specification
 .. _tox: http://tox.readthedocs.org/en/latest/
-
 .. _drf-spectacular-sidecar: https://github.com/tfranzel/drf-spectacular-sidecar
 
 .. |build-status-image| image:: https://api.travis-ci.com/tfranzel/drf-spectacular.svg?branch=master
@@ -292,3 +294,5 @@ globally, and then simply run:
    :target: https://codecov.io/gh/tfranzel/drf-spectacular
 .. |docs| image:: https://readthedocs.org/projects/drf-spectacular/badge/
    :target: https://drf-spectacular.readthedocs.io/
+.. |pypi-dl| image:: https://img.shields.io/pypi/dm/drf-spectacular
+   :target: https://pypi.org/project/drf-spectacular/
