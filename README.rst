@@ -2,7 +2,7 @@
 drf-spectacular
 ===============
 
-|build-status-image| |codecov| |docs| |pypi-version| |pypi-dl|
+|build-status| |codecov| |docs| |pypi-version| |pypi-dl|
 
 Sane and flexible `OpenAPI 3.0`_ schema generation for `Django REST framework`_.
 
@@ -286,8 +286,8 @@ globally, and then simply run:
 .. _tox: http://tox.readthedocs.org/en/latest/
 .. _drf-spectacular-sidecar: https://github.com/tfranzel/drf-spectacular-sidecar
 
-.. |build-status-image| image:: https://api.travis-ci.com/tfranzel/drf-spectacular.svg?branch=master
-   :target: https://travis-ci.com/tfranzel/drf-spectacular?branch=master
+.. |build-status| image:: https://github.com/tfranzel/drf-spectacular/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/tfranzel/drf-spectacular/actions/workflows/ci.yml
 .. |pypi-version| image:: https://img.shields.io/pypi/v/drf-spectacular.svg
    :target: https://pypi.python.org/pypi/drf-spectacular
 .. |codecov| image:: https://codecov.io/gh/tfranzel/drf-spectacular/branch/master/graph/badge.svg
