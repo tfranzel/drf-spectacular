@@ -66,6 +66,13 @@ paths:
           type: number
           format: float
         description: highest price
+        examples:
+          MagicExample1:
+            value: '1337'
+            summary: Magic example 1
+          MagicExample2:
+            value: '1234'
+            summary: Magic example 2
       - in: query
         name: max_sub_price
         schema:

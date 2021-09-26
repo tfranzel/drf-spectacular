@@ -105,6 +105,36 @@ paths:
                     field: error
                   summary: Create Error 403 Example
           description: ''
+  /schema/{id}/:
+    get:
+      operationId: schema_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this simple model.
+        required: true
+        examples:
+          ExampleID1:
+            value: 1
+            summary: Example ID 1
+          ExampleID2:
+            value: 2
+            summary: Example ID 2
+      tags:
+      - schema
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B'
+          description: ''
   /schema/override_extend_schema_action/:
     post:
       operationId: schema_override_extend_schema_action_create

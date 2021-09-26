@@ -1,7 +1,7 @@
 import functools
 import inspect
 import sys
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 from rest_framework.fields import Field, empty
 from rest_framework.serializers import Serializer
@@ -109,8 +109,9 @@ class OpenApiExample(OpenApiSchemaBase):
             description: str = '',
             request_only: bool = False,
             response_only: bool = False,
+            parameter_only: Optional[Tuple[str, _ParameterLocationType]] = None,
             media_type: str = 'application/json',
-            status_codes: Optional[List[str]] = None
+            status_codes: Optional[List[str]] = None,
     ):
         self.name = name
         self.summary = summary
@@ -119,6 +120,7 @@ class OpenApiExample(OpenApiSchemaBase):
         self.external_value = external_value
         self.request_only = request_only
         self.response_only = response_only
+        self.parameter_only = parameter_only
         self.media_type = media_type
         self.status_codes = status_codes or ['200', '201']
 
@@ -306,7 +308,7 @@ def extend_schema(
 
             def get_examples(self):
                 if examples and is_in_scope(self):
-                    return examples
+                    return super().get_examples() + examples
                 return super().get_examples()
 
             def get_request_serializer(self):

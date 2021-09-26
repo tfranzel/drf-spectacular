@@ -8,7 +8,7 @@ from rest_framework import routers, serializers, viewsets
 from rest_framework.test import APIClient
 
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.utils import OpenApiExample, extend_schema, extend_schema_field
 from tests import assert_schema, generate_schema
 
 try:
@@ -129,6 +129,12 @@ class ProductFilter(FilterSet):
         return queryset.filter(id=int(value))  # pragma: no cover
 
 
+@extend_schema(
+    examples=[
+        OpenApiExample('Magic example 1', value='1337', parameter_only=('max_price', 'query')),
+        OpenApiExample('Magic example 2', value='1234', parameter_only=('max_price', 'query')),
+    ]
+)
 class ProductViewset(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer

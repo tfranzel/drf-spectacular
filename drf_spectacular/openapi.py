@@ -1,6 +1,7 @@
 import copy
 import re
 import typing
+from collections import defaultdict
 
 import uritemplate
 from django.core import exceptions as django_exceptions
@@ -213,6 +214,17 @@ class AutoSchema(ViewInspector):
                     del parameters[key]
             else:
                 parameters[key] = parameter
+
+        # collect independently specified parameter examples from @extend_schema.
+        # Append to both discovered and manually specified parameters.
+        examples_by_key = defaultdict(list)
+        for example in self.get_examples():
+            if example.parameter_only:
+                examples_by_key[example.parameter_only].append(example)
+        for key, examples in examples_by_key.items():
+            if key in parameters:
+                parameters[key].setdefault('examples', {})
+                parameters[key]['examples'].update(build_examples_list(examples))
 
         if callable(spectacular_settings.SORT_OPERATION_PARAMETERS):
             return sorted(parameters.values(), key=spectacular_settings.SORT_OPERATION_PARAMETERS)
@@ -968,7 +980,10 @@ class AutoSchema(ViewInspector):
         return []
 
     def _get_examples(self, serializer, direction, media_type, status_code=None, extras=None):
-        examples = self.get_examples()
+        """ Handles examples for request/response. purposefully ignores parameter examples """
+
+        # don't let the parameter examples influence the serializer example retrieval
+        examples = [e for e in self.get_examples() if not e.parameter_only]
 
         if not examples:
             if is_list_serializer(serializer):
