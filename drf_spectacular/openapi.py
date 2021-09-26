@@ -661,8 +661,8 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.IntegerField):
             content = build_basic_type(OpenApiTypes.INT)
             self._map_min_max(field, content)
-            # 2147483647 is max for int32_size, so we use int64 for format
-            if int(content.get('maximum', 0)) > 2147483647 or int(content.get('minimum', 0)) > 2147483647:
+            # Use int64 for format if value outside the 32-bit signed integer range [-2,147,483,648 to 2,147,483,647].
+            if not all(-2147483648 <= int(content.get(key, 0)) <= 2147483647 for key in ('maximum', 'minimum')):
                 content['format'] = 'int64'
             return append_meta(content, meta)
 

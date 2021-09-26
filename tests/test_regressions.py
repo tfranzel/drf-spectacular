@@ -2436,3 +2436,26 @@ def test_path_converter_override(no_warnings):
     assert schema['paths']['/c/{var}/']['get']['parameters'][0]['schema'] == {
         'type': 'string', 'pattern': '[a-f0-9]+'
     }
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    ({'max_value': -2147483648}, {'type': 'integer', 'maximum': -2147483648}),
+    ({'max_value': -2147483649}, {'type': 'integer', 'maximum': -2147483649, 'format': 'int64'}),
+    ({'max_value': 2147483647}, {'type': 'integer', 'maximum': 2147483647}),
+    ({'max_value': 2147483648}, {'type': 'integer', 'maximum': 2147483648, 'format': 'int64'}),
+    ({'min_value': -2147483648}, {'type': 'integer', 'minimum': -2147483648}),
+    ({'min_value': -2147483649}, {'type': 'integer', 'minimum': -2147483649, 'format': 'int64'}),
+    ({'min_value': 2147483647}, {'type': 'integer', 'minimum': 2147483647}),
+    ({'min_value': 2147483648}, {'type': 'integer', 'minimum': 2147483648, 'format': 'int64'}),
+])
+def test_int64_detection(kwargs, expected, no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.IntegerField(**kwargs)
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties']['field'] == expected
