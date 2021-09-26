@@ -730,11 +730,11 @@ class AutoSchema(ViewInspector):
         return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
     def _map_min_max(self, field, content):
-        if field.max_value:
+        if field.max_value is not None:
             content['maximum'] = field.max_value
             if 'exclusiveMaximum' in content:
                 del content['exclusiveMaximum']
-        if field.min_value:
+        if field.min_value is not None:
             content['minimum'] = field.min_value
             if 'exclusiveMinimum' in content:
                 del content['exclusiveMinimum']
