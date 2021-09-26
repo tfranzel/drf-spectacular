@@ -1,0 +1,47 @@
+name: CI
+
+on: [ push, pull_request ]
+
+jobs:
+  prep-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-vars.outputs.matrix }}
+      date: ${{ steps.set-vars.outputs.date }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install tox
+      - name: Generate matrix & vars
+        id: set-vars
+        run: python helper/github-ci-vars.py
+  tests:
+    needs: prep-tests
+    runs-on: ubuntu-latest
+    name: tests-${{ matrix.setup.toxenv }}
+    continue-on-error: ${{ matrix.setup.experimental }}
+    strategy:
+      matrix:
+        setup: ${{ fromJson(needs.prep-tests.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ needs.prep-tests.date }}
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.setup.python-version }}
+      - name: Install tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox --skip-missing-interpreters=false -e ${{ matrix.setup.toxenv }}
+      - uses: codecov/codecov-action@v2
+        with:
+          name: ${{ matrix.setup.toxenv }}
+  passed-tests:
+    name: Required tests passed
+    needs: [ tests ]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All Done"
