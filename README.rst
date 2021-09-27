@@ -117,7 +117,7 @@ these static files as a separate optional package. Usage is as follows:
     INSTALLED_APPS = [
         # ALL YOUR APPS
         'drf_spectacular',
-        'drf_spectacular_sidecar,  # required for Django collectstatic discovery
+        'drf_spectacular_sidecar',  # required for Django collectstatic discovery
     ]
     SPECTACULAR_SETTINGS = {
         'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
