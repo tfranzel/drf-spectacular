@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import TYPE_CHECKING, List, Optional, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
 from drf_spectacular.plumbing import OpenApiGeneratorExtension
 
@@ -13,6 +13,10 @@ class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthentic
     """
     Extension for specifying authentication schemes.
 
+    The common use-case usually consists of setting a ``name`` string and returning a dict from
+    ``get_security_definition``. To model a group of headers that go together, set a list
+    of names and return a corresponding list of definitions from ``get_security_definition``.
+
     The view class is available via ``auto_schema.view``, while the original authentication class
     can be accessed via ``self.target``. If you want to override an included extension, be sure to
     set a higher matching priority by setting the class attribute ``priority = 1`` or higher.
@@ -22,14 +26,17 @@ class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthentic
     """
     _registry: List['OpenApiAuthenticationExtension'] = []
 
-    name: str
+    name: Union[str, List[str]]
 
-    def get_security_requirement(self, auto_schema: 'AutoSchema'):
-        assert self.name, 'name must be specified'
-        return {self.name: []}
+    def get_security_requirement(self, auto_schema: 'AutoSchema') -> Dict[str, List[Any]]:
+        assert self.name, 'name(s) must be specified'
+        if isinstance(self.name, str):
+            return {self.name: []}
+        else:
+            return {name: [] for name in self.name}
 
     @abstractmethod
-    def get_security_definition(self, auto_schema: 'AutoSchema'):
+    def get_security_definition(self, auto_schema: 'AutoSchema') -> Union[dict, List[dict]]:
         pass  # pragma: no cover
 
 

@@ -1,13 +1,17 @@
-from rest_framework import fields, mixins, serializers, viewsets
+from rest_framework import fields, mixins, permissions, serializers, viewsets
+from rest_framework.authentication import BaseAuthentication
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from drf_spectacular.extensions import OpenApiSerializerFieldExtension, OpenApiViewExtension
+from drf_spectacular.extensions import (
+    OpenApiAuthenticationExtension, OpenApiSerializerFieldExtension, OpenApiViewExtension,
+)
 from drf_spectacular.plumbing import build_basic_type
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from tests import generate_schema, get_response_schema
+from tests.models import SimpleModel, SimpleSerializer
 
 
 class Base64Field(fields.Field):
@@ -112,3 +116,32 @@ def test_extension_not_found_for_installed_app(capsys):
 
     OpenApiViewExtension.get_match(object())
     assert 'target class was not found' in capsys.readouterr().err
+
+
+class MultiHeaderAuth(BaseAuthentication):
+    pass
+
+
+def test_multi_auth_scheme_extension(no_warnings):
+    class MultiHeaderAuthExtension(OpenApiAuthenticationExtension):
+        target_class = 'tests.test_extensions.MultiHeaderAuth'
+        name = ['apiKey', 'appId']
+
+        def get_security_definition(self, auto_schema):
+            return [
+                {'type': 'apiKey', 'in': 'header', 'name': 'X-API-KEY'},
+                {'type': 'apiKey', 'in': 'header', 'name': 'X-APP-ID'},
+            ]
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.none()
+        serializer_class = SimpleSerializer
+        authentication_classes = [MultiHeaderAuth]
+        permission_classes = [permissions.IsAuthenticated]
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['securitySchemes'] == {
+        'apiKey': {'type': 'apiKey', 'in': 'header', 'name': 'X-API-KEY'},
+        'appId': {'type': 'apiKey', 'in': 'header', 'name': 'X-APP-ID'}
+    }
+    assert schema['paths']['/x/']['get']['security'] == [{'apiKey': [], 'appId': []}]

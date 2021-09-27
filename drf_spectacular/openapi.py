@@ -261,13 +261,20 @@ class AutoSchema(ViewInspector):
             if security_requirements is not None:
                 auths.append(security_requirements)
 
-            component = ResolvedComponent(
-                name=scheme.name,
-                type=ResolvedComponent.SECURITY_SCHEMA,
-                object=authenticator.__class__,
-                schema=scheme.get_security_definition(self)
-            )
-            self.registry.register_on_missing(component)
+            if isinstance(scheme.name, str):
+                names, definitions = [scheme.name], [scheme.get_security_definition(self)]
+            else:
+                names, definitions = scheme.name, scheme.get_security_definition(self)
+
+            for name, definition in zip(names, definitions):
+                self.registry.register_on_missing(
+                    ResolvedComponent(
+                        name=name,
+                        type=ResolvedComponent.SECURITY_SCHEMA,
+                        object=authenticator.__class__,
+                        schema=definition
+                    )
+                )
 
         if spectacular_settings.SECURITY:
             auths.extend(spectacular_settings.SECURITY)
