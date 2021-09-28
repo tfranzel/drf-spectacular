@@ -650,17 +650,17 @@ class AutoSchema(ViewInspector):
                         'exclusiveMaximum': True,
                         'exclusiveMinimum': True,
                     })
-                self._map_min_max(field, content)
+                self._insert_min_max(field, content)
             return append_meta(content, meta)
 
         if isinstance(field, serializers.FloatField):
             content = build_basic_type(OpenApiTypes.FLOAT)
-            self._map_min_max(field, content)
+            self._insert_min_max(field, content)
             return append_meta(content, meta)
 
         if isinstance(field, serializers.IntegerField):
             content = build_basic_type(OpenApiTypes.INT)
-            self._map_min_max(field, content)
+            self._insert_min_max(field, content)
             # Use int64 for format if value outside the 32-bit signed integer range [-2,147,483,648 to 2,147,483,647].
             if not all(-2147483648 <= int(content.get(key, 0)) <= 2147483647 for key in ('maximum', 'minimum')):
                 content['format'] = 'int64'
@@ -729,7 +729,7 @@ class AutoSchema(ViewInspector):
         warn(f'could not resolve serializer field "{field}". Defaulting to "string"')
         return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
-    def _map_min_max(self, field, content):
+    def _insert_min_max(self, field, content):
         if field.max_value is not None:
             content['maximum'] = field.max_value
             if 'exclusiveMaximum' in content:
