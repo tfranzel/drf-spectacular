@@ -1347,7 +1347,7 @@ def test_exclude_parameter_from_customized_autoschema(no_warnings):
 def test_manual_decimal_validator():
     # manually test this validator as it is not part of the default workflow
     class XSerializer(serializers.Serializer):
-        field = serializers.CharField(
+        field = serializers.FloatField(
             validators=[validators.DecimalValidator(max_digits=4, decimal_places=2)]
         )
 
@@ -1385,8 +1385,17 @@ def test_serialization_with_decimal_values(no_warnings):
         pass  # pragma: no cover
 
     schema = generate_schema('/x/', view_function=view_func)
-    field = schema['components']['schemas']['X']['properties']['field']
-    assert field['minimum'] and field['maximum']
+    assert schema['components']['schemas']['X']['properties']['field'] == {
+        'type': 'number',
+        'format': 'double',
+        'maximum': Decimal('100.00'),
+        'minimum': Decimal('1'),
+    }
+    assert schema['components']['schemas']['X']['properties']['field_coerced'] == {
+        'type': 'string',
+        'format': 'decimal',
+        'pattern': r'^\d{0,3}(?:\.\d{0,2})?$',
+    }
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
     assert b'maximum: 100.00\n' in schema_yml
@@ -2424,3 +2433,50 @@ def test_path_converter_override(no_warnings):
     assert schema['paths']['/c/{var}/']['get']['parameters'][0]['schema'] == {
         'type': 'string', 'pattern': '[a-f0-9]+'
     }
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {'max_value': -2147483648},
+        {'type': 'integer', 'maximum': -2147483648},
+    ),
+    (
+        {'max_value': -2147483649},
+        {'type': 'integer', 'maximum': -2147483649, 'format': 'int64'},
+    ),
+    (
+        {'max_value': 2147483647},
+        {'type': 'integer', 'maximum': 2147483647},
+    ),
+    (
+        {'max_value': 2147483648},
+        {'type': 'integer', 'maximum': 2147483648, 'format': 'int64'},
+    ),
+    (
+        {'min_value': -2147483648},
+        {'type': 'integer', 'minimum': -2147483648},
+    ),
+    (
+        {'min_value': -2147483649},
+        {'type': 'integer', 'minimum': -2147483649, 'format': 'int64'},
+    ),
+    (
+        {'min_value': 2147483647},
+        {'type': 'integer', 'minimum': 2147483647},
+    ),
+    (
+        {'min_value': 2147483648},
+        {'type': 'integer', 'minimum': 2147483648, 'format': 'int64'},
+    ),
+])
+def test_int64_detection(kwargs, expected, no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.IntegerField(**kwargs)
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties']['field'] == expected

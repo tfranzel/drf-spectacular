@@ -592,6 +592,7 @@ class AutoSchema(ViewInspector):
                 return append_meta(build_array_type(component.ref), meta) if component else None
             else:
                 schema = self._map_serializer_field(field.child, direction)
+                self._insert_field_validators(field.child, schema)
                 # remove automatically attached but redundant title
                 if is_trivial_string_variation(field.field_name, schema.get('title')):
                     schema.pop('title', None)
@@ -636,27 +637,32 @@ class AutoSchema(ViewInspector):
                 content = {**build_basic_type(OpenApiTypes.STR), 'format': 'decimal'}
                 if field.max_whole_digits:
                     content['pattern'] = (
-                        f'^\\d{{0,{field.max_whole_digits}}}'
-                        f'(\\.\\d{{0,{field.decimal_places}}})?$'
+                        fr'^\d{{0,{field.max_whole_digits}}}'
+                        fr'(?:\.\d{{0,{field.decimal_places}}})?$'
                     )
             else:
                 content = build_basic_type(OpenApiTypes.DECIMAL)
                 if field.max_whole_digits:
-                    content['maximum'] = int(field.max_whole_digits * '9') + 1
-                    content['minimum'] = -content['maximum']
-                self._map_min_max(field, content)
+                    value = 10 ** field.max_whole_digits
+                    content.update({
+                        'maximum': value,
+                        'minimum': -value,
+                        'exclusiveMaximum': True,
+                        'exclusiveMinimum': True,
+                    })
+                self._insert_min_max(field, content)
             return append_meta(content, meta)
 
         if isinstance(field, serializers.FloatField):
             content = build_basic_type(OpenApiTypes.FLOAT)
-            self._map_min_max(field, content)
+            self._insert_min_max(field, content)
             return append_meta(content, meta)
 
         if isinstance(field, serializers.IntegerField):
             content = build_basic_type(OpenApiTypes.INT)
-            self._map_min_max(field, content)
-            # 2147483647 is max for int32_size, so we use int64 for format
-            if int(content.get('maximum', 0)) > 2147483647 or int(content.get('minimum', 0)) > 2147483647:
+            self._insert_min_max(field, content)
+            # Use int64 for format if value outside the 32-bit signed integer range [-2,147,483,648 to 2,147,483,647].
+            if not all(-2147483648 <= int(content.get(key, 0)) <= 2147483647 for key in ('maximum', 'minimum')):
                 content['format'] = 'int64'
             return append_meta(content, meta)
 
@@ -682,6 +688,7 @@ class AutoSchema(ViewInspector):
             content = build_basic_type(OpenApiTypes.OBJECT)
             if not isinstance(field.child, _UnvalidatedField):
                 content['additionalProperties'] = self._map_serializer_field(field.child, direction)
+                self._insert_field_validators(field.child, content['additionalProperties'])
             return append_meta(content, meta)
 
         if isinstance(field, serializers.CharField):
@@ -722,11 +729,15 @@ class AutoSchema(ViewInspector):
         warn(f'could not resolve serializer field "{field}". Defaulting to "string"')
         return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
-    def _map_min_max(self, field, content):
-        if field.max_value:
+    def _insert_min_max(self, field, content):
+        if field.max_value is not None:
             content['maximum'] = field.max_value
-        if field.min_value:
+            if 'exclusiveMaximum' in content:
+                del content['exclusiveMaximum']
+        if field.min_value is not None:
             content['minimum'] = field.min_value
+            if 'exclusiveMinimum' in content:
+                del content['exclusiveMinimum']
 
     def _map_serializer(self, serializer, direction, bypass_extensions=False):
         serializer = force_instance(serializer)
@@ -817,7 +828,7 @@ class AutoSchema(ViewInspector):
             if add_to_required:
                 required.add(field.field_name)
 
-            self._map_field_validators(field, schema)
+            self._insert_field_validators(field, schema)
 
             if field.field_name in get_override(serializer, 'deprecate_fields', []):
                 schema['deprecated'] = True
@@ -833,38 +844,62 @@ class AutoSchema(ViewInspector):
             description=get_doc(serializer.__class__),
         )
 
-    def _map_field_validators(self, field, schema):
+    def _insert_field_validators(self, field, schema):
+        schema_type = schema.get('type')
+
+        def update_constraint(schema, key, function, value, *, exclusive=False):
+            if callable(value):
+                value = value()
+            current_value = schema.get(key)
+            if current_value is not None:
+                new_value = function(current_value, value)
+            else:
+                new_value = value
+            schema[key] = new_value
+            if key in ('maximum', 'minimum'):
+                exclusive_key = f'exclusive{key.title()}'
+                if exclusive:
+                    if new_value != current_value:
+                        schema[exclusive_key] = True
+                elif exclusive_key in schema:
+                    del schema[exclusive_key]
+
         for v in field.validators:
-            if isinstance(v, validators.EmailValidator):
-                schema['format'] = 'email'
-            elif isinstance(v, validators.URLValidator):
-                schema['format'] = 'uri'
-            elif isinstance(v, validators.RegexValidator):
-                pattern = v.regex.pattern.encode('ascii', 'backslashreplace').decode()
-                pattern = pattern.replace(r'\x', r'\u00')  # unify escaping
-                pattern = pattern.replace(r'\Z', '$').replace(r'\A', '^')  # ECMA anchors
-                schema['pattern'] = pattern
-            elif isinstance(v, validators.MaxLengthValidator):
-                attr_name = 'maxLength'
-                if isinstance(field, serializers.ListField):
-                    attr_name = 'maxItems'
-                schema[attr_name] = v.limit_value() if callable(v.limit_value) else v.limit_value
-            elif isinstance(v, validators.MinLengthValidator):
-                attr_name = 'minLength'
-                if isinstance(field, serializers.ListField):
-                    attr_name = 'minItems'
-                schema[attr_name] = v.limit_value() if callable(v.limit_value) else v.limit_value
-            elif isinstance(v, validators.MaxValueValidator):
-                schema['maximum'] = v.limit_value() if callable(v.limit_value) else v.limit_value
-            elif isinstance(v, validators.MinValueValidator):
-                schema['minimum'] = v.limit_value() if callable(v.limit_value) else v.limit_value
-            elif isinstance(v, validators.DecimalValidator):
-                if v.max_digits:
-                    digits = v.max_digits
-                    if v.decimal_places is not None and v.decimal_places > 0:
-                        digits -= v.decimal_places
-                    schema['maximum'] = int(digits * '9') + 1
-                    schema['minimum'] = -schema['maximum']
+            if schema_type == 'string':
+                if isinstance(v, validators.EmailValidator):
+                    schema['format'] = 'email'
+                elif isinstance(v, validators.URLValidator):
+                    schema['format'] = 'uri'
+                elif isinstance(v, validators.RegexValidator):
+                    pattern = v.regex.pattern.encode('ascii', 'backslashreplace').decode()
+                    pattern = pattern.replace(r'\x', r'\u00')  # unify escaping
+                    pattern = pattern.replace(r'\Z', '$').replace(r'\A', '^')  # ECMA anchors
+                    schema['pattern'] = pattern
+                elif isinstance(v, validators.MaxLengthValidator):
+                    update_constraint(schema, 'maxLength', min, v.limit_value)
+                elif isinstance(v, validators.MinLengthValidator):
+                    update_constraint(schema, 'minLength', max, v.limit_value)
+                elif isinstance(v, validators.FileExtensionValidator) and v.allowed_extensions:
+                    schema['pattern'] = '(?:%s)$' % '|'.join([re.escape(extn) for extn in v.allowed_extensions])
+            elif schema_type in ('integer', 'number'):
+                if isinstance(v, validators.MaxValueValidator):
+                    update_constraint(schema, 'maximum', min, v.limit_value)
+                elif isinstance(v, validators.MinValueValidator):
+                    update_constraint(schema, 'minimum', max, v.limit_value)
+                elif isinstance(v, validators.DecimalValidator) and v.max_digits:
+                    value = 10 ** (v.max_digits - (v.decimal_places or 0))
+                    update_constraint(schema, 'maximum', min, value, exclusive=True)
+                    update_constraint(schema, 'minimum', max, -value, exclusive=True)
+            elif schema_type == 'array':
+                if isinstance(v, validators.MaxLengthValidator):
+                    update_constraint(schema, 'maxItems', min, v.limit_value)
+                elif isinstance(v, validators.MinLengthValidator):
+                    update_constraint(schema, 'minItems', max, v.limit_value)
+            elif schema_type == 'object':
+                if isinstance(v, validators.MaxLengthValidator):
+                    update_constraint(schema, 'maxProperties', min, v.limit_value)
+                elif isinstance(v, validators.MinLengthValidator):
+                    update_constraint(schema, 'minProperties', max, v.limit_value)
 
     def _map_response_type_hint(self, method):
         hint = get_override(method, 'field') or get_type_hints(method).get('return')

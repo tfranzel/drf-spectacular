@@ -1,0 +1,376 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /x:
+    post:
+      operationId: x_create
+      tags:
+      - x
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/X'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/X'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/X'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/X'
+          description: ''
+  /y:
+    post:
+      operationId: y_create
+      tags:
+      - y
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Y'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Y'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Y'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Y'
+          description: ''
+components:
+  schemas:
+    X:
+      type: object
+      properties:
+        char_email:
+          type: string
+          format: email
+        char_url:
+          type: string
+          format: uri
+        char_regex:
+          type: string
+          pattern: \w+
+        char_max_length:
+          type: string
+          maxLength: 200
+        char_min_length:
+          type: string
+          minLength: 100
+        float_max_value:
+          type: number
+          format: float
+          maximum: 200.0
+        float_min_value:
+          type: number
+          format: float
+          minimum: 100.0
+        float_decimal:
+          type: number
+          format: float
+          maximum: 100
+          exclusiveMaximum: true
+          minimum: -100
+          exclusiveMinimum: true
+        integer_max_value:
+          type: integer
+          maximum: 200
+        integer_min_value:
+          type: integer
+          minimum: 100
+        integer_decimal:
+          type: number
+          format: float
+          maximum: 100
+          exclusiveMaximum: true
+          minimum: -100
+          exclusiveMinimum: true
+        decimal_max_value:
+          type: number
+          format: double
+          maximum: 200
+          minimum: -1000
+          exclusiveMinimum: true
+        decimal_min_value:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: 100
+          exclusiveMaximum: true
+        decimal_decimal:
+          type: number
+          format: double
+          maximum: 100
+          minimum: -100
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        list_max_length:
+          type: array
+          items: {}
+          maxItems: 200
+        list_min_length:
+          type: array
+          items: {}
+          minItems: 100
+        dict_max_length:
+          type: object
+          additionalProperties: {}
+          maxProperties: 200
+        dict_min_length:
+          type: object
+          additionalProperties: {}
+          minProperties: 100
+        age:
+          type: string
+          pattern: ^P\d+Y$
+          maxLength: 5
+          minLength: 3
+        array_max_length:
+          type: array
+          items: {}
+          maxItems: 200
+        array_min_length:
+          type: array
+          items: {}
+          minItems: 100
+        ascii_username:
+          type: string
+          pattern: ^[\w.@+-]+$
+        unicode_username:
+          type: string
+          pattern: ^[\w.@+-]+$
+        file_extension:
+          type: string
+          pattern: (?:\.jpg|\.png)$
+        integer_string:
+          type: string
+          pattern: ^-?\d+$
+        integer_list:
+          type: string
+          pattern: ^\d+(?:,\d+)*$
+      required:
+      - age
+      - array_max_length
+      - array_min_length
+      - ascii_username
+      - char_email
+      - char_max_length
+      - char_min_length
+      - char_regex
+      - char_url
+      - decimal_decimal
+      - decimal_max_value
+      - decimal_min_value
+      - dict_max_length
+      - dict_min_length
+      - file_extension
+      - float_decimal
+      - float_max_value
+      - float_min_value
+      - integer_decimal
+      - integer_list
+      - integer_max_value
+      - integer_min_value
+      - integer_string
+      - list_max_length
+      - list_min_length
+      - unicode_username
+    Y:
+      type: object
+      properties:
+        char_max_value:
+          type: string
+        char_min_value:
+          type: string
+        char_decimal:
+          type: string
+        float_email:
+          type: number
+          format: float
+        float_url:
+          type: number
+          format: float
+        float_regex:
+          type: number
+          format: float
+        float_max_length:
+          type: number
+          format: float
+        float_min_length:
+          type: number
+          format: float
+        integer_email:
+          type: integer
+        integer_url:
+          type: integer
+        integer_regex:
+          type: integer
+        integer_max_length:
+          type: integer
+        integer_min_length:
+          type: integer
+        decimal_email:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        decimal_url:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        decimal_regex:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        decimal_max_length:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        decimal_min_length:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        list_email:
+          type: array
+          items: {}
+        list_url:
+          type: array
+          items: {}
+        list_regex:
+          type: array
+          items: {}
+        list_max_value:
+          type: array
+          items: {}
+        list_min_value:
+          type: array
+          items: {}
+        list_decimal:
+          type: array
+          items: {}
+        dict_email:
+          type: object
+          additionalProperties: {}
+        dict_url:
+          type: object
+          additionalProperties: {}
+        dict_regex:
+          type: object
+          additionalProperties: {}
+        dict_max_value:
+          type: object
+          additionalProperties: {}
+        dict_min_value:
+          type: object
+          additionalProperties: {}
+        dict_decimal:
+          type: object
+          additionalProperties: {}
+        boolean_email:
+          type: boolean
+        boolean_url:
+          type: boolean
+        boolean_regex:
+          type: boolean
+        boolean_max_length:
+          type: boolean
+        boolean_min_length:
+          type: boolean
+        boolean_max_value:
+          type: boolean
+        boolean_min_value:
+          type: boolean
+        boolean_decimal:
+          type: boolean
+        duration_max_value:
+          type: string
+        duration_min_value:
+          type: string
+        duration_decimal:
+          type: string
+      required:
+      - boolean_decimal
+      - boolean_email
+      - boolean_max_length
+      - boolean_max_value
+      - boolean_min_length
+      - boolean_min_value
+      - boolean_regex
+      - boolean_url
+      - char_decimal
+      - char_max_value
+      - char_min_value
+      - decimal_email
+      - decimal_max_length
+      - decimal_min_length
+      - decimal_regex
+      - decimal_url
+      - dict_decimal
+      - dict_email
+      - dict_max_value
+      - dict_min_value
+      - dict_regex
+      - dict_url
+      - duration_decimal
+      - duration_max_value
+      - duration_min_value
+      - float_email
+      - float_max_length
+      - float_min_length
+      - float_regex
+      - float_url
+      - integer_email
+      - integer_max_length
+      - integer_min_length
+      - integer_regex
+      - integer_url
+      - list_decimal
+      - list_email
+      - list_max_value
+      - list_min_value
+      - list_regex
+      - list_url
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
