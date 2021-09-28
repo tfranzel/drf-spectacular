@@ -160,8 +160,12 @@ def get_view_model(view, emit_warnings=True):
 
 def get_doc(obj):
     """ get doc string with fallback on obj's base classes (ignoring DRF documentation). """
+    def post_cleanup(doc: str):
+        # also clean up trailing whitespace for each line
+        return '\n'.join(line.rstrip() for line in doc.rstrip().split('\n'))
+
     if not inspect.isclass(obj):
-        return inspect.getdoc(obj) or ''
+        return post_cleanup(inspect.getdoc(obj) or '')
 
     def safe_index(lst, item):
         try:
@@ -174,10 +178,7 @@ def get_doc(obj):
     )
     for cls in obj.__mro__[:lib_barrier]:
         if cls.__doc__:
-            # dedent and cleanup of trailing white space on each line
-            doc = inspect.cleandoc(cls.__doc__)
-            doc = '\n'.join(line.rstrip() for line in doc.rstrip().split('\n'))
-            return doc
+            return post_cleanup(inspect.cleandoc(cls.__doc__))
     return ''
 
 

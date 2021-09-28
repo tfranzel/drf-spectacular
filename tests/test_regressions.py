@@ -2480,3 +2480,32 @@ def test_int64_detection(kwargs, expected, no_warnings):
 
     schema = generate_schema('x', view_function=view_func)
     assert schema['components']['schemas']['X']['properties']['field'] == expected
+
+
+def test_description_whitespace_stripping(no_warnings):
+    class XViewset(viewsets.ModelViewSet):
+        """ view: oneliner with leading/trailing whitespace """
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+
+        def retrieve(self, request):
+            """  retrieve: oneliner with leading/trailing whitespace  """
+            pass  # pragma: no cover
+
+        def create(self, request):
+            """
+                create: multi line indented  
+                description docstring        
+            """  # noqa: W291
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/']['get']['description'] == (
+        'view: oneliner with leading/trailing whitespace'
+    )
+    assert schema['paths']['/x/{id}/']['get']['description'] == (
+        'retrieve: oneliner with leading/trailing whitespace'
+    )
+    assert schema['paths']['/x/']['post']['description'] == (
+        'create: multi line indented\ndescription docstring'
+    )

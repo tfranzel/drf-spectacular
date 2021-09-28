@@ -84,7 +84,7 @@ def test_view_extension(no_warnings):
     schema = generate_schema('x', view=XView)
     operation = schema['paths']['/x']['get']
     assert get_response_schema(operation)['type'] == 'number'
-    assert operation['description'].strip() == 'docstring for GET'
+    assert operation['description'] == 'docstring for GET'
 
 
 @api_view()
