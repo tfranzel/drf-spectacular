@@ -209,68 +209,140 @@ def test_nested_validators():
 
 
 @pytest.mark.parametrize('instance,expected', [
-    (serializers.DictField(validators=[validators.MaxLengthValidator(150), validators.MaxLengthValidator(200)]),
-     {'type': 'object', 'additionalProperties': {}, 'maxProperties': 150}),
-    (serializers.DictField(validators=[validators.MinLengthValidator(150), validators.MinLengthValidator(100)]),
-     {'type': 'object', 'additionalProperties': {}, 'minProperties': 150}),
-    (serializers.ListField(max_length=150, validators=[validators.MaxLengthValidator(200)]),
-     {'type': 'array', 'items': {}, 'maxItems': 150}),
-    (serializers.ListField(min_length=150, validators=[validators.MinLengthValidator(100)]),
-     {'type': 'array', 'items': {}, 'minItems': 150}),
-    (serializers.ListField(max_length=200, validators=[validators.MaxLengthValidator(150)]),
-     {'type': 'array', 'items': {}, 'maxItems': 150}),
-    (serializers.ListField(min_length=100, validators=[validators.MinLengthValidator(150)]),
-     {'type': 'array', 'items': {}, 'minItems': 150}),
-    (serializers.ListField(validators=[validators.MaxLengthValidator(150), validators.MaxLengthValidator(200)]),
-     {'type': 'array', 'items': {}, 'maxItems': 150}),
-    (serializers.ListField(validators=[validators.MinLengthValidator(150), validators.MinLengthValidator(100)]),
-     {'type': 'array', 'items': {}, 'minItems': 150}),
-    (serializers.CharField(max_length=150, validators=[validators.MaxLengthValidator(200)]),
-     {'type': 'string', 'maxLength': 150}),
-    (serializers.CharField(min_length=150, validators=[validators.MinLengthValidator(100)]),
-     {'type': 'string', 'minLength': 150}),
-    (serializers.CharField(max_length=200, validators=[validators.MaxLengthValidator(150)]),
-     {'type': 'string', 'maxLength': 150}),
-    (serializers.CharField(min_length=100, validators=[validators.MinLengthValidator(150)]),
-     {'type': 'string', 'minLength': 150}),
-    (serializers.CharField(validators=[validators.MaxLengthValidator(150), validators.MaxLengthValidator(200)]),
-     {'type': 'string', 'maxLength': 150}),
-    (serializers.CharField(validators=[validators.MinLengthValidator(150), validators.MinLengthValidator(100)]),
-     {'type': 'string', 'minLength': 150}),
-    (serializers.IntegerField(max_value=150, validators=[validators.MaxValueValidator(200)]),
-     {'type': 'integer', 'maximum': 150}),
-    (serializers.IntegerField(min_value=150, validators=[validators.MinValueValidator(100)]),
-     {'type': 'integer', 'minimum': 150}),
-    (serializers.IntegerField(max_value=200, validators=[validators.MaxValueValidator(150)]),
-     {'type': 'integer', 'maximum': 150}),
-    (serializers.IntegerField(min_value=100, validators=[validators.MinValueValidator(150)]),
-     {'type': 'integer', 'minimum': 150}),
-    (serializers.IntegerField(validators=[validators.MaxValueValidator(150), validators.MaxValueValidator(200)]),
-     {'type': 'integer', 'maximum': 150}),
-    (serializers.IntegerField(validators=[validators.MinValueValidator(150), validators.MinValueValidator(100)]),
-     {'type': 'integer', 'minimum': 150}),
-    (serializers.DecimalField(max_digits=3, decimal_places=1, validators=[validators.MaxValueValidator(50)]),
-     {'type': 'number', 'format': 'double', 'maximum': 50, 'minimum': -100, 'exclusiveMinimum': True}),
-    (serializers.DecimalField(max_digits=3, decimal_places=1, validators=[validators.MinValueValidator(-50)]),
-     {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -50, 'exclusiveMaximum': True}),
-    (serializers.DecimalField(max_digits=3, decimal_places=1, validators=[validators.MaxValueValidator(150)]),
-     {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100, 'exclusiveMinimum': True}),
-    (serializers.DecimalField(max_digits=3, decimal_places=1, validators=[validators.MinValueValidator(-150)]),
-     {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100, 'exclusiveMaximum': True}),
-    (serializers.DecimalField(max_digits=4, decimal_places=1,
-     validators=[validators.DecimalValidator(max_digits=3, decimal_places=1)]),
-     {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100,
-      'exclusiveMaximum': True, 'exclusiveMinimum': True}),
-    (serializers.DecimalField(max_digits=3, decimal_places=1,
-     validators=[validators.DecimalValidator(max_digits=4, decimal_places=1)]),
-     {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100,
-      'exclusiveMaximum': True, 'exclusiveMinimum': True}),
-    (serializers.DecimalField(max_digits=3, decimal_places=1,
-     validators=[validators.DecimalValidator(max_digits=2, decimal_places=1), validators.MaxValueValidator(5)]),
-     {'type': 'number', 'format': 'double', 'maximum': 5, 'minimum': -10, 'exclusiveMinimum': True}),
-    (serializers.DecimalField(max_digits=3, decimal_places=1,
-     validators=[validators.DecimalValidator(max_digits=2, decimal_places=1), validators.MinValueValidator(-5)]),
-     {'type': 'number', 'format': 'double', 'maximum': 10, 'minimum': -5, 'exclusiveMaximum': True}),
+    (
+        serializers.DictField(validators=[validators.MaxLengthValidator(150), validators.MaxLengthValidator(200)]),
+        {'type': 'object', 'additionalProperties': {}, 'maxProperties': 150},
+    ),
+    (
+        serializers.DictField(validators=[validators.MinLengthValidator(150), validators.MinLengthValidator(100)]),
+        {'type': 'object', 'additionalProperties': {}, 'minProperties': 150},
+    ),
+    (
+        serializers.ListField(max_length=150, validators=[validators.MaxLengthValidator(200)]),
+        {'type': 'array', 'items': {}, 'maxItems': 150},
+    ),
+    (
+        serializers.ListField(min_length=150, validators=[validators.MinLengthValidator(100)]),
+        {'type': 'array', 'items': {}, 'minItems': 150},
+    ),
+    (
+        serializers.ListField(max_length=200, validators=[validators.MaxLengthValidator(150)]),
+        {'type': 'array', 'items': {}, 'maxItems': 150},
+    ),
+    (
+        serializers.ListField(min_length=100, validators=[validators.MinLengthValidator(150)]),
+        {'type': 'array', 'items': {}, 'minItems': 150},
+    ),
+    (
+        serializers.ListField(validators=[validators.MaxLengthValidator(150), validators.MaxLengthValidator(200)]),
+        {'type': 'array', 'items': {}, 'maxItems': 150},
+    ),
+    (
+        serializers.ListField(validators=[validators.MinLengthValidator(150), validators.MinLengthValidator(100)]),
+        {'type': 'array', 'items': {}, 'minItems': 150},
+    ),
+    (
+        serializers.CharField(max_length=150, validators=[validators.MaxLengthValidator(200)]),
+        {'type': 'string', 'maxLength': 150},
+    ),
+    (
+        serializers.CharField(min_length=150, validators=[validators.MinLengthValidator(100)]),
+        {'type': 'string', 'minLength': 150},
+    ),
+    (
+        serializers.CharField(max_length=200, validators=[validators.MaxLengthValidator(150)]),
+        {'type': 'string', 'maxLength': 150},
+    ),
+    (
+        serializers.CharField(min_length=100, validators=[validators.MinLengthValidator(150)]),
+        {'type': 'string', 'minLength': 150},
+    ),
+    (
+        serializers.CharField(validators=[validators.MaxLengthValidator(150), validators.MaxLengthValidator(200)]),
+        {'type': 'string', 'maxLength': 150},
+    ),
+    (
+        serializers.CharField(validators=[validators.MinLengthValidator(150), validators.MinLengthValidator(100)]),
+        {'type': 'string', 'minLength': 150},
+    ),
+    (
+        serializers.IntegerField(max_value=150, validators=[validators.MaxValueValidator(200)]),
+        {'type': 'integer', 'maximum': 150},
+    ),
+    (
+        serializers.IntegerField(min_value=150, validators=[validators.MinValueValidator(100)]),
+        {'type': 'integer', 'minimum': 150},
+    ),
+    (
+        serializers.IntegerField(max_value=200, validators=[validators.MaxValueValidator(150)]),
+        {'type': 'integer', 'maximum': 150},
+    ),
+    (
+        serializers.IntegerField(min_value=100, validators=[validators.MinValueValidator(150)]),
+        {'type': 'integer', 'minimum': 150},
+    ),
+    (
+        serializers.IntegerField(validators=[validators.MaxValueValidator(150), validators.MaxValueValidator(200)]),
+        {'type': 'integer', 'maximum': 150},
+    ),
+    (
+        serializers.IntegerField(validators=[validators.MinValueValidator(150), validators.MinValueValidator(100)]),
+        {'type': 'integer', 'minimum': 150},
+    ),
+    (
+        serializers.DecimalField(max_digits=3, decimal_places=1, validators=[validators.MaxValueValidator(50)]),
+        {'type': 'number', 'format': 'double', 'maximum': 50, 'minimum': -100, 'exclusiveMinimum': True},
+    ),
+    (
+        serializers.DecimalField(max_digits=3, decimal_places=1, validators=[validators.MinValueValidator(-50)]),
+        {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -50, 'exclusiveMaximum': True},
+    ),
+    (
+        serializers.DecimalField(max_digits=3, decimal_places=1, validators=[validators.MaxValueValidator(150)]),
+        {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100, 'exclusiveMinimum': True},
+    ),
+    (
+        serializers.DecimalField(max_digits=3, decimal_places=1, validators=[validators.MinValueValidator(-150)]),
+        {'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100, 'exclusiveMaximum': True},
+    ),
+    (
+        serializers.DecimalField(
+            max_digits=4,
+            decimal_places=1,
+            validators=[validators.DecimalValidator(max_digits=3, decimal_places=1)],
+        ),
+        {
+            'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100,
+            'exclusiveMaximum': True, 'exclusiveMinimum': True,
+        },
+    ),
+    (
+        serializers.DecimalField(
+            max_digits=3,
+            decimal_places=1,
+            validators=[validators.DecimalValidator(max_digits=4, decimal_places=1)],
+        ),
+        {
+            'type': 'number', 'format': 'double', 'maximum': 100, 'minimum': -100,
+            'exclusiveMaximum': True, 'exclusiveMinimum': True,
+        },
+    ),
+    (
+        serializers.DecimalField(
+            max_digits=3,
+            decimal_places=1,
+            validators=[validators.DecimalValidator(max_digits=2, decimal_places=1), validators.MaxValueValidator(5)],
+        ),
+        {'type': 'number', 'format': 'double', 'maximum': 5, 'minimum': -10, 'exclusiveMinimum': True},
+    ),
+    (
+        serializers.DecimalField(
+            max_digits=3,
+            decimal_places=1,
+            validators=[validators.DecimalValidator(max_digits=2, decimal_places=1), validators.MinValueValidator(-5)],
+        ),
+        {'type': 'number', 'format': 'double', 'maximum': 10, 'minimum': -5, 'exclusiveMaximum': True},
+    ),
 ])
 @mock.patch('rest_framework.settings.api_settings.COERCE_DECIMAL_TO_STRING', False)
 def test_validation_constrained(instance, expected):

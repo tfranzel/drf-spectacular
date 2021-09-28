@@ -1385,24 +1385,21 @@ def test_serialization_with_decimal_values(no_warnings):
         pass  # pragma: no cover
 
     schema = generate_schema('/x/', view_function=view_func)
-    field = schema['components']['schemas']['X']['properties']['field']
-    assert 'pattern' not in field
-    assert field['maximum'] == Decimal('100.00')
-    assert field['minimum'] == Decimal('1')
-    assert 'exclusiveMaximum' not in field
-    assert 'exclusiveMinimum' not in field
-    field = schema['components']['schemas']['X']['properties']['field_coerced']
-    assert field['pattern'] == r'^\d{0,3}(?:\.\d{0,2})?$'
-    assert 'maximum' not in field
-    assert 'minimum' not in field
-    assert 'exclusiveMaximum' not in field
-    assert 'exclusiveMinimum' not in field
+    assert schema['components']['schemas']['X']['properties']['field'] == {
+        'type': 'number',
+        'format': 'double',
+        'maximum': Decimal('100.00'),
+        'minimum': Decimal('1'),
+    }
+    assert schema['components']['schemas']['X']['properties']['field_coerced'] == {
+        'type': 'string',
+        'format': 'decimal',
+        'pattern': r'^\d{0,3}(?:\.\d{0,2})?$',
+    }
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
     assert b'maximum: 100.00\n' in schema_yml
     assert b'minimum: 1\n' in schema_yml
-    assert b'exclusiveMaximum: true' not in field
-    assert b'exclusiveMinimum: true' not in field
 
 
 def test_non_supported_http_verbs(no_warnings):
@@ -2439,14 +2436,38 @@ def test_path_converter_override(no_warnings):
 
 
 @pytest.mark.parametrize('kwargs,expected', [
-    ({'max_value': -2147483648}, {'type': 'integer', 'maximum': -2147483648}),
-    ({'max_value': -2147483649}, {'type': 'integer', 'maximum': -2147483649, 'format': 'int64'}),
-    ({'max_value': 2147483647}, {'type': 'integer', 'maximum': 2147483647}),
-    ({'max_value': 2147483648}, {'type': 'integer', 'maximum': 2147483648, 'format': 'int64'}),
-    ({'min_value': -2147483648}, {'type': 'integer', 'minimum': -2147483648}),
-    ({'min_value': -2147483649}, {'type': 'integer', 'minimum': -2147483649, 'format': 'int64'}),
-    ({'min_value': 2147483647}, {'type': 'integer', 'minimum': 2147483647}),
-    ({'min_value': 2147483648}, {'type': 'integer', 'minimum': 2147483648, 'format': 'int64'}),
+    (
+        {'max_value': -2147483648},
+        {'type': 'integer', 'maximum': -2147483648},
+    ),
+    (
+        {'max_value': -2147483649},
+        {'type': 'integer', 'maximum': -2147483649, 'format': 'int64'},
+    ),
+    (
+        {'max_value': 2147483647},
+        {'type': 'integer', 'maximum': 2147483647},
+    ),
+    (
+        {'max_value': 2147483648},
+        {'type': 'integer', 'maximum': 2147483648, 'format': 'int64'},
+    ),
+    (
+        {'min_value': -2147483648},
+        {'type': 'integer', 'minimum': -2147483648},
+    ),
+    (
+        {'min_value': -2147483649},
+        {'type': 'integer', 'minimum': -2147483649, 'format': 'int64'},
+    ),
+    (
+        {'min_value': 2147483647},
+        {'type': 'integer', 'minimum': 2147483647},
+    ),
+    (
+        {'min_value': 2147483648},
+        {'type': 'integer', 'minimum': 2147483648, 'format': 'int64'},
+    ),
 ])
 def test_int64_detection(kwargs, expected, no_warnings):
     class XSerializer(serializers.Serializer):
