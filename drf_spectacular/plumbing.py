@@ -1008,6 +1008,17 @@ def sanitize_result_object(result):
     return result
 
 
+def sanitize_specification_extensions(x):
+    # https://spec.openapis.org/oas/v3.0.3#specification-extensions
+    output = {}
+    for key, value in x.items():
+        if not re.match(r'^x-', key):
+            warn('invalid extension {key!r}')
+        else:
+            output[key] = value
+    return output
+
+
 def camelize_operation(path, operation):
     for path_variable in re.findall(r'\{(\w+)\}', path):
         path = path.replace(
