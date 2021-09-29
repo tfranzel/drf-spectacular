@@ -519,12 +519,7 @@ class AutoSchema(ViewInspector):
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if is_list_serializer(field):
-            if is_serializer(field.child):
-                component = self.resolve_serializer(field.child, direction)
-                return append_meta(build_array_type(component.ref), meta) if component else None
-            else:
-                schema = self._map_serializer_field(field.child, direction)
-                return append_meta(build_array_type(schema), meta)
+            return append_meta(self._unwrap_list_serializer(field, direction), meta)
 
         # nested serializer
         if is_serializer(field):
@@ -1038,11 +1033,7 @@ class AutoSchema(ViewInspector):
         serializer = force_instance(serializer)
 
         if is_list_serializer(serializer):
-            if is_serializer(serializer.child):
-                component = self.resolve_serializer(serializer.child, 'request')
-                schema = build_array_type(component.ref)
-            else:
-                schema = build_array_type(self._map_serializer_field(serializer.child, 'request'))
+            schema = self._unwrap_list_serializer(serializer, 'request')
             request_body_required = True
         elif is_serializer(serializer):
             if self.method == 'PATCH':
@@ -1116,6 +1107,18 @@ class AutoSchema(ViewInspector):
             schema['description'] = _('Unspecified response body')
             return {'200': self._get_response_for_code(schema, '200')}
 
+    def _unwrap_list_serializer(self, serializer, direction) -> dict:
+        if is_field(serializer):
+            return self._map_serializer_field(serializer, direction)
+        elif is_basic_serializer(serializer):
+            return self.resolve_serializer(serializer, direction).ref
+        elif is_list_serializer(serializer):
+            return build_array_type(
+                self._unwrap_list_serializer(serializer.child, direction)
+            )
+        else:
+            assert False, 'Serializer is of unknown type.'
+
     def _get_response_for_code(self, serializer, status_code, media_types=None):
         if isinstance(serializer, OpenApiResponse):
             serializer, description, examples = (
@@ -1131,10 +1134,7 @@ class AutoSchema(ViewInspector):
         if not serializer:
             return {**headers, 'description': description or _('No response body')}
         elif is_list_serializer(serializer):
-            if is_serializer(serializer.child):
-                schema = self.resolve_serializer(serializer.child, 'response').ref
-            else:
-                schema = self._map_serializer_field(serializer.child, 'response')
+            schema = self._unwrap_list_serializer(serializer.child, 'response')
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'response')
             if not component.schema:

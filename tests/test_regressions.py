@@ -2509,3 +2509,25 @@ def test_description_whitespace_stripping(no_warnings):
     assert schema['paths']['/x/']['post']['description'] == (
         'create: multi line indented\ndescription docstring'
     )
+
+
+def test_double_nested_list_serializer(no_warnings):
+    class XSerializer(serializers.Serializer):
+        id = serializers.IntegerField()
+
+    class XNestedListSerializer(serializers.Serializer):
+        nested_xs = serializers.ListSerializer(child=XSerializer(many=True))
+
+    class XAPIView(generics.GenericAPIView):
+        @extend_schema(request=XNestedListSerializer, responses=XNestedListSerializer)
+        def post(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XAPIView)
+    operation = schema['paths']['/x']['post']
+    assert get_request_schema(operation) == {'$ref': '#/components/schemas/XNestedList'}
+    assert get_response_schema(operation) == {'$ref': '#/components/schemas/XNestedList'}
+    assert schema['components']['schemas']['XNestedList']['properties']['nested_xs'] == {
+        'type': 'array',
+        'items': {'type': 'array', 'items': {'$ref': '#/components/schemas/X'}}
+    }
