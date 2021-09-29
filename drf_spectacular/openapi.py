@@ -24,13 +24,13 @@ from drf_spectacular.extensions import (
     OpenApiFilterExtension, OpenApiSerializerExtension, OpenApiSerializerFieldExtension,
 )
 from drf_spectacular.plumbing import (
-    ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta, build_array_type,
-    build_basic_type, build_choice_field, build_examples_list, build_generic_type,
-    build_media_type_object, build_object_type, build_parameter_type, error, follow_field_source,
-    follow_model_field_lookup, force_instance, get_doc, get_type_hints, get_view_model,
-    is_basic_type, is_field, is_list_serializer, is_patched_serializer, is_serializer,
-    is_trivial_string_variation, resolve_django_path_parameter, resolve_regex_path_parameter,
-    resolve_type_hint, safe_ref, warn,
+    ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta,
+    assert_basic_serializer, build_array_type, build_basic_type, build_choice_field,
+    build_examples_list, build_generic_type, build_media_type_object, build_object_type,
+    build_parameter_type, error, follow_field_source, follow_model_field_lookup, force_instance,
+    get_doc, get_type_hints, get_view_model, is_basic_serializer, is_basic_type, is_field,
+    is_list_serializer, is_patched_serializer, is_serializer, is_trivial_string_variation,
+    resolve_django_path_parameter, resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -163,7 +163,7 @@ class AutoSchema(ViewInspector):
                         default=parameter.default,
                         examples=build_examples_list(parameter.examples),
                     )
-            elif is_serializer(parameter):
+            elif is_basic_serializer(parameter):
                 # explode serializer into separate parameters. defaults to QUERY location
                 mapped = self._map_serializer(parameter, 'request')
                 for property_name, property_schema in mapped['properties'].items():
@@ -806,6 +806,7 @@ class AutoSchema(ViewInspector):
         return meta
 
     def _map_basic_serializer(self, serializer, direction):
+        assert_basic_serializer(serializer)
         serializer = force_instance(serializer)
         required = set()
         properties = {}
@@ -1266,13 +1267,9 @@ class AutoSchema(ViewInspector):
         return name
 
     def resolve_serializer(self, serializer, direction) -> ResolvedComponent:
-        assert is_serializer(serializer), (
-            f'internal assumption violated because we expected a serializer here and instead '
-            f'got a "{serializer}". This may be the result of another app doing some unexpected '
-            f'magic or an invalid internal call. Feel free to report this as a bug at '
-            f'https://github.com/tfranzel/drf-spectacular/issues '
-        )
+        assert_basic_serializer(serializer)
         serializer = force_instance(serializer)
+
         with add_trace_message(serializer.__class__.__name__):
             component = ResolvedComponent(
                 name=self._get_serializer_name(serializer, direction),

@@ -92,6 +92,10 @@ def is_list_serializer(obj) -> bool:
     return isinstance(force_instance(obj), serializers.ListSerializer)
 
 
+def is_basic_serializer(obj) -> bool:
+    return is_serializer(obj) and not is_list_serializer(obj)
+
+
 def is_field(obj):
     # make sure obj is a serializer field and nothing else.
     # guard against serializers because BaseSerializer(Field)
@@ -119,6 +123,15 @@ def is_trivial_string_variation(a: str, b: str):
     a = (a or '').strip().lower().replace(' ', '_').replace('-', '_')
     b = (b or '').strip().lower().replace(' ', '_').replace('-', '_')
     return a == b
+
+
+def assert_basic_serializer(serializer):
+    assert is_basic_serializer(serializer), (
+        f'internal assumption violated because we expected a basic serializer here and '
+        f'instead got a "{serializer}". This may be the result of another app doing '
+        f'some unexpected magic or an invalid internal call. Feel free to report this '
+        f'as a bug at https://github.com/tfranzel/drf-spectacular/issues'
+    )
 
 
 @cache
