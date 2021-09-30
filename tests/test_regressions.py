@@ -2511,12 +2511,15 @@ def test_description_whitespace_stripping(no_warnings):
     )
 
 
-def test_double_nested_list_serializer(no_warnings):
+@pytest.mark.parametrize('list_variation', [
+    serializers.ListField, serializers.ListSerializer
+])
+def test_double_nested_list_serializer(no_warnings, list_variation):
     class XSerializer(serializers.Serializer):
         id = serializers.IntegerField()
 
     class XNestedListSerializer(serializers.Serializer):
-        nested_xs = serializers.ListSerializer(child=XSerializer(many=True))
+        nested_xs = list_variation(child=XSerializer(many=True))
 
     class XAPIView(generics.GenericAPIView):
         @extend_schema(request=XNestedListSerializer, responses=XNestedListSerializer)

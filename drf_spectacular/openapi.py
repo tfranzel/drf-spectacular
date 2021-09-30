@@ -594,7 +594,7 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.ListField):
             if isinstance(field.child, _UnvalidatedField):
                 return append_meta(build_array_type(build_basic_type(OpenApiTypes.ANY)), meta)
-            elif is_serializer(field.child):
+            elif is_basic_serializer(field.child):
                 component = self.resolve_serializer(field.child, direction)
                 return append_meta(build_array_type(component.ref), meta) if component else None
             else:
