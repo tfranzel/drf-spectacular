@@ -1058,7 +1058,7 @@ class AutoSchema(ViewInspector):
                 serializer = copy.copy(serializer)
                 serializer.partial = True
             component = self.resolve_serializer(serializer, 'request')
-            if not component.schema:
+            if not component:
                 # serializer is empty so skip content enumeration
                 return None, False
             schema = component.ref
@@ -1152,7 +1152,7 @@ class AutoSchema(ViewInspector):
             schema = self._unwrap_list_serializer(serializer.child, 'response')
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'response')
-            if not component.schema:
+            if not component:
                 return {**headers, 'description': description or _('No response body')}
             schema = component.ref
         elif is_basic_type(serializer):
