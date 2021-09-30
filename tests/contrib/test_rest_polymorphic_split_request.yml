@@ -29,13 +29,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Person'
+              $ref: '#/components/schemas/PersonRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Person'
+              $ref: '#/components/schemas/PersonRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Person'
+              $ref: '#/components/schemas/PersonRequest'
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -85,13 +85,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Person'
+              $ref: '#/components/schemas/PersonRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Person'
+              $ref: '#/components/schemas/PersonRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Person'
+              $ref: '#/components/schemas/PersonRequest'
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -118,13 +118,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedPerson'
+              $ref: '#/components/schemas/PatchedPersonRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedPerson'
+              $ref: '#/components/schemas/PatchedPersonRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedPerson'
+              $ref: '#/components/schemas/PatchedPersonRequest'
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -178,6 +178,18 @@ components:
       - board
       - company_name
       - id
+    LegalPersonRequest:
+      type: object
+      properties:
+        company_name:
+          type: string
+          maxLength: 30
+        address:
+          type: string
+          maxLength: 30
+      required:
+      - address
+      - company_name
     NaturalPerson:
       type: object
       properties:
@@ -202,6 +214,26 @@ components:
       - id
       - last_name
       - supervisor_id
+    NaturalPersonRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 30
+        last_name:
+          type: string
+          maxLength: 30
+        address:
+          type: string
+          maxLength: 30
+        supervisor_id:
+          type: integer
+          nullable: true
+      required:
+      - address
+      - first_name
+      - last_name
+      - supervisor_id
     NomadicPerson:
       type: object
       properties:
@@ -215,29 +247,18 @@ components:
       required:
       - address
       - id
-    PatchedLegalPerson:
+    PatchedLegalPersonRequest:
       type: object
       properties:
-        id:
-          type: integer
-          readOnly: true
         company_name:
           type: string
           maxLength: 30
         address:
           type: string
           maxLength: 30
-        board:
-          type: array
-          items:
-            $ref: '#/components/schemas/Person'
-          readOnly: true
-    PatchedNaturalPerson:
+    PatchedNaturalPersonRequest:
       type: object
       properties:
-        id:
-          type: integer
-          readOnly: true
         first_name:
           type: string
           maxLength: 30
@@ -250,27 +271,15 @@ components:
         supervisor_id:
           type: integer
           nullable: true
-    PatchedNomadicPerson:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        address:
-          type: string
-          readOnly: true
-          maxLength: 30
-    PatchedPerson:
+    PatchedPersonRequest:
       oneOf:
-      - $ref: '#/components/schemas/PatchedLegalPerson'
-      - $ref: '#/components/schemas/PatchedNaturalPerson'
-      - $ref: '#/components/schemas/PatchedNomadicPerson'
+      - $ref: '#/components/schemas/PatchedLegalPersonRequest'
+      - $ref: '#/components/schemas/PatchedNaturalPersonRequest'
       discriminator:
         propertyName: resourcetype
         mapping:
-          legal: '#/components/schemas/PatchedLegalPerson'
-          natural: '#/components/schemas/PatchedNaturalPerson'
-          nomadic: '#/components/schemas/PatchedNomadicPerson'
+          legal: '#/components/schemas/PatchedLegalPersonRequest'
+          natural: '#/components/schemas/PatchedNaturalPersonRequest'
     Person:
       oneOf:
       - $ref: '#/components/schemas/LegalPerson'
@@ -282,6 +291,15 @@ components:
           legal: '#/components/schemas/LegalPerson'
           natural: '#/components/schemas/NaturalPerson'
           nomadic: '#/components/schemas/NomadicPerson'
+    PersonRequest:
+      oneOf:
+      - $ref: '#/components/schemas/LegalPersonRequest'
+      - $ref: '#/components/schemas/NaturalPersonRequest'
+      discriminator:
+        propertyName: resourcetype
+        mapping:
+          legal: '#/components/schemas/LegalPersonRequest'
+          natural: '#/components/schemas/NaturalPersonRequest'
   securitySchemes:
     basicAuth:
       type: http

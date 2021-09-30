@@ -1,4 +1,6 @@
 # type: ignore
+from unittest import mock
+
 import pytest
 from django.db import models
 from rest_framework import serializers, viewsets
@@ -33,10 +35,17 @@ class NaturalPerson(Person):
     supervisor = models.ForeignKey('NaturalPerson', blank=True, null=True, on_delete=models.CASCADE)
 
 
+class NomadicPerson(Person):
+    @property
+    def address(self):
+        return 'Anywhere!'
+
+
 class PersonSerializer(PolymorphicSerializer):
     model_serializer_mapping = {
         LegalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.LegalPersonSerializer'),
         NaturalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.NaturalPersonSerializer'),
+        NomadicPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.NomadicPersonSerializer'),
     }
 
     def to_resource_type(self, model_or_instance):
@@ -64,6 +73,15 @@ class NaturalPersonSerializer(serializers.ModelSerializer):
         fields = ('id', 'first_name', 'last_name', 'address', 'supervisor_id')
 
 
+class NomadicPersonSerializer(serializers.ModelSerializer):
+    # special case: all fields are read-only.
+    address = serializers.CharField(max_length=30, read_only=True)
+
+    class Meta:
+        model = NomadicPerson
+        fields = ('id', 'address')
+
+
 class PersonViewSet(viewsets.ModelViewSet):
     queryset = Person.objects.all()
     serializer_class = PersonSerializer
@@ -74,6 +92,23 @@ def test_rest_polymorphic(no_warnings):
     assert_schema(
         generate_schema('persons', PersonViewSet),
         'tests/contrib/test_rest_polymorphic.yml'
+    )
+
+
+@pytest.mark.contrib('polymorphic', 'rest_polymorphic')
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_rest_polymorphic_split_request(no_warnings):
+    schema = generate_schema('persons', PersonViewSet)
+    names = set(schema['components']['schemas'])
+    assert 'LegalPersonRequest' in names
+    assert 'NaturalPersonRequest' in names
+    assert 'NomadicPersonRequest' not in names  # All fields were read-only.
+    assert 'PatchedLegalPersonRequest' in names
+    assert 'PatchedNaturalPersonRequest' in names
+    assert 'PatchedNomadicPersonRequest' not in names  # All fields were read-only.
+    assert_schema(
+        generate_schema('persons', PersonViewSet),
+        'tests/contrib/test_rest_polymorphic_split_request.yml',
     )
 
 
