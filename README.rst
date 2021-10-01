@@ -111,7 +111,7 @@ these static files as a separate optional package. Usage is as follows:
 
 .. code:: bash
 
-    $ pip install drf-spectacular[sidecar]
+    $ pip install drf-spectacular-sidecar
 
 .. code:: python
 
