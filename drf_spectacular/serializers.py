@@ -33,6 +33,8 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
             sub_serializer = force_instance(sub_serializer)
             sub_serializer.partial = self.target.partial
             resolved_sub_serializer = auto_schema.resolve_serializer(sub_serializer, direction)
+            if not resolved_sub_serializer:
+                continue
 
             try:
                 discriminator_field = sub_serializer.fields[self.target.resource_type_field_name]
@@ -56,6 +58,8 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
             sub_serializer = force_instance(sub_serializer)
             sub_serializer.partial = self.target.partial
             resolved_sub_serializer = auto_schema.resolve_serializer(sub_serializer, direction)
+            if not resolved_sub_serializer:
+                continue
             sub_components.append((resource_type, resolved_sub_serializer.ref))
 
         return sub_components

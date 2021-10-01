@@ -253,3 +253,53 @@ def test_polymorphic_proxy_serializer_misusage(no_warnings):
 
     with pytest.raises(AssertionError):
         PolymorphicProxySerializer(**PROXY_SERIALIZER_PARAMS).to_internal_value(None)
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+@pytest.mark.parametrize('explicit', [True, False])
+def test_polymorphic_split_request_with_ro_serializer(no_warnings, explicit):
+    class BasicPersonSerializer(serializers.ModelSerializer):
+        type = serializers.SerializerMethodField()
+
+        class Meta:
+            model = NaturalPerson2
+            fields = ('id', 'type')
+
+        def get_type(self, obj) -> str:
+            return 'basic'
+
+    if explicit:
+        poly_proxy = PolymorphicProxySerializer(
+            component_name='MetaPerson',
+            serializers={'natural': NaturalPersonSerializer, 'basic': BasicPersonSerializer},
+            resource_type_field_name='type',
+        )
+    else:
+        poly_proxy = PolymorphicProxySerializer(
+            component_name='MetaPerson',
+            serializers=[NaturalPersonSerializer, BasicPersonSerializer],
+            resource_type_field_name='type',
+        )
+
+    @extend_schema(request=poly_proxy, responses=poly_proxy)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    components = schema['components']['schemas']
+    assert 'BasicPersonRequest' not in components
+    assert components['MetaPerson']['oneOf'] == [
+        {'$ref': '#/components/schemas/NaturalPerson'},
+        {'$ref': '#/components/schemas/BasicPerson'}
+    ]
+    assert components['MetaPerson']['discriminator']['mapping'] == {
+        'natural': '#/components/schemas/NaturalPerson',
+        'basic': '#/components/schemas/BasicPerson'
+    }
+    assert components['MetaPersonRequest']['oneOf'] == [
+        {'$ref': '#/components/schemas/NaturalPersonRequest'},
+    ]
+    assert components['MetaPersonRequest']['discriminator']['mapping'] == {
+        'natural': '#/components/schemas/NaturalPersonRequest',
+    }

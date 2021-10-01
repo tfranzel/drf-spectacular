@@ -14,8 +14,10 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
             sub_serializer = serializer._get_serializer_from_model_or_instance(sub_model)
             sub_serializer.partial = serializer.partial
             resource_type = serializer.to_resource_type(sub_model)
-            ref = auto_schema.resolve_serializer(sub_serializer, direction).ref
-            sub_components.append((resource_type, ref))
+            component = auto_schema.resolve_serializer(sub_serializer, direction)
+            if not component:
+                continue
+            sub_components.append((resource_type, component.ref))
 
             if not resource_type:
                 warn(
