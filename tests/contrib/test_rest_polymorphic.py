@@ -36,9 +36,7 @@ class NaturalPerson(Person):
 
 
 class NomadicPerson(Person):
-    @property
-    def address(self):
-        return 'Anywhere!'
+    pass
 
 
 class PersonSerializer(PolymorphicSerializer):
@@ -97,19 +95,29 @@ def test_rest_polymorphic(no_warnings):
 
 @pytest.mark.contrib('polymorphic', 'rest_polymorphic')
 @mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
-def test_rest_polymorphic_split_request(no_warnings):
+def test_rest_polymorphic_split_request_with_ro_serializer(no_warnings):
     schema = generate_schema('persons', PersonViewSet)
-    names = set(schema['components']['schemas'])
-    assert 'LegalPersonRequest' in names
-    assert 'NaturalPersonRequest' in names
-    assert 'NomadicPersonRequest' not in names  # All fields were read-only.
-    assert 'PatchedLegalPersonRequest' in names
-    assert 'PatchedNaturalPersonRequest' in names
-    assert 'PatchedNomadicPersonRequest' not in names  # All fields were read-only.
-    assert_schema(
-        generate_schema('persons', PersonViewSet),
-        'tests/contrib/test_rest_polymorphic_split_request.yml',
-    )
+    components = schema['components']['schemas']
+    assert 'NomadicPersonRequest' not in components  # All fields were read-only.
+    assert 'PatchedNomadicPersonRequest' not in components  # All fields were read-only.
+    assert components['Person']['oneOf'] == [
+        {'$ref': '#/components/schemas/LegalPerson'},
+        {'$ref': '#/components/schemas/NaturalPerson'},
+        {'$ref': '#/components/schemas/NomadicPerson'}
+    ]
+    assert components['Person']['discriminator']['mapping'] == {
+        'legal': '#/components/schemas/LegalPerson',
+        'natural': '#/components/schemas/NaturalPerson',
+        'nomadic': '#/components/schemas/NomadicPerson'
+    }
+    assert components['PersonRequest']['oneOf'] == [
+        {'$ref': '#/components/schemas/LegalPersonRequest'},
+        {'$ref': '#/components/schemas/NaturalPersonRequest'},
+    ]
+    assert components['PersonRequest']['discriminator']['mapping'] == {
+        'legal': '#/components/schemas/LegalPersonRequest',
+        'natural': '#/components/schemas/NaturalPersonRequest',
+    }
 
 
 @pytest.mark.contrib('polymorphic', 'rest_polymorphic')
