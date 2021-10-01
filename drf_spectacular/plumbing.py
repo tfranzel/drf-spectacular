@@ -1008,12 +1008,12 @@ def sanitize_result_object(result):
     return result
 
 
-def sanitize_specification_extensions(x):
+def sanitize_specification_extensions(extensions):
     # https://spec.openapis.org/oas/v3.0.3#specification-extensions
     output = {}
-    for key, value in x.items():
+    for key, value in extensions.items():
         if not re.match(r'^x-', key):
-            warn('invalid extension {key!r}')
+            warn(f'invalid extension {key!r}. vendor extensions must start with "x-"')
         else:
             output[key] = value
     return output
