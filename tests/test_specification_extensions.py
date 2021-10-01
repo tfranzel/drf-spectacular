@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.views import APIView
 
 from drf_spectacular.contrib.django_oauth_toolkit import DjangoOAuthToolkitScheme
-from drf_spectacular.utils import extend_schema, extend_schema_serializer
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_serializer
 from tests import generate_schema, get_request_schema, get_response_schema
 
 
@@ -156,3 +156,31 @@ def test_security_spec_extensions(no_warnings):
     oauth2 = schema['components']['securitySchemes']['oauth2']
     assert oauth2['x-client-id'] == 'my-client-id'
     assert oauth2['x-client-secret'] == 'my-client-secret'
+
+
+def test_parameter_spec_extensions(no_warnings):
+    # this is a bad example as it is already part of 3.0.3, but others would work accordingly
+    # https://github.com/Redocly/redoc/blob/master/docs/redoc-vendor-extensions.md#parameter-object
+
+    @extend_schema(
+        responses=None,
+        parameters=[
+            OpenApiParameter(
+                name='q',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                extensions={'x-examples': ['foo', 'bar']}  # don't use this for examples!
+            )
+        ]
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['paths']['/x']['get']['parameters'][0] == {
+        'in': 'query',
+        'name': 'q',
+        'schema': {'type': 'string'},
+        'x-examples': ['foo', 'bar']
+    }

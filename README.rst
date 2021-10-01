@@ -29,6 +29,7 @@ Features
     - Tags extraction
     - Request/response/parameter examples
     - Description extraction from ``docstrings``
+    - Vendor specification extensions (``x-*``) in info, operations, parameters, components, and security schemes
     - Sane fallbacks
     - Sane ``operation_id`` naming (based on path)
     - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)

@@ -301,6 +301,7 @@ def build_parameter_type(
         style=None,
         default=None,
         examples=None,
+        extensions=None,
 ):
     irrelevant_field_meta = ['readOnly', 'writeOnly']
     if location == OpenApiParameter.PATH:
@@ -326,6 +327,8 @@ def build_parameter_type(
         schema['schema']['default'] = default
     if examples:
         schema['examples'] = examples
+    if extensions:
+        schema.update(sanitize_specification_extensions(extensions))
     return schema
 
 

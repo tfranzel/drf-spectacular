@@ -168,6 +168,7 @@ class AutoSchema(ViewInspector):
                         explode=parameter.explode,
                         default=parameter.default,
                         examples=build_examples_list(parameter.examples),
+                        extensions=parameter.extensions,
                     )
             elif is_basic_serializer(parameter):
                 # explode serializer into separate parameters. defaults to QUERY location
@@ -1258,6 +1259,7 @@ class AutoSchema(ViewInspector):
                 explode=parameter.explode,
                 default=parameter.default,
                 examples=build_examples_list(parameter.examples),
+                extensions=parameter.extensions,
             )
             del parameter_type['name']
             del parameter_type['in']
