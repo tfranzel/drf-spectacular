@@ -301,6 +301,7 @@ def build_parameter_type(
         style=None,
         default=None,
         examples=None,
+        extensions=None,
 ):
     irrelevant_field_meta = ['readOnly', 'writeOnly']
     if location == OpenApiParameter.PATH:
@@ -326,6 +327,8 @@ def build_parameter_type(
         schema['schema']['default'] = default
     if examples:
         schema['examples'] = examples
+    if extensions:
+        schema.update(sanitize_specification_extensions(extensions))
     return schema
 
 
@@ -1006,6 +1009,17 @@ def sanitize_result_object(result):
             result['paths'][path][method]['operationId'] += suffix
 
     return result
+
+
+def sanitize_specification_extensions(extensions):
+    # https://spec.openapis.org/oas/v3.0.3#specification-extensions
+    output = {}
+    for key, value in extensions.items():
+        if not re.match(r'^x-', key):
+            warn(f'invalid extension {key!r}. vendor extensions must start with "x-"')
+        else:
+            output[key] = value
+    return output
 
 
 def camelize_operation(path, operation):

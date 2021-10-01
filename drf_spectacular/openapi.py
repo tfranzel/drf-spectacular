@@ -31,7 +31,8 @@ from drf_spectacular.plumbing import (
     build_parameter_type, error, follow_field_source, follow_model_field_lookup, force_instance,
     get_doc, get_type_hints, get_view_model, is_basic_serializer, is_basic_type, is_field,
     is_list_serializer, is_patched_serializer, is_serializer, is_trivial_string_variation,
-    resolve_django_path_parameter, resolve_regex_path_parameter, resolve_type_hint, safe_ref, warn,
+    resolve_django_path_parameter, resolve_regex_path_parameter, resolve_type_hint, safe_ref,
+    sanitize_specification_extensions, warn,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -85,6 +86,10 @@ class AutoSchema(ViewInspector):
             operation['deprecated'] = deprecated
 
         operation['responses'] = self._get_response_bodies()
+
+        extensions = self.get_extensions()
+        if extensions:
+            operation.update(sanitize_specification_extensions(extensions))
 
         return operation
 
@@ -163,6 +168,7 @@ class AutoSchema(ViewInspector):
                         explode=parameter.explode,
                         default=parameter.default,
                         examples=build_examples_list(parameter.examples),
+                        extensions=parameter.extensions,
                     )
             elif is_basic_serializer(parameter):
                 # explode serializer into separate parameters. defaults to QUERY location
@@ -311,6 +317,9 @@ class AutoSchema(ViewInspector):
         tokenized_path = self._tokenize_path()
         # use first non-parameter path part as tag
         return tokenized_path[:1]
+
+    def get_extensions(self) -> typing.Dict[str, typing.Any]:
+        return {}
 
     def get_operation_id(self):
         """ override this for custom behaviour """
@@ -754,6 +763,10 @@ class AutoSchema(ViewInspector):
             schema = serializer_extension.map_serializer(self, direction)
         else:
             schema = self._map_basic_serializer(serializer, direction)
+
+        extensions = get_override(serializer, 'extensions', {})
+        if extensions:
+            schema.update(sanitize_specification_extensions(extensions))
 
         return self._postprocess_serializer_schema(schema, serializer, direction)
 
@@ -1246,6 +1259,7 @@ class AutoSchema(ViewInspector):
                 explode=parameter.explode,
                 default=parameter.default,
                 examples=build_examples_list(parameter.examples),
+                extensions=parameter.extensions,
             )
             del parameter_type['name']
             del parameter_type['in']

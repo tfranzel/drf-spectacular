@@ -154,6 +154,7 @@ class OpenApiParameter(OpenApiSchemaBase):
             explode: Optional[bool] = None,
             default: Any = None,
             examples: Optional[List[OpenApiExample]] = None,
+            extensions: Optional[Dict[str, Any]] = None,
             exclude: bool = False,
             response: Union[bool, List[Union[int, str]]] = False,
     ):
@@ -168,6 +169,7 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.explode = explode
         self.default = default
         self.examples = examples or []
+        self.extensions = extensions
         self.exclude = exclude
         self.response = response
 
@@ -210,6 +212,7 @@ def extend_schema(
         methods: Optional[List[str]] = None,
         versions: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
+        extensions: Optional[Dict[str, Any]] = None,
 ) -> Callable[[F], F]:
     """
     Decorator mainly for the "view" method kind. Partially or completely overrides
@@ -255,6 +258,7 @@ def extend_schema(
     :param methods: scope extend_schema to specific methods. matches all by default.
     :param versions: scope extend_schema to specific API version. matches all by default.
     :param examples: attach request/response examples to the operation
+    :param extensions: specification extensions, e.g. ``x-badges``, ``x-code-samples``, etc.
     :return:
     """
     def decorator(f):
@@ -341,6 +345,11 @@ def extend_schema(
                     return tags
                 return super().get_tags()
 
+            def get_extensions(self):
+                if extensions and is_in_scope(self):
+                    return extensions
+                return super().get_extensions()
+
         if inspect.isclass(f):
             # either direct decoration of views, or unpacked @api_view from OpenApiViewExtension
             if operation_id is not None or operation is not None:
@@ -413,6 +422,7 @@ def extend_schema_serializer(
         exclude_fields: Optional[List[str]] = None,
         deprecate_fields: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
+        extensions: Optional[Dict[str, Any]] = None,
         component_name: Optional[str] = None,
 ) -> Callable[[F], F]:
     """
@@ -425,6 +435,7 @@ def extend_schema_serializer(
         schema. fields will still be exposed through the API.
     :param deprecate_fields: fields to mark as deprecated while processing the serializer.
     :param examples: define example data to serializer.
+    :param extensions: specification extensions, e.g. ``x-is-dynamic``, etc.
     :param component_name: override default class name extraction.
     """
     def decorator(klass):
@@ -436,6 +447,8 @@ def extend_schema_serializer(
             set_override(klass, 'deprecate_fields', deprecate_fields)
         if examples:
             set_override(klass, 'examples', examples)
+        if extensions:
+            set_override(klass, 'extensions', extensions)
         if component_name:
             set_override(klass, 'component_name', component_name)
         return klass

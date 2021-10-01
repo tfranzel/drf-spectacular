@@ -405,3 +405,17 @@ def test_invalid_path_converter_override(capsys):
     generate_schema(None, patterns=urlpatterns)
     stderr = capsys.readouterr().err
     assert 'Unable to use path converter override for "int".' in stderr
+
+
+def test_malformed_vendor_extensions(capsys):
+    @extend_schema(
+        responses=None,
+        extensions={'foo': 'not-prefixed'}
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('x', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'invalid extension \'foo\'. vendor extensions must start with' in stderr
