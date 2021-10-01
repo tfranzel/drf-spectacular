@@ -1,6 +1,36 @@
 Changelog
 =========
 
+0.20.0 (2021-10-01)
+-------------------
+
+- Add support for specification extensions. [Nick Pope]
+- add example injection for (discovered) parameters `#414 <https://github.com/tfranzel/drf-spectacular/issues/414>`_
+- Fix crash with read-only polymorphic sub-serializer. [Nick Pope]
+- Add arbitrarily deep ListSerializer nesting `#539 <https://github.com/tfranzel/drf-spectacular/issues/539>`_
+- tighten serializer assumptions `#539 <https://github.com/tfranzel/drf-spectacular/issues/539>`_
+- fix whitespace stripping on methods
+- Rename `AutoSchema._map_field_validators()` → `.insert_field_validators()`. [Nick Pope]
+- Rename `AutoSchema._map_min_max()` → `.insert_min_max()`. [Nick Pope]
+- Fix detection of int64 from min/max values. [Nick Pope]
+- Fix zero handling in _map_min_max(). [Nick Pope]
+- Add support for introspection of nested validators. [Nick Pope]
+- Fix invalid schemas caused by validator introspection. [Nick Pope]
+- Overhaul validator logic. [Nick Pope]
+- support multiple headers in OpenApiAuthenticationExtension `#537 <https://github.com/tfranzel/drf-spectacular/issues/537>`_
+- docs: Missing end quote for INSTALLED_APPS [Prayash Mohapatra]
+- update doc `#530 <https://github.com/tfranzel/drf-spectacular/issues/530>`_
+- introducing the spectacular sidecar
+- fallback improvements to typing system with typing_extensions
+
+Breaking changes / important additions:
+
+- Added vendor specification extensions
+- Completetly overhauled validator logic and bugfixes
+- Offline UI assets with optional ``drf-spectacular-sidecar`` package
+- several internal logic improvements and stricter assumptions
+
+
 0.19.0 (2021-09-21)
 -------------------
 
