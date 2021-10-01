@@ -56,10 +56,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # CDNs for swagger and redoc. You can change the version or even host your
     # own depending on your requirements.
-    'SWAGGER_UI_DIST': '//cdn.jsdelivr.net/npm/swagger-ui-dist@3.52.3',
-    'SWAGGER_UI_FAVICON_HREF': '//cdn.jsdelivr.net/npm/swagger-ui-dist@3.52.3/favicon-32x32.png',
-
-    'REDOC_DIST': '//cdn.jsdelivr.net/npm/redoc@next',
+    'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest',
+    'SWAGGER_UI_FAVICON_HREF': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/favicon-32x32.png',
+    'REDOC_DIST': 'https://cdn.jsdelivr.net/npm/redoc@latest',
 
     # Append OpenAPI objects to path and components in addition to the generated objects
     'APPEND_PATHS': {},
