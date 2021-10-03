@@ -200,4 +200,4 @@ class SpectacularRedocView(APIView):
     def _redoc_dist(self):
         if spectacular_settings.REDOC_DIST == 'SIDECAR':
             return _get_sidecar_url('redoc')
-        return spectacular_settings.SWAGGER_UI_DIST
+        return spectacular_settings.REDOC_DIST
