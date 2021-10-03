@@ -862,7 +862,7 @@ class AutoSchema(ViewInspector):
             return pagination_class()
         return None
 
-    def _get_paginated_name(self, serializer_name):
+    def get_paginated_name(self, serializer_name):
         return f'Paginated{serializer_name}List'
 
     def map_parsers(self):
@@ -1109,7 +1109,7 @@ class AutoSchema(ViewInspector):
                 and is_serializer(serializer)
                 and (not is_list_serializer(serializer) or is_serializer(serializer.child))
             ):
-                paginated_name = self._get_paginated_name(self._get_serializer_name(serializer, "response"))
+                paginated_name = self.get_paginated_name(self._get_serializer_name(serializer, "response"))
                 component = ResolvedComponent(
                     name=paginated_name,
                     type=ResolvedComponent.SCHEMA,
