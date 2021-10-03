@@ -131,4 +131,4 @@ def test_spectacular_swagger_ui_alternate(no_warnings):
 def test_spectacular_ui_with_raw_settings(no_warnings):
     response = APIClient().get('/api/v2/schema/swagger-ui/')
     assert response.status_code == 200
-    assert b'const swagger_settings = {"deepLinking": true};\n\n' in response.content
+    assert b'const swaggerSettings = {"deepLinking": true};\n' in response.content
