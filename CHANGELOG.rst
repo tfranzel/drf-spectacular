@@ -1,6 +1,18 @@
 Changelog
 =========
 
+0.20.1 (2021-10-03)
+-------------------
+
+- move swagger CDN to jsdelivr (unpkg has been flaky)
+- bugfix wrong DIST setting in Redoc `#546 <https://github.com/tfranzel/drf-spectacular/issues/546>`_
+- Allow paginated_name customization [Georgy Komarov]
+
+Breaking changes / important additions:
+
+- Hotfix release due to regression in the Redoc template
+
+
 0.20.0 (2021-10-01)
 -------------------
 
