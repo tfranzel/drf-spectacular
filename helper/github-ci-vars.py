@@ -11,8 +11,6 @@ for env in envs:
 
     # github "commit" checks will fail even though workflow passes overall.
     # temp remove the optional targets to make github CI work.
-    if int(version.group("minor")) >= 10:
-        continue
     if 'master' in env:
         continue
 
