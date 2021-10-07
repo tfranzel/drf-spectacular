@@ -79,3 +79,14 @@ client code has a hard time with the disjunctive nature of the unmodified compon
 This blueprint is designed to fix that issue.
 
 .. literalinclude:: blueprints/rollup.py
+
+RapiDoc
+-------
+
+`RapiDoc`__ is documentation tool that can be used as an alternate to Redoc or Swagger UI.
+
+__ https://mrin9.github.io/RapiDoc/
+
+.. literalinclude:: blueprints/rapidoc.py
+
+.. literalinclude:: blueprints/rapidoc.html

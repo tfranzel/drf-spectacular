@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ title|default:"RapiDoc" }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="module" src="{{ dist }}/dist/rapidoc-min.js"></script>
+  </head>
+  <body>
+    <rapi-doc spec-url="{{ schema_url }}"></rapi-doc>
+  </body>
+</html>
