@@ -2569,3 +2569,38 @@ def test_action_decorator_case_insensitive(no_warnings, extend_method, action_me
 
     schema = generate_schema('x', viewset=XViewSet)
     schema['paths']['/x/{id}/custom_action/']['get']['summary'] == 'A custom action!'
+
+
+def test_extend_schema_view_isolation(no_warnings):
+
+    class Animal(models.Model):
+        pass
+
+    class AnimalSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Animal
+            fields = '__all__'
+
+    class AnimalViewSet(viewsets.GenericViewSet):
+        serializer_class = AnimalSerializer
+        queryset = Animal.objects.all()
+
+        @action(detail=False)
+        def notes(self, request):
+            pass  # pragma: no cover
+
+    @extend_schema_view(notes=extend_schema(summary='List mammals.'))
+    class MammalViewSet(AnimalViewSet):
+        pass
+
+    @extend_schema_view(notes=extend_schema(summary='List insects.'))
+    class InsectViewSet(AnimalViewSet):
+        pass
+
+    router = routers.SimpleRouter()
+    router.register('api/mammals', MammalViewSet)
+    router.register('api/insects', InsectViewSet)
+
+    schema = generate_schema(None, patterns=router.urls)
+    assert schema['paths']['/api/mammals/notes/']['get']['summary'] == 'List mammals.'
+    assert schema['paths']['/api/insects/notes/']['get']['summary'] == 'List insects.'

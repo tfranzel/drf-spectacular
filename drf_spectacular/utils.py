@@ -473,12 +473,14 @@ def extend_schema_view(**kwargs) -> Callable[[F], F]:
       calls as values
     """
     def wrapping_decorator(method_decorator, method):
-        @method_decorator
         @functools.wraps(method)
         def wrapped_method(self, request, *args, **kwargs):
             return method(self, request, *args, **kwargs)
 
-        return wrapped_method
+        if hasattr(method, 'kwargs'):
+            wrapped_method.kwargs = method.kwargs.copy()
+
+        return method_decorator(wrapped_method)
 
     def decorator(view):
         view_methods = {m.__name__: m for m in get_view_methods(view)}
