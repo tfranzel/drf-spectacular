@@ -261,6 +261,9 @@ def extend_schema(
     :param extensions: specification extensions, e.g. ``x-badges``, ``x-code-samples``, etc.
     :return:
     """
+    if methods is not None:
+        methods = [method.upper() for method in methods]
+
     def decorator(f):
         BaseSchema = (
             # explicit manually set schema or previous view annotation
@@ -287,7 +290,7 @@ def extend_schema(
 
         class ExtendedSchema(BaseSchema):
             def get_operation(self, path, path_regex, path_prefix, method, registry):
-                self.method = method
+                self.method = method.upper()
 
                 if exclude and is_in_scope(self):
                     return None

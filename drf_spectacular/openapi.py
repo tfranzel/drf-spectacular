@@ -53,7 +53,7 @@ class AutoSchema(ViewInspector):
         self.path = path
         self.path_regex = path_regex
         self.path_prefix = path_prefix
-        self.method = method
+        self.method = method.upper()
 
         operation = {'operationId': self.get_operation_id()}
 
@@ -114,7 +114,7 @@ class AutoSchema(ViewInspector):
         if hasattr(self.view, 'action'):
             return self.view.action == 'list'
         # list responses are "usually" only returned by GET
-        if self.method.lower() != 'get':
+        if self.method != 'GET':
             return False
         if isinstance(self.view, ListModelMixin):
             return True
@@ -327,7 +327,7 @@ class AutoSchema(ViewInspector):
         # replace dashes as they can be problematic later in code generation
         tokenized_path = [t.replace('-', '_') for t in tokenized_path]
 
-        if self.method.lower() == 'get' and self._is_list_view():
+        if self.method == 'GET' and self._is_list_view():
             action = 'list'
         else:
             action = self.method_mapping[self.method.lower()]
