@@ -106,14 +106,18 @@ def set_override(obj, prop, value):
 
 
 def get_view_methods(view, schema=None):
-    return [
-        getattr(view, item) for item in dir(view) if callable(getattr(view, item)) and (
-            item in view.http_method_names
-            or item in (schema or view.schema).method_mapping.values()
-            or item == 'list'
-            or hasattr(getattr(view, item), 'mapping')
-        )
-    ]
+    schema = schema or view.schema
+    names = {
+        'list',
+        *view.http_method_names,
+        *schema.method_mapping.values(),
+    }
+    for name in dir(view):
+        obj = getattr(view, name)
+        if not callable(obj):
+            continue
+        if name in names or hasattr(obj, 'mapping'):
+            yield obj
 
 
 def cache(user_function):
