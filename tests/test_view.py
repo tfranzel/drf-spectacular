@@ -102,7 +102,7 @@ def test_spectacular_ui_view(no_warnings, ui):
     assert response.status_code == 200
     assert response.content.startswith(b'<!DOCTYPE html>')
     if ui == 'redoc':
-        assert b'<title>ReDoc</title>' in response.content
+        assert b'<title>Redoc</title>' in response.content
         assert spectacular_settings.REDOC_DIST.encode() in response.content
     else:
         assert b'<title>Swagger</title>' in response.content
@@ -131,4 +131,4 @@ def test_spectacular_swagger_ui_alternate(no_warnings):
 def test_spectacular_ui_with_raw_settings(no_warnings):
     response = APIClient().get('/api/v2/schema/swagger-ui/')
     assert response.status_code == 200
-    assert b'const swagger_settings  = {"deepLinking": true}\n\n' in response.content
+    assert b'const swagger_settings = {"deepLinking": true};\n\n' in response.content
