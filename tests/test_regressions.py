@@ -2534,3 +2534,38 @@ def test_double_nested_list_serializer(no_warnings, list_variation):
         'type': 'array',
         'items': {'type': 'array', 'items': {'$ref': '#/components/schemas/X'}}
     }
+
+
+@pytest.mark.parametrize('extend_method, api_view_method', [
+    ('get', 'GET'),
+    ('GET', 'get'),
+])
+def test_api_view_decorator_case_insensitive(no_warnings, extend_method, api_view_method):
+
+    @extend_schema(methods=[extend_method], responses=OpenApiTypes.FLOAT)
+    @api_view([api_view_method])
+    def pi(request):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=pi)
+    operation = schema['paths']['/x']['get']
+    assert get_response_schema(operation) == {'type': 'number', 'format': 'float'}
+
+
+@pytest.mark.parametrize('extend_method, action_method', [
+    ('get', 'GET'),
+    ('GET', 'get'),
+])
+def test_action_decorator_case_insensitive(no_warnings, extend_method, action_method):
+
+    class XViewSet(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+        @extend_schema(methods=[extend_method], summary='A custom action!')
+        @action(methods=[action_method], detail=True)
+        def custom_action(self):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', viewset=XViewSet)
+    schema['paths']['/x/{id}/custom_action/']['get']['summary'] == 'A custom action!'
