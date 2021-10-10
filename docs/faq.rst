@@ -20,7 +20,7 @@ modify otherwise. Have a look at :ref:`customization` on how to use ``Extensions
 
 I get an empty schema or endpoints are missing
 ----------------------------------------------
-This is usually due to endpoint permissions or versioning.
+This is usually due versioning (or more rarely due to permisssions).
 
 In case you use versioning on all endpoints, that might be the intended output.
 By default the schema will only contain unversioned endpoints. Explicitly specify
@@ -32,7 +32,8 @@ what version you want to generate.
 
 This will contain unversioned endpoints together with the endpoints for the the specified version.
 
-If that does not help, open an `issue <https://github.com/tfranzel/drf-spectacular/issues>`_.
+For the schema views you can either set a versioning class (implicit versioning via the request) or
+explicitly override the version with ``SpectacularAPIView.as_view(api_version='YOUR_VERSION')``.
 
 
 I expected a different schema
@@ -222,3 +223,35 @@ you can remove those parameters by resetting the filter backends with ``@action(
         @action(methods=['GET'], detail=False, pagination_class=None)
         def custom_action(self):
             pass
+
+
+How to I wrap my responses? / My endpoints are wrapped in a generic envelope
+----------------------------------------------------------------------------
+
+This non-native behavior can be conventiently modeled with a simple helper function. You simply need
+to wrap the actual serializer with your envelope serializer and provide it to ``@extend_schema``.
+
+Here is an example on how to build an ``enveloper`` helper function. In this example, the actual
+serializer is put into the ``data`` field, while ``status`` is some arbitrary envelope field.
+Adapt to your specific requirements.
+
+.. code-block:: python
+
+    def enveloper(serializer_class, many):
+        component_name = 'Enveloped{}{}'.format(
+            serializer_class.__name__.replace("Serializer", ""),
+            "List" if many else "",
+        )
+
+        @extend_schema_serializer(many=False, component_name=component_name)
+        class EnvelopeSerializer(serializers.Serializer):
+            status = serializers.BooleanField()  # some arbitrary envelope field
+            data = serializer_class(many=many)  # the enveloping part
+
+        return EnvelopeSerializer
+
+
+    class XViewset(GenericViewSet):
+        @extend_schema(responses=enveloper(XSerializer, True))
+        def list(self, request, *args, **kwargs):
+            ...

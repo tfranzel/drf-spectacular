@@ -699,17 +699,17 @@ def test_viewset_list_with_envelope(no_warnings):
     class XSerializer(serializers.Serializer):
         x = serializers.IntegerField()
 
-    def enveloper(serializer_class, list):
-        @extend_schema_serializer(many=False)
+    def enveloper(serializer_class, many):
+        component_name = 'Enveloped{}{}'.format(
+            serializer_class.__name__.replace("Serializer", ""),
+            "List" if many else "",
+        )
+
+        @extend_schema_serializer(many=False, component_name=component_name)
         class EnvelopeSerializer(serializers.Serializer):
             status = serializers.BooleanField()
-            data = XSerializer(many=list)
+            data = serializer_class(many=many)
 
-            class Meta:
-                ref_name = 'Enveloped{}{}'.format(
-                    serializer_class.__name__.replace("Serializer", ""),
-                    "List" if list else "",
-                )
         return EnvelopeSerializer
 
     class XViewset(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
