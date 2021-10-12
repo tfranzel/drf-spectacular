@@ -2568,22 +2568,13 @@ def test_action_decorator_case_insensitive(no_warnings, extend_method, action_me
             pass  # pragma: no cover
 
     schema = generate_schema('x', viewset=XViewSet)
-    schema['paths']['/x/{id}/custom_action/']['get']['summary'] == 'A custom action!'
+    assert schema['paths']['/x/{id}/custom_action/']['get']['summary'] == 'A custom action!'
 
 
 def test_extend_schema_view_isolation(no_warnings):
-
-    class Animal(models.Model):
-        pass
-
-    class AnimalSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Animal
-            fields = '__all__'
-
     class AnimalViewSet(viewsets.GenericViewSet):
-        serializer_class = AnimalSerializer
-        queryset = Animal.objects.all()
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.all()
 
         @action(detail=False)
         def notes(self, request):
@@ -2604,3 +2595,62 @@ def test_extend_schema_view_isolation(no_warnings):
     schema = generate_schema(None, patterns=router.urls)
     assert schema['paths']['/api/mammals/notes/']['get']['summary'] == 'List mammals.'
     assert schema['paths']['/api/insects/notes/']['get']['summary'] == 'List insects.'
+
+
+def test_extend_schema_view_layering(no_warnings):
+    class YSerializer(serializers.Serializer):
+        field = serializers.FloatField()
+
+    class ZSerializer(serializers.Serializer):
+        field = serializers.UUIDField()
+
+    class XViewSet(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    @extend_schema_view(retrieve=extend_schema(responses=YSerializer))
+    class YViewSet(XViewSet):
+        pass
+
+    @extend_schema_view(retrieve=extend_schema(responses=ZSerializer))
+    class ZViewSet(YViewSet):
+        pass
+
+    router = routers.SimpleRouter()
+    router.register('x', XViewSet)
+    router.register('y', YViewSet)
+    router.register('z', ZViewSet)
+    schema = generate_schema(None, patterns=router.urls)
+    resp = {
+        c: get_response_schema(schema['paths'][f'/{c.lower()}/{{id}}/']['get'])
+        for c in ['X', 'Y', 'Z']
+    }
+    assert resp['X'] == {'$ref': '#/components/schemas/Simple'}
+    assert resp['Y'] == {'$ref': '#/components/schemas/Y'}
+    assert resp['Z'] == {'$ref': '#/components/schemas/Z'}
+
+
+def test_extend_schema_view_extend_schema_crosstalk(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.FloatField()
+
+    # extend_schema_view provokes decorator reordering in extend_schema
+    @extend_schema(tags=['X'])
+    @extend_schema_view(retrieve=extend_schema(responses=XSerializer))
+    class XViewSet(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    @extend_schema(tags=['Y'])
+    class YViewSet(XViewSet):
+        pass
+
+    router = routers.SimpleRouter()
+    router.register('x', XViewSet)
+    router.register('y', YViewSet)
+    schema = generate_schema(None, patterns=router.urls)
+    op = {
+        c: schema['paths'][f'/{c.lower()}/{{id}}/']['get'] for c in ['X', 'Y']
+    }
+    assert op['X']['tags'] == ['X']
+    assert op['Y']['tags'] == ['Y']
