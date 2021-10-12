@@ -232,6 +232,65 @@ paths:
       responses:
         '204':
           description: No response body
+  /z/{id}/:
+    get:
+      operationId: z_retrieve
+      description: overridden description for child only
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this esv model.
+        required: true
+      tags:
+      - custom-retrieve-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+  /z/extended_action/:
+    get:
+      operationId: z_extended_action_retrieve
+      description: view extended action description
+      tags:
+      - global-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                pattern: ^[0-9]{4}(?:-[0-9]{2}){2}$
+          description: ''
+  /z/raw_action/:
+    get:
+      operationId: z_raw_action_retrieve
+      summary: view raw action summary
+      tags:
+      - child-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
 components:
   schemas:
     ESV:

@@ -2568,4 +2568,106 @@ def test_action_decorator_case_insensitive(no_warnings, extend_method, action_me
             pass  # pragma: no cover
 
     schema = generate_schema('x', viewset=XViewSet)
-    schema['paths']['/x/{id}/custom_action/']['get']['summary'] == 'A custom action!'
+    assert schema['paths']['/x/{id}/custom_action/']['get']['summary'] == 'A custom action!'
+
+
+def test_extend_schema_view_isolation(no_warnings):
+    class AnimalViewSet(viewsets.GenericViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.all()
+
+        @action(detail=False)
+        def notes(self, request):
+            pass  # pragma: no cover
+
+    @extend_schema_view(notes=extend_schema(summary='List mammals.'))
+    class MammalViewSet(AnimalViewSet):
+        pass
+
+    @extend_schema_view(notes=extend_schema(summary='List insects.'))
+    class InsectViewSet(AnimalViewSet):
+        pass
+
+    router = routers.SimpleRouter()
+    router.register('api/mammals', MammalViewSet)
+    router.register('api/insects', InsectViewSet)
+
+    schema = generate_schema(None, patterns=router.urls)
+    assert schema['paths']['/api/mammals/notes/']['get']['summary'] == 'List mammals.'
+    assert schema['paths']['/api/insects/notes/']['get']['summary'] == 'List insects.'
+
+
+def test_extend_schema_view_layering(no_warnings):
+    class YSerializer(serializers.Serializer):
+        field = serializers.FloatField()
+
+    class ZSerializer(serializers.Serializer):
+        field = serializers.UUIDField()
+
+    class XViewSet(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    @extend_schema_view(retrieve=extend_schema(responses=YSerializer))
+    class YViewSet(XViewSet):
+        pass
+
+    @extend_schema_view(retrieve=extend_schema(responses=ZSerializer))
+    class ZViewSet(YViewSet):
+        pass
+
+    router = routers.SimpleRouter()
+    router.register('x', XViewSet)
+    router.register('y', YViewSet)
+    router.register('z', ZViewSet)
+    schema = generate_schema(None, patterns=router.urls)
+    resp = {
+        c: get_response_schema(schema['paths'][f'/{c.lower()}/{{id}}/']['get'])
+        for c in ['X', 'Y', 'Z']
+    }
+    assert resp['X'] == {'$ref': '#/components/schemas/Simple'}
+    assert resp['Y'] == {'$ref': '#/components/schemas/Y'}
+    assert resp['Z'] == {'$ref': '#/components/schemas/Z'}
+
+
+def test_extend_schema_view_extend_schema_crosstalk(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.FloatField()
+
+    # extend_schema_view provokes decorator reordering in extend_schema
+    @extend_schema(tags=['X'])
+    @extend_schema_view(retrieve=extend_schema(responses=XSerializer))
+    class XViewSet(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    @extend_schema(tags=['Y'])
+    class YViewSet(XViewSet):
+        pass
+
+    router = routers.SimpleRouter()
+    router.register('x', XViewSet)
+    router.register('y', YViewSet)
+    schema = generate_schema(None, patterns=router.urls)
+    op = {
+        c: schema['paths'][f'/{c.lower()}/{{id}}/']['get'] for c in ['X', 'Y']
+    }
+    assert op['X']['tags'] == ['X']
+    assert op['Y']['tags'] == ['Y']
+
+
+def test_extend_schema_view_on_api_view(no_warnings):
+    @extend_schema_view(
+        get=extend_schema(description='get desc', responses=OpenApiTypes.FLOAT),
+        post=extend_schema(description='post desc', request=OpenApiTypes.INT, responses=OpenApiTypes.UUID),
+    )
+    @api_view(['GET', 'POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    op_get = schema['paths']['/x/']['get']
+    op_post = schema['paths']['/x/']['post']
+    assert get_response_schema(op_get) == {'type': 'number', 'format': 'float'}
+    assert get_response_schema(op_post) == {'format': 'uuid', 'type': 'string'}
+    assert get_request_schema(op_post) == {'type': 'integer'}

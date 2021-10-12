@@ -28,7 +28,7 @@ class ESVSerializer(serializers.ModelSerializer):
     extended_action=extend_schema(description='view extended action description'),
     raw_action=extend_schema(description='view raw action description'),
 )
-class XViewset(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class XViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = ESVModel.objects.all()
     serializer_class = ESVSerializer
 
@@ -52,9 +52,24 @@ class YViewSet(viewsets.ModelViewSet):
     queryset = ESVModel.objects.all()
 
 
+# view to make sure that schema applied to a subclass does not affect its parent.
+@extend_schema_view(
+    list=extend_schema(exclude=True),
+    retrieve=extend_schema(description='overridden description for child only'),
+    extended_action=extend_schema(responses={200: {'type': 'string', 'pattern': r'^[0-9]{4}(?:-[0-9]{2}){2}$'}}),
+    raw_action=extend_schema(summary="view raw action summary"),
+)
+class ZViewSet(XViewSet):
+    @extend_schema(tags=['child-tag'])
+    @action(detail=False, methods=['GET'])
+    def raw_action(self, request):
+        return Response('2019-03-01')
+
+
 router = routers.SimpleRouter()
-router.register('x', XViewset)
+router.register('x', XViewSet)
 router.register('y', YViewSet)
+router.register('z', ZViewSet)
 urlpatterns = router.urls
 
 

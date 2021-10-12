@@ -1,4 +1,3 @@
-import functools
 import inspect
 import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
@@ -7,7 +6,9 @@ from rest_framework.fields import Field, empty
 from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
-from drf_spectacular.drainage import error, get_view_methods, set_override, warn
+from drf_spectacular.drainage import (
+    error, get_view_method_names, isolate_view_method, set_override, warn,
+)
 from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 
 if sys.version_info >= (3, 8):
@@ -362,11 +363,13 @@ def extend_schema(
                 )
             # reorder schema class MRO so that view method annotation takes precedence
             # over view class annotation. only relevant if there is a method annotation
-            for view_method in get_view_methods(view=f, schema=BaseSchema):
-                if 'schema' in getattr(view_method, 'kwargs', {}):
-                    view_method.kwargs['schema'] = type(
-                        'ExtendedMetaSchema', (view_method.kwargs['schema'], ExtendedSchema), {}
-                    )
+            for view_method_name in get_view_method_names(view=f, schema=BaseSchema):
+                if 'schema' not in getattr(getattr(f, view_method_name), 'kwargs', {}):
+                    continue
+                view_method = isolate_view_method(f, view_method_name)
+                view_method.kwargs['schema'] = type(
+                    'ExtendedMetaSchema', (view_method.kwargs['schema'], ExtendedSchema), {}
+                )
             # persist schema on class to provide annotation to derived view methods.
             # the second purpose is to serve as base for view multi-annotation
             f.schema = ExtendedSchema()
@@ -472,33 +475,26 @@ def extend_schema_view(**kwargs) -> Callable[[F], F]:
     :param kwargs: method names as argument names and :func:`@extend_schema <.extend_schema>`
       calls as values
     """
-    def wrapping_decorator(method_decorator, method):
-        @method_decorator
-        @functools.wraps(method)
-        def wrapped_method(self, request, *args, **kwargs):
-            return method(self, request, *args, **kwargs)
-
-        return wrapped_method
-
     def decorator(view):
-        view_methods = {m.__name__: m for m in get_view_methods(view)}
+        # special case for @api_view. redirect decoration to enclosed WrappedAPIView
+        if callable(view) and hasattr(view, 'cls'):
+            extend_schema_view(**kwargs)(view.cls)
+            return view
+
+        available_view_methods = get_view_method_names(view)
 
         for method_name, method_decorator in kwargs.items():
-            if method_name not in view_methods:
+            if method_name not in available_view_methods:
                 warn(
                     f'@extend_schema_view argument "{method_name}" was not found on view '
                     f'{view.__name__}. method override for "{method_name}" will be ignored.'
                 )
                 continue
 
-            method = view_methods[method_name]
-            # the context of derived methods must not be altered, as it belongs to the other
-            # class. create a new context via the wrapping_decorator so the schema can be safely
-            # stored in the wrapped_method. methods belonging to the view can be safely altered.
-            if method_name in view.__dict__:
-                method_decorator(method)
-            else:
-                setattr(view, method_name, wrapping_decorator(method_decorator, method))
+            # the context of derived methods must not be altered, as it belongs to the
+            # other view. create a new context so the schema can be safely stored in the
+            # wrapped_method. view methods that are not derived can be safely altered.
+            method_decorator(isolate_view_method(view, method_name))
         return view
 
     return decorator
