@@ -476,6 +476,11 @@ def extend_schema_view(**kwargs) -> Callable[[F], F]:
       calls as values
     """
     def decorator(view):
+        # special case for @api_view. redirect decoration to enclosed WrappedAPIView
+        if callable(view) and hasattr(view, 'cls'):
+            extend_schema_view(**kwargs)(view.cls)
+            return view
+
         available_view_methods = get_view_method_names(view)
 
         for method_name, method_decorator in kwargs.items():

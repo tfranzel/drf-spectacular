@@ -2654,3 +2654,20 @@ def test_extend_schema_view_extend_schema_crosstalk(no_warnings):
     }
     assert op['X']['tags'] == ['X']
     assert op['Y']['tags'] == ['Y']
+
+
+def test_extend_schema_view_on_api_view(no_warnings):
+    @extend_schema_view(
+        get=extend_schema(description='get desc', responses=OpenApiTypes.FLOAT),
+        post=extend_schema(description='post desc', request=OpenApiTypes.INT, responses=OpenApiTypes.UUID),
+    )
+    @api_view(['GET', 'POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    op_get = schema['paths']['/x/']['get']
+    op_post = schema['paths']['/x/']['post']
+    assert get_response_schema(op_get) == {'type': 'number', 'format': 'float'}
+    assert get_response_schema(op_post) == {'format': 'uuid', 'type': 'string'}
+    assert get_request_schema(op_post) == {'type': 'integer'}

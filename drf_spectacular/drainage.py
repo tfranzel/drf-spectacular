@@ -124,8 +124,10 @@ def isolate_view_method(view, method_name):
     Break derivation by wrapping the method and explicitly setting it on the view.
     """
     method = getattr(view, method_name)
-    # no isolation required as the view method is not derived
-    if method_name in view.__dict__:
+    # no isolation is required if the view method is not derived.
+    # @api_view is a special case that also breaks isolation. It proxies all view
+    # methods through a single handler function, which then also requires isolation.
+    if method_name in view.__dict__ and method.__name__ != 'handler':
         return method
 
     @functools.wraps(method)
