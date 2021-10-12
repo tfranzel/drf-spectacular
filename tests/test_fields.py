@@ -111,10 +111,15 @@ class AllFields(models.Model):
 
     if DJANGO_VERSION >= '3.1':
         field_json = models.JSONField()
+        field_json_list = models.JSONField(default=list)
     else:
         @property
         def field_json(self):
             return {'A': 1, 'B': 2}
+
+        @property
+        def field_json_list(self):
+            return [{'A': 1}, {'B': 2}]
 
     @property
     def field_model_property_float(self) -> float:
@@ -229,6 +234,7 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     # there is a JSON model field for django>=3.1 that would be placed automatically. for <=3.1 we
     # need to set the field explicitly. defined here for both cases to have consistent ordering.
     field_json = serializers.JSONField()
+    field_json_list = serializers.ListField()
 
     # traversal of non-model types of complex object
     field_sub_object_calculated = serializers.ReadOnlyField(source='sub_object.calculated')
@@ -330,6 +336,7 @@ def test_model_setup_is_valid():
     )
     if DJANGO_VERSION >= '3.1':
         m.field_json = {'A': 1, 'B': 2}
+        m.field_json_list = [{'A': 1}, {'B': 2}]
     m.field_file.save('hello.txt', ContentFile("hello world"), save=True)
     m.save()
     m.field_m2m.add(aux)

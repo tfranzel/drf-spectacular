@@ -176,6 +176,9 @@ components:
         field_json:
           type: object
           additionalProperties: {}
+        field_json_list:
+          type: array
+          items: {}
         field_sub_object_calculated:
           type: integer
           readOnly: true
@@ -312,6 +315,7 @@ components:
       - field_int
       - field_ip_generic
       - field_json
+      - field_json_list
       - field_list
       - field_list_serializer
       - field_m2m

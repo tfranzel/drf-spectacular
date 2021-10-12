@@ -37,6 +37,14 @@
     "A": 1,
     "B": 2
   },
+  "field_json_list": [
+    {
+      "A": 1
+    },
+    {
+      "B": 2
+    }
+  ],
   "field_sub_object_calculated": 1,
   "field_sub_object_nested_calculated": 1,
   "field_sub_object_model_int": 1,

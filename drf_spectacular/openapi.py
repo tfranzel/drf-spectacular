@@ -474,7 +474,10 @@ class AutoSchema(ViewInspector):
             return self._map_model_field(model_field.target_field, direction)
         elif hasattr(models, 'JSONField') and isinstance(model_field, models.JSONField):
             # fix for DRF==3.11 with django>=3.1 as it is not yet represented in the field_mapping
-            return build_basic_type(OpenApiTypes.OBJECT)
+            if issubclass(model_field.default, list):
+                return build_array_type(build_basic_type(OpenApiTypes.ANY))
+            else:
+                return build_basic_type(OpenApiTypes.OBJECT)
         elif isinstance(model_field, models.BinaryField):
             return build_basic_type(OpenApiTypes.BYTE)
         elif hasattr(models, model_field.get_internal_type()):
