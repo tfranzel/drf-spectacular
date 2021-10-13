@@ -90,13 +90,16 @@ For example:
 
 .. code-block:: python
 
-    'ENUM_NAME_OVERRIDES': {
-        # variable containing list of tuples, e.g. [('US', 'US'), ('RU', 'RU'),]
-        'LanguageEnum': language_choices,
-        # dedicated Enum or models.Choices class
-        'CountryEnum': 'import_path.enums.CountryEnum',
-        # choices is an attribute of class CurrencyContainer containing a list of tuples
-        'CurrencyEnum': 'import_path.CurrencyContainer.choices',
+    SPECTACULAR_SETTINGS = {
+        ...
+        'ENUM_NAME_OVERRIDES': {
+            # variable containing list of tuples, e.g. [('US', 'US'), ('RU', 'RU'),]
+            'LanguageEnum': language_choices,
+            # dedicated Enum or models.Choices class
+            'CountryEnum': 'import_path.enums.CountryEnum',
+            # choices is an attribute of class CurrencyContainer containing a list of tuples
+            'CurrencyEnum': 'import_path.CurrencyContainer.choices',
+        }
     }
 
 If you have multiple semantically distinct enums that happen to have the same
