@@ -540,7 +540,8 @@ class AutoSchema(ViewInspector):
 
         # nested serializer with many=True gets automatically replaced with ListSerializer
         if is_list_serializer(field):
-            return append_meta(self._unwrap_list_serializer(field, direction), meta)
+            schema = self._unwrap_list_serializer(field, direction)
+            return append_meta(schema, meta) if schema else None
 
         # nested serializer
         if is_serializer(field):
@@ -1065,7 +1066,7 @@ class AutoSchema(ViewInspector):
 
         if is_list_serializer(serializer):
             schema = self._unwrap_list_serializer(serializer, 'request')
-            request_body_required = True
+            request_body_required = bool(schema)
         elif is_serializer(serializer):
             if self.method == 'PATCH':
                 # we simulate what DRF is doing: the entry serializer is set to partial
@@ -1138,15 +1139,15 @@ class AutoSchema(ViewInspector):
             schema['description'] = _('Unspecified response body')
             return {'200': self._get_response_for_code(schema, '200')}
 
-    def _unwrap_list_serializer(self, serializer, direction) -> dict:
+    def _unwrap_list_serializer(self, serializer, direction) -> typing.Optional[dict]:
         if is_field(serializer):
             return self._map_serializer_field(serializer, direction)
         elif is_basic_serializer(serializer):
-            return self.resolve_serializer(serializer, direction).ref
+            component = self.resolve_serializer(serializer, direction)
+            return component.ref if component else None
         elif is_list_serializer(serializer):
-            return build_array_type(
-                self._unwrap_list_serializer(serializer.child, direction)
-            )
+            result = self._unwrap_list_serializer(serializer.child, direction)
+            return build_array_type(result) if result else None
         else:
             assert False, 'Serializer is of unknown type.'
 
@@ -1166,6 +1167,8 @@ class AutoSchema(ViewInspector):
             return {**headers, 'description': description or _('No response body')}
         elif is_list_serializer(serializer):
             schema = self._unwrap_list_serializer(serializer.child, 'response')
+            if not schema:
+                return {**headers, 'description': description or _('No response body')}
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, 'response')
             if not component:

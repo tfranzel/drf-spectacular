@@ -2671,3 +2671,54 @@ def test_extend_schema_view_on_api_view(no_warnings):
     assert get_response_schema(op_get) == {'type': 'number', 'format': 'float'}
     assert get_response_schema(op_post) == {'format': 'uuid', 'type': 'string'}
     assert get_request_schema(op_post) == {'type': 'integer'}
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+@pytest.mark.parametrize('ro,wo', [(True, False), (False, True), (False, False)])
+def test_nested_empty_direction_serializer_with_split(no_warnings, ro, wo):
+    class NestedSerializer(serializers.Serializer):
+        field = serializers.IntegerField(write_only=wo, read_only=ro)
+
+    class XSerializer(serializers.Serializer):
+        field = NestedSerializer(many=True)
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def pi(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x', view_function=pi)
+    operation = schema['paths']['/x']['post']
+    if wo:
+        assert get_request_schema(operation) == {'$ref': '#/components/schemas/XRequest'}
+        assert operation['responses']['200'] == {'description': 'No response body'}
+    elif ro:
+        assert 'requestBody' not in operation
+        assert get_response_schema(operation) == {'$ref': '#/components/schemas/X'}
+    else:
+        assert get_request_schema(operation) == {'$ref': '#/components/schemas/XRequest'}
+        assert get_response_schema(operation) == {'$ref': '#/components/schemas/X'}
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+@pytest.mark.parametrize('ro,wo', [(True, False), (False, True), (False, False)])
+def test_empty_direction_list_serializer_with_split(no_warnings, ro, wo):
+    class XSerializer(serializers.Serializer):
+        field = serializers.IntegerField(write_only=wo, read_only=ro)
+
+    @extend_schema(request=XSerializer(many=True), responses=XSerializer(many=True))
+    @api_view(['POST'])
+    def pi(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x', view_function=pi)
+    operation = schema['paths']['/x']['post']
+    if wo:
+        assert get_request_schema(operation)['items'] == {'$ref': '#/components/schemas/XRequest'}
+        assert operation['responses']['200'] == {'description': 'No response body'}
+    elif ro:
+        assert 'requestBody' not in operation
+        assert get_response_schema(operation)['items'] == {'$ref': '#/components/schemas/X'}
+    else:
+        assert get_request_schema(operation)['items'] == {'$ref': '#/components/schemas/XRequest'}
+        assert get_response_schema(operation)['items'] == {'$ref': '#/components/schemas/X'}
