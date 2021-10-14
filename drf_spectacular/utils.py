@@ -18,6 +18,7 @@ else:
 
 
 _SerializerType = Union[Serializer, Type[Serializer]]
+_FieldType = Union[Field, Type[Field]]
 
 _ParameterLocationType = Literal['query', 'path', 'header', 'cookie']
 
@@ -399,7 +400,7 @@ def extend_schema(
 
 
 def extend_schema_field(
-        field: Union[_SerializerType, Field, OpenApiTypes, Dict],
+        field: Union[_SerializerType, _FieldType, OpenApiTypes, Dict],
         component_name: Optional[str] = None
 ) -> Callable[[F], F]:
     """

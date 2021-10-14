@@ -360,3 +360,24 @@ def test_extend_schema_field_custom_schema_with_without_breakout(no_warnings):
     assert properties['field']['readOnly']
     assert 'Breakout' in properties['field_breakout']['allOf'][0]['$ref']
     assert properties['field_breakout']['readOnly']
+
+
+def test_extend_schema_field_with_field_class(no_warnings) -> None:
+    class XSerializer(serializers.Serializer):
+        field = serializers.SerializerMethodField()
+
+        @extend_schema_field(serializers.IntegerField())
+        def get_field(self, object):
+            return 1  # pragma: no cover
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['components']['schemas']['X'] == {
+        'type': 'object',
+        'properties': {'field': {'type': 'integer', 'readOnly': True}},
+        'required': ['field']
+    }
