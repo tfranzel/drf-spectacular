@@ -13,6 +13,12 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Remove matching SCHEMA_PATH_PREFIX from operation path. Usually used in
     # conjunction with appended prefixes in SERVERS.
     'SCHEMA_PATH_PREFIX_TRIM': False,
+    # Insert a manual path prefix to the operation path, e.g. '/service/backend'.
+    # Use this for example to align paths when the API is mounted as a sub-resource
+    # behind a proxy and Django is not aware of that. Alternatively, prefixes can
+    # also specified via SERVERS, but this makes the operation path more explicit.
+    'SCHEMA_PATH_PREFIX_INSERT': '',
+
 
     # Coercion of {pk} to {id} is controlled by SCHEMA_COERCE_PATH_PK. Additionally,
     # some libraries (e.g. drf-nested-routers) use "_pk" suffixed path variables.
@@ -89,6 +95,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SORT_OPERATIONS': True,
 
     # enum name overrides. dict with keys "YourEnum" and their choice values "field.choices"
+    # e.g. {'SomeEnum': ['A', 'B'], 'OtherEnum': 'import.path.to.choices'}
     'ENUM_NAME_OVERRIDES': {},
     # Adds "blank" and "null" enum choices where appropriate. disable on client generation issues
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': True,
@@ -151,6 +158,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'VERSION': '0.0.0',
     # Optional list of servers.
     # Each entry MUST contain "url", MAY contain "description", "variables"
+    # e.g. [{'url': 'https://example.com/v1', 'description': 'Text'}, ...]
     'SERVERS': [],
     # Tags defined in the global scope
     'TAGS': [],

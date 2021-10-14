@@ -2722,3 +2722,14 @@ def test_empty_direction_list_serializer_with_split(no_warnings, ro, wo):
     else:
         assert get_request_schema(operation)['items'] == {'$ref': '#/components/schemas/XRequest'}
         assert get_response_schema(operation)['items'] == {'$ref': '#/components/schemas/X'}
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX_INSERT', '/service/backend')
+def test_schema_path_prefix_insert(no_warnings):
+    @extend_schema(responses=typing.Any)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('v1/x/', view_function=view_func)
+    assert '/service/backend/v1/x/' in schema['paths']
