@@ -1033,7 +1033,7 @@ class AutoSchema(ViewInspector):
                 continue
             if media_type and media_type != example.media_type:
                 continue
-            if status_code and status_code not in example.status_codes:
+            if status_code and status_code not in (example.status_codes or [200, 201]):
                 continue
             filtered_examples.append(example)
 
