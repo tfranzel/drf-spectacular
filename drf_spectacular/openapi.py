@@ -15,6 +15,7 @@ from rest_framework.mixins import ListModelMixin
 from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.schemas.utils import get_pk_description  # type: ignore
 from rest_framework.settings import api_settings
+from rest_framework.status import is_success
 from rest_framework.utils.model_meta import get_field_info
 from rest_framework.views import APIView
 
@@ -1208,7 +1209,7 @@ class AutoSchema(ViewInspector):
         if (
             self._is_list_view(serializer)
             and get_override(serializer, 'many') is not False
-            and (200 <= status_code < 300 or spectacular_settings.ENABLE_LIST_MECHANICS_ON_NON_2XX)
+            and (is_success(status_code) or spectacular_settings.ENABLE_LIST_MECHANICS_ON_NON_2XX)
         ):
             schema = build_array_type(schema)
             paginator = self._get_paginator()
