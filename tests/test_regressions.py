@@ -4,6 +4,7 @@ import typing
 import uuid
 from decimal import Decimal
 from functools import partialmethod
+from http import HTTPStatus
 from unittest import mock
 
 import pytest
@@ -14,7 +15,7 @@ from django.db.models import fields
 from django.urls import path, re_path, register_converter
 from django.urls.converters import StringConverter
 from rest_framework import (
-    filters, generics, mixins, pagination, parsers, renderers, routers, serializers, views,
+    filters, generics, mixins, pagination, parsers, renderers, routers, serializers, status, views,
     viewsets,
 )
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
@@ -2753,3 +2754,40 @@ def test_enforce_non_blank_fields(no_warnings):
         'wo': {'type': 'string', 'writeOnly': True, 'minLength': 1},
         'rw': {'type': 'string', 'minLength': 1}
     }
+
+
+def test_response_status_codes_types(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.IntegerField()
+
+    @extend_schema(
+        request=XSerializer,
+        responses={
+            200: OpenApiResponse(
+                description='Integer status code.',
+                response=XSerializer,
+            ),
+            '400': OpenApiResponse(
+                description='String status code.',
+                response=XSerializer,
+            ),
+            status.HTTP_401_UNAUTHORIZED: OpenApiResponse(
+                description='DRF constant.',
+                response=XSerializer,
+            ),
+            HTTPStatus.FORBIDDEN: OpenApiResponse(
+                description='http.HTTPStatus enum.',
+                response=XSerializer,
+            ),
+        },
+    )
+    @api_view(['POST'])
+    def pi(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x', view_function=pi)
+    operation = schema['paths']['/x']['post']
+    assert operation['responses']['200']['description'] == 'Integer status code.'
+    assert operation['responses']['400']['description'] == 'String status code.'
+    assert operation['responses']['401']['description'] == 'DRF constant.'
+    assert operation['responses']['403']['description'] == 'http.HTTPStatus enum.'

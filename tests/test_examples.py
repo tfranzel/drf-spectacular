@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -75,6 +77,7 @@ class ExampleTestWithExtendedViewSet(viewsets.GenericViewSet):
             400: OpenApiTypes.OBJECT,
             403: OpenApiTypes.OBJECT,
             404: OpenApiTypes.OBJECT,
+            500: OpenApiTypes.OBJECT,
         },
         examples=[
             OpenApiExample(
@@ -102,6 +105,12 @@ class ExampleTestWithExtendedViewSet(viewsets.GenericViewSet):
                 value={'field': 'error'},
                 response_only=True,
                 status_codes=[404],  # integer
+            ),
+            OpenApiExample(
+                'Create Error 500 Example',
+                value={'field': 'error'},
+                response_only=True,
+                status_codes=[HTTPStatus.INTERNAL_SERVER_ERROR],  # enum
             ),
         ],
     )

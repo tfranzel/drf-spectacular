@@ -1,5 +1,6 @@
 import inspect
 import sys
+from http import HTTPStatus
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 from rest_framework.fields import Field, empty
@@ -113,7 +114,7 @@ class OpenApiExample(OpenApiSchemaBase):
             response_only: bool = False,
             parameter_only: Optional[Tuple[str, _ParameterLocationType]] = None,
             media_type: str = 'application/json',
-            status_codes: Optional[List[Union[int, str]]] = None,
+            status_codes: Optional[List[Union[HTTPStatus, int, str]]] = None,
     ):
         self.name = name
         self.summary = summary
