@@ -105,6 +105,18 @@ paths:
                     field: error
                   summary: Create Error 403 Example
           description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                CreateError404Example:
+                  value:
+                    field: error
+                  summary: Create Error 404 Example
+          description: ''
   /schema/{id}/:
     get:
       operationId: schema_retrieve

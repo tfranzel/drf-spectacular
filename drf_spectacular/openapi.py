@@ -1010,7 +1010,7 @@ class AutoSchema(ViewInspector):
         """ override this for custom behaviour """
         return []
 
-    def _get_examples(self, serializer, direction, media_type, status_code=None, extras=None):
+    def _get_examples(self, serializer, direction, media_type, status_code: typing.Optional[int] = None, extras=None):
         """ Handles examples for request/response. purposefully ignores parameter examples """
 
         # don't let the parameter examples influence the serializer example retrieval
@@ -1127,22 +1127,23 @@ class AutoSchema(ViewInspector):
             if self.method == 'DELETE':
                 return {'204': {'description': _('No response body')}}
             if self._is_create_operation():
-                return {'201': self._get_response_for_code(response_serializers, '201')}
-            return {'200': self._get_response_for_code(response_serializers, '200')}
+                return {'201': self._get_response_for_code(response_serializers, 201)}
+            return {'200': self._get_response_for_code(response_serializers, 200)}
         elif isinstance(response_serializers, dict):
             # custom handling for overriding default return codes with @extend_schema
             responses = {}
-            for code, serializer in response_serializers.items():
-                if isinstance(code, tuple):
-                    code, media_types = str(code[0]), code[1:]
+            for status_code, serializer in response_serializers.items():
+                if isinstance(status_code, tuple):
+                    status_code, *media_types = status_code
                 else:
-                    code, media_types = str(code), None
-                content_response = self._get_response_for_code(serializer, code, media_types)
-                if code in responses:
-                    responses[code]['content'].update(content_response['content'])
+                    media_types = None
+                status_code = int(status_code)
+                content_response = self._get_response_for_code(serializer, status_code, media_types)
+                if status_code in responses:
+                    responses[status_code]['content'].update(content_response['content'])
                 else:
-                    responses[code] = content_response
-            return responses
+                    responses[status_code] = content_response
+            return {str(k): v for k, v in responses.items()}
         else:
             warn(
                 f'could not resolve "{response_serializers}" for {self.method} {self.path}. '
@@ -1151,7 +1152,7 @@ class AutoSchema(ViewInspector):
             )
             schema = build_basic_type(OpenApiTypes.OBJECT)
             schema['description'] = _('Unspecified response body')
-            return {'200': self._get_response_for_code(schema, '200')}
+            return {'200': self._get_response_for_code(schema, 200)}
 
     def _unwrap_list_serializer(self, serializer, direction) -> typing.Optional[dict]:
         if is_field(serializer):
@@ -1207,7 +1208,7 @@ class AutoSchema(ViewInspector):
         if (
             self._is_list_view(serializer)
             and get_override(serializer, 'many') is not False
-            and ('200' <= status_code < '300' or spectacular_settings.ENABLE_LIST_MECHANICS_ON_NON_2XX)
+            and (200 <= status_code < 300 or spectacular_settings.ENABLE_LIST_MECHANICS_ON_NON_2XX)
         ):
             schema = build_array_type(schema)
             paginator = self._get_paginator()
@@ -1244,7 +1245,7 @@ class AutoSchema(ViewInspector):
             'description': description
         }
 
-    def _get_response_headers_for_code(self, status_code) -> dict:
+    def _get_response_headers_for_code(self, status_code: int) -> dict:
         result = {}
         for parameter in self.get_override_parameters():
             if not isinstance(parameter, OpenApiParameter):
@@ -1253,7 +1254,7 @@ class AutoSchema(ViewInspector):
                 continue
             if (
                 isinstance(parameter.response, list)
-                and status_code not in [str(code) for code in parameter.response]
+                and status_code not in parameter.response
             ):
                 continue
 

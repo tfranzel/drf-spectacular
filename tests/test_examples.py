@@ -74,6 +74,7 @@ class ExampleTestWithExtendedViewSet(viewsets.GenericViewSet):
             201: BSerializer,
             400: OpenApiTypes.OBJECT,
             403: OpenApiTypes.OBJECT,
+            404: OpenApiTypes.OBJECT,
         },
         examples=[
             OpenApiExample(
@@ -94,7 +95,13 @@ class ExampleTestWithExtendedViewSet(viewsets.GenericViewSet):
                 'Create Error 403 Example',
                 value={'field': 'error'},
                 response_only=True,
-                status_codes=['403']
+                status_codes=['403'],  # string
+            ),
+            OpenApiExample(
+                'Create Error 404 Example',
+                value={'field': 'error'},
+                response_only=True,
+                status_codes=[404],  # integer
             ),
         ],
     )
