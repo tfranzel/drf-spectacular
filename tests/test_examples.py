@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
-    OpenApiExample, OpenApiParameter, extend_schema, extend_schema_serializer,
+    OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_serializer,
 )
 from tests import assert_schema, generate_schema
 from tests.models import SimpleModel
@@ -159,7 +159,32 @@ class ExampleTestWithExtendedViewSet(viewsets.GenericViewSet):
     def raw_action(self, request):
         return Response()  # pragma: no cover
 
-    @extend_schema(responses=BSerializer)
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                description="",
+                response=BSerializer,
+                examples=[
+                    OpenApiExample(
+                        'Override 200 Example',
+                        value={'field': 'ok'},
+                    ),
+                ],
+            ),
+            400: OpenApiResponse(
+                description="",
+                response=BSerializer,
+                examples=[
+                    OpenApiExample(
+                        'Override 400 Example',
+                        value={'field': 'status_codes_undeclared_in_response_examples'},
+                        # Ensure this works when status_codes are not provided.
+                        # Previously this only worked automatically for 200 and 201.
+                    ),
+                ],
+            ),
+        },
+    )
     @action(detail=False, methods=['POST'])
     def override_extend_schema_action(self, request):
         return Response()  # pragma: no cover

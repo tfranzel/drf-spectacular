@@ -1172,6 +1172,14 @@ class AutoSchema(ViewInspector):
             serializer, description, examples = (
                 serializer.response, serializer.description, serializer.examples
             )
+            for example in examples:
+                if example.status_codes is None:
+                    example.status_codes = [status_code]
+                elif status_code not in example.status_codes:
+                    warn(
+                        f'example in response with status code {status_code} had'
+                        f'status_codes set to {example.status_codes!r}'
+                    )
         else:
             description, examples = '', []
 

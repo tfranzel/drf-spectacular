@@ -199,6 +199,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/B'
+              examples:
+                Override200Example:
+                  value:
+                    field: ok
+                  summary: Override 200 Example
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B'
+              examples:
+                Override400Example:
+                  value:
+                    field: status_codes_undeclared_in_response_examples
+                  summary: Override 400 Example
           description: ''
   /schema/raw_action/:
     get:
