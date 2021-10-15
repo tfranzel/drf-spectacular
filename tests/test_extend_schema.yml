@@ -279,6 +279,11 @@ paths:
           minimum: 1
         description: filter by rating stars
         required: true
+      - in: query
+        name: tag
+        schema:
+          type: string
+          minLength: 1
       tags:
       - doesitall
       security:
@@ -408,6 +413,8 @@ components:
             $ref: '#/components/schemas/OrderByEnum'
           default:
           - a
+        tag:
+          type: string
       required:
       - stars
   securitySchemes:

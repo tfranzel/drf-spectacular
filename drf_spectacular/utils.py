@@ -155,6 +155,7 @@ class OpenApiParameter(OpenApiSchemaBase):
             style: Optional[str] = None,
             explode: Optional[bool] = None,
             default: Any = None,
+            allow_blank: bool = True,
             examples: Optional[List[OpenApiExample]] = None,
             extensions: Optional[Dict[str, Any]] = None,
             exclude: bool = False,
@@ -170,6 +171,7 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.style = style
         self.explode = explode
         self.default = default
+        self.allow_blank = allow_blank
         self.examples = examples or []
         self.extensions = extensions
         self.exclude = exclude

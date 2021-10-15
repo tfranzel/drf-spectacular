@@ -53,6 +53,7 @@ class QuerySerializer(serializers.Serializer):
         choices=['a', 'b', 'c'],
         default=['a'],
     )
+    tag = serializers.CharField(required=False)
 
 
 class ErrorDetailSerializer(serializers.Serializer):

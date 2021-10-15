@@ -300,6 +300,7 @@ def build_parameter_type(
         explode=None,
         style=None,
         default=None,
+        allow_blank=True,
         examples=None,
         extensions=None,
 ):
@@ -325,6 +326,8 @@ def build_parameter_type(
         schema['schema']['enum'] = sorted(enum)
     if default is not None and 'default' not in irrelevant_field_meta:
         schema['schema']['default'] = default
+    if not allow_blank and schema['schema'].get('type') == 'string':
+        schema['schema']['minLength'] = schema['schema'].get('minLength', 1)
     if examples:
         schema['examples'] = examples
     if extensions:

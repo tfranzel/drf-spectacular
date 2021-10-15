@@ -167,19 +167,23 @@ class AutoSchema(ViewInspector):
                         style=parameter.style,
                         explode=parameter.explode,
                         default=parameter.default,
+                        allow_blank=parameter.allow_blank,
                         examples=build_examples_list(parameter.examples),
                         extensions=parameter.extensions,
                     )
             elif is_basic_serializer(parameter):
                 # explode serializer into separate parameters. defaults to QUERY location
+                parameter = force_instance(parameter)
                 mapped = self._map_serializer(parameter, 'request')
                 for property_name, property_schema in mapped['properties'].items():
+                    field = parameter.fields.get(property_name)
                     result[property_name, OpenApiParameter.QUERY] = build_parameter_type(
                         name=property_name,
                         schema=property_schema,
                         description=property_schema.pop('description', None),
                         location=OpenApiParameter.QUERY,
-                        required=property_name in mapped.get('required', []),
+                        allow_blank=getattr(field, 'allow_blank', True),
+                        required=field.required,
                     )
             else:
                 warn(f'could not resolve parameter annotation {parameter}. Skipping.')
@@ -1272,6 +1276,7 @@ class AutoSchema(ViewInspector):
                 style=parameter.style,
                 explode=parameter.explode,
                 default=parameter.default,
+                allow_blank=parameter.allow_blank,
                 examples=build_examples_list(parameter.examples),
                 extensions=parameter.extensions,
             )
