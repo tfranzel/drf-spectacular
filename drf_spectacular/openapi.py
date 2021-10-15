@@ -497,7 +497,7 @@ class AutoSchema(ViewInspector):
             return build_basic_type(OpenApiTypes.STR)
 
     def _map_serializer_field(self, field, direction, bypass_extensions=False):
-        meta = self._get_serializer_field_meta(field)
+        meta = self._get_serializer_field_meta(field, direction)
 
         if has_override(field, 'field'):
             override = get_override(field, 'field')
@@ -798,7 +798,7 @@ class AutoSchema(ViewInspector):
             del schema['required']
         return schema
 
-    def _get_serializer_field_meta(self, field):
+    def _get_serializer_field_meta(self, field, direction):
         if not isinstance(field, serializers.Field):
             return {}
 
@@ -809,6 +809,14 @@ class AutoSchema(ViewInspector):
             meta['writeOnly'] = True
         if field.allow_null:
             meta['nullable'] = True
+        if isinstance(field, serializers.CharField) and not field.allow_blank:
+            # blank check only applies to inbound requests
+            if spectacular_settings.COMPONENT_SPLIT_REQUEST:
+                if direction == 'request':
+                    meta['minLength'] = 1
+            elif spectacular_settings.ENFORCE_NON_BLANK_FIELDS:
+                if not field.read_only:
+                    meta['minLength'] = 1
         if field.default is not None and field.default != empty and not callable(field.default):
             if isinstance(field, (serializers.ModelField, serializers.SerializerMethodField)):
                 # Skip coercion for lack of a better solution. ModelField.to_representation()

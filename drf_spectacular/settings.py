@@ -19,7 +19,6 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # also specified via SERVERS, but this makes the operation path more explicit.
     'SCHEMA_PATH_PREFIX_INSERT': '',
 
-
     # Coercion of {pk} to {id} is controlled by SCHEMA_COERCE_PATH_PK. Additionally,
     # some libraries (e.g. drf-nested-routers) use "_pk" suffixed path variables.
     # This setting globally coerces path variables like "{user_pk}" to "{user_id}".
@@ -34,9 +33,18 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Create separate components for PATCH endpoints (without required list)
     'COMPONENT_SPLIT_PATCH': True,
     # Split components into request and response parts where appropriate
+    # This setting is highly recommended to achieve the most accurate API
+    # description, however it comes at the cost of having more components.
     'COMPONENT_SPLIT_REQUEST': False,
     # Aid client generator targets that have trouble with read-only properties.
     'COMPONENT_NO_READ_ONLY_REQUIRED': False,
+
+    # Adds "minLength: 1" to fields that do not allow blank strings. Deactivated
+    # by default because serializers do not strictly enforce this on responses and
+    # so "minLength: 1" may not always accurately describe API behavior.
+    # Gets implicitly enabled by COMPONENT_SPLIT_REQUEST, because this can be
+    # accurately modeled when request and response components are separated.
+    'ENFORCE_NON_BLANK_FIELDS': False,
 
     # Configuration for serving a schema subset with SpectacularAPIView
     'SERVE_URLCONF': None,

@@ -2733,3 +2733,23 @@ def test_schema_path_prefix_insert(no_warnings):
 
     schema = generate_schema('v1/x/', view_function=view_func)
     assert '/service/backend/v1/x/' in schema['paths']
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENFORCE_NON_BLANK_FIELDS', True)
+def test_enforce_non_blank_fields(no_warnings):
+    class XSerializer(serializers.Serializer):
+        ro = serializers.CharField(read_only=True)
+        wo = serializers.CharField(write_only=True)
+        rw = serializers.CharField()
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'ro': {'type': 'string', 'readOnly': True},
+        'wo': {'type': 'string', 'writeOnly': True, 'minLength': 1},
+        'rw': {'type': 'string', 'minLength': 1}
+    }
