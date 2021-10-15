@@ -1,6 +1,29 @@
 Changelog
 =========
 
+0.20.2 (2021-10-15)
+-------------------
+
+- add setting for manual path prefix: SCHEMA_PATH_PREFIX_INSERT `#567 <https://github.com/tfranzel/drf-spectacular/issues/567>`_
+- improve type hint for @extend_schema_field `#569 <https://github.com/tfranzel/drf-spectacular/issues/569>`_
+- bugfix COMPONENT_SPLIT_REQUEST for empty req/resp serializers `#572 <https://github.com/tfranzel/drf-spectacular/issues/572>`_
+- Make it cleared that ENUM_NAME_OVERRIDES is a key within SPECTACULAR_SETTINGS [johnthagen]
+- Improve formatting in customization docs [johnthagen]
+- bugfix @extend_schema_view on @api_view `#554 <https://github.com/tfranzel/drf-spectacular/issues/554>`_
+- bugfix isolation for @extend_schema/@extend_schema_view reorg `#554 <https://github.com/tfranzel/drf-spectacular/issues/554>`_
+- Fix inheritance bugs with @extend_schema_view(). [Nick Pope]
+- Allow methods in @extend_schema to be case insensitive. [Nick Pope]
+- Added a documentation blueprint for RapiDoc. [Nick Pope]
+- Tidy templates for documentation views. [Nick Pope]
+- Use latest version for CDN packages. [Nick Pope]
+
+Breaking changes / important additions:
+
+- Mainly a bugfix release that solves several longstanding issues with ``@extend_schema_view``/``@extend_schema``
+  annotation isolation. There should be no more side effects from arbitrarily mixing and matching the decorators.
+- Improved handling of completely empty serializers with COMPONENT_SPLIT_REQUEST.
+
+
 0.20.1 (2021-10-03)
 -------------------
 
