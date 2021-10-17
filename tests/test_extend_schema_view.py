@@ -63,7 +63,7 @@ class ZViewSet(XViewSet):
     @extend_schema(tags=['child-tag'])
     @action(detail=False, methods=['GET'])
     def raw_action(self, request):
-        return Response('2019-03-01')
+        return Response('2019-03-01')  # pragma: no cover
 
 
 router = routers.SimpleRouter()

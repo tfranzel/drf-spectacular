@@ -1141,14 +1141,14 @@ def test_queryset_filter_and_ordering_only_on_list(no_warnings):
 
     schema = generate_schema('x', XViewset)
 
-    retrieve_parameters = schema['paths']['/x/']['get']['parameters']
-    assert len(retrieve_parameters) == 2
-    assert retrieve_parameters[0]['name'] == 'ordering'
-    assert retrieve_parameters[1]['name'] == 'search'
+    list_parameters = schema['paths']['/x/']['get']['parameters']
+    assert len(list_parameters) == 2
+    assert list_parameters[0]['name'] == 'ordering'
+    assert list_parameters[1]['name'] == 'search'
 
-    list_parameters = schema['paths']['/x/{id}/']['get']['parameters']
-    assert len(list_parameters) == 1
-    assert list_parameters[0]['name'] == 'id'
+    retrieve_parameters = schema['paths']['/x/{id}/']['get']['parameters']
+    assert len(retrieve_parameters) == 1
+    assert retrieve_parameters[0]['name'] == 'id'
 
 
 def test_pagination(no_warnings):

@@ -90,3 +90,17 @@ __ https://mrin9.github.io/RapiDoc/
 .. literalinclude:: blueprints/rapidoc.py
 
 .. literalinclude:: blueprints/rapidoc.html
+
+
+drf-rw-serializers
+------------------
+
+`drf-rw-serializers`__ provides generic views, viewsets and mixins that extend the Django REST
+Framework ones adding separated serializers for read and write operations.
+
+`drf-spectacular` requires just a small ``AutoSchema`` augmentation to make it aware of
+``drf-rw-serializers``. Remember to replace the ``AutoSchema`` in ``DEFAULT_SCHEMA_CLASS``.
+
+__ https://github.com/vintasoftware/drf-rw-serializers
+
+.. literalinclude:: blueprints/drf_rw_serializers.py
