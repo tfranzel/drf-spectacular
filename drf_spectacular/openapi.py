@@ -414,14 +414,15 @@ class AutoSchema(ViewInspector):
 
         return parameters
 
-    def _get_filter_parameters(self):
+    def get_filter_backends(self):
+        """ override this for custom behaviour """
         if not self._is_list_view():
             return []
-        if getattr(self.view, 'filter_backends', None) is None:
-            return []
+        return getattr(self.view, 'filter_backends', [])
 
+    def _get_filter_parameters(self):
         parameters = []
-        for filter_backend in self.view.filter_backends:
+        for filter_backend in self.get_filter_backends():
             filter_extension = OpenApiFilterExtension.get_match(filter_backend())
             if filter_extension:
                 parameters += filter_extension.get_schema_operation_parameters(self)
@@ -1006,6 +1007,7 @@ class AutoSchema(ViewInspector):
             )
 
     def get_examples(self):
+        """ override this for custom behaviour """
         return []
 
     def _get_examples(self, serializer, direction, media_type, status_code=None, extras=None):

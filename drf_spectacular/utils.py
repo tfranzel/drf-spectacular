@@ -211,6 +211,7 @@ def extend_schema(
         summary: Optional[str] = None,
         deprecated: Optional[bool] = None,
         tags: Optional[List[str]] = None,
+        filters: Optional[bool] = None,
         exclude: bool = False,
         operation: Optional[Dict] = None,
         methods: Optional[List[str]] = None,
@@ -256,6 +257,7 @@ def extend_schema(
     :param summary: an optional short summary of the description
     :param deprecated: mark operation as deprecated
     :param tags: override default list of tags
+    :param filters: ignore list detection and forcefully enable/disable filter discovery
     :param exclude: set True to exclude operation from schema
     :param operation: manually override what auto-discovery would generate. you must
         provide a OpenAPI3-compliant dictionary that gets directly translated to YAML.
@@ -356,6 +358,11 @@ def extend_schema(
                 if extensions and is_in_scope(self):
                     return extensions
                 return super().get_extensions()
+
+            def get_filter_backends(self):
+                if filters is not None and is_in_scope(self):
+                    return getattr(self.view, 'filter_backends', []) if filters else []
+                return super().get_filter_backends()
 
         if inspect.isclass(f):
             # either direct decoration of views, or unpacked @api_view from OpenApiViewExtension

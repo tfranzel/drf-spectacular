@@ -10,6 +10,7 @@ from rest_framework.test import APIClient
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, extend_schema, extend_schema_field
 from tests import assert_schema, generate_schema
+from tests.models import SimpleModel, SimpleSerializer
 
 try:
     from django_filters.rest_framework import (
@@ -213,6 +214,7 @@ def test_django_filters_requests(no_warnings):
     assert len(response.json()) == 1
 
 
+@pytest.mark.contrib('django_filter')
 def test_through_model_multi_choice_filter(no_warnings):
     class RelationModel(models.Model):
         test = models.CharField(max_length=50)
@@ -246,11 +248,10 @@ def test_through_model_multi_choice_filter(no_warnings):
     generate_schema('x', TestViewSet)
 
 
+@pytest.mark.contrib('django_filter')
 def test_boolean_filter_subclassing_in_different_import_path(no_warnings):
     # this import is important as there is a override via subclassing
     # happening in django_filter.rest_framework.filters
-    import django_filters
-
     class DjangoFilterDummyModel(models.Model):
         seen = models.DateTimeField(null=True)
 
@@ -264,7 +265,7 @@ def test_boolean_filter_subclassing_in_different_import_path(no_warnings):
             model = DjangoFilterDummyModel
             fields = []
 
-        seen = django_filters.BooleanFilter(field_name="seen", lookup_expr="isnull")
+        seen = BooleanFilter(field_name="seen", lookup_expr="isnull")
 
     class XViewSet(viewsets.ModelViewSet):
         queryset = DjangoFilterDummyModel.objects.all()
@@ -276,3 +277,39 @@ def test_boolean_filter_subclassing_in_different_import_path(no_warnings):
     assert schema['paths']['/x/']['get']['parameters'] == [
         {'in': 'query', 'name': 'seen', 'schema': {'type': 'boolean'}}
     ]
+
+
+@pytest.mark.contrib('django_filter')
+def test_filters_on_retrieve_operations(no_warnings):
+    from django_filters import FilterSet
+    from django_filters.rest_framework import DjangoFilterBackend
+
+    class SimpleFilterSet(FilterSet):
+        pages = BaseInFilter(field_name='id')
+
+        class Meta:
+            model = SimpleModel
+            fields = '__all__'
+
+    class XViewset(viewsets.GenericViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+        filterset_class = SimpleFilterSet
+        filter_backends = [DjangoFilterBackend]
+
+        @extend_schema(
+            responses={(200, 'application/pdf'): OpenApiTypes.BINARY},
+            filters=True,
+        )
+        def retrieve(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/{id}/']['get']['parameters'][1] == {
+        'in': 'query',
+        'name': 'pages',
+        'schema': {'type': 'array', 'items': {'type': 'integer'}},
+        'description': 'Multiple values may be separated by commas.',
+        'explode': False,
+        'style': 'form'
+    }
