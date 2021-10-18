@@ -92,7 +92,7 @@ decorator. It takes either basic types or a ``Serializer`` as argument. In case 
             return urlsafe_base64_encode(b'\xf0\xf1\xf2')
 
 
-You can apply it also to the method of a `SerializerMethodField`.
+You can apply it also to the method of a ``SerializerMethodField``.
 
 .. code-block:: python
 
