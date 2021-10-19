@@ -104,3 +104,17 @@ Framework ones adding separated serializers for read and write operations.
 __ https://github.com/vintasoftware/drf-rw-serializers
 
 .. literalinclude:: blueprints/drf_rw_serializers.py
+
+drf-extra-fields Base64FileField
+--------------------------------
+
+`drf-extra-fields`__ provides a ``Base64ImageField`` and ``Base64FileField`` that automatically
+represent binary files as base64 encoded strings. This is a useful way to embed files within a
+larger JSON API and keep all data within the same tree and served with a single request or
+response.
+
+Because requests to these fields require a base64 encoded string and responses can be either a
+URI or base64 contents (if ``represent_as_base64`` is set to ``True``) custom schema generation
+logic is required as this differs from the default DRF ``FileField``.
+
+__ https://github.com/Hipo/drf-extra-fields
