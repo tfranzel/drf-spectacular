@@ -11,7 +11,6 @@ schema closer to your API.
   Sane fallbacks are used wherever possible and some warnings might not even be relevant to you.
   The remaining issues can be solved with the following steps.
 
-
 Step 1: ``queryset`` and ``serializer_class``
 ---------------------------------------------
 Introspection heavily relies on those two attributes. ``get_serializer_class()``
@@ -147,6 +146,13 @@ Extensions provide a way to hook into the introspection without actually touchin
 All extensions work on the same principle. You provide a ``target_class`` (import path
 string or actual class) and then state what `drf-spectcular` should use instead of what
 it would normally discover.
+
+.. note:: The extensions register themselves automatically. Just be sure that the Python
+  interpreter sees them at least once.
+  To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your
+  ``PROJECT/__init__.py`` (same directory as ``settings.py`` and ``urls.py``)
+  with ``import PROJECT.schema``. Please do not import the file in
+  ``settings.py`` as this may potentially lead to cyclic import issues. Now you are all set.
 
 .. note:: Only the first Extension matching the criteria is used. By setting the ``priority`` attribute
   on your extension, you can influence the matching order (default ``0``).
