@@ -2753,3 +2753,29 @@ def test_enforce_non_blank_fields(no_warnings):
         'wo': {'type': 'string', 'writeOnly': True, 'minLength': 1},
         'rw': {'type': 'string', 'minLength': 1}
     }
+
+
+def test_extend_schema_serializer_isolation(no_warnings):
+    @extend_schema_serializer(component_name='ABC')
+    class OneSerializer(serializers.Serializer):
+        pass
+
+    @extend_schema_serializer(component_name='XYZ')
+    class TwoSerializer(OneSerializer):
+        pass
+
+    assert OneSerializer._spectacular_annotation == {'component_name': 'ABC'}
+    assert TwoSerializer._spectacular_annotation == {'component_name': 'XYZ'}
+
+
+def test_extend_schema_field_isolation(no_warnings):
+    @extend_schema_field(field=OpenApiTypes.FLOAT)
+    class OneField(serializers.IntegerField):
+        pass
+
+    @extend_schema_field(field=OpenApiTypes.DOUBLE)
+    class TwoField(OneField):
+        pass
+
+    assert OneField._spectacular_annotation['field'] == OpenApiTypes.FLOAT
+    assert TwoField._spectacular_annotation['field'] == OpenApiTypes.DOUBLE

@@ -101,6 +101,8 @@ def get_override(obj, prop, default=None):
 def set_override(obj, prop, value):
     if not hasattr(obj, '_spectacular_annotation'):
         obj._spectacular_annotation = {}
+    elif '_spectacular_annotation' not in obj.__dict__:
+        obj._spectacular_annotation = obj._spectacular_annotation.copy()
     obj._spectacular_annotation[prop] = value
     return obj
 
