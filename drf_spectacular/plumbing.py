@@ -752,6 +752,14 @@ def list_hash(lst):
     return hashlib.sha256(json.dumps(list(lst), sort_keys=True).encode()).hexdigest()
 
 
+def anchor_pattern(pattern: str) -> str:
+    if not pattern.startswith('^'):
+        pattern = '^' + pattern
+    if not pattern.endswith('$'):
+        pattern = pattern + '$'
+    return pattern
+
+
 def resolve_django_path_parameter(path_regex, variable, available_formats):
     """
     convert django style path parameters to OpenAPI parameters.
@@ -799,7 +807,7 @@ def resolve_django_path_parameter(path_regex, variable, available_formats):
         elif converter in registered_converters:
             # gracious fallback for custom converters that have no override specified.
             schema = build_basic_type(OpenApiTypes.STR)
-            schema['pattern'] = registered_converters[converter].regex
+            schema['pattern'] = anchor_pattern(registered_converters[converter].regex)
         else:
             error(f'Encountered path converter "{converter}" that is unknown to Django.')
             return None
@@ -833,7 +841,10 @@ def resolve_regex_path_parameter(path_regex, variable):
 
         return build_parameter_type(
             name=variable,
-            schema={**build_basic_type(OpenApiTypes.STR), 'pattern': pattern},
+            schema={
+                **build_basic_type(OpenApiTypes.STR),
+                'pattern': anchor_pattern(pattern),
+            },
             location=OpenApiParameter.PATH,
         )
 

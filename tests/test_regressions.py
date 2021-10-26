@@ -2344,7 +2344,7 @@ def test_regex_path_parameter_discovery_pattern(no_warnings):
     assert schema['paths']['/pi/{precision}']['get']['parameters'][0] == {
         'in': 'path',
         'name': 'precision',
-        'schema': {'type': 'string', 'pattern': '(\\d+)-[\\w|\\.]+(failed|success)'},
+        'schema': {'type': 'string', 'pattern': '^(\\d+)-[\\w|\\.]+(failed|success)$'},
         'required': True
     }
 
@@ -2431,7 +2431,7 @@ def test_path_converter_override(no_warnings):
         'type': 'integer', 'format': 'signed'
     }
     assert schema['paths']['/c/{var}/']['get']['parameters'][0]['schema'] == {
-        'type': 'string', 'pattern': '[a-f0-9]+'
+        'type': 'string', 'pattern': '^[a-f0-9]+$'
     }
 
 
