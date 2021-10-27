@@ -200,8 +200,7 @@ Where should I put my extensions? / my extensions are not detected
 
 The extensions register themselves automatically. Just be sure that the python interpreter sees them at least once.
 To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your ``PROJECT/__init__.py``
-(same directory as ``settings.py`` and ``urls.py``) with ``import PROJECT.schema``. Please do not import the file in
-``settings.py`` as this may potentially lead to cyclic import issues.
+(same directory as ``settings.py`` and ``urls.py``) with ``import PROJECT.schema``.
 
 
 My ``@action`` is erroneously paginated or has filter parameters that I do not want

@@ -151,8 +151,7 @@ it would normally discover.
   interpreter sees them at least once.
   To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your
   ``PROJECT/__init__.py`` (same directory as ``settings.py`` and ``urls.py``)
-  with ``import PROJECT.schema``. Please do not import the file in
-  ``settings.py`` as this may potentially lead to cyclic import issues. Now you are all set.
+  with ``import PROJECT.schema``.
 
 .. note:: Only the first Extension matching the criteria is used. By setting the ``priority`` attribute
   on your extension, you can influence the matching order (default ``0``).
