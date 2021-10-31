@@ -97,7 +97,10 @@ const requestInterceptor = (request, ...args) => {
       console.error("schema auth injection failed with error: ", e);
     }
   }
-  request.headers["{{ csrf_header_name }}"] = "{{ csrf_token }}";
+  // selectively omit adding headers to mitigate CORS issues.
+  if (!["GET", undefined].includes(request.method) && request.credentials === "same-origin") {
+    request.headers["{{ csrf_header_name }}"] = "{{ csrf_token }}";
+  }
   return request;
 };
 
