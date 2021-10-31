@@ -2799,3 +2799,17 @@ def test_extend_schema_field_isolation(no_warnings):
 
     assert OneField._spectacular_annotation['field'] == OpenApiTypes.FLOAT
     assert TwoField._spectacular_annotation['field'] == OpenApiTypes.DOUBLE
+
+
+def test_catch_all_status_code_responses(no_warnings):
+    @extend_schema(responses={
+        '2XX': SimpleSerializer,
+        '401': inline_serializer('Error1', fields={'detail': serializers.CharField()}),
+        '4XX': inline_serializer('Error2', fields={'detail': serializers.CharField()}),
+    })
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert list(schema['paths']['/x/']['get']['responses'].keys()) == ['2XX', '401', '4XX']
