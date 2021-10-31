@@ -1,5 +1,4 @@
 import inspect
-import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 from rest_framework.fields import Field, empty
@@ -7,20 +6,14 @@ from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import (
-    error, get_view_method_names, isolate_view_method, set_override, warn,
+    Final, Literal, error, get_view_method_names, isolate_view_method, set_override, warn,
 )
 from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 
-if sys.version_info >= (3, 8):
-    from typing import Final, Literal
-else:
-    from typing_extensions import Final, Literal
-
-
 _SerializerType = Union[Serializer, Type[Serializer]]
 _FieldType = Union[Field, Type[Field]]
-
 _ParameterLocationType = Literal['query', 'path', 'header', 'cookie']
+Direction = Literal['request', 'response']
 
 
 class PolymorphicProxySerializer(Serializer):

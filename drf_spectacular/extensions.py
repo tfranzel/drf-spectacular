@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
 from drf_spectacular.plumbing import OpenApiGeneratorExtension
+from drf_spectacular.utils import Direction
 
 if TYPE_CHECKING:
     from rest_framework.views import APIView
@@ -58,7 +59,7 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
         """ return str for overriding default name extraction """
         return None
 
-    def map_serializer(self, auto_schema: 'AutoSchema', direction):
+    def map_serializer(self, auto_schema: 'AutoSchema', direction: Direction):
         """ override for customized serializer mapping """
         return auto_schema._map_serializer(self.target_class, direction, bypass_extensions=True)
 
@@ -82,7 +83,7 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
         return None
 
     @abstractmethod
-    def map_serializer_field(self, auto_schema: 'AutoSchema', direction):
+    def map_serializer_field(self, auto_schema: 'AutoSchema', direction: Direction):
         """ override for customized serializer field mapping """
         pass  # pragma: no cover
 
