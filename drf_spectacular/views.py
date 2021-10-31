@@ -116,13 +116,31 @@ class SpectacularSwaggerView(APIView):
                 ),
                 'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
                 'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
-                'template_name_js': self.template_name_js
+                'template_name_js': self.template_name_js,
+                'csrf_header_name': self._get_csrf_header_name(),
+                'schema_auth_names': self._dump(self._get_schema_auth_names()),
             },
             template_name=self.template_name,
         )
 
     def _dump(self, data):
-        return data if isinstance(data, str) else json.dumps(data)
+        return data if isinstance(data, str) else json.dumps(data, indent=2)
+
+    def _get_csrf_header_name(self):
+        csrf_header_name = settings.CSRF_HEADER_NAME
+        if csrf_header_name.startswith('HTTP_'):
+            csrf_header_name = csrf_header_name[5:]
+        return csrf_header_name.replace('_', '-')
+
+    def _get_schema_auth_names(self):
+        from drf_spectacular.extensions import OpenApiAuthenticationExtension
+        if spectacular_settings.SERVE_PUBLIC:
+            return []
+        auth_extensions = [
+            OpenApiAuthenticationExtension.get_match(klass)
+            for klass in self.authentication_classes
+        ]
+        return [auth.name for auth in auth_extensions if auth]
 
     def _swagger_ui_dist(self):
         if spectacular_settings.SWAGGER_UI_DIST == 'SIDECAR':
@@ -154,6 +172,8 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
                     ),
                     'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
                     'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
+                    'csrf_header_name': self._get_csrf_header_name(),
+                    'schema_auth_names': self._dump(self._get_schema_auth_names()),
                 },
                 template_name=self.template_name_js,
                 content_type='application/javascript',
