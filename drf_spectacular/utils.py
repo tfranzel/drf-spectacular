@@ -183,7 +183,7 @@ class OpenApiResponse(OpenApiSchemaBase):
     def __init__(
             self,
             response: Any = None,
-            description: Optional[str] = None,
+            description: str = '',
             examples: Optional[List[OpenApiExample]] = None
     ):
         self.response = response

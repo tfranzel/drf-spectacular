@@ -1957,6 +1957,26 @@ def test_openapi_response_wrapper(no_warnings):
     }
 
 
+def test_openapi_response_without_description_string(no_warnings):
+    class XViewSet(viewsets.GenericViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+        @extend_schema(
+            responses={
+                200: OpenApiResponse(
+                    response=SimpleSerializer,
+                    examples=[OpenApiExample("Example1", value={"field": 1})],
+                )
+            }
+        )
+        def retrieve(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', XViewSet)
+    assert schema['paths']['/x/{id}/']['get']['responses']['200']['description'] == ''
+
+
 def test_prefix_estimation_with_re_special_chars_as_literals_in_path(no_warnings):
     # make sure prefix estimation logic does not choke on reserved RE chars
     @extend_schema(request=typing.Any, responses=typing.Any)
