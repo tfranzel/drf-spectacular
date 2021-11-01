@@ -419,3 +419,17 @@ def test_malformed_vendor_extensions(capsys):
     generate_schema('x', view_function=view_func)
     stderr = capsys.readouterr().err
     assert 'invalid extension \'foo\'. vendor extensions must start with' in stderr
+
+
+def test_serializer_method_missing(capsys):
+    class XSerializer(serializers.Serializer):
+        some_field = serializers.SerializerMethodField()
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request):
+        pass  # pragma: no cover
+
+    generate_schema('x', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'SerializerMethodField "some_field" is missing required method "get_some_field"' in stderr

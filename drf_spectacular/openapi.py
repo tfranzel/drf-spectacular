@@ -697,7 +697,14 @@ class AutoSchema(ViewInspector):
             return append_meta(content, meta)
 
         if isinstance(field, serializers.SerializerMethodField):
-            method = getattr(field.parent, field.method_name)
+            method = getattr(field.parent, field.method_name, None)
+            if method is None:
+                error(
+                    f'SerializerMethodField "{field.field_name}" is missing required method '
+                    f'"{field.method_name}". defaulting to "string".'
+                )
+                return append_meta(build_basic_type(OpenApiTypes.STR), meta)
+
             return append_meta(self._map_response_type_hint(method), meta)
 
         if isinstance(field, (serializers.BooleanField, serializers.NullBooleanField)):
