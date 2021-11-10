@@ -1,6 +1,37 @@
 Changelog
 =========
 
+0.21.0 (2021-11-10)
+-------------------
+
+- add renderer & parser whitelist setting `#598 <https://github.com/tfranzel/drf-spectacular/issues/598>`_
+- catch attr exception for invalid SerializerMethodField `#592 <https://github.com/tfranzel/drf-spectacular/issues/592>`_
+- add regression test for catch-all status codes `#573 <https://github.com/tfranzel/drf-spectacular/issues/573>`_
+- bugfix OpenApiResponse without description argument `#591 <https://github.com/tfranzel/drf-spectacular/issues/591>`_
+- introduce direction literal / import consolidation `#582 <https://github.com/tfranzel/drf-spectacular/issues/582>`_
+- mitigate CORS issues for external requests in Swagger UI `#588 <https://github.com/tfranzel/drf-spectacular/issues/588>`_
+- Swagger UI authorized schema retrieval `#342 <https://github.com/tfranzel/drf-spectacular/issues/342>`_ `#458 <https://github.com/tfranzel/drf-spectacular/issues/458>`_
+- remove cyclic import warning as fixes haves mitigated the issue. `#581 <https://github.com/tfranzel/drf-spectacular/issues/581>`_
+- bugfix: anchor parameter patterns with ^$
+- bugfix isolation of derivatives for @extend_schema_serializer/@extend_schema_field `#585 <https://github.com/tfranzel/drf-spectacular/issues/585>`_
+- add support for djangorestframework-recursive `#586 <https://github.com/tfranzel/drf-spectacular/issues/586>`_
+- Add blueprint for drf-extra-fields Base64FileField [johnthagen]
+- Add note about extensions registering themselves [johnthagen]
+- Document alternative to drf-yasg swagger_schema_field [johnthagen]
+- allow to bypass list detection for filter discovery `#407 <https://github.com/tfranzel/drf-spectacular/issues/407>`_
+- add blueprint (closes `#448 <https://github.com/tfranzel/drf-spectacular/issues/448>`_), fix test misnomer
+- non-blank string enforcement for parameters `#282 <https://github.com/tfranzel/drf-spectacular/issues/282>`_
+- add setting ENFORCE_NON_BLANK_FIELDS to enable blank checks `#186 <https://github.com/tfranzel/drf-spectacular/issues/186>`_
+
+Breaking changes / important additions:
+
+- Fixed two more decorator isolation issues.
+- Added Swagger UI plugin to handle reloading the schema on authentication changes (``'SERVE_PUBLIC': False``).
+- Added ``minLength`` where a blank value is not allowed. Apart the the dedicated setting, it is implicitly enabled by ``COMPONENT_SPLIT_REQUEST``.
+- Several other small fixes and additional settings for corner cases. This is mainly a y-steam release due to the potential impact
+  on the Swagger UI and ``minLength`` changes.
+
+
 0.20.2 (2021-10-15)
 -------------------
 
