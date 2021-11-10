@@ -2813,3 +2813,22 @@ def test_catch_all_status_code_responses(no_warnings):
 
     schema = generate_schema('/x/', view_function=view_func)
     assert list(schema['paths']['/x/']['get']['responses'].keys()) == ['2XX', '401', '4XX']
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.RENDERER_WHITELIST', [renderers.MultiPartRenderer])
+@mock.patch('drf_spectacular.settings.spectacular_settings.PARSER_WHITELIST', [parsers.MultiPartParser])
+def test_renderer_parser_whitelist(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.none()
+        renderer_classes = [renderers.MultiPartRenderer, renderers.JSONRenderer]
+        parser_classes = [parsers.MultiPartParser, parsers.JSONParser]
+
+    schema = generate_schema('/x', XViewset)
+    request_types = list(schema['paths']['/x/']['post']['requestBody']['content'].keys())
+    response_types = list(schema['paths']['/x/']['post']['responses']['201']['content'].keys())
+
+    assert response_types == request_types == ['multipart/form-data']

@@ -1161,3 +1161,12 @@ def resolve_type_hint(hint):
         return build_array_type(resolve_type_hint(args[0]))
     else:
         raise UnableToProceedError()
+
+
+def whitelisted(obj: object, classes: List[Type[object]], exact=False):
+    if not classes:
+        return True
+    if exact:
+        return obj.__class__ in classes
+    else:
+        return isinstance(obj, tuple(classes))

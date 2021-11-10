@@ -144,6 +144,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # authentication classes that are not contained in the whitelist. Use full import paths
     # like ['rest_framework.authentication.TokenAuthentication', ...]
     'AUTHENTICATION_WHITELIST': [],
+    # Controls which parsers are exposed in the schema. Works analog to AUTHENTICATION_WHITELIST.
+    'PARSER_WHITELIST': [],
+    # Controls which renderers are exposed in the schema. Works analog to AUTHENTICATION_WHITELIST.
+    # rest_framework.renderers.BrowsableAPIRenderer is ignored by default if whitelist is empty
+    'RENDERER_WHITELIST': [],
 
     # Option for turning off error and warn messages
     'DISABLE_ERRORS_AND_WARNINGS': False,
@@ -197,6 +202,8 @@ IMPORT_STRINGS = [
     'SORT_OPERATIONS',
     'SORT_OPERATION_PARAMETERS',
     'AUTHENTICATION_WHITELIST',
+    'RENDERER_WHITELIST',
+    'PARSER_WHITELIST',
 ]
 
 spectacular_settings = APISettings(

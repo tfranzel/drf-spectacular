@@ -32,7 +32,7 @@ from drf_spectacular.plumbing import (
     get_doc, get_type_hints, get_view_model, is_basic_serializer, is_basic_type, is_field,
     is_list_serializer, is_patched_serializer, is_serializer, is_trivial_string_variation,
     resolve_django_path_parameter, resolve_regex_path_parameter, resolve_type_hint, safe_ref,
-    sanitize_specification_extensions, warn,
+    sanitize_specification_extensions, warn, whitelisted,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -264,10 +264,7 @@ class AutoSchema(ViewInspector):
         auths = []
 
         for authenticator in self.view.get_authenticators():
-            if (
-                spectacular_settings.AUTHENTICATION_WHITELIST
-                and authenticator.__class__ not in spectacular_settings.AUTHENTICATION_WHITELIST
-            ):
+            if not whitelisted(authenticator, spectacular_settings.AUTHENTICATION_WHITELIST, True):
                 continue
 
             scheme = OpenApiAuthenticationExtension.get_match(authenticator)
@@ -970,14 +967,25 @@ class AutoSchema(ViewInspector):
         return f'Paginated{serializer_name}List'
 
     def map_parsers(self):
-        return list(dict.fromkeys([p.media_type for p in self.view.get_parsers()]))
+        return list(dict.fromkeys([
+            p.media_type for p in self.view.get_parsers()
+            if whitelisted(p, spectacular_settings.PARSER_WHITELIST)
+        ]))
 
     def map_renderers(self, attribute):
         assert attribute in ['media_type', 'format']
+
+        # Either use whitelist or default back to old behavior by excluding BrowsableAPIRenderer
+        def use_renderer(r):
+            if spectacular_settings.RENDERER_WHITELIST:
+                return whitelisted(r, spectacular_settings.RENDERER_WHITELIST)
+            else:
+                return not isinstance(r, renderers.BrowsableAPIRenderer)
+
         return list(dict.fromkeys([
             getattr(r, attribute).split(';')[0]
             for r in self.view.get_renderers()
-            if not isinstance(r, renderers.BrowsableAPIRenderer) and getattr(r, attribute, None)
+            if use_renderer(r) and hasattr(r, attribute)
         ]))
 
     def _get_serializer(self):
