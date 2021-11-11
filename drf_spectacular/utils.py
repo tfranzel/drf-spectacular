@@ -11,7 +11,7 @@ else:
     from typing_extensions import Final, Literal
 
 from rest_framework.fields import Field, empty
-from rest_framework.serializers import Serializer
+from rest_framework.serializers import ListSerializer, Serializer
 from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import (
@@ -19,10 +19,12 @@ from drf_spectacular.drainage import (
 )
 from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 
+_ListSerializerType = Union[ListSerializer, Type[ListSerializer]]
 _SerializerType = Union[Serializer, Type[Serializer]]
 _FieldType = Union[Field, Type[Field]]
 _ParameterLocationType = Literal['query', 'path', 'header', 'cookie']
 _StrOrPromise = Union[str, Promise]
+_SchemaType = Dict[str, Any]
 Direction = Literal['request', 'response']
 
 
@@ -202,7 +204,7 @@ class OpenApiParameter(OpenApiSchemaBase):
     def __init__(
             self,
             name: str,
-            type: Union[_SerializerType, _KnownPythonTypes, OpenApiTypes, dict] = str,
+            type: Union[_SerializerType, _KnownPythonTypes, OpenApiTypes, _SchemaType] = str,
             location: _ParameterLocationType = QUERY,
             required: bool = False,
             description: _StrOrPromise = '',
@@ -326,7 +328,7 @@ def extend_schema(
         tags: Optional[Sequence[str]] = None,
         filters: Optional[bool] = None,
         exclude: Optional[bool] = None,
-        operation: Optional[Dict] = None,
+        operation: Optional[_SchemaType] = None,
         methods: Optional[Sequence[str]] = None,
         versions: Optional[Sequence[str]] = None,
         examples: Optional[Sequence[OpenApiExample]] = None,
@@ -542,7 +544,7 @@ def extend_schema(
 
 
 def extend_schema_field(
-        field: Union[_SerializerType, _FieldType, OpenApiTypes, Dict],
+        field: Union[_SerializerType, _FieldType, OpenApiTypes, _SchemaType],
         component_name: Optional[str] = None
 ) -> Callable[[F], F]:
     """

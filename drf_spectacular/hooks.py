@@ -4,8 +4,9 @@ from collections import defaultdict
 from inflection import camelize
 from rest_framework.settings import api_settings
 
+from drf_spectacular.drainage import warn
 from drf_spectacular.plumbing import (
-    ResolvedComponent, list_hash, load_enum_name_overrides, safe_ref, warn,
+    ResolvedComponent, list_hash, load_enum_name_overrides, safe_ref,
 )
 from drf_spectacular.settings import spectacular_settings
 

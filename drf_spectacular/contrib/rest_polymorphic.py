@@ -1,6 +1,7 @@
+from drf_spectacular.drainage import warn
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.plumbing import (
-    ResolvedComponent, build_basic_type, build_object_type, is_patched_serializer, warn,
+    ResolvedComponent, build_basic_type, build_object_type, is_patched_serializer,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
