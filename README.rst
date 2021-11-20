@@ -190,11 +190,11 @@ the sky is the limit.
     from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
     from drf_spectacular.types import OpenApiTypes
 
-    class AlbumViewset(viewset.ModelViewset)
+    class AlbumViewset(viewset.ModelViewset):
         serializer_class = AlbumSerializer
 
         @extend_schema(
-            request=AlbumCreationSerializer
+            request=AlbumCreationSerializer,
             responses={201: AlbumSerializer},
         )
         def create(self, request):
@@ -244,7 +244,7 @@ the sky is the limit.
             return super().list(request)
 
         @extend_schema(
-            request=AlbumLikeSerializer
+            request=AlbumLikeSerializer,
             responses={204: None},
             methods=["POST"]
         )
@@ -252,6 +252,7 @@ the sky is the limit.
         @action(detail=True, methods=['post', 'get'])
         def set_password(self, request, pk=None):
             # your action behaviour
+            ...
 
 More customization
 ^^^^^^^^^^^^^^^^^^
