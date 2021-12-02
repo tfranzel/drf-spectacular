@@ -71,7 +71,23 @@ class SpectacularAPIView(APIView):
         # that we try to source version through the schema view's own versioning_class.
         version = self.api_version or request.version or self._get_version_parameter(request)
         generator = self.generator_class(urlconf=self.urlconf, api_version=version)
-        return Response(generator.get_schema(request=request, public=self.serve_public))
+        if request.query_params.get("format", False):
+            title = (
+                spectacular_settings.TITLE
+                if spectacular_settings.TITLE != ""
+                else "schema"
+            )
+            response = Response(
+                generator.get_schema(request=request, public=self.serve_public)
+            )
+            response[
+                "Content-Disposition"
+            ] = f'attachment; filename="{title}.{request.query_params.get("format")}"'
+            return response
+        else:
+            return Response(
+                generator.get_schema(request=request, public=self.serve_public)
+            )
 
     def _get_version_parameter(self, request):
         version = request.GET.get('version')

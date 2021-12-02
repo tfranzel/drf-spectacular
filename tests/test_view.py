@@ -65,6 +65,11 @@ def test_spectacular_view_custom_urlconf(no_warnings):
     assert response.status_code == 200
     assert response.content == b'3.1415'
 
+    response = APIClient().get('/api/v2/schema/?format=json')
+    assert 'filename="schema.json"' in response.headers.get("Content-Disposition")
+    response = APIClient().get('/api/v2/schema/?format=yaml')
+    assert 'filename="schema.yaml"' in response.headers.get("Content-Disposition")
+
 
 @pytest.mark.parametrize(['accept', 'format', 'indent'], [
     ('application/vnd.oai.openapi', 'yaml', None),
