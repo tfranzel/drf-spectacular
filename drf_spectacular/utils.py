@@ -308,7 +308,7 @@ def extend_schema(
                 return super().get_override_parameters()
 
             def get_auth(self):
-                if auth and is_in_scope(self):
+                if auth is not None and is_in_scope(self):
                     return auth
                 return super().get_auth()
 
