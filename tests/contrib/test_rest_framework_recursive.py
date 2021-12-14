@@ -17,6 +17,11 @@ class TreeSerializer(serializers.Serializer):
     children = serializers.ListField(child=RecursiveField())
 
 
+class TreeManySerializer(serializers.Serializer):
+    name = serializers.CharField()
+    children = RecursiveField(many=True)
+
+
 class PingSerializer(serializers.Serializer):
     ping_id = serializers.IntegerField()
     pong = RecursiveField('PongSerializer', required=False)
@@ -39,6 +44,11 @@ def test_rest_framework_recursive(no_warnings):
     def tree(request):
         pass  # pragma: no cover
 
+    @extend_schema(request=TreeManySerializer, responses=TreeManySerializer)
+    @api_view(['POST'])
+    def tree_many(request):
+        pass  # pragma: no cover
+
     @extend_schema(request=PingSerializer, responses=PingSerializer)
     @api_view(['POST'])
     def pong(request):
@@ -51,6 +61,7 @@ def test_rest_framework_recursive(no_warnings):
 
     urlpatterns = [
         path('tree', tree),
+        path('tree_many', tree_many),
         path('pong', pong),
         path('link', link)
     ]
