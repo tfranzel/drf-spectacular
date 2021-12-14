@@ -87,6 +87,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/Tree'
           description: ''
+  /tree_many:
+    post:
+      operationId: tree_many_create
+      tags:
+      - tree_many
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMany'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TreeMany'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TreeMany'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeMany'
+          description: ''
 components:
   schemas:
     Link:
@@ -130,6 +158,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Tree'
+      required:
+      - children
+      - name
+    TreeMany:
+      type: object
+      properties:
+        name:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeMany'
       required:
       - children
       - name
