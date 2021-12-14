@@ -1,5 +1,3 @@
-from rest_framework import serializers
-
 from drf_spectacular.extensions import OpenApiSerializerFieldExtension
 from drf_spectacular.plumbing import build_array_type, is_list_serializer
 
