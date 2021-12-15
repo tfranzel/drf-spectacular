@@ -119,3 +119,11 @@ logic is required as this differs from the default DRF ``FileField``.
 .. literalinclude:: blueprints/drf_extra_fields.py
 
 __ https://github.com/Hipo/drf-extra-fields
+
+django-auth-adfs
+----------------
+
+`django-auth-adfs <https://github.com/snok/django-auth-adfs>`_ provides "a Django authentication backend for Microsoft ADFS and Azure AD".
+The blueprint works for the Azure AD configuration guide (see: https://django-auth-adfs.readthedocs.io/en/latest/azure_ad_config_guide.html).
+
+.. literalinclude:: blueprints/django_auth_adfs.py
