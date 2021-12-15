@@ -84,8 +84,8 @@ setup(
     python_requires=">=3.6",
     install_requires=requirements,
     extras_require={
-        "offline": ["drf_spectacular_sidecar"],
-        "sidecar": ["drf_spectacular_sidecar"],
+        "offline": ["drf-spectacular-sidecar"],
+        "sidecar": ["drf-spectacular-sidecar"],
     },
     classifiers=[
         'Development Status :: 5 - Production/Stable',

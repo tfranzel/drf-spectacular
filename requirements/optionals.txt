@@ -10,4 +10,4 @@ django-filter>=2.3.0
 psycopg2-binary>=2.7.3.2
 drf-nested-routers>=0.93.3
 djangorestframework-recursive>=0.1.2
-drf_spectacular_sidecar
+drf-spectacular-sidecar
