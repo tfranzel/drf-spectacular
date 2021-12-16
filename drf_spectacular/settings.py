@@ -207,7 +207,7 @@ IMPORT_STRINGS = [
 ]
 
 spectacular_settings = APISettings(
-    user_settings=getattr(settings, 'SPECTACULAR_SETTINGS', {}),
+    user_settings=getattr(settings, 'SPECTACULAR_SETTINGS', {}),  # type: ignore
     defaults=SPECTACULAR_DEFAULTS,  # type: ignore
     import_strings=IMPORT_STRINGS,
 )
