@@ -1,7 +1,8 @@
+from contextlib import contextmanager
 from typing import Any, Dict
 
 from django.conf import settings
-from rest_framework.settings import APISettings
+from rest_framework.settings import APISettings, perform_import
 
 SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # A regex specifying the common denominator for all operation paths. If
@@ -206,8 +207,43 @@ IMPORT_STRINGS = [
     'PARSER_WHITELIST',
 ]
 
-spectacular_settings = APISettings(
+
+class SpectacularSettings(APISettings):
+    _original_settings: Dict[str, Any] = {}
+
+    def apply_patches(self, patches):
+        for attr, val in patches.items():
+            if attr.startswith('SERVE_') or attr == 'DEFAULT_GENERATOR_CLASS':
+                raise AttributeError(
+                    f'{attr} not allowed in custom_settings. use dedicated parameter instead.'
+                )
+            if attr in self.import_strings:
+                val = perform_import(val, attr)
+            # load and store original value, then override __dict__ entry
+            self._original_settings[attr] = getattr(self, attr)
+            setattr(self, attr, val)
+
+    def clear_patches(self):
+        for attr, orig_val in self._original_settings.items():
+            setattr(self, attr, orig_val)
+        self._original_settings = {}
+
+
+spectacular_settings = SpectacularSettings(
     user_settings=getattr(settings, 'SPECTACULAR_SETTINGS', {}),  # type: ignore
     defaults=SPECTACULAR_DEFAULTS,  # type: ignore
     import_strings=IMPORT_STRINGS,
 )
+
+
+@contextmanager
+def patched_settings(patches):
+    """ temporarily patch the global spectacular settings (or do nothing) """
+    if not patches:
+        yield
+    else:
+        try:
+            spectacular_settings.apply_patches(patches)
+            yield
+        finally:
+            spectacular_settings.clear_patches()
