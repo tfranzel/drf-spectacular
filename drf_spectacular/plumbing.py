@@ -5,13 +5,14 @@ import inspect
 import json
 import re
 import sys
+import types
 import typing
 import urllib.parse
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
 from decimal import Decimal
 from enum import Enum
-from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, DefaultDict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
 import inflection
 import uritemplate
@@ -49,6 +50,12 @@ try:
 except ImportError:
     class Choices:  # type: ignore
         pass
+
+# types.UnionType was added in Python 3.10 for new PEP 604 pipe union syntax
+if hasattr(types, 'UnionType'):
+    UNION_TYPES: Tuple[Any, ...] = (typing.Union, types.UnionType)  # type: ignore
+else:
+    UNION_TYPES = (typing.Union,)
 
 if sys.version_info >= (3, 8):
     CACHED_PROPERTY_FUNCS = (functools.cached_property, cached_property)  # type: ignore
@@ -497,7 +504,7 @@ def _follow_return_type(a_callable):
     if target_type is None:
         return target_type
     origin, args = _get_type_hint_origin(target_type)
-    if origin is Union:
+    if origin in UNION_TYPES:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
             warn(
@@ -1148,7 +1155,7 @@ def resolve_type_hint(hint):
                 k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()
             }
         )
-    elif origin is Union:
+    elif origin in UNION_TYPES:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
             schema = {'oneOf': [resolve_type_hint(arg) for arg in type_args]}

@@ -231,6 +231,25 @@ if sys.version_info >= (3, 9):
         {'type': 'object', 'additionalProperties': {'type': 'integer'}}
     ))
 
+# New X | Y union syntax in Python 3.10+ (PEP 604)
+if sys.version_info >= (3, 10):
+    TYPE_HINT_TEST_PARAMS.extend([
+        (
+            int | None,
+            {'type': 'integer', 'nullable': True}
+        ),
+        (
+            int | str,
+            {'oneOf': [{'type': 'integer'}, {'type': 'string'}]}
+        ), (
+            int | str | None,
+            {'oneOf': [{'type': 'integer'}, {'type': 'string'}], 'nullable': True}
+        ), (
+            list[int | str],
+            {"type": "array", "items": {"oneOf": [{"type": "integer"}, {"type": "string"}]}}
+        )
+    ])
+
 
 @pytest.mark.parametrize(['type_hint', 'ref_schema'], TYPE_HINT_TEST_PARAMS)
 def test_type_hint_extraction(no_warnings, type_hint, ref_schema):
