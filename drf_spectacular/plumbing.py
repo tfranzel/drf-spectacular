@@ -410,7 +410,8 @@ def build_root_object(paths, components, version):
             **settings.EXTENSIONS_INFO,
         },
         'paths': {**paths, **settings.APPEND_PATHS},
-        'components': components
+        'components': components,
+        **settings.EXTENSIONS_ROOT,
     }
     if settings.DESCRIPTION:
         root['info']['description'] = settings.DESCRIPTION

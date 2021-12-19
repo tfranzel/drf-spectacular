@@ -183,6 +183,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # https://swagger.io/specification/#specification-extensions
     'EXTENSIONS_INFO': {},
 
+    # Arbitrary specification extensions attached to the schema's root object.
+    # https://swagger.io/specification/#specification-extensions
+    'EXTENSIONS_ROOT': {},
+
     # Oauth2 related settings. used for example by django-oauth2-toolkit.
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#oauth-flows-object
     'OAUTH2_FLOWS': [],

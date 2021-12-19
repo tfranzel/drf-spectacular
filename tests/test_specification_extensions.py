@@ -17,6 +17,9 @@ from tests import generate_schema, get_request_schema, get_response_schema
         'url': 'https://www.django-rest-framework.org/img/logo.png',
     },
 })
+@mock.patch('drf_spectacular.settings.spectacular_settings.EXTENSIONS_ROOT', {
+    'x-tagGroups': [{'name': 'Foo', 'tags': ['bar', 'baz']}]
+})
 def test_root_info_spec_extensions(no_warnings):
     # https://redoc.ly/docs/api-reference-docs/specification-extensions/x-logo/
 
@@ -29,6 +32,7 @@ def test_root_info_spec_extensions(no_warnings):
         'backgroundColor': "#ffffff",
         'url': 'https://www.django-rest-framework.org/img/logo.png',
     }
+    assert schema['x-tagGroups'] == [{'name': 'Foo', 'tags': ['bar', 'baz']}]
 
 
 def test_operation_spec_extensions(no_warnings):
