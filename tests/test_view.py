@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 import yaml
+from django import __version__ as DJANGO_VERSION
 from django.urls import path
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -46,6 +47,9 @@ def test_spectacular_view(no_warnings):
     assert response.status_code == 200
     assert response.content.startswith(b'openapi: 3.0.3\n')
     assert response.accepted_media_type == 'application/vnd.oai.openapi'
+
+    if DJANGO_VERSION > '3':
+        assert response.headers.get('CONTENT-DISPOSITION') == 'inline; filename="schema.yaml"'
 
     schema = yaml.load(response.content, Loader=yaml.SafeLoader)
     validate_schema(schema)
