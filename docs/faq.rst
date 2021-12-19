@@ -257,3 +257,30 @@ Adapt to your specific requirements.
         @extend_schema(responses=enveloper(XSerializer, True))
         def list(self, request, *args, **kwargs):
             ...
+
+
+How can I have multiple ``SpectacularAPIView`` with differing settings
+----------------------------------------------------------------------
+
+First, define your base settings in ``settings.py`` with ``SPECTACULAR_SETTINGS``. Then,
+if you need another schema with different settings, you can provide scoped overrides by
+providing a ``custom_settings`` argument. ``custom_settings`` expects a ``dict`` and only
+allows keys that represent valid setting names.
+
+Beware that using this mechanic is not thread-safe at the moment.
+
+Also note that overriding ``SERVE_*`` or ``DEFAULT_GENERATOR_CLASS`` in ``custom_settings`` is
+not allowed. ``SpectacularAPIView`` has dedicated arguments for overriding these settings.
+
+.. code-block:: python
+
+    urlpatterns = [
+        path('api/schema/', SpectacularAPIView.as_view(),
+        path('api/schema-custom/', SpectacularAPIView.as_view(
+            custom_settings={
+                'TITLE': 'your custom title',
+                'SCHEMA_PATH_PREFIX': 'your custom regex',
+                ...
+            }
+        ), name='schema-custom'),
+    ]

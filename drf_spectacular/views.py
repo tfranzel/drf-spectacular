@@ -15,7 +15,7 @@ from drf_spectacular.plumbing import get_relative_url, set_query_parameters
 from drf_spectacular.renderers import (
     OpenApiJsonRenderer, OpenApiJsonRenderer2, OpenApiYamlRenderer, OpenApiYamlRenderer2,
 )
-from drf_spectacular.settings import spectacular_settings
+from drf_spectacular.settings import patched_settings, spectacular_settings
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 
@@ -53,6 +53,7 @@ class SpectacularAPIView(APIView):
     serve_public = spectacular_settings.SERVE_PUBLIC
     urlconf = spectacular_settings.SERVE_URLCONF
     api_version = None
+    custom_settings = None
 
     @extend_schema(**SCHEMA_KWARGS)
     def get(self, request, *args, **kwargs):
@@ -60,11 +61,12 @@ class SpectacularAPIView(APIView):
             ModuleWrapper = namedtuple('ModuleWrapper', ['urlpatterns'])
             self.urlconf = ModuleWrapper(tuple(self.urlconf))
 
-        if settings.USE_I18N and request.GET.get('lang'):
-            with translation.override(request.GET.get('lang')):
+        with patched_settings(self.custom_settings):
+            if settings.USE_I18N and request.GET.get('lang'):
+                with translation.override(request.GET.get('lang')):
+                    return self._get_schema_response(request)
+            else:
                 return self._get_schema_response(request)
-        else:
-            return self._get_schema_response(request)
 
     def _get_schema_response(self, request):
         # version specified as parameter to the view always takes precedence. after
