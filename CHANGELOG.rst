@@ -1,6 +1,25 @@
 Changelog
 =========
 
+0.21.1 (2021-12-20)
+-------------------
+
+- add root level extension setting `#619 <https://github.com/tfranzel/drf-spectacular/issues/619>`_
+- ease schema browser handling with "Content-Disposition" `#607 <https://github.com/tfranzel/drf-spectacular/issues/607>`_
+- custom settings per SpectacularAPIView instance `#365 <https://github.com/tfranzel/drf-spectacular/issues/365>`_
+- Support new X | Y union syntax in Python 3.10 (PEP 604) [Marti Raudsepp]
+- upstream release updates, compat test fix for jwt, consistency fix
+- add blueprint for django-auth-adfs [1110sillabo]
+- use is_list_serializer instead of isinstance() [Roman Sichnyi]
+- Fix schema generation for RecursiveField(many=True) [Roman Sichnyi]
+- enable clearing auth methods with empty list `#99 <https://github.com/tfranzel/drf-spectacular/issues/99>`_
+- Fix typos in the code example [Marcin Kurczewski]
+
+Breaking changes / important additions:
+
+- Some minor bugfixes and small feature additions. No large schema changes are expected
+
+
 0.21.0 (2021-11-10)
 -------------------
 
