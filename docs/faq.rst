@@ -284,3 +284,31 @@ not allowed. ``SpectacularAPIView`` has dedicated arguments for overriding these
             }
         ), name='schema-custom'),
     ]
+
+
+How to correctly annotate function-based views that use ``@api_view()``
+-----------------------------------------------------------------------
+
+DRF provides a convenient way to write function-based views. ``@api_view()`` in essence wraps a regular
+function and implicitly converts it to a ``APIView`` class. For single-method cases, simply use
+:py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` just as you would with a normal view method.
+
+.. code-block:: python
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        return ...
+
+For functions that provide multiple methods, its advisable to use :py:func:`@extend_schema_view <drf_spectacular.utils.extend_schema_view>`
+and break down each case separately.
+
+.. code-block:: python
+
+    @extend_schema_view(
+        get=extend_schema(description='get desc', responses=XSerializer),
+        post=extend_schema(description='post desc', request=None, responses=OpenApiTypes.UUID),
+    )
+    @api_view(['GET', 'POST'])
+    def view_func(request, format=None):
+        return ...
