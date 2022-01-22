@@ -15,7 +15,7 @@ paths:
       responses:
         '200':
           content:
-            application/json:
+            application/json; version=v2:
               schema:
                 type: array
                 items:
@@ -40,7 +40,7 @@ paths:
       responses:
         '200':
           content:
-            application/json:
+            application/json; version=v2:
               schema:
                 $ref: '#/components/schemas/Xv2'
           description: ''

@@ -31,8 +31,8 @@ from drf_spectacular.plumbing import (
     build_parameter_type, error, follow_field_source, follow_model_field_lookup, force_instance,
     get_doc, get_type_hints, get_view_model, is_basic_serializer, is_basic_type, is_field,
     is_list_serializer, is_patched_serializer, is_serializer, is_trivial_string_variation,
-    resolve_django_path_parameter, resolve_regex_path_parameter, resolve_type_hint, safe_ref,
-    sanitize_specification_extensions, warn, whitelisted,
+    modify_media_types_for_versioning, resolve_django_path_parameter, resolve_regex_path_parameter,
+    resolve_type_hint, safe_ref, sanitize_specification_extensions, warn, whitelisted,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -1246,6 +1246,8 @@ class AutoSchema(ViewInspector):
 
         if not media_types:
             media_types = self.map_renderers('media_type')
+
+        media_types = modify_media_types_for_versioning(self.view, media_types)
 
         return {
             **headers,

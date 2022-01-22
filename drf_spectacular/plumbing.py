@@ -33,6 +33,7 @@ from django.utils.functional import Promise, cached_property
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, fields, mixins, serializers, versioning
+from rest_framework.compat import unicode_http_header
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
@@ -897,7 +898,7 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         # e.g "application/json; version=1.0"
         # To allow the AcceptHeaderVersioning negotiator going through.
         if not hasattr(view.request, 'accepted_renderer'):
-            # Probably a mock request, content negotation was not performed, so, we do it now.
+            # Probably a mock request, content negotiation was not performed, so, we do it now.
             negotiated = view.perform_content_negotiation(view.request)
             view.request.accepted_renderer, view.request.accepted_media_type = negotiated
         media_type = _MediaType(view.request.accepted_media_type)
@@ -906,6 +907,23 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         )
 
     return path
+
+
+def modify_media_types_for_versioning(view, media_types: List[str]) -> List[str]:
+    if view.versioning_class != versioning.AcceptHeaderVersioning:
+        return media_types
+
+    media_type = _MediaType(view.request.accepted_media_type)
+    version = media_type.params.get(view.versioning_class.version_param)  # type: ignore
+    version = unicode_http_header(version)
+
+    if not version or version == view.versioning_class.default_version:
+        return media_types
+
+    return [
+        f'{media_type}; {view.versioning_class.version_param}={version}'
+        for media_type in media_types
+    ]
 
 
 def analyze_named_regex_pattern(path):
