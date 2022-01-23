@@ -1,0 +1,72 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /anonymous:
+    get:
+      operationId: anonymous_retrieve
+      tags:
+      - anonymous
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+          description: ''
+  /named:
+    get:
+      operationId: named_retrieve
+      tags:
+      - named
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+          description: ''
+components:
+  schemas:
+    Group:
+      type: object
+      properties:
+        name:
+          type: string
+        leader:
+          $ref: '#/components/schemas/Person'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+      required:
+      - leader
+      - members
+      - name
+    Person:
+      type: object
+      properties:
+        name:
+          type: string
+        length:
+          type: integer
+      required:
+      - length
+      - name
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

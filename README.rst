@@ -44,6 +44,7 @@ Features
         - `django-filter <https://github.com/carltongibson/django-filter>`_
         - `drf-nested-routers <https://github.com/alanjds/drf-nested-routers>`_
         - `djangorestframework-recursive <https://github.com/heywbj/django-rest-framework-recursive>`_
+        - `djangorestframework-dataclasses <https://github.com/oxan/djangorestframework-dataclasses>`_
 
 
 For more information visit the `documentation <https://drf-spectacular.readthedocs.io>`_.
