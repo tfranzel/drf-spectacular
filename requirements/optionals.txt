@@ -11,3 +11,4 @@ psycopg2-binary>=2.7.3.2
 drf-nested-routers>=0.93.3
 djangorestframework-recursive>=0.1.2
 drf-spectacular-sidecar
+djangorestframework-dataclasses>=1.0.0; python_version >= '3.7'
