@@ -36,10 +36,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/C'
               examples:
-                SerializerCExampleRO:
+                ListSerializerCExampleRO:
                   value:
-                    field: 111
-                  summary: Serializer C Example RO
+                  - field: 111
+                  summary: List Serializer C Example RO
           description: ''
     post:
       operationId: schema_create
