@@ -36,7 +36,7 @@ from drf_spectacular.plumbing import (
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, OpenApiExample
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse
 
 
 class AutoSchema(ViewInspector):
