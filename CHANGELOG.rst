@@ -1,6 +1,19 @@
 Changelog
 =========
 
+0.21.2 (2022-02-01)
+-------------------
+
+- Add support for djangorestframework-dataclasses [Oxan van Leeuwen]
+- add version to schema for AcceptHeaderVersioning `#637 <https://github.com/tfranzel/drf-spectacular/issues/637>`_
+- FAQ for @api_view `#635 <https://github.com/tfranzel/drf-spectacular/issues/635>`_
+- add extensions for dj_rest_auth's JWTCookieAuthentication `#626 <https://github.com/tfranzel/drf-spectacular/issues/626>`_
+
+Breaking changes / important additions:
+
+- Some minor bugfixes and feature additions. Schemas using AcceptHeaderVersioning contain a small change.
+
+
 0.21.1 (2021-12-20)
 -------------------
 
