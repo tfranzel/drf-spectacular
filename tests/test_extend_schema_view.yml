@@ -46,6 +46,58 @@ paths:
               schema:
                 $ref: '#/components/schemas/ESV'
           description: ''
+  /x/dual_method_action/:
+    get:
+      operationId: x_dual_method_action_retrieve
+      description: view dual method action description
+      parameters:
+      - in: query
+        name: message
+        schema:
+          type: string
+          minLength: 1
+        required: true
+      tags:
+      - global-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+    post:
+      operationId: x_dual_method_action_create
+      description: view dual method action description
+      tags:
+      - global-tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
   /x/extended_action/:
     get:
       operationId: x_extended_action_retrieve
@@ -256,6 +308,58 @@ paths:
               schema:
                 $ref: '#/components/schemas/ESV'
           description: ''
+  /z/dual_method_action/:
+    get:
+      operationId: z_dual_method_action_retrieve
+      description: view dual method action description
+      parameters:
+      - in: query
+        name: message
+        schema:
+          type: string
+          minLength: 1
+        required: true
+      tags:
+      - global-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+    post:
+      operationId: z_dual_method_action_create
+      description: view dual method action description
+      tags:
+      - global-tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
   /z/extended_action/:
     get:
       operationId: z_extended_action_retrieve
@@ -293,6 +397,13 @@ paths:
           description: ''
 components:
   schemas:
+    DualMethodActionParams:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
     ESV:
       type: object
       properties:

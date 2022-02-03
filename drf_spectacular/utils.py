@@ -497,7 +497,11 @@ def extend_schema_view(**kwargs) -> Callable[[F], F]:
             # the context of derived methods must not be altered, as it belongs to the
             # other view. create a new context so the schema can be safely stored in the
             # wrapped_method. view methods that are not derived can be safely altered.
-            method_decorator(isolate_view_method(view, method_name))
+            if hasattr(method_decorator, '__iter__'):
+                for sub_method_decorator in method_decorator:
+                    sub_method_decorator(isolate_view_method(view, method_name))
+            else:
+                method_decorator(isolate_view_method(view, method_name))
         return view
 
     return decorator
