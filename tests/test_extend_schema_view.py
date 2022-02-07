@@ -21,12 +21,20 @@ class ESVSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class DualMethodActionParamsSerializer(serializers.Serializer):
+    message = serializers.CharField()
+
+
 @extend_schema(tags=['global-tag'])
 @extend_schema_view(
     list=extend_schema(description='view list description'),
     retrieve=extend_schema(description='view retrieve description'),
     extended_action=extend_schema(description='view extended action description'),
     raw_action=extend_schema(description='view raw action description'),
+    dual_method_action=[
+        extend_schema(parameters=[DualMethodActionParamsSerializer], methods=['GET']),
+        extend_schema(request=DualMethodActionParamsSerializer, methods=['POST']),
+    ]
 )
 class XViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = ESVModel.objects.all()
@@ -44,6 +52,15 @@ class XViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Generi
     @action(detail=False, methods=['GET'])
     def raw_action(self, request):
         return Response('2019-03-01')
+
+    @extend_schema(description='view dual method action description')
+    @action(detail=False, methods=['GET', 'POST'])
+    def dual_method_action(self, request):
+        if request.method == 'POST':
+            data = request.data
+        else:
+            data = request.query_params
+        return Response(data['message'])
 
 
 # view to make sure there is no cross-talk
@@ -98,3 +115,9 @@ def test_extend_schema_view_call_transparency(no_warnings):
     response = APIClient().get('/x/raw_action/')
     assert response.status_code == 200
     assert response.content == b'"2019-03-01"'
+    response = APIClient().get('/x/dual_method_action/', {'message': 'foo bar'})
+    assert response.status_code == 200
+    assert response.content == b'"foo bar"'
+    response = APIClient().post('/x/dual_method_action/', {'message': 'foo bar'})
+    assert response.status_code == 200
+    assert response.content == b'"foo bar"'
