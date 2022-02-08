@@ -910,7 +910,10 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
 
 
 def modify_media_types_for_versioning(view, media_types: List[str]) -> List[str]:
-    if view.versioning_class != versioning.AcceptHeaderVersioning:
+    if (
+        not view.versioning_class
+        or not issubclass(view.versioning_class, versioning.AcceptHeaderVersioning)
+    ):
         return media_types
 
     media_type = _MediaType(view.request.accepted_media_type)
