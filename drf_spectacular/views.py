@@ -136,7 +136,11 @@ class SpectacularSwaggerView(APIView):
 
     def _get_schema_url(self, request):
         schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
-        return set_query_parameters(url=schema_url, lang=request.GET.get('lang'))
+        return set_query_parameters(
+            url=schema_url,
+            lang=request.GET.get('lang'),
+            version=request.GET.get('version')
+        )
 
     def _get_csrf_header_name(self):
         csrf_header_name = settings.CSRF_HEADER_NAME
@@ -231,4 +235,8 @@ class SpectacularRedocView(APIView):
 
     def _get_schema_url(self, request):
         schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
-        return set_query_parameters(schema_url, lang=request.GET.get('lang'))
+        return set_query_parameters(
+            url=schema_url,
+            lang=request.GET.get('lang'),
+            version=request.GET.get('version')
+        )
