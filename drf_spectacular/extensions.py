@@ -118,8 +118,10 @@ class OpenApiFilterExtension(OpenApiGeneratorExtension['OpenApiFilterExtension']
     is accessible via ``auto_schema.view``.
 
     ``get_schema_operation_parameters()`` is expected to return either an empty list or a list
-    of valid `OpenAPI parameter objects
+    of valid raw `OpenAPI parameter objects
     <https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#parameterObject>`_.
+    Using ``drf_spectacular.plumbing.build_parameter_type`` is recommended to generate
+    the appropriate raw dict objects.
     """
     _registry: List['OpenApiFilterExtension'] = []
 
