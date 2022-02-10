@@ -136,3 +136,10 @@ def test_spectacular_ui_with_raw_settings(no_warnings):
     response = APIClient().get('/api/v2/schema/swagger-ui/')
     assert response.status_code == 200
     assert b'const swaggerSettings = {"deepLinking": true};\n' in response.content
+
+
+@pytest.mark.urls(__name__)
+def test_spectacular_ui_param_passthrough(no_warnings):
+    response = APIClient().get('/api/v2/schema/swagger-ui/?foo=bar&lang=jp&version=v2')
+    assert response.status_code == 200
+    assert b'url: "/api/v2/schema/?lang\\u003Djp\\u0026version\\u003Dv2"' in response.content

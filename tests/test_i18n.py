@@ -89,4 +89,4 @@ def test_i18n_schema(no_warnings, url, header, translated):
 @pytest.mark.urls(__name__)
 def test_i18n_schema_ui(no_warnings):
     response = APIClient().get('/api/schema/swagger-ui/?lang=de')
-    assert b'/api/schema/?lang=de' in response.content
+    assert b'/api/schema/?lang\\u003Dde' in response.content

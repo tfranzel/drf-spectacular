@@ -105,7 +105,7 @@ const requestInterceptor = (request, ...args) => {
 };
 
 const ui = SwaggerUIBundle({
-  url: "{{ schema_url }}",
+  url: "{{ schema_url|escapejs }}",
   dom_id: "#swagger-ui",
   presets: [SwaggerUIBundle.presets.apis],
   plugins,
