@@ -116,16 +116,12 @@ class SpectacularSwaggerView(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
-        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
         return Response(
             data={
                 'title': self.title,
                 'dist': self._swagger_ui_dist(),
                 'favicon_href': self._swagger_ui_favicon(),
-                'schema_url': set_query_parameters(
-                    url=schema_url,
-                    lang=request.GET.get('lang')
-                ),
+                'schema_url': self._get_schema_url(request),
                 'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
                 'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
                 'template_name_js': self.template_name_js,
@@ -137,6 +133,10 @@ class SpectacularSwaggerView(APIView):
 
     def _dump(self, data):
         return data if isinstance(data, str) else json.dumps(data, indent=2)
+
+    def _get_schema_url(self, request):
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
+        return set_query_parameters(url=schema_url, lang=request.GET.get('lang'))
 
     def _get_csrf_header_name(self):
         csrf_header_name = settings.CSRF_HEADER_NAME
@@ -175,13 +175,9 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
         if request.GET.get('script') is not None:
-            schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
             return Response(
                 data={
-                    'schema_url': set_query_parameters(
-                        url=schema_url,
-                        lang=request.GET.get('lang')
-                    ),
+                    'schema_url': self._get_schema_url(request),
                     'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
                     'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
                     'csrf_header_name': self._get_csrf_header_name(),
@@ -218,13 +214,12 @@ class SpectacularRedocView(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
-        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
-        schema_url = set_query_parameters(schema_url, lang=request.GET.get('lang'))
+
         return Response(
             data={
                 'title': self.title,
                 'dist': self._redoc_dist(),
-                'schema_url': schema_url,
+                'schema_url': self._get_schema_url(request),
             },
             template_name=self.template_name
         )
@@ -233,3 +228,7 @@ class SpectacularRedocView(APIView):
         if spectacular_settings.REDOC_DIST == 'SIDECAR':
             return _get_sidecar_url('redoc')
         return spectacular_settings.REDOC_DIST
+
+    def _get_schema_url(self, request):
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
+        return set_query_parameters(schema_url, lang=request.GET.get('lang'))
