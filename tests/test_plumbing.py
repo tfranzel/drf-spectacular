@@ -165,27 +165,6 @@ TYPE_HINT_TEST_PARAMS = [
         InvalidLanguageEnum,
         {'enum': ['en', 'de']}
     ), (
-        TD1,
-        {
-            'type': 'object',
-            'properties': {
-                'foo': {'type': 'integer'},
-                'bar': {'type': 'array', 'items': {'type': 'string'}}
-            }
-        }
-    ), (
-        typing.List[TD2],
-        {
-            'type': 'array',
-            'items': {
-                'type': 'object',
-                'properties': {
-                    'foo': {'type': 'string'},
-                    'bar': {'type': 'object', 'additionalProperties': {'type': 'integer'}}
-                }
-            }
-        }
-    ), (
         NamedTupleB,
         {
             'type': 'object',
@@ -225,12 +204,93 @@ if sys.version_info >= (3, 8):
         {'enum': ['x', 'y'], 'type': 'string'}
     ))
 
+    class TD3(TypedDict, total=False):
+        """a test description"""
+        a: str
+    TYPE_HINT_TEST_PARAMS.append((
+        TD3,
+        {
+            'type': 'object',
+            'description': 'a test description',
+            'properties': {
+                'a': {'type': 'string'},
+            }
+        }
+    ))
+
 if sys.version_info >= (3, 9):
     TYPE_HINT_TEST_PARAMS.append((
         dict[str, int],
         {'type': 'object', 'additionalProperties': {'type': 'integer'}}
     ))
 
+    class TD4Optional(TypedDict, total=False):
+        a: str
+
+    class TD4(TD4Optional):
+        """A test description2"""
+        b: bool
+    TYPE_HINT_TEST_PARAMS.append((
+        TD1,
+        {
+            'type': 'object',
+            'properties': {
+                'foo': {'type': 'integer'},
+                'bar': {'type': 'array', 'items': {'type': 'string'}}
+            },
+            'required': ['bar', 'foo']
+        }
+    ))
+    TYPE_HINT_TEST_PARAMS.append((
+        typing.List[TD2],
+        {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'foo': {'type': 'string'},
+                    'bar': {'type': 'object', 'additionalProperties': {'type': 'integer'}}
+                },
+                'required': ['bar', 'foo'],
+            }
+        }
+    ))
+    TYPE_HINT_TEST_PARAMS.append((
+        TD4,
+        {
+            'type': 'object',
+            'description': 'A test description2',
+            'properties': {
+                'a': {'type': 'string'},
+                'b': {'type': 'boolean'}
+            },
+            'required': ['b'],
+        })
+    )
+else:
+    TYPE_HINT_TEST_PARAMS.append((
+        TD1,
+        {
+            'type': 'object',
+            'properties': {
+                'foo': {'type': 'integer'},
+                'bar': {'type': 'array', 'items': {'type': 'string'}}
+            },
+        }
+    ))
+    TYPE_HINT_TEST_PARAMS.append((
+        typing.List[TD2],
+        {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'foo': {'type': 'string'},
+                    'bar': {'type': 'object', 'additionalProperties': {'type': 'integer'}}
+                }
+            },
+        }
+    ))
 # New X | Y union syntax in Python 3.10+ (PEP 604)
 if sys.version_info >= (3, 10):
     TYPE_HINT_TEST_PARAMS.extend([
