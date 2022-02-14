@@ -131,10 +131,10 @@ class OpenApiParameter(OpenApiSchemaBase):
     For valid ``style`` choices please consult the
     `OpenAPI specification <https://swagger.io/specification/#style-values>`_.
     """
-    QUERY: Final = 'query'
-    PATH: Final = 'path'
-    HEADER: Final = 'header'
-    COOKIE: Final = 'cookie'
+    QUERY: Final[Literal['query']] = 'query'
+    PATH: Final[Literal['path']] = 'path'
+    HEADER: Final[Literal['header']] = 'header'
+    COOKIE: Final[Literal['cookie']] = 'cookie'
 
     def __init__(
             self,
