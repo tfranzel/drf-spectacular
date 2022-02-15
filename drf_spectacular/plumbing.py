@@ -144,6 +144,8 @@ def get_lib_doc_excludes():
     # -> plumbing.py -> DRF views -> DRF DefaultSchema -> openapi.py - plumbing.py -> Loop
     from rest_framework import generics, views, viewsets
     return [
+        object,
+        dict,
         views.APIView,
         *[getattr(serializers, c) for c in dir(serializers) if c.endswith('Serializer')],
         *[getattr(viewsets, c) for c in dir(viewsets) if c.endswith('ViewSet')],
@@ -1126,6 +1128,22 @@ def _get_type_hint_origin(hint):
         return origin, args
 
 
+def _resolve_typeddict(hint):
+    """resolve required fields for TypedDicts if on 3.9 or above"""
+    required = None
+
+    if sys.version_info >= (3, 9):
+        required = [h for h in hint.__required_keys__]
+
+    return build_object_type(
+        properties={
+            k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()
+        },
+        required=required,
+        description=get_doc(hint),
+    )
+
+
 def resolve_type_hint(hint):
     """ resolve return value type hints to schema """
     origin, args = _get_type_hint_origin(hint)
@@ -1172,11 +1190,7 @@ def resolve_type_hint(hint):
             schema.update(build_basic_type(mixin_base_types[0]))
         return schema
     elif isinstance(hint, _TypedDictMeta):
-        return build_object_type(
-            properties={
-                k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()
-            }
-        )
+        return _resolve_typeddict(hint)
     elif origin in UNION_TYPES:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
