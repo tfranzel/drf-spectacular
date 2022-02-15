@@ -13,6 +13,7 @@ from django.db import models
 from django.urls import re_path
 from rest_framework import generics, serializers
 
+from drf_spectacular.drainage import TypedDict
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     analyze_named_regex_pattern, build_basic_type, detype_pattern, follow_field_source,
@@ -20,11 +21,6 @@ from drf_spectacular.plumbing import (
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
-
-if sys.version_info >= (3, 8):
-    from typing import TypedDict
-else:
-    from typing_extensions import TypedDict
 
 
 def test_is_serializer():
