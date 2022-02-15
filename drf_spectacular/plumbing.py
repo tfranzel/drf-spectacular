@@ -1139,7 +1139,7 @@ def _resolve_typeddict(hint):
             k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()
         },
         required=required,
-        description=inspect.cleandoc(hint.__doc__ or ""),
+        description=get_doc(hint.__doc__),
     )
 
 
