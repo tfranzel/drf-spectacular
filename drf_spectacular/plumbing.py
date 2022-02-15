@@ -14,6 +14,13 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, DefaultDict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
+if sys.version_info >= (3, 8):
+    from typing import Literal, _TypedDictMeta  # type: ignore[attr-defined] # noqa: F401
+else:
+    from typing_extensions import (  # type: ignore[attr-defined] # noqa: F401
+        Literal, _TypedDictMeta,
+    )
+
 import inflection
 import uritemplate
 from django.apps import apps
@@ -39,7 +46,7 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
 from uritemplate import URITemplate
 
-from drf_spectacular.drainage import Literal, _TypedDictMeta, cache, error, warn
+from drf_spectacular.drainage import cache, error, warn
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
     DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,

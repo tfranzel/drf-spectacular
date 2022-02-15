@@ -1,12 +1,20 @@
 import inspect
+import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
+
+if sys.version_info >= (3, 8):
+    from typing import Final, Literal  # type: ignore[attr-defined] # noqa: F401
+else:
+    from typing_extensions import (  # type: ignore[attr-defined] # noqa: F401
+        Final, Literal,
+    )
 
 from rest_framework.fields import Field, empty
 from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import (
-    Final, Literal, error, get_view_method_names, isolate_view_method, set_override, warn,
+    error, get_view_method_names, isolate_view_method, set_override, warn,
 )
 from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 
@@ -131,10 +139,10 @@ class OpenApiParameter(OpenApiSchemaBase):
     For valid ``style`` choices please consult the
     `OpenAPI specification <https://swagger.io/specification/#style-values>`_.
     """
-    QUERY: Final[Literal['query']] = 'query'
-    PATH: Final[Literal['path']] = 'path'
-    HEADER: Final[Literal['header']] = 'header'
-    COOKIE: Final[Literal['cookie']] = 'cookie'
+    QUERY: Final = 'query'
+    PATH: Final = 'path'
+    HEADER: Final = 'header'
+    COOKIE: Final = 'cookie'
 
     def __init__(
             self,
