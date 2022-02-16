@@ -1,12 +1,19 @@
 import inspect
+import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
+
+# direct import due to https://github.com/microsoft/pyright/issues/3025
+if sys.version_info >= (3, 8):
+    from typing import Final, Literal
+else:
+    from typing_extensions import Final, Literal
 
 from rest_framework.fields import Field, empty
 from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import (
-    Final, Literal, error, get_view_method_names, isolate_view_method, set_override, warn,
+    error, get_view_method_names, isolate_view_method, set_override, warn,
 )
 from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 
