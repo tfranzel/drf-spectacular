@@ -78,11 +78,16 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             filters.IsoDateTimeFromToRangeFilter: OpenApiTypes.DATETIME,
             filters.DateTimeFromToRangeFilter: OpenApiTypes.DATETIME,
         }
-        if has_override(filter_field, 'field'):
-            annotation = get_override(filter_field, 'field')
+        filter_method = self._get_filter_method(filterset_class, filter_field)
+
+        if has_override(filter_field, 'field') or has_override(filter_method, 'field'):
+            annotation = (
+                get_override(filter_field, 'field') or get_override(filter_method, 'field')
+            )
             if is_basic_type(annotation):
                 schema = build_basic_type(annotation)
             else:
+                # allow injecting raw schema via @extend_schema_field decorator
                 schema = annotation
         elif isinstance(filter_field, tuple(unambiguous_mapping)):
             for cls in filter_field.__class__.__mro__:
@@ -92,7 +97,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         elif isinstance(filter_field, (filters.NumberFilter, filters.NumericRangeFilter)):
             # NumberField is underspecified by itself. try to find the
             # type that makes the most sense or default to generic NUMBER
-            if filter_field.method:
+            if filter_method:
                 schema = self._build_filter_method_type(filterset_class, filter_field)
                 if schema['type'] not in ['integer', 'number']:
                     schema = build_basic_type(OpenApiTypes.NUMBER)
@@ -182,12 +187,16 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             for field_name in field_names
         ]
 
-    def _build_filter_method_type(self, filterset_class, filter_field):
+    def _get_filter_method(self, filterset_class, filter_field):
         if callable(filter_field.method):
-            filter_method = filter_field.method
+            return filter_field.method
+        elif isinstance(filter_field.method, str):
+            return getattr(filterset_class, filter_field.method)
         else:
-            filter_method = getattr(filterset_class, filter_field.method)
+            return None
 
+    def _build_filter_method_type(self, filterset_class, filter_field):
+        filter_method = self._get_filter_method(filterset_class,  filter_field)
         try:
             filter_method_hints = get_type_hints(filter_method)
         except:  # noqa: E722

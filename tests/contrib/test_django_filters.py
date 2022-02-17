@@ -88,6 +88,7 @@ class ProductFilter(FilterSet):
     int_id = NumberFilter(method='filter_method_typed')
     number_id = NumberFilter(method='filter_method_untyped', help_text='some injected help text')
     number_id_ext = NumberFilter(method=external_filter_method)
+    email = CharFilter(method='filter_method_decorated')
     # implicit filter declaration
     subproduct__sub_price = NumberFilter()  # reverse relation
     other_sub_product__uuid = UUIDFilter()  # forward relation
@@ -128,6 +129,11 @@ class ProductFilter(FilterSet):
 
     def filter_method_untyped(self, queryset, name, value):
         return queryset.filter(id=int(value))  # pragma: no cover
+
+    # email makes no sense here. it's just to test decoration
+    @extend_schema_field(OpenApiTypes.EMAIL)
+    def filter_method_decorated(self, queryset, name, value):
+        return queryset.filter(id=int(value))
 
 
 @extend_schema(

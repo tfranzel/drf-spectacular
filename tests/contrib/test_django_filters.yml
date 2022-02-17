@@ -37,6 +37,11 @@ paths:
         explode: false
         style: form
       - in: query
+        name: email
+        schema:
+          type: string
+          format: email
+      - in: query
         name: in_categories
         schema:
           type: array
