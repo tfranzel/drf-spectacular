@@ -133,7 +133,7 @@ class ProductFilter(FilterSet):
     # email makes no sense here. it's just to test decoration
     @extend_schema_field(OpenApiTypes.EMAIL)
     def filter_method_decorated(self, queryset, name, value):
-        return queryset.filter(id=int(value))
+        return queryset.filter(id=int(value))  # pragma: no cover
 
 
 @extend_schema(
