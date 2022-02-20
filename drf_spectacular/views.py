@@ -54,6 +54,7 @@ class SpectacularAPIView(APIView):
     urlconf = spectacular_settings.SERVE_URLCONF
     api_version = None
     custom_settings = None
+    patterns = None
 
     @extend_schema(**SCHEMA_KWARGS)
     def get(self, request, *args, **kwargs):
@@ -72,7 +73,7 @@ class SpectacularAPIView(APIView):
         # version specified as parameter to the view always takes precedence. after
         # that we try to source version through the schema view's own versioning_class.
         version = self.api_version or request.version or self._get_version_parameter(request)
-        generator = self.generator_class(urlconf=self.urlconf, api_version=version)
+        generator = self.generator_class(urlconf=self.urlconf, api_version=version, patterns=self.patterns)
         return Response(
             data=generator.get_schema(request=request, public=self.serve_public),
             headers={"Content-Disposition": f'inline; filename="{self._get_filename(request, version)}"'}
