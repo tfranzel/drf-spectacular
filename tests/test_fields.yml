@@ -99,6 +99,8 @@ components:
           format: double
           maximum: 1000
           minimum: -1000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
         field_method_float:
           type: number
           format: float
@@ -242,7 +244,7 @@ components:
         field_decimal:
           type: string
           format: decimal
-          pattern: ^\d{0,3}(\.\d{0,3})?$
+          pattern: ^\d{0,3}(?:\.\d{0,3})?$
         field_file:
           type: string
           format: uri

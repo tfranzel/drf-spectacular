@@ -15,7 +15,7 @@ from drf_spectacular.plumbing import get_relative_url, set_query_parameters
 from drf_spectacular.renderers import (
     OpenApiJsonRenderer, OpenApiJsonRenderer2, OpenApiYamlRenderer, OpenApiYamlRenderer2,
 )
-from drf_spectacular.settings import spectacular_settings
+from drf_spectacular.settings import patched_settings, spectacular_settings
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 
@@ -53,6 +53,8 @@ class SpectacularAPIView(APIView):
     serve_public = spectacular_settings.SERVE_PUBLIC
     urlconf = spectacular_settings.SERVE_URLCONF
     api_version = None
+    custom_settings = None
+    patterns = None
 
     @extend_schema(**SCHEMA_KWARGS)
     def get(self, request, *args, **kwargs):
@@ -60,18 +62,29 @@ class SpectacularAPIView(APIView):
             ModuleWrapper = namedtuple('ModuleWrapper', ['urlpatterns'])
             self.urlconf = ModuleWrapper(tuple(self.urlconf))
 
-        if settings.USE_I18N and request.GET.get('lang'):
-            with translation.override(request.GET.get('lang')):
+        with patched_settings(self.custom_settings):
+            if settings.USE_I18N and request.GET.get('lang'):
+                with translation.override(request.GET.get('lang')):
+                    return self._get_schema_response(request)
+            else:
                 return self._get_schema_response(request)
-        else:
-            return self._get_schema_response(request)
 
     def _get_schema_response(self, request):
         # version specified as parameter to the view always takes precedence. after
         # that we try to source version through the schema view's own versioning_class.
         version = self.api_version or request.version or self._get_version_parameter(request)
-        generator = self.generator_class(urlconf=self.urlconf, api_version=version)
-        return Response(generator.get_schema(request=request, public=self.serve_public))
+        generator = self.generator_class(urlconf=self.urlconf, api_version=version, patterns=self.patterns)
+        return Response(
+            data=generator.get_schema(request=request, public=self.serve_public),
+            headers={"Content-Disposition": f'inline; filename="{self._get_filename(request, version)}"'}
+        )
+
+    def _get_filename(self, request, version):
+        return "{title}{version}.{suffix}".format(
+            title=spectacular_settings.TITLE or 'schema',
+            version=f' ({version})' if version else '',
+            suffix=self.perform_content_negotiation(request, force=True)[0].format
+        )
 
     def _get_version_parameter(self, request):
         version = request.GET.get('version')
@@ -88,6 +101,10 @@ class SpectacularJSONAPIView(SpectacularAPIView):
     renderer_classes = [OpenApiJsonRenderer, OpenApiJsonRenderer2]
 
 
+def _get_sidecar_url(package):
+    return f'{settings.STATIC_URL}drf_spectacular_sidecar/{package}'
+
+
 class SpectacularSwaggerView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
@@ -100,25 +117,57 @@ class SpectacularSwaggerView(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
-        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
         return Response(
             data={
                 'title': self.title,
-                'dist': spectacular_settings.SWAGGER_UI_DIST,
-                'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
-                'schema_url': set_query_parameters(
-                    url=schema_url,
-                    lang=request.GET.get('lang')
-                ),
+                'dist': self._swagger_ui_dist(),
+                'favicon_href': self._swagger_ui_favicon(),
+                'schema_url': self._get_schema_url(request),
                 'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
                 'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
-                'template_name_js': self.template_name_js
+                'template_name_js': self.template_name_js,
+                'csrf_header_name': self._get_csrf_header_name(),
+                'schema_auth_names': self._dump(self._get_schema_auth_names()),
             },
             template_name=self.template_name,
         )
 
     def _dump(self, data):
-        return data if isinstance(data, str) else json.dumps(data)
+        return data if isinstance(data, str) else json.dumps(data, indent=2)
+
+    def _get_schema_url(self, request):
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
+        return set_query_parameters(
+            url=schema_url,
+            lang=request.GET.get('lang'),
+            version=request.GET.get('version')
+        )
+
+    def _get_csrf_header_name(self):
+        csrf_header_name = settings.CSRF_HEADER_NAME
+        if csrf_header_name.startswith('HTTP_'):
+            csrf_header_name = csrf_header_name[5:]
+        return csrf_header_name.replace('_', '-')
+
+    def _get_schema_auth_names(self):
+        from drf_spectacular.extensions import OpenApiAuthenticationExtension
+        if spectacular_settings.SERVE_PUBLIC:
+            return []
+        auth_extensions = [
+            OpenApiAuthenticationExtension.get_match(klass)
+            for klass in self.authentication_classes
+        ]
+        return [auth.name for auth in auth_extensions if auth]
+
+    def _swagger_ui_dist(self):
+        if spectacular_settings.SWAGGER_UI_DIST == 'SIDECAR':
+            return _get_sidecar_url('swagger-ui-dist')
+        return spectacular_settings.SWAGGER_UI_DIST
+
+    def _swagger_ui_favicon(self):
+        if spectacular_settings.SWAGGER_UI_FAVICON_HREF == 'SIDECAR':
+            return _get_sidecar_url('swagger-ui-dist') + '/favicon-32x32.png'
+        return spectacular_settings.SWAGGER_UI_FAVICON_HREF
 
 
 class SpectacularSwaggerSplitView(SpectacularSwaggerView):
@@ -131,15 +180,13 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
         if request.GET.get('script') is not None:
-            schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
             return Response(
                 data={
-                    'schema_url': set_query_parameters(
-                        url=schema_url,
-                        lang=request.GET.get('lang')
-                    ),
+                    'schema_url': self._get_schema_url(request),
                     'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
                     'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
+                    'csrf_header_name': self._get_csrf_header_name(),
+                    'schema_auth_names': self._dump(self._get_schema_auth_names()),
                 },
                 template_name=self.template_name_js,
                 content_type='application/javascript',
@@ -149,8 +196,8 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
             return Response(
                 data={
                     'title': self.title,
-                    'dist': spectacular_settings.SWAGGER_UI_DIST,
-                    'favicon_href': spectacular_settings.SWAGGER_UI_FAVICON_HREF,
+                    'dist': self._swagger_ui_dist(),
+                    'favicon_href': self._swagger_ui_favicon(),
                     'script_url': set_query_parameters(
                         url=script_url,
                         lang=request.GET.get('lang'),
@@ -172,13 +219,25 @@ class SpectacularRedocView(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
-        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
-        schema_url = set_query_parameters(schema_url, lang=request.GET.get('lang'))
+
         return Response(
             data={
                 'title': self.title,
-                'dist': spectacular_settings.REDOC_DIST,
-                'schema_url': schema_url,
+                'dist': self._redoc_dist(),
+                'schema_url': self._get_schema_url(request),
             },
             template_name=self.template_name
+        )
+
+    def _redoc_dist(self):
+        if spectacular_settings.REDOC_DIST == 'SIDECAR':
+            return _get_sidecar_url('redoc')
+        return spectacular_settings.REDOC_DIST
+
+    def _get_schema_url(self, request):
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
+        return set_query_parameters(
+            url=schema_url,
+            lang=request.GET.get('lang'),
+            version=request.GET.get('version')
         )

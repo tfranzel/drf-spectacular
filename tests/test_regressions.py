@@ -699,17 +699,17 @@ def test_viewset_list_with_envelope(no_warnings):
     class XSerializer(serializers.Serializer):
         x = serializers.IntegerField()
 
-    def enveloper(serializer_class, list):
-        @extend_schema_serializer(many=False)
+    def enveloper(serializer_class, many):
+        component_name = 'Enveloped{}{}'.format(
+            serializer_class.__name__.replace("Serializer", ""),
+            "List" if many else "",
+        )
+
+        @extend_schema_serializer(many=False, component_name=component_name)
         class EnvelopeSerializer(serializers.Serializer):
             status = serializers.BooleanField()
-            data = XSerializer(many=list)
+            data = serializer_class(many=many)
 
-            class Meta:
-                ref_name = 'Enveloped{}{}'.format(
-                    serializer_class.__name__.replace("Serializer", ""),
-                    "List" if list else "",
-                )
         return EnvelopeSerializer
 
     class XViewset(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -1141,14 +1141,14 @@ def test_queryset_filter_and_ordering_only_on_list(no_warnings):
 
     schema = generate_schema('x', XViewset)
 
-    retrieve_parameters = schema['paths']['/x/']['get']['parameters']
-    assert len(retrieve_parameters) == 2
-    assert retrieve_parameters[0]['name'] == 'ordering'
-    assert retrieve_parameters[1]['name'] == 'search'
+    list_parameters = schema['paths']['/x/']['get']['parameters']
+    assert len(list_parameters) == 2
+    assert list_parameters[0]['name'] == 'ordering'
+    assert list_parameters[1]['name'] == 'search'
 
-    list_parameters = schema['paths']['/x/{id}/']['get']['parameters']
-    assert len(list_parameters) == 1
-    assert list_parameters[0]['name'] == 'id'
+    retrieve_parameters = schema['paths']['/x/{id}/']['get']['parameters']
+    assert len(retrieve_parameters) == 1
+    assert retrieve_parameters[0]['name'] == 'id'
 
 
 def test_pagination(no_warnings):
@@ -1347,7 +1347,7 @@ def test_exclude_parameter_from_customized_autoschema(no_warnings):
 def test_manual_decimal_validator():
     # manually test this validator as it is not part of the default workflow
     class XSerializer(serializers.Serializer):
-        field = serializers.CharField(
+        field = serializers.FloatField(
             validators=[validators.DecimalValidator(max_digits=4, decimal_places=2)]
         )
 
@@ -1385,8 +1385,17 @@ def test_serialization_with_decimal_values(no_warnings):
         pass  # pragma: no cover
 
     schema = generate_schema('/x/', view_function=view_func)
-    field = schema['components']['schemas']['X']['properties']['field']
-    assert field['minimum'] and field['maximum']
+    assert schema['components']['schemas']['X']['properties']['field'] == {
+        'type': 'number',
+        'format': 'double',
+        'maximum': Decimal('100.00'),
+        'minimum': Decimal('1'),
+    }
+    assert schema['components']['schemas']['X']['properties']['field_coerced'] == {
+        'type': 'string',
+        'format': 'decimal',
+        'pattern': r'^\d{0,3}(?:\.\d{0,2})?$',
+    }
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
     assert b'maximum: 100.00\n' in schema_yml
@@ -1948,6 +1957,26 @@ def test_openapi_response_wrapper(no_warnings):
     }
 
 
+def test_openapi_response_without_description_string(no_warnings):
+    class XViewSet(viewsets.GenericViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+        @extend_schema(
+            responses={
+                200: OpenApiResponse(
+                    response=SimpleSerializer,
+                    examples=[OpenApiExample("Example1", value={"field": 1})],
+                )
+            }
+        )
+        def retrieve(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', XViewSet)
+    assert schema['paths']['/x/{id}/']['get']['responses']['200']['description'] == ''
+
+
 def test_prefix_estimation_with_re_special_chars_as_literals_in_path(no_warnings):
     # make sure prefix estimation logic does not choke on reserved RE chars
     @extend_schema(request=typing.Any, responses=typing.Any)
@@ -2335,7 +2364,7 @@ def test_regex_path_parameter_discovery_pattern(no_warnings):
     assert schema['paths']['/pi/{precision}']['get']['parameters'][0] == {
         'in': 'path',
         'name': 'precision',
-        'schema': {'type': 'string', 'pattern': '(\\d+)-[\\w|\\.]+(failed|success)'},
+        'schema': {'type': 'string', 'pattern': '^(\\d+)-[\\w|\\.]+(failed|success)$'},
         'required': True
     }
 
@@ -2422,5 +2451,394 @@ def test_path_converter_override(no_warnings):
         'type': 'integer', 'format': 'signed'
     }
     assert schema['paths']['/c/{var}/']['get']['parameters'][0]['schema'] == {
-        'type': 'string', 'pattern': '[a-f0-9]+'
+        'type': 'string', 'pattern': '^[a-f0-9]+$'
     }
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {'max_value': -2147483648},
+        {'type': 'integer', 'maximum': -2147483648},
+    ),
+    (
+        {'max_value': -2147483649},
+        {'type': 'integer', 'maximum': -2147483649, 'format': 'int64'},
+    ),
+    (
+        {'max_value': 2147483647},
+        {'type': 'integer', 'maximum': 2147483647},
+    ),
+    (
+        {'max_value': 2147483648},
+        {'type': 'integer', 'maximum': 2147483648, 'format': 'int64'},
+    ),
+    (
+        {'min_value': -2147483648},
+        {'type': 'integer', 'minimum': -2147483648},
+    ),
+    (
+        {'min_value': -2147483649},
+        {'type': 'integer', 'minimum': -2147483649, 'format': 'int64'},
+    ),
+    (
+        {'min_value': 2147483647},
+        {'type': 'integer', 'minimum': 2147483647},
+    ),
+    (
+        {'min_value': 2147483648},
+        {'type': 'integer', 'minimum': 2147483648, 'format': 'int64'},
+    ),
+])
+def test_int64_detection(kwargs, expected, no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.IntegerField(**kwargs)
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties']['field'] == expected
+
+
+def test_description_whitespace_stripping(no_warnings):
+    class XViewset(viewsets.ModelViewSet):
+        """ view: oneliner with leading/trailing whitespace """
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+
+        def retrieve(self, request):
+            """  retrieve: oneliner with leading/trailing whitespace  """
+            pass  # pragma: no cover
+
+        def create(self, request):
+            """
+                create: multi line indented  
+                description docstring        
+            """  # noqa: W291
+            pass  # pragma: no cover
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/']['get']['description'] == (
+        'view: oneliner with leading/trailing whitespace'
+    )
+    assert schema['paths']['/x/{id}/']['get']['description'] == (
+        'retrieve: oneliner with leading/trailing whitespace'
+    )
+    assert schema['paths']['/x/']['post']['description'] == (
+        'create: multi line indented\ndescription docstring'
+    )
+
+
+@pytest.mark.parametrize('list_variation', [
+    serializers.ListField, serializers.ListSerializer
+])
+def test_double_nested_list_serializer(no_warnings, list_variation):
+    class XSerializer(serializers.Serializer):
+        id = serializers.IntegerField()
+
+    class XNestedListSerializer(serializers.Serializer):
+        nested_xs = list_variation(child=XSerializer(many=True))
+
+    class XAPIView(generics.GenericAPIView):
+        @extend_schema(request=XNestedListSerializer, responses=XNestedListSerializer)
+        def post(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XAPIView)
+    operation = schema['paths']['/x']['post']
+    assert get_request_schema(operation) == {'$ref': '#/components/schemas/XNestedList'}
+    assert get_response_schema(operation) == {'$ref': '#/components/schemas/XNestedList'}
+    assert schema['components']['schemas']['XNestedList']['properties']['nested_xs'] == {
+        'type': 'array',
+        'items': {'type': 'array', 'items': {'$ref': '#/components/schemas/X'}}
+    }
+
+
+@pytest.mark.parametrize('extend_method, api_view_method', [
+    ('get', 'GET'),
+    ('GET', 'get'),
+])
+def test_api_view_decorator_case_insensitive(no_warnings, extend_method, api_view_method):
+
+    @extend_schema(methods=[extend_method], responses=OpenApiTypes.FLOAT)
+    @api_view([api_view_method])
+    def pi(request):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=pi)
+    operation = schema['paths']['/x']['get']
+    assert get_response_schema(operation) == {'type': 'number', 'format': 'float'}
+
+
+@pytest.mark.parametrize('extend_method, action_method', [
+    ('get', 'GET'),
+    ('GET', 'get'),
+])
+def test_action_decorator_case_insensitive(no_warnings, extend_method, action_method):
+
+    class XViewSet(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+        @extend_schema(methods=[extend_method], summary='A custom action!')
+        @action(methods=[action_method], detail=True)
+        def custom_action(self):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', viewset=XViewSet)
+    assert schema['paths']['/x/{id}/custom_action/']['get']['summary'] == 'A custom action!'
+
+
+def test_extend_schema_view_isolation(no_warnings):
+    class AnimalViewSet(viewsets.GenericViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.all()
+
+        @action(detail=False)
+        def notes(self, request):
+            pass  # pragma: no cover
+
+    @extend_schema_view(notes=extend_schema(summary='List mammals.'))
+    class MammalViewSet(AnimalViewSet):
+        pass
+
+    @extend_schema_view(notes=extend_schema(summary='List insects.'))
+    class InsectViewSet(AnimalViewSet):
+        pass
+
+    router = routers.SimpleRouter()
+    router.register('api/mammals', MammalViewSet)
+    router.register('api/insects', InsectViewSet)
+
+    schema = generate_schema(None, patterns=router.urls)
+    assert schema['paths']['/api/mammals/notes/']['get']['summary'] == 'List mammals.'
+    assert schema['paths']['/api/insects/notes/']['get']['summary'] == 'List insects.'
+
+
+def test_extend_schema_view_layering(no_warnings):
+    class YSerializer(serializers.Serializer):
+        field = serializers.FloatField()
+
+    class ZSerializer(serializers.Serializer):
+        field = serializers.UUIDField()
+
+    class XViewSet(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    @extend_schema_view(retrieve=extend_schema(responses=YSerializer))
+    class YViewSet(XViewSet):
+        pass
+
+    @extend_schema_view(retrieve=extend_schema(responses=ZSerializer))
+    class ZViewSet(YViewSet):
+        pass
+
+    router = routers.SimpleRouter()
+    router.register('x', XViewSet)
+    router.register('y', YViewSet)
+    router.register('z', ZViewSet)
+    schema = generate_schema(None, patterns=router.urls)
+    resp = {
+        c: get_response_schema(schema['paths'][f'/{c.lower()}/{{id}}/']['get'])
+        for c in ['X', 'Y', 'Z']
+    }
+    assert resp['X'] == {'$ref': '#/components/schemas/Simple'}
+    assert resp['Y'] == {'$ref': '#/components/schemas/Y'}
+    assert resp['Z'] == {'$ref': '#/components/schemas/Z'}
+
+
+def test_extend_schema_view_extend_schema_crosstalk(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.FloatField()
+
+    # extend_schema_view provokes decorator reordering in extend_schema
+    @extend_schema(tags=['X'])
+    @extend_schema_view(retrieve=extend_schema(responses=XSerializer))
+    class XViewSet(viewsets.ReadOnlyModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    @extend_schema(tags=['Y'])
+    class YViewSet(XViewSet):
+        pass
+
+    router = routers.SimpleRouter()
+    router.register('x', XViewSet)
+    router.register('y', YViewSet)
+    schema = generate_schema(None, patterns=router.urls)
+    op = {
+        c: schema['paths'][f'/{c.lower()}/{{id}}/']['get'] for c in ['X', 'Y']
+    }
+    assert op['X']['tags'] == ['X']
+    assert op['Y']['tags'] == ['Y']
+
+
+def test_extend_schema_view_on_api_view(no_warnings):
+    @extend_schema_view(
+        get=extend_schema(description='get desc', responses=OpenApiTypes.FLOAT),
+        post=extend_schema(description='post desc', request=OpenApiTypes.INT, responses=OpenApiTypes.UUID),
+    )
+    @api_view(['GET', 'POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    op_get = schema['paths']['/x/']['get']
+    op_post = schema['paths']['/x/']['post']
+    assert get_response_schema(op_get) == {'type': 'number', 'format': 'float'}
+    assert get_response_schema(op_post) == {'format': 'uuid', 'type': 'string'}
+    assert get_request_schema(op_post) == {'type': 'integer'}
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+@pytest.mark.parametrize('ro,wo', [(True, False), (False, True), (False, False)])
+def test_nested_empty_direction_serializer_with_split(no_warnings, ro, wo):
+    class NestedSerializer(serializers.Serializer):
+        field = serializers.IntegerField(write_only=wo, read_only=ro)
+
+    class XSerializer(serializers.Serializer):
+        field = NestedSerializer(many=True)
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def pi(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x', view_function=pi)
+    operation = schema['paths']['/x']['post']
+    if wo:
+        assert get_request_schema(operation) == {'$ref': '#/components/schemas/XRequest'}
+        assert operation['responses']['200'] == {'description': 'No response body'}
+    elif ro:
+        assert 'requestBody' not in operation
+        assert get_response_schema(operation) == {'$ref': '#/components/schemas/X'}
+    else:
+        assert get_request_schema(operation) == {'$ref': '#/components/schemas/XRequest'}
+        assert get_response_schema(operation) == {'$ref': '#/components/schemas/X'}
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+@pytest.mark.parametrize('ro,wo', [(True, False), (False, True), (False, False)])
+def test_empty_direction_list_serializer_with_split(no_warnings, ro, wo):
+    class XSerializer(serializers.Serializer):
+        field = serializers.IntegerField(write_only=wo, read_only=ro)
+
+    @extend_schema(request=XSerializer(many=True), responses=XSerializer(many=True))
+    @api_view(['POST'])
+    def pi(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x', view_function=pi)
+    operation = schema['paths']['/x']['post']
+    if wo:
+        assert get_request_schema(operation)['items'] == {'$ref': '#/components/schemas/XRequest'}
+        assert operation['responses']['200'] == {'description': 'No response body'}
+    elif ro:
+        assert 'requestBody' not in operation
+        assert get_response_schema(operation)['items'] == {'$ref': '#/components/schemas/X'}
+    else:
+        assert get_request_schema(operation)['items'] == {'$ref': '#/components/schemas/XRequest'}
+        assert get_response_schema(operation)['items'] == {'$ref': '#/components/schemas/X'}
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX_INSERT', '/service/backend')
+def test_schema_path_prefix_insert(no_warnings):
+    @extend_schema(responses=typing.Any)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('v1/x/', view_function=view_func)
+    assert '/service/backend/v1/x/' in schema['paths']
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENFORCE_NON_BLANK_FIELDS', True)
+def test_enforce_non_blank_fields(no_warnings):
+    class XSerializer(serializers.Serializer):
+        ro = serializers.CharField(read_only=True)
+        wo = serializers.CharField(write_only=True)
+        rw = serializers.CharField()
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'ro': {'type': 'string', 'readOnly': True},
+        'wo': {'type': 'string', 'writeOnly': True, 'minLength': 1},
+        'rw': {'type': 'string', 'minLength': 1}
+    }
+
+
+def test_extend_schema_serializer_isolation(no_warnings):
+    @extend_schema_serializer(component_name='ABC')
+    class OneSerializer(serializers.Serializer):
+        pass
+
+    @extend_schema_serializer(component_name='XYZ')
+    class TwoSerializer(OneSerializer):
+        pass
+
+    assert OneSerializer._spectacular_annotation == {'component_name': 'ABC'}
+    assert TwoSerializer._spectacular_annotation == {'component_name': 'XYZ'}
+
+
+def test_extend_schema_field_isolation(no_warnings):
+    @extend_schema_field(field=OpenApiTypes.FLOAT)
+    class OneField(serializers.IntegerField):
+        pass
+
+    @extend_schema_field(field=OpenApiTypes.DOUBLE)
+    class TwoField(OneField):
+        pass
+
+    assert OneField._spectacular_annotation['field'] == OpenApiTypes.FLOAT
+    assert TwoField._spectacular_annotation['field'] == OpenApiTypes.DOUBLE
+
+
+def test_catch_all_status_code_responses(no_warnings):
+    @extend_schema(responses={
+        '2XX': SimpleSerializer,
+        '401': inline_serializer('Error1', fields={'detail': serializers.CharField()}),
+        '4XX': inline_serializer('Error2', fields={'detail': serializers.CharField()}),
+    })
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert list(schema['paths']['/x/']['get']['responses'].keys()) == ['2XX', '401', '4XX']
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.RENDERER_WHITELIST', [renderers.MultiPartRenderer])
+@mock.patch('drf_spectacular.settings.spectacular_settings.PARSER_WHITELIST', [parsers.MultiPartParser])
+def test_renderer_parser_whitelist(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.none()
+        renderer_classes = [renderers.MultiPartRenderer, renderers.JSONRenderer]
+        parser_classes = [parsers.MultiPartParser, parsers.JSONParser]
+
+    schema = generate_schema('/x', XViewset)
+    request_types = list(schema['paths']['/x/']['post']['requestBody']['content'].keys())
+    response_types = list(schema['paths']['/x/']['post']['responses']['201']['content'].keys())
+
+    assert response_types == request_types == ['multipart/form-data']
+
+
+def test_empty_auth_override(no_warnings):
+    @extend_schema(responses=SimpleSerializer, auth=[])
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert 'security' not in schema['paths']['/x/']['get']

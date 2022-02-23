@@ -1,7 +1,8 @@
+from contextlib import contextmanager
 from typing import Any, Dict
 
 from django.conf import settings
-from rest_framework.settings import APISettings
+from rest_framework.settings import APISettings, perform_import
 
 SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # A regex specifying the common denominator for all operation paths. If
@@ -13,6 +14,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Remove matching SCHEMA_PATH_PREFIX from operation path. Usually used in
     # conjunction with appended prefixes in SERVERS.
     'SCHEMA_PATH_PREFIX_TRIM': False,
+    # Insert a manual path prefix to the operation path, e.g. '/service/backend'.
+    # Use this for example to align paths when the API is mounted as a sub-resource
+    # behind a proxy and Django is not aware of that. Alternatively, prefixes can
+    # also specified via SERVERS, but this makes the operation path more explicit.
+    'SCHEMA_PATH_PREFIX_INSERT': '',
 
     # Coercion of {pk} to {id} is controlled by SCHEMA_COERCE_PATH_PK. Additionally,
     # some libraries (e.g. drf-nested-routers) use "_pk" suffixed path variables.
@@ -28,9 +34,18 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Create separate components for PATCH endpoints (without required list)
     'COMPONENT_SPLIT_PATCH': True,
     # Split components into request and response parts where appropriate
+    # This setting is highly recommended to achieve the most accurate API
+    # description, however it comes at the cost of having more components.
     'COMPONENT_SPLIT_REQUEST': False,
     # Aid client generator targets that have trouble with read-only properties.
     'COMPONENT_NO_READ_ONLY_REQUIRED': False,
+
+    # Adds "minLength: 1" to fields that do not allow blank strings. Deactivated
+    # by default because serializers do not strictly enforce this on responses and
+    # so "minLength: 1" may not always accurately describe API behavior.
+    # Gets implicitly enabled by COMPONENT_SPLIT_REQUEST, because this can be
+    # accurately modeled when request and response components are separated.
+    'ENFORCE_NON_BLANK_FIELDS': False,
 
     # Configuration for serving a schema subset with SpectacularAPIView
     'SERVE_URLCONF': None,
@@ -56,10 +71,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # CDNs for swagger and redoc. You can change the version or even host your
     # own depending on your requirements.
-    'SWAGGER_UI_DIST': '//unpkg.com/swagger-ui-dist@3.52.0',
-    'SWAGGER_UI_FAVICON_HREF': '//unpkg.com/swagger-ui-dist@3.52.0/favicon-32x32.png',
-
-    'REDOC_DIST': '//cdn.jsdelivr.net/npm/redoc@next',
+    'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest',
+    'SWAGGER_UI_FAVICON_HREF': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/favicon-32x32.png',
+    'REDOC_DIST': 'https://cdn.jsdelivr.net/npm/redoc@latest',
 
     # Append OpenAPI objects to path and components in addition to the generated objects
     'APPEND_PATHS': {},
@@ -90,6 +104,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SORT_OPERATIONS': True,
 
     # enum name overrides. dict with keys "YourEnum" and their choice values "field.choices"
+    # e.g. {'SomeEnum': ['A', 'B'], 'OtherEnum': 'import.path.to.choices'}
     'ENUM_NAME_OVERRIDES': {},
     # Adds "blank" and "null" enum choices where appropriate. disable on client generation issues
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': True,
@@ -130,6 +145,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # authentication classes that are not contained in the whitelist. Use full import paths
     # like ['rest_framework.authentication.TokenAuthentication', ...]
     'AUTHENTICATION_WHITELIST': [],
+    # Controls which parsers are exposed in the schema. Works analog to AUTHENTICATION_WHITELIST.
+    'PARSER_WHITELIST': [],
+    # Controls which renderers are exposed in the schema. Works analog to AUTHENTICATION_WHITELIST.
+    # rest_framework.renderers.BrowsableAPIRenderer is ignored by default if whitelist is empty
+    'RENDERER_WHITELIST': [],
 
     # Option for turning off error and warn messages
     'DISABLE_ERRORS_AND_WARNINGS': False,
@@ -152,6 +172,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'VERSION': '0.0.0',
     # Optional list of servers.
     # Each entry MUST contain "url", MAY contain "description", "variables"
+    # e.g. [{'url': 'https://example.com/v1', 'description': 'Text'}, ...]
     'SERVERS': [],
     # Tags defined in the global scope
     'TAGS': [],
@@ -161,6 +182,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Arbitrary specification extensions attached to the schema's info object.
     # https://swagger.io/specification/#specification-extensions
     'EXTENSIONS_INFO': {},
+
+    # Arbitrary specification extensions attached to the schema's root object.
+    # https://swagger.io/specification/#specification-extensions
+    'EXTENSIONS_ROOT': {},
 
     # Oauth2 related settings. used for example by django-oauth2-toolkit.
     # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#oauth-flows-object
@@ -182,10 +207,47 @@ IMPORT_STRINGS = [
     'SORT_OPERATIONS',
     'SORT_OPERATION_PARAMETERS',
     'AUTHENTICATION_WHITELIST',
+    'RENDERER_WHITELIST',
+    'PARSER_WHITELIST',
 ]
 
-spectacular_settings = APISettings(
-    user_settings=getattr(settings, 'SPECTACULAR_SETTINGS', {}),
+
+class SpectacularSettings(APISettings):
+    _original_settings: Dict[str, Any] = {}
+
+    def apply_patches(self, patches):
+        for attr, val in patches.items():
+            if attr.startswith('SERVE_') or attr == 'DEFAULT_GENERATOR_CLASS':
+                raise AttributeError(
+                    f'{attr} not allowed in custom_settings. use dedicated parameter instead.'
+                )
+            if attr in self.import_strings:
+                val = perform_import(val, attr)
+            # load and store original value, then override __dict__ entry
+            self._original_settings[attr] = getattr(self, attr)
+            setattr(self, attr, val)
+
+    def clear_patches(self):
+        for attr, orig_val in self._original_settings.items():
+            setattr(self, attr, orig_val)
+        self._original_settings = {}
+
+
+spectacular_settings = SpectacularSettings(
+    user_settings=getattr(settings, 'SPECTACULAR_SETTINGS', {}),  # type: ignore
     defaults=SPECTACULAR_DEFAULTS,  # type: ignore
     import_strings=IMPORT_STRINGS,
 )
+
+
+@contextmanager
+def patched_settings(patches):
+    """ temporarily patch the global spectacular settings (or do nothing) """
+    if not patches:
+        yield
+    else:
+        try:
+            spectacular_settings.apply_patches(patches)
+            yield
+        finally:
+            spectacular_settings.clear_patches()

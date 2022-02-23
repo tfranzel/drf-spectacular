@@ -20,7 +20,7 @@ modify otherwise. Have a look at :ref:`customization` on how to use ``Extensions
 
 I get an empty schema or endpoints are missing
 ----------------------------------------------
-This is usually due to endpoint permissions or versioning.
+This is usually due versioning (or more rarely due to permisssions).
 
 In case you use versioning on all endpoints, that might be the intended output.
 By default the schema will only contain unversioned endpoints. Explicitly specify
@@ -32,7 +32,8 @@ what version you want to generate.
 
 This will contain unversioned endpoints together with the endpoints for the the specified version.
 
-If that does not help, open an `issue <https://github.com/tfranzel/drf-spectacular/issues>`_.
+For the schema views you can either set a versioning class (implicit versioning via the request) or
+explicitly override the version with ``SpectacularAPIView.as_view(api_version='YOUR_VERSION')``.
 
 
 I expected a different schema
@@ -89,13 +90,16 @@ For example:
 
 .. code-block:: python
 
-    'ENUM_NAME_OVERRIDES': {
-        # variable containing list of tuples, e.g. [('US', 'US'), ('RU', 'RU'),]
-        'LanguageEnum': language_choices,
-        # dedicated Enum or models.Choices class
-        'CountryEnum': 'import_path.enums.CountryEnum',
-        # choices is an attribute of class CurrencyContainer containing a list of tuples
-        'CurrencyEnum': 'import_path.CurrencyContainer.choices',
+    SPECTACULAR_SETTINGS = {
+        ...
+        'ENUM_NAME_OVERRIDES': {
+            # variable containing list of tuples, e.g. [('US', 'US'), ('RU', 'RU'),]
+            'LanguageEnum': language_choices,
+            # dedicated Enum or models.Choices class
+            'CountryEnum': 'import_path.enums.CountryEnum',
+            # choices is an attribute of class CurrencyContainer containing a list of tuples
+            'CurrencyEnum': 'import_path.CurrencyContainer.choices',
+        }
     }
 
 If you have multiple semantically distinct enums that happen to have the same
@@ -196,8 +200,7 @@ Where should I put my extensions? / my extensions are not detected
 
 The extensions register themselves automatically. Just be sure that the python interpreter sees them at least once.
 To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your ``PROJECT/__init__.py``
-(same directory as ``settings.py`` and ``urls.py``) with ``import PROJECT.schema``. Please do not import the file in
-``settings.py`` as this may potentially lead to cyclic import issues.
+(same directory as ``settings.py`` and ``urls.py``) with ``import PROJECT.schema``.
 
 
 My ``@action`` is erroneously paginated or has filter parameters that I do not want
@@ -222,3 +225,90 @@ you can remove those parameters by resetting the filter backends with ``@action(
         @action(methods=['GET'], detail=False, pagination_class=None)
         def custom_action(self):
             pass
+
+
+How to I wrap my responses? / My endpoints are wrapped in a generic envelope
+----------------------------------------------------------------------------
+
+This non-native behavior can be conventiently modeled with a simple helper function. You simply need
+to wrap the actual serializer with your envelope serializer and provide it to ``@extend_schema``.
+
+Here is an example on how to build an ``enveloper`` helper function. In this example, the actual
+serializer is put into the ``data`` field, while ``status`` is some arbitrary envelope field.
+Adapt to your specific requirements.
+
+.. code-block:: python
+
+    def enveloper(serializer_class, many):
+        component_name = 'Enveloped{}{}'.format(
+            serializer_class.__name__.replace("Serializer", ""),
+            "List" if many else "",
+        )
+
+        @extend_schema_serializer(many=False, component_name=component_name)
+        class EnvelopeSerializer(serializers.Serializer):
+            status = serializers.BooleanField()  # some arbitrary envelope field
+            data = serializer_class(many=many)  # the enveloping part
+
+        return EnvelopeSerializer
+
+
+    class XViewset(GenericViewSet):
+        @extend_schema(responses=enveloper(XSerializer, True))
+        def list(self, request, *args, **kwargs):
+            ...
+
+
+How can I have multiple ``SpectacularAPIView`` with differing settings
+----------------------------------------------------------------------
+
+First, define your base settings in ``settings.py`` with ``SPECTACULAR_SETTINGS``. Then,
+if you need another schema with different settings, you can provide scoped overrides by
+providing a ``custom_settings`` argument. ``custom_settings`` expects a ``dict`` and only
+allows keys that represent valid setting names.
+
+Beware that using this mechanic is not thread-safe at the moment.
+
+Also note that overriding ``SERVE_*`` or ``DEFAULT_GENERATOR_CLASS`` in ``custom_settings`` is
+not allowed. ``SpectacularAPIView`` has dedicated arguments for overriding these settings.
+
+.. code-block:: python
+
+    urlpatterns = [
+        path('api/schema/', SpectacularAPIView.as_view(),
+        path('api/schema-custom/', SpectacularAPIView.as_view(
+            custom_settings={
+                'TITLE': 'your custom title',
+                'SCHEMA_PATH_PREFIX': 'your custom regex',
+                ...
+            }
+        ), name='schema-custom'),
+    ]
+
+
+How to correctly annotate function-based views that use ``@api_view()``
+-----------------------------------------------------------------------
+
+DRF provides a convenient way to write function-based views. ``@api_view()`` in essence wraps a regular
+function and implicitly converts it to a ``APIView`` class. For single-method cases, simply use
+:py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` just as you would with a normal view method.
+
+.. code-block:: python
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        return ...
+
+For functions that provide multiple methods, its advisable to use :py:func:`@extend_schema_view <drf_spectacular.utils.extend_schema_view>`
+and break down each case separately.
+
+.. code-block:: python
+
+    @extend_schema_view(
+        get=extend_schema(description='get desc', responses=XSerializer),
+        post=extend_schema(description='post desc', request=None, responses=OpenApiTypes.UUID),
+    )
+    @api_view(['GET', 'POST'])
+    def view_func(request, format=None):
+        return ...

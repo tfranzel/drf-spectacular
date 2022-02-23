@@ -22,4 +22,3 @@ generated_clients/
 *_out.yml
 
 !.gitignore
-!.travis.yml

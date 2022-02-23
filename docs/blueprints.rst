@@ -16,8 +16,7 @@ Blueprint files can be found `here <https://github.com/tfranzel/drf-spectacular/
   themselves automatically. Just be sure that the python interpreter sees them at least once.
   To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your
   ``PROJECT/__init__.py`` (same directory as ``settings.py`` and ``urls.py``)
-  with ``import PROJECT.schema``. Please do not import the file in
-  ``settings.py`` as this may potentially lead to cyclic import issues. Now you are all set.
+  with ``import PROJECT.schema``. Now you are all set.
 
 
 dj-stripe
@@ -79,3 +78,52 @@ client code has a hard time with the disjunctive nature of the unmodified compon
 This blueprint is designed to fix that issue.
 
 .. literalinclude:: blueprints/rollup.py
+
+RapiDoc
+-------
+
+`RapiDoc`__ is documentation tool that can be used as an alternate to Redoc or Swagger UI.
+
+__ https://mrin9.github.io/RapiDoc/
+
+.. literalinclude:: blueprints/rapidoc.py
+
+.. literalinclude:: blueprints/rapidoc.html
+
+
+drf-rw-serializers
+------------------
+
+`drf-rw-serializers`__ provides generic views, viewsets and mixins that extend the Django REST
+Framework ones adding separated serializers for read and write operations.
+
+`drf-spectacular` requires just a small ``AutoSchema`` augmentation to make it aware of
+``drf-rw-serializers``. Remember to replace the ``AutoSchema`` in ``DEFAULT_SCHEMA_CLASS``.
+
+__ https://github.com/vintasoftware/drf-rw-serializers
+
+.. literalinclude:: blueprints/drf_rw_serializers.py
+
+drf-extra-fields Base64FileField
+--------------------------------
+
+`drf-extra-fields`__ provides a ``Base64FileField`` and ``Base64ImageField`` that automatically
+represent binary files as base64 encoded strings. This is a useful way to embed files within a
+larger JSON API and keep all data within the same tree and served with a single request or
+response.
+
+Because requests to these fields require a base64 encoded string and responses can be either a
+URI or base64 contents (if ``represent_as_base64=True``) custom schema generation
+logic is required as this differs from the default DRF ``FileField``.
+
+.. literalinclude:: blueprints/drf_extra_fields.py
+
+__ https://github.com/Hipo/drf-extra-fields
+
+django-auth-adfs
+----------------
+
+`django-auth-adfs <https://github.com/snok/django-auth-adfs>`_ provides "a Django authentication backend for Microsoft ADFS and Azure AD".
+The blueprint works for the Azure AD configuration guide (see: https://django-auth-adfs.readthedocs.io/en/latest/azure_ad_config_guide.html).
+
+.. literalinclude:: blueprints/django_auth_adfs.py

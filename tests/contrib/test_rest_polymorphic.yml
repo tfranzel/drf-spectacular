@@ -202,6 +202,19 @@ components:
       - id
       - last_name
       - supervisor_id
+    NomadicPerson:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        address:
+          type: string
+          readOnly: true
+          maxLength: 30
+      required:
+      - address
+      - id
     PatchedLegalPerson:
       type: object
       properties:
@@ -237,24 +250,38 @@ components:
         supervisor_id:
           type: integer
           nullable: true
+    PatchedNomadicPerson:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        address:
+          type: string
+          readOnly: true
+          maxLength: 30
     PatchedPerson:
       oneOf:
       - $ref: '#/components/schemas/PatchedLegalPerson'
       - $ref: '#/components/schemas/PatchedNaturalPerson'
+      - $ref: '#/components/schemas/PatchedNomadicPerson'
       discriminator:
         propertyName: resourcetype
         mapping:
           legal: '#/components/schemas/PatchedLegalPerson'
           natural: '#/components/schemas/PatchedNaturalPerson'
+          nomadic: '#/components/schemas/PatchedNomadicPerson'
     Person:
       oneOf:
       - $ref: '#/components/schemas/LegalPerson'
       - $ref: '#/components/schemas/NaturalPerson'
+      - $ref: '#/components/schemas/NomadicPerson'
       discriminator:
         propertyName: resourcetype
         mapping:
           legal: '#/components/schemas/LegalPerson'
           natural: '#/components/schemas/NaturalPerson'
+          nomadic: '#/components/schemas/NomadicPerson'
   securitySchemes:
     basicAuth:
       type: http

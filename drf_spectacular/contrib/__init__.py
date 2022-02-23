@@ -3,7 +3,9 @@ __all__ = [
     'djangorestframework_camel_case',
     'rest_auth',
     'rest_polymorphic',
+    'rest_framework_dataclasses',
     'rest_framework_jwt',
     'rest_framework_simplejwt',
     'django_filters',
+    'rest_framework_recursive',
 ]

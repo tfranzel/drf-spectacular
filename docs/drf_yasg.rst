@@ -9,6 +9,12 @@ features are being used.
 __ https://pypi.org/project/drf-yasg
 __ https://pypi.org/project/djangorestframework/
 
+.. note:: In contrast to `drf-yasg`, we don't package Redoc & Swagger UI but serve them via hyperliked CDNs instead.
+  If you want or need to serve those files yourself, you can do that with the optional
+  `drf-spectacular-sidecar <https://github.com/tfranzel/drf-spectacular-sidecar>`_. See
+  :ref:`installation instructions <self-contained-ui-installation>` for further details.
+
+
 Decorators
 ----------
 
@@ -41,6 +47,10 @@ Decorators
 
 - Instead of using :py:func:`@method_decorator <django.utils.decorators.method_decorator>`, use
   :py:func:`@extend_schema_view <drf_spectacular.utils.extend_schema_view>`.
+
+- Instead of using `swagger_schema_field`, use
+  :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` or
+  :py:func:`@extend_schema_serializer <drf_spectacular.utils.extend_schema_serializer>`.
 
 Helper Classes
 --------------
