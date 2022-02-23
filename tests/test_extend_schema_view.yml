@@ -46,6 +46,58 @@ paths:
               schema:
                 $ref: '#/components/schemas/ESV'
           description: ''
+  /x/dual_method_action/:
+    get:
+      operationId: x_dual_method_action_retrieve
+      description: view dual method action description
+      parameters:
+      - in: query
+        name: message
+        schema:
+          type: string
+          minLength: 1
+        required: true
+      tags:
+      - global-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+    post:
+      operationId: x_dual_method_action_create
+      description: view dual method action description
+      tags:
+      - global-tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
   /x/extended_action/:
     get:
       operationId: x_extended_action_retrieve
@@ -232,8 +284,126 @@ paths:
       responses:
         '204':
           description: No response body
+  /z/{id}/:
+    get:
+      operationId: z_retrieve
+      description: overridden description for child only
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this esv model.
+        required: true
+      tags:
+      - custom-retrieve-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+  /z/dual_method_action/:
+    get:
+      operationId: z_dual_method_action_retrieve
+      description: view dual method action description
+      parameters:
+      - in: query
+        name: message
+        schema:
+          type: string
+          minLength: 1
+        required: true
+      tags:
+      - global-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+    post:
+      operationId: z_dual_method_action_create
+      description: view dual method action description
+      tags:
+      - global-tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DualMethodActionParams'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
+  /z/extended_action/:
+    get:
+      operationId: z_extended_action_retrieve
+      description: view extended action description
+      tags:
+      - global-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                pattern: ^[0-9]{4}(?:-[0-9]{2}){2}$
+          description: ''
+  /z/raw_action/:
+    get:
+      operationId: z_raw_action_retrieve
+      summary: view raw action summary
+      tags:
+      - child-tag
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESV'
+          description: ''
 components:
   schemas:
+    DualMethodActionParams:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
     ESV:
       type: object
       properties:

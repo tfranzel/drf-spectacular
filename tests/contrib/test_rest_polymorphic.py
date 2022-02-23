@@ -1,4 +1,6 @@
 # type: ignore
+from unittest import mock
+
 import pytest
 from django.db import models
 from rest_framework import serializers, viewsets
@@ -33,10 +35,15 @@ class NaturalPerson(Person):
     supervisor = models.ForeignKey('NaturalPerson', blank=True, null=True, on_delete=models.CASCADE)
 
 
+class NomadicPerson(Person):
+    pass
+
+
 class PersonSerializer(PolymorphicSerializer):
     model_serializer_mapping = {
         LegalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.LegalPersonSerializer'),
         NaturalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.NaturalPersonSerializer'),
+        NomadicPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.NomadicPersonSerializer'),
     }
 
     def to_resource_type(self, model_or_instance):
@@ -64,6 +71,15 @@ class NaturalPersonSerializer(serializers.ModelSerializer):
         fields = ('id', 'first_name', 'last_name', 'address', 'supervisor_id')
 
 
+class NomadicPersonSerializer(serializers.ModelSerializer):
+    # special case: all fields are read-only.
+    address = serializers.CharField(max_length=30, read_only=True)
+
+    class Meta:
+        model = NomadicPerson
+        fields = ('id', 'address')
+
+
 class PersonViewSet(viewsets.ModelViewSet):
     queryset = Person.objects.all()
     serializer_class = PersonSerializer
@@ -75,6 +91,33 @@ def test_rest_polymorphic(no_warnings):
         generate_schema('persons', PersonViewSet),
         'tests/contrib/test_rest_polymorphic.yml'
     )
+
+
+@pytest.mark.contrib('polymorphic', 'rest_polymorphic')
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_rest_polymorphic_split_request_with_ro_serializer(no_warnings):
+    schema = generate_schema('persons', PersonViewSet)
+    components = schema['components']['schemas']
+    assert 'NomadicPersonRequest' not in components  # All fields were read-only.
+    assert 'PatchedNomadicPersonRequest' not in components  # All fields were read-only.
+    assert components['Person']['oneOf'] == [
+        {'$ref': '#/components/schemas/LegalPerson'},
+        {'$ref': '#/components/schemas/NaturalPerson'},
+        {'$ref': '#/components/schemas/NomadicPerson'}
+    ]
+    assert components['Person']['discriminator']['mapping'] == {
+        'legal': '#/components/schemas/LegalPerson',
+        'natural': '#/components/schemas/NaturalPerson',
+        'nomadic': '#/components/schemas/NomadicPerson'
+    }
+    assert components['PersonRequest']['oneOf'] == [
+        {'$ref': '#/components/schemas/LegalPersonRequest'},
+        {'$ref': '#/components/schemas/NaturalPersonRequest'},
+    ]
+    assert components['PersonRequest']['discriminator']['mapping'] == {
+        'legal': '#/components/schemas/LegalPersonRequest',
+        'natural': '#/components/schemas/NaturalPersonRequest',
+    }
 
 
 @pytest.mark.contrib('polymorphic', 'rest_polymorphic')

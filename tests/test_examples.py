@@ -1,4 +1,4 @@
-from rest_framework import mixins, serializers, viewsets
+from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -7,6 +7,7 @@ from drf_spectacular.utils import (
     OpenApiExample, OpenApiParameter, extend_schema, extend_schema_serializer,
 )
 from tests import assert_schema, generate_schema
+from tests.models import SimpleModel
 
 
 @extend_schema_serializer(
@@ -59,9 +60,13 @@ class CSerializer(serializers.Serializer):
     field = serializers.IntegerField()
 
 
-@extend_schema(responses=BSerializer)
-class ExampleTestWithExtendedViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+@extend_schema(
+    responses=BSerializer,
+    examples=[OpenApiExample("Example ID 1", value=1, parameter_only=('id', 'path'))]
+)
+class ExampleTestWithExtendedViewSet(viewsets.GenericViewSet):
     serializer_class = ASerializer
+    queryset = SimpleModel.objects.none()
 
     @extend_schema(
         request=ASerializer,
@@ -120,6 +125,18 @@ class ExampleTestWithExtendedViewSet(mixins.ListModelMixin, mixins.CreateModelMi
         responses=CSerializer,
     )
     def list(self, request):
+        return Response()  # pragma: no cover
+
+    @extend_schema(
+        examples=[
+            OpenApiExample(
+                "Example ID 2",
+                value=2,
+                parameter_only=('id', OpenApiParameter.PATH)
+            )
+        ]
+    )
+    def retrieve(self, request):
         return Response()  # pragma: no cover
 
     @action(detail=False, methods=['GET'])

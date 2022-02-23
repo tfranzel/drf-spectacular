@@ -12,6 +12,7 @@ class PNM1(models.Model):
 
 class PNM2(models.Model):
     field_relation = models.ForeignKey(PNM1, on_delete=models.CASCADE)
+    field_non_blank = models.CharField(max_length=5)
 
 
 class XSerializer(serializers.ModelSerializer):

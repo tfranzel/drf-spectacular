@@ -1,24 +1,26 @@
-import functools
 import inspect
 import sys
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
-from rest_framework.fields import Field, empty
-from rest_framework.serializers import Serializer
-from rest_framework.settings import api_settings
-
-from drf_spectacular.drainage import error, get_view_methods, set_override, warn
-from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
-
+# direct import due to https://github.com/microsoft/pyright/issues/3025
 if sys.version_info >= (3, 8):
     from typing import Final, Literal
 else:
     from typing_extensions import Final, Literal
 
+from rest_framework.fields import Field, empty
+from rest_framework.serializers import Serializer
+from rest_framework.settings import api_settings
+
+from drf_spectacular.drainage import (
+    error, get_view_method_names, isolate_view_method, set_override, warn,
+)
+from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 
 _SerializerType = Union[Serializer, Type[Serializer]]
-
+_FieldType = Union[Field, Type[Field]]
 _ParameterLocationType = Literal['query', 'path', 'header', 'cookie']
+Direction = Literal['request', 'response']
 
 
 class PolymorphicProxySerializer(Serializer):
@@ -109,8 +111,9 @@ class OpenApiExample(OpenApiSchemaBase):
             description: str = '',
             request_only: bool = False,
             response_only: bool = False,
+            parameter_only: Optional[Tuple[str, _ParameterLocationType]] = None,
             media_type: str = 'application/json',
-            status_codes: Optional[List[str]] = None
+            status_codes: Optional[List[str]] = None,
     ):
         self.name = name
         self.summary = summary
@@ -119,6 +122,7 @@ class OpenApiExample(OpenApiSchemaBase):
         self.external_value = external_value
         self.request_only = request_only
         self.response_only = response_only
+        self.parameter_only = parameter_only
         self.media_type = media_type
         self.status_codes = status_codes or ['200', '201']
 
@@ -151,7 +155,9 @@ class OpenApiParameter(OpenApiSchemaBase):
             style: Optional[str] = None,
             explode: Optional[bool] = None,
             default: Any = None,
+            allow_blank: bool = True,
             examples: Optional[List[OpenApiExample]] = None,
+            extensions: Optional[Dict[str, Any]] = None,
             exclude: bool = False,
             response: Union[bool, List[Union[int, str]]] = False,
     ):
@@ -165,7 +171,9 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.style = style
         self.explode = explode
         self.default = default
+        self.allow_blank = allow_blank
         self.examples = examples or []
+        self.extensions = extensions
         self.exclude = exclude
         self.response = response
 
@@ -182,7 +190,7 @@ class OpenApiResponse(OpenApiSchemaBase):
     def __init__(
             self,
             response: Any = None,
-            description: Optional[str] = None,
+            description: str = '',
             examples: Optional[List[OpenApiExample]] = None
     ):
         self.response = response
@@ -203,11 +211,13 @@ def extend_schema(
         summary: Optional[str] = None,
         deprecated: Optional[bool] = None,
         tags: Optional[List[str]] = None,
+        filters: Optional[bool] = None,
         exclude: bool = False,
         operation: Optional[Dict] = None,
         methods: Optional[List[str]] = None,
         versions: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
+        extensions: Optional[Dict[str, Any]] = None,
 ) -> Callable[[F], F]:
     """
     Decorator mainly for the "view" method kind. Partially or completely overrides
@@ -247,14 +257,19 @@ def extend_schema(
     :param summary: an optional short summary of the description
     :param deprecated: mark operation as deprecated
     :param tags: override default list of tags
+    :param filters: ignore list detection and forcefully enable/disable filter discovery
     :param exclude: set True to exclude operation from schema
     :param operation: manually override what auto-discovery would generate. you must
         provide a OpenAPI3-compliant dictionary that gets directly translated to YAML.
     :param methods: scope extend_schema to specific methods. matches all by default.
     :param versions: scope extend_schema to specific API version. matches all by default.
     :param examples: attach request/response examples to the operation
+    :param extensions: specification extensions, e.g. ``x-badges``, ``x-code-samples``, etc.
     :return:
     """
+    if methods is not None:
+        methods = [method.upper() for method in methods]
+
     def decorator(f):
         BaseSchema = (
             # explicit manually set schema or previous view annotation
@@ -281,7 +296,7 @@ def extend_schema(
 
         class ExtendedSchema(BaseSchema):
             def get_operation(self, path, path_regex, path_prefix, method, registry):
-                self.method = method
+                self.method = method.upper()
 
                 if exclude and is_in_scope(self):
                     return None
@@ -300,13 +315,13 @@ def extend_schema(
                 return super().get_override_parameters()
 
             def get_auth(self):
-                if auth and is_in_scope(self):
+                if auth is not None and is_in_scope(self):
                     return auth
                 return super().get_auth()
 
             def get_examples(self):
                 if examples and is_in_scope(self):
-                    return examples
+                    return super().get_examples() + examples
                 return super().get_examples()
 
             def get_request_serializer(self):
@@ -339,6 +354,16 @@ def extend_schema(
                     return tags
                 return super().get_tags()
 
+            def get_extensions(self):
+                if extensions and is_in_scope(self):
+                    return extensions
+                return super().get_extensions()
+
+            def get_filter_backends(self):
+                if filters is not None and is_in_scope(self):
+                    return getattr(self.view, 'filter_backends', []) if filters else []
+                return super().get_filter_backends()
+
         if inspect.isclass(f):
             # either direct decoration of views, or unpacked @api_view from OpenApiViewExtension
             if operation_id is not None or operation is not None:
@@ -348,11 +373,13 @@ def extend_schema(
                 )
             # reorder schema class MRO so that view method annotation takes precedence
             # over view class annotation. only relevant if there is a method annotation
-            for view_method in get_view_methods(view=f, schema=BaseSchema):
-                if 'schema' in getattr(view_method, 'kwargs', {}):
-                    view_method.kwargs['schema'] = type(
-                        'ExtendedMetaSchema', (view_method.kwargs['schema'], ExtendedSchema), {}
-                    )
+            for view_method_name in get_view_method_names(view=f, schema=BaseSchema):
+                if 'schema' not in getattr(getattr(f, view_method_name), 'kwargs', {}):
+                    continue
+                view_method = isolate_view_method(f, view_method_name)
+                view_method.kwargs['schema'] = type(
+                    'ExtendedMetaSchema', (view_method.kwargs['schema'], ExtendedSchema), {}
+                )
             # persist schema on class to provide annotation to derived view methods.
             # the second purpose is to serve as base for view multi-annotation
             f.schema = ExtendedSchema()
@@ -382,7 +409,7 @@ def extend_schema(
 
 
 def extend_schema_field(
-        field: Union[_SerializerType, Field, OpenApiTypes, Dict],
+        field: Union[_SerializerType, _FieldType, OpenApiTypes, Dict],
         component_name: Optional[str] = None
 ) -> Callable[[F], F]:
     """
@@ -411,6 +438,7 @@ def extend_schema_serializer(
         exclude_fields: Optional[List[str]] = None,
         deprecate_fields: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
+        extensions: Optional[Dict[str, Any]] = None,
         component_name: Optional[str] = None,
 ) -> Callable[[F], F]:
     """
@@ -423,6 +451,7 @@ def extend_schema_serializer(
         schema. fields will still be exposed through the API.
     :param deprecate_fields: fields to mark as deprecated while processing the serializer.
     :param examples: define example data to serializer.
+    :param extensions: specification extensions, e.g. ``x-is-dynamic``, etc.
     :param component_name: override default class name extraction.
     """
     def decorator(klass):
@@ -434,6 +463,8 @@ def extend_schema_serializer(
             set_override(klass, 'deprecate_fields', deprecate_fields)
         if examples:
             set_override(klass, 'examples', examples)
+        if extensions:
+            set_override(klass, 'extensions', extensions)
         if component_name:
             set_override(klass, 'component_name', component_name)
         return klass
@@ -454,33 +485,30 @@ def extend_schema_view(**kwargs) -> Callable[[F], F]:
     :param kwargs: method names as argument names and :func:`@extend_schema <.extend_schema>`
       calls as values
     """
-    def wrapping_decorator(method_decorator, method):
-        @method_decorator
-        @functools.wraps(method)
-        def wrapped_method(self, request, *args, **kwargs):
-            return method(self, request, *args, **kwargs)
-
-        return wrapped_method
-
     def decorator(view):
-        view_methods = {m.__name__: m for m in get_view_methods(view)}
+        # special case for @api_view. redirect decoration to enclosed WrappedAPIView
+        if callable(view) and hasattr(view, 'cls'):
+            extend_schema_view(**kwargs)(view.cls)
+            return view
+
+        available_view_methods = get_view_method_names(view)
 
         for method_name, method_decorator in kwargs.items():
-            if method_name not in view_methods:
+            if method_name not in available_view_methods:
                 warn(
                     f'@extend_schema_view argument "{method_name}" was not found on view '
                     f'{view.__name__}. method override for "{method_name}" will be ignored.'
                 )
                 continue
 
-            method = view_methods[method_name]
-            # the context of derived methods must not be altered, as it belongs to the other
-            # class. create a new context via the wrapping_decorator so the schema can be safely
-            # stored in the wrapped_method. methods belonging to the view can be safely altered.
-            if method_name in view.__dict__:
-                method_decorator(method)
+            # the context of derived methods must not be altered, as it belongs to the
+            # other view. create a new context so the schema can be safely stored in the
+            # wrapped_method. view methods that are not derived can be safely altered.
+            if hasattr(method_decorator, '__iter__'):
+                for sub_method_decorator in method_decorator:
+                    sub_method_decorator(isolate_view_method(view, method_name))
             else:
-                setattr(view, method_name, wrapping_decorator(method_decorator, method))
+                method_decorator(isolate_view_method(view, method_name))
         return view
 
     return decorator

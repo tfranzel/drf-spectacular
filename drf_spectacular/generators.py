@@ -241,6 +241,9 @@ class SchemaGenerator(BaseSchemaGenerator):
             if spectacular_settings.SCHEMA_PATH_PREFIX_TRIM:
                 path = re.sub(pattern=path_prefix, repl='', string=path, flags=re.IGNORECASE)
 
+            if spectacular_settings.SCHEMA_PATH_PREFIX_INSERT:
+                path = spectacular_settings.SCHEMA_PATH_PREFIX_INSERT + path
+
             if not path.startswith('/'):
                 path = '/' + path
 

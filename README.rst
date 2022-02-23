@@ -2,9 +2,9 @@
 drf-spectacular
 ===============
 
-|build-status-image| |codecov| |pypi-version| |docs|
+|build-status| |codecov| |docs| |pypi-version| |pypi-dl|
 
-Sane and flexible `OpenAPI 3.0 <https://github.com/OAI/OpenAPI-Specification>`_ schema generation for `Django REST framework <https://www.django-rest-framework.org/>`_.
+Sane and flexible `OpenAPI 3.0`_ schema generation for `Django REST framework`_.
 
 This project has 3 goals:
     1. Extract as much schema information from DRF as possible.
@@ -29,6 +29,7 @@ Features
     - Tags extraction
     - Request/response/parameter examples
     - Description extraction from ``docstrings``
+    - Vendor specification extensions (``x-*``) in info, operations, parameters, components, and security schemes
     - Sane fallbacks
     - Sane ``operation_id`` naming (based on path)
     - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)
@@ -42,6 +43,8 @@ Features
         - `djangorestframework-camel-case <https://github.com/vbabiy/djangorestframework-camel-case>`_ (via postprocessing hook ``camelize_serializer_fields``)
         - `django-filter <https://github.com/carltongibson/django-filter>`_
         - `drf-nested-routers <https://github.com/alanjds/drf-nested-routers>`_
+        - `djangorestframework-recursive <https://github.com/heywbj/django-rest-framework-recursive>`_
+        - `djangorestframework-dataclasses <https://github.com/oxan/djangorestframework-dataclasses>`_
 
 
 For more information visit the `documentation <https://drf-spectacular.readthedocs.io>`_.
@@ -55,8 +58,8 @@ Requirements
 ------------
 
 -  Python >= 3.6
--  Django (2.2, 3.1, 3.2)
--  Django REST Framework (3.10, 3.11, 3.12)
+-  Django (2.2, 3.2, 4.0)
+-  Django REST Framework (3.10, 3.11, 3.12, 3.13)
 
 Installation
 ------------
@@ -98,6 +101,34 @@ specify any settings, but we recommend to specify at least some metadata.
         'VERSION': '1.0.0',
         # OTHER SETTINGS
     }
+
+.. _self-contained-ui-installation:
+
+Self-contained UI installation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Certain environments have no direct access to the internet and as such are unable
+to retrieve Swagger UI or Redoc from CDNs. `drf-spectacular-sidecar`_ provides
+these static files as a separate optional package. Usage is as follows:
+
+.. code:: bash
+
+    $ pip install drf-spectacular[sidecar]
+
+.. code:: python
+
+    INSTALLED_APPS = [
+        # ALL YOUR APPS
+        'drf_spectacular',
+        'drf_spectacular_sidecar',  # required for Django collectstatic discovery
+    ]
+    SPECTACULAR_SETTINGS = {
+        'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
+        'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+        'REDOC_DIST': 'SIDECAR',
+        # OTHER SETTINGS
+    }
+
 
 Release management
 ^^^^^^^^^^^^^^^^^^
@@ -160,11 +191,11 @@ the sky is the limit.
     from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
     from drf_spectacular.types import OpenApiTypes
 
-    class AlbumViewset(viewset.ModelViewset)
+    class AlbumViewset(viewset.ModelViewset):
         serializer_class = AlbumSerializer
 
         @extend_schema(
-            request=AlbumCreationSerializer
+            request=AlbumCreationSerializer,
             responses={201: AlbumSerializer},
         )
         def create(self, request):
@@ -214,7 +245,7 @@ the sky is the limit.
             return super().list(request)
 
         @extend_schema(
-            request=AlbumLikeSerializer
+            request=AlbumLikeSerializer,
             responses={204: None},
             methods=["POST"]
         )
@@ -222,6 +253,7 @@ the sky is the limit.
         @action(detail=True, methods=['post', 'get'])
         def set_password(self, request, pk=None):
             # your action behaviour
+            ...
 
 More customization
 ^^^^^^^^^^^^^^^^^^
@@ -253,13 +285,18 @@ globally, and then simply run:
 
     $ tox
 
+.. _Django REST framework: https://www.django-rest-framework.org/
+.. _OpenAPI 3.0: https://github.com/OAI/OpenAPI-Specification
 .. _tox: http://tox.readthedocs.org/en/latest/
+.. _drf-spectacular-sidecar: https://github.com/tfranzel/drf-spectacular-sidecar
 
-.. |build-status-image| image:: https://api.travis-ci.com/tfranzel/drf-spectacular.svg?branch=master
-   :target: https://travis-ci.com/tfranzel/drf-spectacular?branch=master
+.. |build-status| image:: https://github.com/tfranzel/drf-spectacular/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/tfranzel/drf-spectacular/actions/workflows/ci.yml
 .. |pypi-version| image:: https://img.shields.io/pypi/v/drf-spectacular.svg
    :target: https://pypi.python.org/pypi/drf-spectacular
 .. |codecov| image:: https://codecov.io/gh/tfranzel/drf-spectacular/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/tfranzel/drf-spectacular
 .. |docs| image:: https://readthedocs.org/projects/drf-spectacular/badge/
    :target: https://drf-spectacular.readthedocs.io/
+.. |pypi-dl| image:: https://img.shields.io/pypi/dm/drf-spectacular
+   :target: https://pypi.org/project/drf-spectacular/

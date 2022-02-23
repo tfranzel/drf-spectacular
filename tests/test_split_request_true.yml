@@ -73,6 +73,10 @@ components:
           $ref: '#/components/schemas/XRequest'
         field_relation_partial:
           $ref: '#/components/schemas/PatchedXRequest'
+        field_non_blank:
+          type: string
+          minLength: 1
+          maxLength: 5
     X:
       type: object
       properties:
@@ -101,7 +105,11 @@ components:
           $ref: '#/components/schemas/X'
         field_relation_partial:
           $ref: '#/components/schemas/X'
+        field_non_blank:
+          type: string
+          maxLength: 5
       required:
+      - field_non_blank
       - field_relation
       - field_relation_partial
       - id
@@ -112,7 +120,12 @@ components:
           $ref: '#/components/schemas/XRequest'
         field_relation_partial:
           $ref: '#/components/schemas/PatchedXRequest'
+        field_non_blank:
+          type: string
+          minLength: 1
+          maxLength: 5
       required:
+      - field_non_blank
       - field_relation
       - field_relation_partial
   securitySchemes:

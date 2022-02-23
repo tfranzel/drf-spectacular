@@ -1,6 +1,134 @@
 Changelog
 =========
 
+0.21.2 (2022-02-01)
+-------------------
+
+- Add support for djangorestframework-dataclasses [Oxan van Leeuwen]
+- add version to schema for AcceptHeaderVersioning `#637 <https://github.com/tfranzel/drf-spectacular/issues/637>`_
+- FAQ for @api_view `#635 <https://github.com/tfranzel/drf-spectacular/issues/635>`_
+- add extensions for dj_rest_auth's JWTCookieAuthentication `#626 <https://github.com/tfranzel/drf-spectacular/issues/626>`_
+
+Breaking changes / important additions:
+
+- Some minor bugfixes and feature additions. Schemas using AcceptHeaderVersioning contain a small change.
+
+
+0.21.1 (2021-12-20)
+-------------------
+
+- add root level extension setting `#619 <https://github.com/tfranzel/drf-spectacular/issues/619>`_
+- ease schema browser handling with "Content-Disposition" `#607 <https://github.com/tfranzel/drf-spectacular/issues/607>`_
+- custom settings per SpectacularAPIView instance `#365 <https://github.com/tfranzel/drf-spectacular/issues/365>`_
+- Support new X | Y union syntax in Python 3.10 (PEP 604) [Marti Raudsepp]
+- upstream release updates, compat test fix for jwt, consistency fix
+- add blueprint for django-auth-adfs [1110sillabo]
+- use is_list_serializer instead of isinstance() [Roman Sichnyi]
+- Fix schema generation for RecursiveField(many=True) [Roman Sichnyi]
+- enable clearing auth methods with empty list `#99 <https://github.com/tfranzel/drf-spectacular/issues/99>`_
+- Fix typos in the code example [Marcin Kurczewski]
+
+Breaking changes / important additions:
+
+- Some minor bugfixes and small feature additions. No large schema changes are expected
+
+
+0.21.0 (2021-11-10)
+-------------------
+
+- add renderer & parser whitelist setting `#598 <https://github.com/tfranzel/drf-spectacular/issues/598>`_
+- catch attr exception for invalid SerializerMethodField `#592 <https://github.com/tfranzel/drf-spectacular/issues/592>`_
+- add regression test for catch-all status codes `#573 <https://github.com/tfranzel/drf-spectacular/issues/573>`_
+- bugfix OpenApiResponse without description argument `#591 <https://github.com/tfranzel/drf-spectacular/issues/591>`_
+- introduce direction literal / import consolidation `#582 <https://github.com/tfranzel/drf-spectacular/issues/582>`_
+- mitigate CORS issues for external requests in Swagger UI `#588 <https://github.com/tfranzel/drf-spectacular/issues/588>`_
+- Swagger UI authorized schema retrieval `#342 <https://github.com/tfranzel/drf-spectacular/issues/342>`_ `#458 <https://github.com/tfranzel/drf-spectacular/issues/458>`_
+- remove cyclic import warning as fixes haves mitigated the issue. `#581 <https://github.com/tfranzel/drf-spectacular/issues/581>`_
+- bugfix: anchor parameter patterns with ^$
+- bugfix isolation of derivatives for @extend_schema_serializer/@extend_schema_field `#585 <https://github.com/tfranzel/drf-spectacular/issues/585>`_
+- add support for djangorestframework-recursive `#586 <https://github.com/tfranzel/drf-spectacular/issues/586>`_
+- Add blueprint for drf-extra-fields Base64FileField [johnthagen]
+- Add note about extensions registering themselves [johnthagen]
+- Document alternative to drf-yasg swagger_schema_field [johnthagen]
+- allow to bypass list detection for filter discovery `#407 <https://github.com/tfranzel/drf-spectacular/issues/407>`_
+- add blueprint (closes `#448 <https://github.com/tfranzel/drf-spectacular/issues/448>`_), fix test misnomer
+- non-blank string enforcement for parameters `#282 <https://github.com/tfranzel/drf-spectacular/issues/282>`_
+- add setting ENFORCE_NON_BLANK_FIELDS to enable blank checks `#186 <https://github.com/tfranzel/drf-spectacular/issues/186>`_
+
+Breaking changes / important additions:
+
+- Fixed two more decorator isolation issues.
+- Added Swagger UI plugin to handle reloading the schema on authentication changes (``'SERVE_PUBLIC': False``).
+- Added ``minLength`` where a blank value is not allowed. Apart the the dedicated setting, it is implicitly enabled by ``COMPONENT_SPLIT_REQUEST``.
+- Several other small fixes and additional settings for corner cases. This is mainly a y-steam release due to the potential impact
+  on the Swagger UI and ``minLength`` changes.
+
+
+0.20.2 (2021-10-15)
+-------------------
+
+- add setting for manual path prefix: SCHEMA_PATH_PREFIX_INSERT `#567 <https://github.com/tfranzel/drf-spectacular/issues/567>`_
+- improve type hint for @extend_schema_field `#569 <https://github.com/tfranzel/drf-spectacular/issues/569>`_
+- bugfix COMPONENT_SPLIT_REQUEST for empty req/resp serializers `#572 <https://github.com/tfranzel/drf-spectacular/issues/572>`_
+- Make it cleared that ENUM_NAME_OVERRIDES is a key within SPECTACULAR_SETTINGS [johnthagen]
+- Improve formatting in customization docs [johnthagen]
+- bugfix @extend_schema_view on @api_view `#554 <https://github.com/tfranzel/drf-spectacular/issues/554>`_
+- bugfix isolation for @extend_schema/@extend_schema_view reorg `#554 <https://github.com/tfranzel/drf-spectacular/issues/554>`_
+- Fix inheritance bugs with @extend_schema_view(). [Nick Pope]
+- Allow methods in @extend_schema to be case insensitive. [Nick Pope]
+- Added a documentation blueprint for RapiDoc. [Nick Pope]
+- Tidy templates for documentation views. [Nick Pope]
+- Use latest version for CDN packages. [Nick Pope]
+
+Breaking changes / important additions:
+
+- Mainly a bugfix release that solves several longstanding issues with ``@extend_schema_view``/``@extend_schema``
+  annotation isolation. There should be no more side effects from arbitrarily mixing and matching the decorators.
+- Improved handling of completely empty serializers with COMPONENT_SPLIT_REQUEST.
+
+
+0.20.1 (2021-10-03)
+-------------------
+
+- move swagger CDN to jsdelivr (unpkg has been flaky)
+- bugfix wrong DIST setting in Redoc `#546 <https://github.com/tfranzel/drf-spectacular/issues/546>`_
+- Allow paginated_name customization [Georgy Komarov]
+
+Breaking changes / important additions:
+
+- Hotfix release due to regression in the Redoc template
+
+
+0.20.0 (2021-10-01)
+-------------------
+
+- Add support for specification extensions. [Nick Pope]
+- add example injection for (discovered) parameters `#414 <https://github.com/tfranzel/drf-spectacular/issues/414>`_
+- Fix crash with read-only polymorphic sub-serializer. [Nick Pope]
+- Add arbitrarily deep ListSerializer nesting `#539 <https://github.com/tfranzel/drf-spectacular/issues/539>`_
+- tighten serializer assumptions `#539 <https://github.com/tfranzel/drf-spectacular/issues/539>`_
+- fix whitespace stripping on methods
+- Rename `AutoSchema._map_field_validators()` → `.insert_field_validators()`. [Nick Pope]
+- Rename `AutoSchema._map_min_max()` → `.insert_min_max()`. [Nick Pope]
+- Fix detection of int64 from min/max values. [Nick Pope]
+- Fix zero handling in _map_min_max(). [Nick Pope]
+- Add support for introspection of nested validators. [Nick Pope]
+- Fix invalid schemas caused by validator introspection. [Nick Pope]
+- Overhaul validator logic. [Nick Pope]
+- support multiple headers in OpenApiAuthenticationExtension `#537 <https://github.com/tfranzel/drf-spectacular/issues/537>`_
+- docs: Missing end quote for INSTALLED_APPS [Prayash Mohapatra]
+- update doc `#530 <https://github.com/tfranzel/drf-spectacular/issues/530>`_
+- introducing the spectacular sidecar
+- fallback improvements to typing system with typing_extensions
+
+Breaking changes / important additions:
+
+- Added vendor specification extensions
+- Completetly overhauled validator logic and bugfixes
+- Offline UI assets with optional ``drf-spectacular-sidecar`` package
+- several internal logic improvements and stricter assumptions
+
+
 0.19.0 (2021-09-21)
 -------------------
 

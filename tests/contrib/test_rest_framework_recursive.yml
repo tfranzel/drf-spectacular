@@ -1,0 +1,183 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /link:
+    post:
+      operationId: link_create
+      tags:
+      - link
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Link'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Link'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Link'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+          description: ''
+  /pong:
+    post:
+      operationId: pong_create
+      tags:
+      - pong
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ping'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Ping'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Ping'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ping'
+          description: ''
+  /tree:
+    post:
+      operationId: tree_create
+      tags:
+      - tree
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tree'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Tree'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Tree'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tree'
+          description: ''
+  /tree_many:
+    post:
+      operationId: tree_many_create
+      tags:
+      - tree_many
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMany'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TreeMany'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TreeMany'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeMany'
+          description: ''
+components:
+  schemas:
+    Link:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 25
+        next:
+          allOf:
+          - $ref: '#/components/schemas/Link'
+          nullable: true
+      required:
+      - name
+      - next
+    Ping:
+      type: object
+      properties:
+        ping_id:
+          type: integer
+        pong:
+          $ref: '#/components/schemas/Pong'
+      required:
+      - ping_id
+    Pong:
+      type: object
+      properties:
+        pong_id:
+          type: integer
+        ping:
+          $ref: '#/components/schemas/Ping'
+      required:
+      - ping
+      - pong_id
+    Tree:
+      type: object
+      properties:
+        name:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tree'
+      required:
+      - children
+      - name
+    TreeMany:
+      type: object
+      properties:
+        name:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeMany'
+      required:
+      - children
+      - name
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

@@ -5,18 +5,14 @@ import inspect
 import json
 import re
 import sys
+import types
 import typing
 import urllib.parse
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
 from decimal import Decimal
 from enum import Enum
-from typing import DefaultDict, Generic, List, Optional, Type, TypeVar, Union
-
-if sys.version_info >= (3, 8):
-    from typing import Literal, _TypedDictMeta  # type: ignore[attr-defined]
-else:
-    from typing_extensions import Literal, _TypedDictMeta  # type: ignore[attr-defined]
+from typing import Any, DefaultDict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
 import inflection
 import uritemplate
@@ -37,12 +33,13 @@ from django.utils.functional import Promise, cached_property
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, fields, mixins, serializers, versioning
+from rest_framework.compat import unicode_http_header
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
 from uritemplate import URITemplate
 
-from drf_spectacular.drainage import cache, error, warn
+from drf_spectacular.drainage import Literal, _TypedDictMeta, cache, error, warn
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
     DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,
@@ -54,6 +51,12 @@ try:
 except ImportError:
     class Choices:  # type: ignore
         pass
+
+# types.UnionType was added in Python 3.10 for new PEP 604 pipe union syntax
+if hasattr(types, 'UnionType'):
+    UNION_TYPES: Tuple[Any, ...] = (typing.Union, types.UnionType)  # type: ignore
+else:
+    UNION_TYPES = (typing.Union,)
 
 if sys.version_info >= (3, 8):
     CACHED_PROPERTY_FUNCS = (functools.cached_property, cached_property)  # type: ignore
@@ -92,6 +95,10 @@ def is_list_serializer(obj) -> bool:
     return isinstance(force_instance(obj), serializers.ListSerializer)
 
 
+def is_basic_serializer(obj) -> bool:
+    return is_serializer(obj) and not is_list_serializer(obj)
+
+
 def is_field(obj):
     # make sure obj is a serializer field and nothing else.
     # guard against serializers because BaseSerializer(Field)
@@ -121,6 +128,15 @@ def is_trivial_string_variation(a: str, b: str):
     return a == b
 
 
+def assert_basic_serializer(serializer):
+    assert is_basic_serializer(serializer), (
+        f'internal assumption violated because we expected a basic serializer here and '
+        f'instead got a "{serializer}". This may be the result of another app doing '
+        f'some unexpected magic or an invalid internal call. Feel free to report this '
+        f'as a bug at https://github.com/tfranzel/drf-spectacular/issues'
+    )
+
+
 @cache
 def get_lib_doc_excludes():
     # do not import on package level due to potential import recursion when loading
@@ -128,6 +144,8 @@ def get_lib_doc_excludes():
     # -> plumbing.py -> DRF views -> DRF DefaultSchema -> openapi.py - plumbing.py -> Loop
     from rest_framework import generics, views, viewsets
     return [
+        object,
+        dict,
         views.APIView,
         *[getattr(serializers, c) for c in dir(serializers) if c.endswith('Serializer')],
         *[getattr(viewsets, c) for c in dir(viewsets) if c.endswith('ViewSet')],
@@ -160,8 +178,12 @@ def get_view_model(view, emit_warnings=True):
 
 def get_doc(obj):
     """ get doc string with fallback on obj's base classes (ignoring DRF documentation). """
+    def post_cleanup(doc: str):
+        # also clean up trailing whitespace for each line
+        return '\n'.join(line.rstrip() for line in doc.rstrip().split('\n'))
+
     if not inspect.isclass(obj):
-        return inspect.getdoc(obj) or ''
+        return post_cleanup(inspect.getdoc(obj) or '')
 
     def safe_index(lst, item):
         try:
@@ -174,10 +196,7 @@ def get_doc(obj):
     )
     for cls in obj.__mro__[:lib_barrier]:
         if cls.__doc__:
-            # dedent and cleanup of trailing white space on each line
-            doc = inspect.cleandoc(cls.__doc__)
-            doc = '\n'.join(line.rstrip() for line in doc.rstrip().split('\n'))
-            return doc
+            return post_cleanup(inspect.cleandoc(cls.__doc__))
     return ''
 
 
@@ -286,7 +305,9 @@ def build_parameter_type(
         explode=None,
         style=None,
         default=None,
+        allow_blank=True,
         examples=None,
+        extensions=None,
 ):
     irrelevant_field_meta = ['readOnly', 'writeOnly']
     if location == OpenApiParameter.PATH:
@@ -310,8 +331,12 @@ def build_parameter_type(
         schema['schema']['enum'] = sorted(enum)
     if default is not None and 'default' not in irrelevant_field_meta:
         schema['schema']['default'] = default
+    if not allow_blank and schema['schema'].get('type') == 'string':
+        schema['schema']['minLength'] = schema['schema'].get('minLength', 1)
     if examples:
         schema['examples'] = examples
+    if extensions:
+        schema.update(sanitize_specification_extensions(extensions))
     return schema
 
 
@@ -385,10 +410,11 @@ def build_root_object(paths, components, version):
         'info': {
             'title': settings.TITLE,
             'version': version,
-            **settings.EXTENSIONS_INFO,
+            **sanitize_specification_extensions(settings.EXTENSIONS_INFO),
         },
         'paths': {**paths, **settings.APPEND_PATHS},
-        'components': components
+        'components': components,
+        **sanitize_specification_extensions(settings.EXTENSIONS_ROOT),
     }
     if settings.DESCRIPTION:
         root['info']['description'] = settings.DESCRIPTION
@@ -482,7 +508,7 @@ def _follow_return_type(a_callable):
     if target_type is None:
         return target_type
     origin, args = _get_type_hint_origin(target_type)
-    if origin is Union:
+    if origin in UNION_TYPES:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
             warn(
@@ -732,6 +758,14 @@ def list_hash(lst):
     return hashlib.sha256(json.dumps(list(lst), sort_keys=True).encode()).hexdigest()
 
 
+def anchor_pattern(pattern: str) -> str:
+    if not pattern.startswith('^'):
+        pattern = '^' + pattern
+    if not pattern.endswith('$'):
+        pattern = pattern + '$'
+    return pattern
+
+
 def resolve_django_path_parameter(path_regex, variable, available_formats):
     """
     convert django style path parameters to OpenAPI parameters.
@@ -779,7 +813,7 @@ def resolve_django_path_parameter(path_regex, variable, available_formats):
         elif converter in registered_converters:
             # gracious fallback for custom converters that have no override specified.
             schema = build_basic_type(OpenApiTypes.STR)
-            schema['pattern'] = registered_converters[converter].regex
+            schema['pattern'] = anchor_pattern(registered_converters[converter].regex)
         else:
             error(f'Encountered path converter "{converter}" that is unknown to Django.')
             return None
@@ -813,7 +847,10 @@ def resolve_regex_path_parameter(path_regex, variable):
 
         return build_parameter_type(
             name=variable,
-            schema={**build_basic_type(OpenApiTypes.STR), 'pattern': pattern},
+            schema={
+                **build_basic_type(OpenApiTypes.STR),
+                'pattern': anchor_pattern(pattern),
+            },
             location=OpenApiParameter.PATH,
         )
 
@@ -863,7 +900,7 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         # e.g "application/json; version=1.0"
         # To allow the AcceptHeaderVersioning negotiator going through.
         if not hasattr(view.request, 'accepted_renderer'):
-            # Probably a mock request, content negotation was not performed, so, we do it now.
+            # Probably a mock request, content negotiation was not performed, so, we do it now.
             negotiated = view.perform_content_negotiation(view.request)
             view.request.accepted_renderer, view.request.accepted_media_type = negotiated
         media_type = _MediaType(view.request.accepted_media_type)
@@ -872,6 +909,26 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         )
 
     return path
+
+
+def modify_media_types_for_versioning(view, media_types: List[str]) -> List[str]:
+    if (
+        not view.versioning_class
+        or not issubclass(view.versioning_class, versioning.AcceptHeaderVersioning)
+    ):
+        return media_types
+
+    media_type = _MediaType(view.request.accepted_media_type)
+    version = media_type.params.get(view.versioning_class.version_param)  # type: ignore
+    version = unicode_http_header(version)
+
+    if not version or version == view.versioning_class.default_version:
+        return media_types
+
+    return [
+        f'{media_type}; {view.versioning_class.version_param}={version}'
+        for media_type in media_types
+    ]
 
 
 def analyze_named_regex_pattern(path):
@@ -994,6 +1051,17 @@ def sanitize_result_object(result):
     return result
 
 
+def sanitize_specification_extensions(extensions):
+    # https://spec.openapis.org/oas/v3.0.3#specification-extensions
+    output = {}
+    for key, value in extensions.items():
+        if not re.match(r'^x-', key):
+            warn(f'invalid extension {key!r}. vendor extensions must start with "x-"')
+        else:
+            output[key] = value
+    return output
+
+
 def camelize_operation(path, operation):
     for path_variable in re.findall(r'\{(\w+)\}', path):
         path = path.replace(
@@ -1060,6 +1128,22 @@ def _get_type_hint_origin(hint):
         return origin, args
 
 
+def _resolve_typeddict(hint):
+    """resolve required fields for TypedDicts if on 3.9 or above"""
+    required = None
+
+    if sys.version_info >= (3, 9):
+        required = [h for h in hint.__required_keys__]
+
+    return build_object_type(
+        properties={
+            k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()
+        },
+        required=required,
+        description=get_doc(hint),
+    )
+
+
 def resolve_type_hint(hint):
     """ resolve return value type hints to schema """
     origin, args = _get_type_hint_origin(hint)
@@ -1106,12 +1190,8 @@ def resolve_type_hint(hint):
             schema.update(build_basic_type(mixin_base_types[0]))
         return schema
     elif isinstance(hint, _TypedDictMeta):
-        return build_object_type(
-            properties={
-                k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()
-            }
-        )
-    elif origin is Union:
+        return _resolve_typeddict(hint)
+    elif origin in UNION_TYPES:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
             schema = {'oneOf': [resolve_type_hint(arg) for arg in type_args]}
@@ -1124,3 +1204,12 @@ def resolve_type_hint(hint):
         return build_array_type(resolve_type_hint(args[0]))
     else:
         raise UnableToProceedError()
+
+
+def whitelisted(obj: object, classes: List[Type[object]], exact=False):
+    if not classes:
+        return True
+    if exact:
+        return obj.__class__ in classes
+    else:
+        return isinstance(obj, tuple(classes))

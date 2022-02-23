@@ -11,7 +11,6 @@ schema closer to your API.
   Sane fallbacks are used wherever possible and some warnings might not even be relevant to you.
   The remaining issues can be solved with the following steps.
 
-
 Step 1: ``queryset`` and ``serializer_class``
 ---------------------------------------------
 Introspection heavily relies on those two attributes. ``get_serializer_class()``
@@ -82,7 +81,7 @@ Step 3: :py:class:`@extend_schema_field <drf_spectacular.utils.extend_schema_fie
 A custom ``SerializerField`` might not get picked up properly. You can inform `drf-spectacular`
 on what is to be expected with the :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>`
 decorator. It takes either basic types or a ``Serializer`` as argument. In case of basic types
-(e.g. str int etc.) a type hint is already sufficient.
+(e.g. ``str``, ``int``, etc.) a type hint is already sufficient.
 
 .. code-block:: python
 
@@ -92,7 +91,7 @@ decorator. It takes either basic types or a ``Serializer`` as argument. In case 
             return urlsafe_base64_encode(b'\xf0\xf1\xf2')
 
 
-You can apply it also to the method of a `SerializerMethodField`.
+You can apply it also to the method of a ``SerializerMethodField``.
 
 .. code-block:: python
 
@@ -147,6 +146,12 @@ Extensions provide a way to hook into the introspection without actually touchin
 All extensions work on the same principle. You provide a ``target_class`` (import path
 string or actual class) and then state what `drf-spectcular` should use instead of what
 it would normally discover.
+
+.. note:: The extensions register themselves automatically. Just be sure that the Python
+  interpreter sees them at least once.
+  To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your
+  ``PROJECT/__init__.py`` (same directory as ``settings.py`` and ``urls.py``)
+  with ``import PROJECT.schema``.
 
 .. note:: Only the first Extension matching the criteria is used. By setting the ``priority`` attribute
   on your extension, you can influence the matching order (default ``0``).

@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from django import __version__ as DJANGO_VERSION
 from django.urls import path
 from rest_framework import mixins, routers, serializers, viewsets
 
@@ -22,6 +23,7 @@ class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     required_scopes = ['x:read', 'x:write']
 
 
+@pytest.mark.skipif(DJANGO_VERSION >= '4', reason='1.19.1 broken for Django 4.0')
 @pytest.mark.contrib('rest_framework_jwt')
 def test_drf_jwt(no_warnings):
     from rest_framework_jwt.views import obtain_jwt_token
@@ -39,6 +41,7 @@ def test_drf_jwt(no_warnings):
     assert_schema(schema, 'tests/contrib/test_drf_jwt.yml')
 
 
+@pytest.mark.skipif(DJANGO_VERSION >= '4', reason='1.19.1 broken for Django 4.0')
 @pytest.mark.contrib('rest_framework_jwt')
 @mock.patch('rest_framework_jwt.settings.api_settings.JWT_AUTH_HEADER_PREFIX', 'JWT')
 def test_drf_jwt_non_bearer_keyword(no_warnings):
