@@ -27,16 +27,16 @@ from drf_spectacular.extensions import (
 from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta,
     assert_basic_serializer, build_array_type, build_basic_type, build_choice_field,
-    build_examples_list, build_generic_type, build_media_type_object, build_object_type,
-    build_parameter_type, error, follow_field_source, follow_model_field_lookup, force_instance,
-    get_doc, get_type_hints, get_view_model, is_basic_serializer, is_basic_type, is_field,
-    is_list_serializer, is_patched_serializer, is_serializer, is_trivial_string_variation,
+    build_examples_list, build_generic_type, build_media_type_object, build_mocked_view,
+    build_object_type, build_parameter_type, error, follow_field_source, follow_model_field_lookup,
+    force_instance, get_doc, get_type_hints, get_view_model, is_basic_serializer, is_basic_type,
+    is_field, is_list_serializer, is_patched_serializer, is_serializer, is_trivial_string_variation,
     modify_media_types_for_versioning, resolve_django_path_parameter, resolve_regex_path_parameter,
     resolve_type_hint, safe_ref, sanitize_specification_extensions, warn, whitelisted,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse
+from drf_spectacular.utils import OpenApiCallback, OpenApiParameter, OpenApiResponse
 
 
 class AutoSchema(ViewInspector):
@@ -90,6 +90,10 @@ class AutoSchema(ViewInspector):
         extensions = self.get_extensions()
         if extensions:
             operation.update(sanitize_specification_extensions(extensions))
+
+        callbacks = self._get_callbacks()
+        if callbacks:
+            operation['callbacks'] = callbacks
 
         return operation
 
@@ -321,6 +325,68 @@ class AutoSchema(ViewInspector):
 
     def get_extensions(self) -> typing.Dict[str, typing.Any]:
         return {}
+
+    def _get_callbacks(self):
+        """
+        Creates a mocked view for every callback. The given extend_schema decorator then
+        specifies the expectations on the receiving end of the callback. Effectively
+        simulates a sub-schema from the opposing perspective via a virtual view definition.
+        """
+        result = {}
+
+        for callback in self.get_callbacks():
+            if isinstance(callback.decorator, dict):
+                methods = callback.decorator
+            else:
+                methods = {'post': callback.decorator}
+
+            path_items = {}
+
+            for method, decorator in methods.items():
+                # a dict indicates a raw schema; use directly
+                if isinstance(decorator, dict):
+                    path_items[method.lower()] = decorator
+                    continue
+
+                mocked_view = build_mocked_view(
+                    method=method,
+                    path=callback.path,
+                    extend_schema_decorator=decorator,
+                    registry=self.registry
+                )
+                operation = {}
+
+                description = mocked_view.schema.get_description()
+                if description:
+                    operation['description'] = description
+
+                summary = mocked_view.schema.get_summary()
+                if summary:
+                    operation['summary'] = summary
+
+                request_body = mocked_view.schema._get_request_body()
+                if request_body:
+                    operation['requestBody'] = request_body
+
+                deprecated = mocked_view.schema.is_deprecated()
+                if deprecated:
+                    operation['deprecated'] = deprecated
+
+                operation['responses'] = mocked_view.schema._get_response_bodies()
+
+                extensions = mocked_view.schema.get_extensions()
+                if extensions:
+                    operation.update(sanitize_specification_extensions(extensions))
+
+                path_items[method.lower()] = operation
+
+            result[callback.name] = {callback.path: path_items}
+
+        return result
+
+    def get_callbacks(self) -> typing.List[OpenApiCallback]:
+        """ override this for custom behaviour """
+        return []
 
     def get_operation_id(self):
         """ override this for custom behaviour """
