@@ -1213,3 +1213,26 @@ def whitelisted(obj: object, classes: List[Type[object]], exact=False):
         return obj.__class__ in classes
     else:
         return isinstance(obj, tuple(classes))
+
+
+def build_mocked_view(method: str, path: str, extend_schema_decorator, registry):
+    from rest_framework import parsers, views
+
+    @extend_schema_decorator
+    class TmpView(views.APIView):
+        parser_classes = [parsers.JSONParser]
+
+    # emulate what Generator would do to setup schema generation.
+    view_callable = TmpView.as_view()
+    view = view_callable.cls()  # type: ignore
+    view.request = spectacular_settings.GET_MOCK_REQUEST(
+        method.upper(), path, view, None
+    )
+    view.kwargs = {}
+    # prepare AutoSchema with "init" values as if get_operation() was called
+    view.schema.registry = registry
+    view.schema.path = path
+    view.schema.path_regex = path
+    view.schema.path_prefix = ''
+    view.schema.method = method.upper()
+    return view

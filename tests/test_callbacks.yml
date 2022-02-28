@@ -1,0 +1,179 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /x/:
+    get:
+      operationId: x_list
+      tags:
+      - x
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Simple'
+          description: ''
+  /x/{id}/:
+    get:
+      operationId: x_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this simple model.
+        required: true
+      tags:
+      - x
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simple'
+          description: ''
+  /x/health/:
+    post:
+      operationId: x_health_create
+      tags:
+      - x
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Health'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Health'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Health'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+      callbacks:
+        HealthEvent:
+          '{$request.body#/callbackUrl}':
+            post:
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/Event'
+                required: true
+              responses:
+                '200':
+                  description: status new ack
+            delete:
+              deprecated: true
+              responses:
+                '200':
+                  description: status expiration
+            patch:
+              requestBody:
+                content:
+                  application/yaml:
+                    schema:
+                      type: integer
+              responses:
+                '200':
+                  description: Raw schema
+  /x/subscription/:
+    post:
+      operationId: x_subscription_create
+      tags:
+      - x
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subscribe'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Subscribe'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Subscribe'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+      callbacks:
+        SubscriptionEvent:
+          '{$request.body#/callbackUrl}':
+            post:
+              description: pushes events to callbackUrl as "application/x-www-form-urlencoded"
+              summary: some summary
+              requestBody:
+                content:
+                  application/x-www-form-urlencoded:
+                    schema:
+                      $ref: '#/components/schemas/Event'
+                required: true
+              responses:
+                '200':
+                  description: event was successfully received
+                4XX:
+                  description: event will be retried shortly
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        change:
+          type: string
+      required:
+      - change
+    Health:
+      type: object
+      properties:
+        callbackUrl:
+          type: string
+          format: uri
+      required:
+      - callbackUrl
+    Simple:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+      required:
+      - id
+    Subscribe:
+      type: object
+      properties:
+        callbackUrl:
+          type: string
+          format: uri
+      required:
+      - callbackUrl
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

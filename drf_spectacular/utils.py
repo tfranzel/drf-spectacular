@@ -201,6 +201,36 @@ class OpenApiResponse(OpenApiSchemaBase):
 F = TypeVar('F', bound=Callable[..., Any])
 
 
+class OpenApiCallback(OpenApiSchemaBase):
+    """
+    Helper class to bundle a callback definition. This specifies a view on the callee's
+    side, effectively stating the expectations on the receiving end. Please note that this
+    particular :func:`@extend_schema <.extend_schema>` instance operates from the perspective
+    of the callback origin, which means that ``request`` specifies the outgoing request.
+
+    For convenience sake, we assume the callback sends ``application/json`` and return a ``200``.
+    If that is not sufficient, you can use ``request`` and ``responses`` overloads just as you
+    normally would.
+
+    :param name: Name under which the this callback is listed in the schema.
+    :param path: Path on which the callback operation is performed. To reference request
+        body contents, please refer to OpenAPI specification's
+        `key expressions <https://swagger.io/specification/#key-expression>`_ for valid choices.
+    :param decorator: :func:`@extend_schema <.extend_schema>` decorator that specifies the receiving
+        endpoint. In this special context the allowed parameters are ``requests``, ``responses``,
+        ``summary``, ``description``, ``deprecated``.
+    """
+    def __init__(
+            self,
+            name: str,
+            path: str,
+            decorator: Union[Callable[[F], F], Dict[str, Callable[[F], F]], Dict[str, Any]],
+    ):
+        self.name = name
+        self.path = path
+        self.decorator = decorator
+
+
 def extend_schema(
         operation_id: Optional[str] = None,
         parameters: Optional[List[Union[OpenApiParameter, _SerializerType]]] = None,
@@ -218,6 +248,7 @@ def extend_schema(
         versions: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
         extensions: Optional[Dict[str, Any]] = None,
+        callbacks: Optional[List[OpenApiCallback]] = None
 ) -> Callable[[F], F]:
     """
     Decorator mainly for the "view" method kind. Partially or completely overrides
@@ -265,6 +296,7 @@ def extend_schema(
     :param versions: scope extend_schema to specific API version. matches all by default.
     :param examples: attach request/response examples to the operation
     :param extensions: specification extensions, e.g. ``x-badges``, ``x-code-samples``, etc.
+    :param callbacks: associate callbacks with this endpoint
     :return:
     """
     if methods is not None:
@@ -363,6 +395,11 @@ def extend_schema(
                 if filters is not None and is_in_scope(self):
                     return getattr(self.view, 'filter_backends', []) if filters else []
                 return super().get_filter_backends()
+
+            def get_callbacks(self):
+                if callbacks is not None and is_in_scope(self):
+                    return callbacks
+                return super().get_callbacks()
 
         if inspect.isclass(f):
             # either direct decoration of views, or unpacked @api_view from OpenApiViewExtension

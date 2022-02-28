@@ -34,6 +34,7 @@ Features
     - Sane ``operation_id`` naming (based on path)
     - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)
     - Optional input/output serializer component split
+    - Callback operations
     - Included support for:
         - `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_
         - `SimpleJWT <https://github.com/SimpleJWT/django-rest-framework-simplejwt>`_
