@@ -1,6 +1,6 @@
 import pytest
 import yaml
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.urls import include, path
 from rest_framework import routers, viewsets
 from rest_framework.authentication import TokenAuthentication
@@ -85,7 +85,7 @@ def test_mock_request_symmetry_version(no_warnings):
 def test_mock_request_symmetry_authentication(
         no_warnings, serve_public, authenticated, url, expected_endpoints
 ):
-    user = User.objects.create(username='test')
+    user = get_user_model().objects.create(username='test')
     token, _ = Token.objects.get_or_create(user=user)
     auth_header = {'HTTP_AUTHORIZATION': f'Token {token}'} if authenticated else {}
     response = APIClient().get(url, **auth_header)
