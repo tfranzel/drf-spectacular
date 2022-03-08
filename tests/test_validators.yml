@@ -81,15 +81,15 @@ components:
           minLength: 100
         float_max_value:
           type: number
-          format: float
+          format: double
           maximum: 200.0
         float_min_value:
           type: number
-          format: float
+          format: double
           minimum: 100.0
         float_decimal:
           type: number
-          format: float
+          format: double
           maximum: 100
           exclusiveMaximum: true
           minimum: -100
@@ -102,7 +102,7 @@ components:
           minimum: 100
         integer_decimal:
           type: number
-          format: float
+          format: double
           maximum: 100
           exclusiveMaximum: true
           minimum: -100
@@ -208,19 +208,19 @@ components:
           type: string
         float_email:
           type: number
-          format: float
+          format: double
         float_url:
           type: number
-          format: float
+          format: double
         float_regex:
           type: number
-          format: float
+          format: double
         float_max_length:
           type: number
-          format: float
+          format: double
         float_min_length:
           type: number
-          format: float
+          format: double
         integer_email:
           type: integer
         integer_url:

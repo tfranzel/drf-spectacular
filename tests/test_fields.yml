@@ -117,7 +117,7 @@ components:
           type: array
           items:
             type: number
-            format: float
+            format: double
           maxItems: 100
           minItems: 3
         field_list_serializer:
@@ -215,7 +215,7 @@ components:
           type: integer
         field_float:
           type: number
-          format: float
+          format: double
         field_bool:
           type: boolean
         field_char:

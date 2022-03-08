@@ -11,7 +11,7 @@ paths:
         name: all_values
         schema:
           type: number
-          format: float
+          format: double
       - in: query
         name: category
         schema:
@@ -143,12 +143,12 @@ paths:
         name: price_range_max
         schema:
           type: number
-          format: float
+          format: double
       - in: query
         name: price_range_min
         schema:
           type: number
-          format: float
+          format: double
       - in: query
         name: price_range_vat_decorated_max
         schema:
@@ -161,12 +161,12 @@ paths:
         name: price_range_vat_max
         schema:
           type: number
-          format: float
+          format: double
       - in: query
         name: price_range_vat_min
         schema:
           type: number
-          format: float
+          format: double
       - in: query
         name: sub
         schema:
@@ -235,7 +235,7 @@ components:
           type: boolean
         price:
           type: number
-          format: float
+          format: double
         other_sub_product:
           type: integer
       required:

@@ -149,7 +149,7 @@ def test_serializer_reverse_relations_including_read_only(no_warnings):
     assert properties['m5many_set_ro']['items'] == m5many_pk
     assert properties['m5many_set_explicit']['items'] == m5many_pk
 
-    m5foreign_pk = {'type': 'number', 'format': 'float'}
+    m5foreign_pk = {'type': 'number', 'format': 'double'}
     assert properties['m5foreign_set']['items'] == m5foreign_pk
     assert properties['m5foreign_set_ro']['items'] == m5foreign_pk
     assert properties['m5foreign_set_explicit']['items'] == m5foreign_pk
@@ -204,8 +204,8 @@ def test_serializer_forward_relations_including_read_only(no_warnings):
 
     assert properties['field_one'] == {'type': 'string'}
     assert properties['field_one_ro'] == {'type': 'string', 'readOnly': True}
-    assert properties['field_foreign'] == {'type': 'number', 'format': 'float'}
-    assert properties['field_foreign_ro'] == {'type': 'number', 'format': 'float', 'readOnly': True}
+    assert properties['field_foreign'] == {'type': 'number', 'format': 'double'}
+    assert properties['field_foreign_ro'] == {'type': 'number', 'format': 'double', 'readOnly': True}
     assert properties['field_many'] == {'type': 'array', 'items': {'type': 'string', 'format': 'uuid'}}
     assert properties['field_many_ro'] == {
         'type': 'array', 'items': {'type': 'string', 'format': 'uuid'}, 'readOnly': True

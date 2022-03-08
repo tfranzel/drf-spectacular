@@ -739,7 +739,7 @@ class AutoSchema(ViewInspector):
             return append_meta(content, meta)
 
         if isinstance(field, serializers.FloatField):
-            content = build_basic_type(OpenApiTypes.FLOAT)
+            content = build_basic_type(OpenApiTypes.DOUBLE)
             self._insert_min_max(field, content)
             return append_meta(content, meta)
 
