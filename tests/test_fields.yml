@@ -244,7 +244,7 @@ components:
         field_decimal:
           type: string
           format: decimal
-          pattern: ^\d{0,3}(?:\.\d{0,3})?$
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
         field_file:
           type: string
           format: uri

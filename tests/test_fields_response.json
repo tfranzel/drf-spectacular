@@ -1,6 +1,6 @@
 {
   "id": 1,
-  "field_decimal_uncoerced": 666.333,
+  "field_decimal_uncoerced": -666.333,
   "field_method_float": 1.3456,
   "field_method_object": {
     "key": "value"
@@ -58,7 +58,7 @@
   "field_uuid": "00000000-0000-0000-0000-000000000000",
   "field_url": "https://github.com/tfranzel/drf-spectacular",
   "field_ip_generic": "2001:db8::8a2e:370:7334",
-  "field_decimal": "666.333",
+  "field_decimal": "-666.333",
   "field_file": "http://testserver/hello_p8Eotwr.txt",
   "field_img": null,
   "field_date": "2021-09-09",

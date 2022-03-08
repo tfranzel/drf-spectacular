@@ -1394,7 +1394,7 @@ def test_serialization_with_decimal_values(no_warnings):
     assert schema['components']['schemas']['X']['properties']['field_coerced'] == {
         'type': 'string',
         'format': 'decimal',
-        'pattern': r'^\d{0,3}(?:\.\d{0,2})?$',
+        'pattern': r'^-?\d{0,3}(?:\.\d{0,2})?$',
     }
 
     schema_yml = OpenApiYamlRenderer().render(schema, renderer_context={})
