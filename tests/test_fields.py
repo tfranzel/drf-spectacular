@@ -308,7 +308,7 @@ def test_model_setup_is_valid():
         field_uuid='00000000-00000000-00000000-00000000',
         field_url='https://github.com/tfranzel/drf-spectacular',
         field_ip_generic='2001:db8::8a2e:370:7334',
-        field_decimal=Decimal('666.333'),
+        field_decimal=Decimal('-666.333'),
         field_file=None,
         field_img=None,  # TODO fill with data below
         field_date='2021-09-09',

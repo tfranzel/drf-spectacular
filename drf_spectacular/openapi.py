@@ -722,7 +722,7 @@ class AutoSchema(ViewInspector):
                 content = {**build_basic_type(OpenApiTypes.STR), 'format': 'decimal'}
                 if field.max_whole_digits:
                     content['pattern'] = (
-                        fr'^\d{{0,{field.max_whole_digits}}}'
+                        fr'^-?\d{{0,{field.max_whole_digits}}}'
                         fr'(?:\.\d{{0,{field.decimal_places}}})?$'
                     )
             else:
