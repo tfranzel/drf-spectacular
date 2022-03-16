@@ -38,7 +38,7 @@ paths:
               examples:
                 SerializerCExampleRO:
                   value:
-                    field: 111
+                  - field: 111
                   summary: Serializer C Example RO
           description: ''
     post:

@@ -27,12 +27,13 @@ from drf_spectacular.extensions import (
 from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta,
     assert_basic_serializer, build_array_type, build_basic_type, build_choice_field,
-    build_examples_list, build_generic_type, build_media_type_object, build_mocked_view,
-    build_object_type, build_parameter_type, error, follow_field_source, follow_model_field_lookup,
-    force_instance, get_doc, get_type_hints, get_view_model, is_basic_serializer, is_basic_type,
-    is_field, is_list_serializer, is_patched_serializer, is_serializer, is_trivial_string_variation,
-    modify_media_types_for_versioning, resolve_django_path_parameter, resolve_regex_path_parameter,
-    resolve_type_hint, safe_ref, sanitize_specification_extensions, warn, whitelisted,
+    build_examples_list, build_generic_type, build_listed_example_value, build_media_type_object,
+    build_mocked_view, build_object_type, build_parameter_type, error, follow_field_source,
+    follow_model_field_lookup, force_instance, get_doc, get_type_hints, get_view_model,
+    is_basic_serializer, is_basic_type, is_field, is_list_serializer, is_patched_serializer,
+    is_serializer, is_trivial_string_variation, modify_media_types_for_versioning,
+    resolve_django_path_parameter, resolve_regex_path_parameter, resolve_type_hint, safe_ref,
+    sanitize_specification_extensions, warn, whitelisted,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -1097,6 +1098,8 @@ class AutoSchema(ViewInspector):
         # don't let the parameter examples influence the serializer example retrieval
         examples = [e for e in self.get_examples() if not e.parameter_only]
 
+        # Examples from Serializers via @extend_schema_serializer are only considered, if
+        # there were no higher priority examples directly from view annotation.
         if not examples:
             if is_list_serializer(serializer):
                 examples = get_override(serializer.child, 'examples', [])
@@ -1116,6 +1119,15 @@ class AutoSchema(ViewInspector):
                 continue
             if status_code and status_code not in example.status_codes:
                 continue
+
+            if (
+                self._is_list_view(serializer)
+                and get_override(serializer, 'many') is not False
+            ):
+                # contain modification to this context so "listing" is not propagated elsewhere
+                example = copy.copy(example)
+                example.value = build_listed_example_value(example.value, self._get_paginator(), direction)
+
             filtered_examples.append(example)
 
         return build_examples_list(filtered_examples)

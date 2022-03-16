@@ -1,4 +1,4 @@
-from rest_framework import serializers, viewsets
+from rest_framework import generics, pagination, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -154,3 +154,45 @@ def test_examples(no_warnings):
         generate_schema('schema', ExampleTestWithExtendedViewSet),
         'tests/test_examples.yml',
     )
+
+
+def test_example_pagination(no_warnings):
+    class PaginatedExamplesViewSet(ExampleTestWithExtendedViewSet):
+        pagination_class = pagination.LimitOffsetPagination
+
+    schema = generate_schema('e', PaginatedExamplesViewSet)
+    operation = schema['paths']['/e/']['get']
+    assert operation['responses']['200']['content']['application/json']['examples'] == {
+        'SerializerCExampleRO': {
+            'value': {
+                'count': 123,
+                'next': 'http://api.example.org/accounts/?offset=400&limit=100',
+                'previous': 'http://api.example.org/accounts/?offset=200&limit=100',
+                'results': {'field': 111}
+            },
+            'summary': 'Serializer C Example RO'
+        }
+    }
+
+
+def test_example_request_response_listed_examples(no_warnings):
+    @extend_schema(
+        request=ASerializer(many=True),
+        responses=ASerializer(many=True),
+        examples=[
+            OpenApiExample('Ex', {'id': '1234'})
+        ]
+    )
+    class XView(generics.CreateAPIView):
+        pass
+
+    schema = generate_schema('e', view=XView)
+    operation = schema['paths']['/e']['post']
+    assert operation['requestBody']['content']['application/json'] == {
+        'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/A'}},
+        'examples': {'Ex': {'value': [{'id': '1234'}]}}
+    }
+    assert operation['responses']['201']['content']['application/json'] == {
+        'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/A'}},
+        'examples': {'Ex': {'value': [{'id': '1234'}]}}
+    }

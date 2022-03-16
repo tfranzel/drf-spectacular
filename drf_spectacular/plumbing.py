@@ -1236,3 +1236,23 @@ def build_mocked_view(method: str, path: str, extend_schema_decorator, registry)
     view.schema.path_prefix = ''
     view.schema.method = method.upper()
     return view
+
+
+def build_listed_example_value(value: Any, paginator, direction):
+    if not paginator or direction == 'request':
+        return [value]
+
+    sentinel = object()
+    schema = paginator.get_paginated_response_schema(sentinel)
+    try:
+        return {
+            field_name: value if field_schema is sentinel else field_schema['example']
+            for field_name, field_schema in schema['properties'].items()
+        }
+    except (AttributeError, KeyError):
+        warn(
+            f"OpenApiExample could not be paginated because {paginator.__class__} either "
+            f"has an unknown schema structure or the individual pagination fields did not "
+            f"provide example values themselves. Using the plain example value as fallback."
+        )
+        return value
