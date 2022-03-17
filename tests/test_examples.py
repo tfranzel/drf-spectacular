@@ -1,3 +1,5 @@
+import pytest
+from rest_framework import __version__ as DRF_VERSION  # type: ignore[attr-defined]
 from rest_framework import generics, pagination, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -156,6 +158,7 @@ def test_examples(no_warnings):
     )
 
 
+@pytest.mark.skipif(DRF_VERSION < '3.12', reason='DRF pagination schema broken')
 def test_example_pagination(no_warnings):
     class PaginatedExamplesViewSet(ExampleTestWithExtendedViewSet):
         pagination_class = pagination.LimitOffsetPagination
