@@ -128,6 +128,18 @@ def test_spectacular_swagger_ui_alternate(no_warnings):
 
 
 @mock.patch(
+    'drf_spectacular.settings.spectacular_settings.SWAGGER_UI_PLUGINS',
+    [{"name": "name1", "source": "source1"}, {"name": "name2", "source": "source2"}]
+)
+@pytest.mark.urls(__name__)
+def test_spectacular_swagger_plugins(no_warnings):
+    response = APIClient().get('/api/v2/schema/swagger-ui/')
+    assert response.status_code == 200
+    assert b'const plugins = [\n\n  name1,\n\n  name2,\n\n];' in response.content
+    assert b'<script src="source1"></script>\n\n    <script src="source2"></script>' in response.content
+
+
+@mock.patch(
     'drf_spectacular.settings.spectacular_settings.SWAGGER_UI_SETTINGS',
     '{"deepLinking": true}'
 )

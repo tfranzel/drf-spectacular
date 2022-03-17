@@ -124,6 +124,7 @@ class SpectacularSwaggerView(APIView):
                 'favicon_href': self._swagger_ui_favicon(),
                 'schema_url': self._get_schema_url(request),
                 'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
+                'plugins': spectacular_settings.SWAGGER_UI_PLUGINS,
                 'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
                 'template_name_js': self.template_name_js,
                 'csrf_header_name': self._get_csrf_header_name(),

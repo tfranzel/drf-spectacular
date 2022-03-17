@@ -3,7 +3,11 @@
 const swaggerSettings = {{ settings|safe }};
 const schemaAuthNames = {{ schema_auth_names|safe }};
 let schemaAuthFailed = false;
-const plugins = [];
+const plugins = [
+{% for plugin in plugins %}
+  {{ plugin.name }},
+{%  endfor %}
+];
 
 const reloadSchemaOnAuthChange = () => {
   return {

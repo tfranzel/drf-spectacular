@@ -65,6 +65,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
     },
+    "SWAGGER_UI_PLUGINS": [],
     # Initialize SwaggerUI with additional OAuth2 configuration.
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/oauth2/
     'SWAGGER_UI_OAUTH2_CONFIG': {},
