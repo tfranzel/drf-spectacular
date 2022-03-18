@@ -66,6 +66,10 @@ class AutoSchema(ViewInspector):
         if summary:
             operation['summary'] = summary
 
+        external_docs = self._get_external_docs()
+        if external_docs:
+            operation['externalDocs'] = external_docs
+
         parameters = self._get_parameters()
         if parameters:
             operation['parameters'] = parameters
@@ -256,6 +260,17 @@ class AutoSchema(ViewInspector):
         return action_doc or view_doc
 
     def get_summary(self):
+        """ override this for custom behaviour """
+        return None
+
+    def _get_external_docs(self):
+        external_docs = self.get_external_docs()
+        if isinstance(external_docs, str):
+            return {'url': external_docs}
+        else:
+            return external_docs
+
+    def get_external_docs(self):
         """ override this for custom behaviour """
         return None
 

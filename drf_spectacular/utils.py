@@ -248,7 +248,8 @@ def extend_schema(
         versions: Optional[List[str]] = None,
         examples: Optional[List[OpenApiExample]] = None,
         extensions: Optional[Dict[str, Any]] = None,
-        callbacks: Optional[List[OpenApiCallback]] = None
+        callbacks: Optional[List[OpenApiCallback]] = None,
+        external_docs: Optional[Union[Dict[str, str], str]] = None,
 ) -> Callable[[F], F]:
     """
     Decorator mainly for the "view" method kind. Partially or completely overrides
@@ -297,6 +298,9 @@ def extend_schema(
     :param examples: attach request/response examples to the operation
     :param extensions: specification extensions, e.g. ``x-badges``, ``x-code-samples``, etc.
     :param callbacks: associate callbacks with this endpoint
+    :param external_docs: Link external documentation. Provide a dict with an "url" key and
+        optionally a "description" key. For convenience, if only a string is given it is
+        treated as the URL.
     :return:
     """
     if methods is not None:
@@ -400,6 +404,11 @@ def extend_schema(
                 if callbacks is not None and is_in_scope(self):
                     return callbacks
                 return super().get_callbacks()
+
+            def get_external_docs(self):
+                if external_docs is not None and is_in_scope(self):
+                    return external_docs
+                return super().get_external_docs()
 
         if inspect.isclass(f):
             # either direct decoration of views, or unpacked @api_view from OpenApiViewExtension
