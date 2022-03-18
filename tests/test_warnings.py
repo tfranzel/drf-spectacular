@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter, PolymorphicProxySerializer, extend_schema, extend_schema_view,
+    inline_serializer,
 )
 from tests import generate_schema
 from tests.models import SimpleModel, SimpleSerializer
@@ -433,3 +434,20 @@ def test_serializer_method_missing(capsys):
     generate_schema('x', view_function=view_func)
     stderr = capsys.readouterr().err
     assert 'SerializerMethodField "some_field" is missing required method "get_some_field"' in stderr
+
+
+def test_invalid_field_names(capsys):
+    @extend_schema(
+        responses=inline_serializer(
+            'Name with spaces',
+            fields={'test': serializers.CharField()}
+        ),
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('/x/', view_function=view_func)
+
+    stderr = capsys.readouterr().err
+    assert 'illegal characters' in stderr

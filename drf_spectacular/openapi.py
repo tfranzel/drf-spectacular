@@ -1409,6 +1409,13 @@ class AutoSchema(ViewInspector):
         if direction == 'request' and spectacular_settings.COMPONENT_SPLIT_REQUEST:
             name = name + 'Request'
 
+        if not re.match(r'^[\w.-]+$', name):
+            warn(
+                f'Component name "{name}" contains illegal characters. Only "A-Z a-z 0-9 - . _" '
+                f'are allowed. Furthermore, "-" and "." are discoursed due to potential tooling '
+                f'issues. This likely leads to an invalid schema.'
+            )
+
         return name
 
     def resolve_serializer(self, serializer, direction) -> ResolvedComponent:
