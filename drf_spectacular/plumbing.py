@@ -889,12 +889,8 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         # emulate router behaviour by injecting substituted variable into view
         view.kwargs[version_param] = requested_version
     elif issubclass(view.versioning_class, versioning.NamespaceVersioning):
-        try:
-            view.request.resolver_match = get_resolver(
-                urlconf=detype_patterns(tuple(patterns)),
-            ).resolve(path)
-        except Resolver404:
-            error(f"namespace versioning path resolution failed for {path}. Path will be ignored.")
+        patterns = detype_patterns(tuple(patterns))
+        view.request.resolver_match = resolve_path(path, patterns)
     elif issubclass(view.versioning_class, versioning.AcceptHeaderVersioning):
         # Append the version into request accepted_media_type.
         # e.g "application/json; version=1.0"
@@ -909,6 +905,15 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
         )
 
     return path
+
+
+@cache
+def resolve_path(path, patterns):
+    """Cache path resolution to avoid looking up the same path for different methods."""
+    try:
+        return get_resolver(urlconf=patterns).resolve(path)
+    except Resolver404:
+        error(f"namespace versioning path resolution failed for {path}. Path will be ignored.")
 
 
 def modify_media_types_for_versioning(view, media_types: List[str]) -> List[str]:
