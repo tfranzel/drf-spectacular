@@ -891,7 +891,7 @@ def modify_for_versioning(patterns, method, path, view, requested_version):
     elif issubclass(view.versioning_class, versioning.NamespaceVersioning):
         try:
             view.request.resolver_match = get_resolver(
-                urlconf=tuple(detype_pattern(p) for p in patterns)
+                urlconf=detype_patterns(tuple(patterns)),
             ).resolve(path)
         except Resolver404:
             error(f"namespace versioning path resolution failed for {path}. Path will be ignored.")
@@ -974,6 +974,12 @@ def analyze_named_regex_pattern(path):
         i += ff
     assert not stack
     return result
+
+
+@cache
+def detype_patterns(patterns):
+    """Cache detyped patterns due to the expensive nature of rebuilding URLResolver."""
+    return tuple(detype_pattern(pattern) for pattern in patterns)
 
 
 def detype_pattern(pattern):
