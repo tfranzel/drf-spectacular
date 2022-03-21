@@ -1,6 +1,38 @@
 Changelog
 =========
 
+0.22.0 (2022-03-21)
+-------------------
+
+- Added ``detype_patterns()`` with ``@cache``. [Nick Pope]
+- add "externalDocs" to operation via extend_schema `#681 <https://github.com/tfranzel/drf-spectacular/issues/681>`_
+- warn on invalid components names `#685 <https://github.com/tfranzel/drf-spectacular/issues/685>`_
+- wrap examples in list/pagination when serializer is many=True `#641 <https://github.com/tfranzel/drf-spectacular/issues/641>`_ `#640 <https://github.com/tfranzel/drf-spectacular/issues/640>`_ `#595 <https://github.com/tfranzel/drf-spectacular/issues/595>`_
+- python's and django's float is really "double precision" `#674 <https://github.com/tfranzel/drf-spectacular/issues/674>`_
+- Support negative numbers in pattern regex for coerced decimal fields [Mike Hansen]
+- add OpenAPI callback operations `#665 <https://github.com/tfranzel/drf-spectacular/issues/665>`_
+- Keep the urlpatterns in the apiview and pass it to the generator [Jorge Cardona]
+- django-filter: raise priority of explicitly given filter method type hints `#660 <https://github.com/tfranzel/drf-spectacular/issues/660>`_
+- also allow @extend_schema_field on django-filter filter method `#660 <https://github.com/tfranzel/drf-spectacular/issues/660>`_
+- accommodate pyright limitations `#657 <https://github.com/tfranzel/drf-spectacular/issues/657>`_
+- fix doc extraction for built-in types `#654 <https://github.com/tfranzel/drf-spectacular/issues/654>`_
+- use get_doc for description [Josh Ferge]
+- add more information to resolved TypedDicts [Josh Ferge]
+- fix url escaping bug introduced in `#556 <https://github.com/tfranzel/drf-spectacular/issues/556>`_ (`#650 <https://github.com/tfranzel/drf-spectacular/issues/650>`_)
+- pass through version from UI to schema endpoint `#650 <https://github.com/tfranzel/drf-spectacular/issues/650>`_
+- factor out schema_url generation `#650 <https://github.com/tfranzel/drf-spectacular/issues/650>`_
+- relax AcceptHeaderVersioning contraint for modification `#650 <https://github.com/tfranzel/drf-spectacular/issues/650>`_
+- Enable the use of lists in extend_schema_view() [François Travais]
+
+Breaking changes / important additions:
+
+- This is a y-stream release with a lot of bugfixes, some new features and potentially small schema changes (if affected features are used).
+- Examples are now wrapped in pagination/lists when endpoint/serializer is ``many=True``
+- django-filter had some internal restructuring and thus overrides are now always honored.
+- added callback functionality (EXPERIMENTAL and subject to change due to pending issue)
+- Many thanks to all the contributors!
+
+
 0.21.2 (2022-02-01)
 -------------------
 
