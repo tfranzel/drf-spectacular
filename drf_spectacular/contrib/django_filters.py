@@ -139,12 +139,12 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         schema.pop('readOnly', None)
         # enrich schema with additional info from filter_field
         enum = schema.pop('enum', None)
-        # choices can be a list of tuples, or a callable that returns such a list at runtime. Only use the former
         if 'choices' in filter_field.extra:
-            if not callable(filter_field.extra['choices']):
-                enum = [c for c, _ in filter_field.extra['choices']]
-            else:
+            if callable(filter_field.extra['choices']):
+                # choices function may utilize the DB, so refrain from actually calling it.
                 enum = None
+            else:
+                enum = [c for c, _ in filter_field.extra['choices']]
         if enum:
             schema['enum'] = sorted(enum, key=str)
 

@@ -223,6 +223,9 @@ def test_django_filters_requests(no_warnings):
     response = APIClient().get('/api/products/?multi_cat=A&multi_cat=B')
     assert response.status_code == 200, response.content
     assert len(response.json()) == 1
+    response = APIClient().get('/api/products/?cat_callable=A')
+    assert response.status_code == 200, response.content
+    assert len(response.json()) == 1
 
 
 @pytest.mark.contrib('django_filter')
