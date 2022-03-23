@@ -13,6 +13,11 @@ paths:
           type: number
           format: double
       - in: query
+        name: cat_callable
+        schema:
+          type: string
+        description: some category description
+      - in: query
         name: category
         schema:
           type: string

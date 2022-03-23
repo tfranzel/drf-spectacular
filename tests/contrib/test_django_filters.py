@@ -14,8 +14,8 @@ from tests.models import SimpleModel, SimpleSerializer
 
 try:
     from django_filters.rest_framework import (
-        AllValuesFilter, BaseInFilter, BooleanFilter, CharFilter, DjangoFilterBackend, FilterSet,
-        ModelChoiceFilter, ModelMultipleChoiceFilter, MultipleChoiceFilter, NumberFilter,
+        AllValuesFilter, BaseInFilter, BooleanFilter, CharFilter, ChoiceFilter, DjangoFilterBackend,
+        FilterSet, ModelChoiceFilter, ModelMultipleChoiceFilter, MultipleChoiceFilter, NumberFilter,
         NumericRangeFilter, OrderingFilter, RangeFilter, UUIDFilter,
     )
 except ImportError:
@@ -30,6 +30,7 @@ except ImportError:
             pass
 
     CharFilter = NumberFilter
+    ChoiceFilter = NumberFilter
     OrderingFilter = NumberFilter
     BaseInFilter = NumberFilter
     BooleanFilter = NumberFilter
@@ -116,6 +117,10 @@ class ProductFilter(FilterSet):
     price_range_vat_decorated = extend_schema_field(OpenApiTypes.INT)(
         RangeFilter(field_name='price_vat')
     )
+
+    def get_choices(*args, **kwargs):
+        return (('A', 'aaa'),)
+    cat_callable = ChoiceFilter(field_name="category", choices=get_choices)
 
     class Meta:
         model = Product
