@@ -103,7 +103,7 @@ components:
           exclusiveMinimum: true
         field_method_float:
           type: number
-          format: float
+          format: double
           readOnly: true
         field_method_object:
           type: object
@@ -159,15 +159,15 @@ components:
           readOnly: true
         field_model_property_float:
           type: number
-          format: float
+          format: double
           readOnly: true
         field_model_cached_property_float:
           type: number
-          format: float
+          format: double
           readOnly: true
         field_model_py_cached_property_float:
           type: number
-          format: float
+          format: double
           readOnly: true
         field_dict_int:
           type: object

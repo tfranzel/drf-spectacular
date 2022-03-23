@@ -150,7 +150,7 @@ OPENAPI_TYPE_MAPPING = {
 
 PYTHON_TYPE_MAPPING = {
     str: OpenApiTypes.STR,
-    float: OpenApiTypes.FLOAT,
+    float: OpenApiTypes.DOUBLE,
     bool: OpenApiTypes.BOOL,
     bytes: OpenApiTypes.BINARY,
     int: OpenApiTypes.INT,
