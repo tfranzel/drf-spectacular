@@ -140,7 +140,11 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         # enrich schema with additional info from filter_field
         enum = schema.pop('enum', None)
         if 'choices' in filter_field.extra:
-            enum = [c for c, _ in filter_field.extra['choices']]
+            if callable(filter_field.extra['choices']):
+                # choices function may utilize the DB, so refrain from actually calling it.
+                enum = None
+            else:
+                enum = [c for c, _ in filter_field.extra['choices']]
         if enum:
             schema['enum'] = sorted(enum, key=str)
 

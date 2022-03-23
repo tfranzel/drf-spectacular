@@ -14,8 +14,8 @@ from tests.models import SimpleModel, SimpleSerializer
 
 try:
     from django_filters.rest_framework import (
-        AllValuesFilter, BaseInFilter, BooleanFilter, CharFilter, DjangoFilterBackend, FilterSet,
-        ModelChoiceFilter, ModelMultipleChoiceFilter, MultipleChoiceFilter, NumberFilter,
+        AllValuesFilter, BaseInFilter, BooleanFilter, CharFilter, ChoiceFilter, DjangoFilterBackend,
+        FilterSet, ModelChoiceFilter, ModelMultipleChoiceFilter, MultipleChoiceFilter, NumberFilter,
         NumericRangeFilter, OrderingFilter, RangeFilter, UUIDFilter,
     )
 except ImportError:
@@ -30,6 +30,7 @@ except ImportError:
             pass
 
     CharFilter = NumberFilter
+    ChoiceFilter = NumberFilter
     OrderingFilter = NumberFilter
     BaseInFilter = NumberFilter
     BooleanFilter = NumberFilter
@@ -116,6 +117,10 @@ class ProductFilter(FilterSet):
     price_range_vat_decorated = extend_schema_field(OpenApiTypes.INT)(
         RangeFilter(field_name='price_vat')
     )
+
+    def get_choices(*args, **kwargs):
+        return (('A', 'aaa'),)
+    cat_callable = ChoiceFilter(field_name="category", choices=get_choices)
 
     class Meta:
         model = Product
@@ -216,6 +221,9 @@ def test_django_filters_requests(no_warnings):
     assert response.status_code == 200
     assert len(response.json()) == 1
     response = APIClient().get('/api/products/?multi_cat=A&multi_cat=B')
+    assert response.status_code == 200, response.content
+    assert len(response.json()) == 1
+    response = APIClient().get('/api/products/?cat_callable=A')
     assert response.status_code == 200, response.content
     assert len(response.json()) == 1
 
