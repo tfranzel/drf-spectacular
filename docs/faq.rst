@@ -312,3 +312,24 @@ and break down each case separately.
     @api_view(['GET', 'POST'])
     def view_func(request, format=None):
         return ...
+
+
+My ``get_queryset()`` depends on some attributes not available at schema generation time
+----------------------------------------------------------------------------------------
+
+In certain situations we need to call ``get_serializer``, which in turn calls ``get_queryset``.
+If your ``get_queryset`` (or ``get_serializer_class``) depends on attributes not available at
+schema generation time (e.g. ``request.user.is_authenticated``), you need to provide a fallback
+that allows us to call that method. While the schema is generated, you can check for the view
+attribute ``swagger_fake_view`` and simply return an empty queryset of the correct model.
+
+.. code-block:: python
+
+    class XViewset(viewsets.ModelViewset):
+        ...
+
+        def get_queryset(self):
+            if getattr(self, 'swagger_fake_view', False)  # drf-yasg comp
+                return YourModel.objects.none()
+            # your usual logic
+
