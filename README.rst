@@ -100,6 +100,7 @@ specify any settings, but we recommend to specify at least some metadata.
         'TITLE': 'Your Project API',
         'DESCRIPTION': 'Your project description',
         'VERSION': '1.0.0',
+        'SERVE_INCLUDE_SCHEMA': False,
         # OTHER SETTINGS
     }
 
