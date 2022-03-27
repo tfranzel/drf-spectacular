@@ -303,3 +303,51 @@ def test_polymorphic_split_request_with_ro_serializer(no_warnings, explicit):
     assert components['MetaPersonRequest']['discriminator']['mapping'] == {
         'natural': '#/components/schemas/NaturalPersonRequest',
     }
+
+
+def test_polymorphic_forced_many_false(no_warnings):
+    class XViewSet(viewsets.GenericViewSet):
+        @extend_schema(
+            responses=PolymorphicProxySerializer(
+                component_name='MetaPerson',
+                serializers=[NaturalPersonSerializer, LegalPersonSerializer],
+                resource_type_field_name='type',
+                many=False
+            )
+        )
+        def list(self, request, *args, **kwargs):
+            return Response({})  # pragma: no cover
+
+    schema = generate_schema('x', XViewSet)
+    assert get_response_schema(schema['paths']['/x/']['get']) == {
+        '$ref': '#/components/schemas/MetaPerson'
+    }
+
+
+def test_polymorphic_manual_many(no_warnings):
+    mixed_poly = PolymorphicProxySerializer(
+        component_name='MetaLegalPerson',
+        serializers=[NaturalPersonSerializer, NaturalPersonSerializer(many=True)],
+        resource_type_field_name=None,
+        many=False,
+    )
+
+    class XViewSet(viewsets.GenericViewSet):
+        @extend_schema(request=mixed_poly, responses=mixed_poly)
+        def create(self, request, *args, **kwargs):
+            return Response({})  # pragma: no cover
+
+        @extend_schema(responses=mixed_poly)
+        def list(self, request, *args, **kwargs):
+            return Response({})  # pragma: no cover
+
+    schema = generate_schema('x', XViewSet)
+    response_schema = get_response_schema(schema['paths']['/x/']['post'])
+    request_schema = get_request_schema(schema['paths']['/x/']['post'])
+    assert response_schema == request_schema == {'$ref': '#/components/schemas/MetaLegalPerson'}
+    assert schema['components']['schemas']['MetaLegalPerson'] == {
+        'oneOf': [
+            {'$ref': '#/components/schemas/NaturalPerson'},
+            {'type': 'array', 'items': {'$ref': '#/components/schemas/NaturalPerson'}}
+        ]
+    }

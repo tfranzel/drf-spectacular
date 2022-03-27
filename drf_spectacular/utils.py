@@ -49,9 +49,14 @@ class PolymorphicProxySerializer(Serializer):
 
     Also make sure that each sub-serializer has a field named after the value of
     ``resource_type_field_name`` (discriminator field). Generated clients will likely
-    depend on the existence of this field. Setting ``resource_type_field_name``
-    to ``None`` will remove the discriminator altogether. This may be useful in
-    certain situations, but will most likely break client generation.
+    depend on the existence of this field.
+
+    Setting ``resource_type_field_name`` to ``None`` will remove the discriminator
+    altogether. This may be useful in certain situations, but will most likely break
+    client generation. Another use-case is explicit control over sub-serializer's ``many``
+    attribute. To explicitly control this aspect, you need disable the discriminator with
+    ``resource_type_field_name=None`` as well as disable automatic list handling with
+    ``many=False``.
 
     It is **strongly** recommended to pass the ``Serializers`` as **list**,
     and by that let *drf-spectacular* retrieve the field and handle the mapping
@@ -65,12 +70,23 @@ class PolymorphicProxySerializer(Serializer):
             component_name: str,
             serializers: Union[List[_SerializerType], Dict[str, _SerializerType]],
             resource_type_field_name: Optional[str],
-            many: bool = False,
+            many: Optional[bool] = None,
     ):
         self.component_name = component_name
         self.serializers = serializers
         self.resource_type_field_name = resource_type_field_name
-        super().__init__(many=many)
+        if self._many is False:  # type: ignore[attr-defined]
+            set_override(self, 'many', False)
+        super().__init__()
+
+    def __new__(cls, *args, **kwargs):
+        many = kwargs.pop('many', None)
+        if many is True:
+            instance = cls.many_init(*args, **kwargs)
+        else:
+            instance = super().__new__(cls, *args, **kwargs)
+        instance._many = many
+        return instance
 
     @property
     def data(self):

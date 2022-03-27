@@ -305,6 +305,27 @@ def test_polymorphic_proxy_subserializer_missing_type_field(capsys):
     assert 'sub-serializer Incomplete of Broken must contain' in stderr
 
 
+@pytest.mark.parametrize('resource_type_field_name', ['field', None])
+def test_polymorphic_proxy_serializer_misconfig(capsys, resource_type_field_name):
+    class XSerializer(serializers.Serializer):
+        field = serializers.IntegerField()  # missing field named type
+
+    class XAPIView(APIView):
+        @extend_schema(
+            responses=PolymorphicProxySerializer(
+                component_name='Broken',
+                serializers=[XSerializer(many=True)],
+                resource_type_field_name=resource_type_field_name,
+            )
+        )
+        def get(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('x', view=XAPIView)
+    stderr = capsys.readouterr().err
+    assert 'following usage pattern is necessary: PolymorphicProxySerializer' in stderr
+
+
 def test_warning_operation_id_on_extend_schema_view(capsys):
     @extend_schema(operation_id='Invalid', responses=int)
     class XAPIView(APIView):
