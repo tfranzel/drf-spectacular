@@ -10,6 +10,10 @@ from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.validation import validate_schema
 
 
+class SchemaGenerationError(CommandError):
+    pass
+
+
 class SchemaValidationError(CommandError):
     pass
 
@@ -56,9 +60,12 @@ class Command(BaseCommand):
         GENERATOR_STATS.emit_summary()
 
         if options['fail_on_warn'] and GENERATOR_STATS:
-            raise SchemaValidationError('Failing as requested due to warnings')
+            raise SchemaGenerationError('Failing as requested due to warnings')
         if options['validate']:
-            validate_schema(schema)
+            try:
+                validate_schema(schema)
+            except Exception as e:
+                raise SchemaValidationError(e)
 
         renderer = self.get_renderer(options['format'])
         output = renderer.render(schema, renderer_context={})

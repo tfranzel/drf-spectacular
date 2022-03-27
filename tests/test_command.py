@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 import yaml
 from django.core import management
+from django.core.management import CommandError
 from django.core.management.base import SystemCheckError
 from django.urls import path
 from rest_framework.decorators import api_view
@@ -36,7 +37,7 @@ def test_command_parameterized(capsys):
 
 
 def test_command_fail(capsys):
-    with pytest.raises(RuntimeError):
+    with pytest.raises(CommandError):
         management.call_command(
             'spectacular',
             '--fail-on-warn',
