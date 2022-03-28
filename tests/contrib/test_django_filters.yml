@@ -181,6 +181,12 @@ paths:
         schema:
           type: number
           format: float
+      - in: query
+        name: untyped_choice_field_method_with_explicit_choices
+        schema:
+          type: integer
+          enum:
+          - 1
       tags:
       - products
       security:

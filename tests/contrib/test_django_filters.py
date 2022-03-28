@@ -120,7 +120,14 @@ class ProductFilter(FilterSet):
 
     def get_choices(*args, **kwargs):
         return (('A', 'aaa'),)
+
     cat_callable = ChoiceFilter(field_name="category", choices=get_choices)
+
+    # will guess type from choices as a last resort
+    untyped_choice_field_method_with_explicit_choices = ChoiceFilter(
+        method="filter_method_untyped",
+        choices=[(1, 'one')],
+    )
 
     class Meta:
         model = Product

@@ -84,6 +84,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         }
         filter_method = self._get_filter_method(filterset_class, filter_field)
         filter_method_hint = self._get_filter_method_hint(filter_method)
+        filter_choices = self._get_explicit_filter_choices(filter_field)
 
         if has_override(filter_field, 'field') or has_override(filter_method, 'field'):
             annotation = (
@@ -116,17 +117,24 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 schema = build_basic_type(OpenApiTypes.NUMBER)  # TODO may be improved
             else:
                 schema = build_basic_type(OpenApiTypes.NUMBER)
-        else:
+        elif isinstance(filter_field, filters.ChoiceFilter):
             try:
-                # the last resort is to lookup the type via the model or queryset field.
-                # first search for the field in the model as this has the least amount of
-                # potential side effects. Only after that fails, attempt to call
-                # get_queryset() to check for potential query annotations.
-                model_field = self._get_model_field(filter_field, model)
-                if not isinstance(model_field, models.Field):
-                    qs = auto_schema.view.get_queryset()
-                    model_field = qs.query.annotations[filter_field.field_name].field
-                schema = auto_schema._map_model_field(model_field, direction=None)
+                schema = self._get_schema_from_model_field(auto_schema, filter_field, model)
+            except Exception:
+                if filter_choices and is_basic_type(type(filter_choices[0])):
+                    # fallback to type guessing from first choice element
+                    schema = build_basic_type(type(filter_choices[0]))
+                else:
+                    warn(
+                        f'Unable to guess choice types from values, filter method\'s type hint '
+                        f'or find "{field_name}" in model. Defaulting to string.'
+                    )
+                    schema = build_basic_type(OpenApiTypes.STR)
+        else:
+            # the last resort is to look up the type via the model or queryset field
+            # and emit a warning if we were unsuccessful.
+            try:
+                schema = self._get_schema_from_model_field(auto_schema, filter_field, model)
             except Exception as exc:  # pragma: no cover
                 warn(
                     f'Exception raised while trying resolve model field for django-filter '
@@ -139,12 +147,9 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         schema.pop('readOnly', None)
         # enrich schema with additional info from filter_field
         enum = schema.pop('enum', None)
-        if 'choices' in filter_field.extra:
-            if callable(filter_field.extra['choices']):
-                # choices function may utilize the DB, so refrain from actually calling it.
-                enum = None
-            else:
-                enum = [c for c, _ in filter_field.extra['choices']]
+        # explicit filter choices may disable enum retrieved from model
+        if filter_choices is not None:
+            enum = filter_choices
         if enum:
             schema['enum'] = sorted(enum, key=str)
 
@@ -207,8 +212,29 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         except:  # noqa: E722
             return _NoHint
 
+    def _get_explicit_filter_choices(self, filter_field):
+        if 'choices' not in filter_field.extra:
+            return None
+        elif callable(filter_field.extra['choices']):
+            # choices function may utilize the DB, so refrain from actually calling it.
+            return []
+        else:
+            return [c for c, _ in filter_field.extra['choices']]
+
     def _get_model_field(self, filter_field, model):
         if not filter_field.field_name:
             return None
         path = filter_field.field_name.split('__')
         return follow_field_source(model, path, emit_warnings=False)
+
+    def _get_schema_from_model_field(self, auto_schema, filter_field, model):
+        # Has potential to throw exceptions. Needs to be wrapped in try/except!
+        #
+        # first search for the field in the model as this has the least amount of
+        # potential side effects. Only after that fails, attempt to call
+        # get_queryset() to check for potential query annotations.
+        model_field = self._get_model_field(filter_field, model)
+        if not isinstance(model_field, models.Field):
+            qs = auto_schema.view.get_queryset()
+            model_field = qs.query.annotations[filter_field.field_name].field
+        return auto_schema._map_model_field(model_field, direction=None)
