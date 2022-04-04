@@ -50,6 +50,9 @@ class SubObject:
 
     @property
     def calculated(self) -> int:
+        """
+        My calculated property
+        """
         return self._instance.field_int
 
     @property
