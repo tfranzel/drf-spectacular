@@ -275,8 +275,9 @@ def test_serializer_retrieval_from_view(no_warnings):
     class X1Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
         serializer_class = UnusedSerializer
 
-        def get_serializer(self):
-            return XSerializer()
+        def get_serializer(self, *args, **kwargs):
+            assert 'request' in kwargs['context']
+            return XSerializer(*args, **kwargs)
 
     class X2Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
         def get_serializer_class(self):

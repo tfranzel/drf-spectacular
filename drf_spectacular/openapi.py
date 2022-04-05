@@ -1072,20 +1072,21 @@ class AutoSchema(ViewInspector):
 
     def _get_serializer(self):
         view = self.view
+        context = {'request': view.request}
         try:
             if isinstance(view, GenericAPIView):
                 # try to circumvent queryset issues with calling get_serializer. if view has NOT
                 # overridden get_serializer, its safe to use get_serializer_class.
                 if view.__class__.get_serializer == GenericAPIView.get_serializer:
-                    return view.get_serializer_class()()
-                return view.get_serializer()
+                    return view.get_serializer_class()(context=context)
+                return view.get_serializer(context=context)
             elif isinstance(view, APIView):
                 # APIView does not implement the required interface, but be lenient and make
                 # good guesses before giving up and emitting a warning.
                 if callable(getattr(view, 'get_serializer', None)):
-                    return view.get_serializer()
+                    return view.get_serializer(context=context)
                 elif callable(getattr(view, 'get_serializer_class', None)):
-                    return view.get_serializer_class()()
+                    return view.get_serializer_class()(context=context)
                 elif hasattr(view, 'serializer_class'):
                     return view.serializer_class
                 else:
