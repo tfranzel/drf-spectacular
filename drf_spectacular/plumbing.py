@@ -947,7 +947,7 @@ def analyze_named_regex_pattern(path):
             skip = True
             name_capture = True
             ff = 4
-        elif path[i] in '(':
+        elif path[i] in '(' and regex_capture:
             stack += 1
             ff = 1
         elif path[i] == '>' and name_capture:
@@ -956,8 +956,8 @@ def analyze_named_regex_pattern(path):
             regex_capture = True
             skip = True
             ff = 1
-        elif path[i] in ')':
-            if regex_capture and not stack:
+        elif path[i] in ')' and regex_capture:
+            if not stack:
                 regex_capture = False
                 result[name_buffer] = regex_buffer
                 name_buffer, regex_buffer = '', ''
