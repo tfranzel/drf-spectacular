@@ -1,8 +1,10 @@
 import json
 from collections import namedtuple
+from importlib import import_module
 from typing import Any, Dict
 
 from django.conf import settings
+from django.urls import URLPattern
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -60,7 +62,17 @@ class SpectacularAPIView(APIView):
     def get(self, request, *args, **kwargs):
         if isinstance(self.urlconf, list) or isinstance(self.urlconf, tuple):
             ModuleWrapper = namedtuple('ModuleWrapper', ['urlpatterns'])
-            self.urlconf = ModuleWrapper(tuple(self.urlconf))
+            if isinstance(self.urlconf[1], URLPattern):
+                self.urlconf = ModuleWrapper(tuple(self.urlconf))
+            else:
+                patterns = []
+                for item in self.urlconf:
+                    try:
+                        url = import_module(item)
+                        patterns += url.urlpatterns
+                    except ModuleNotFoundError:
+                        raise ModuleNotFoundError(f'Could not import {item}')
+                self.urlconf = ModuleWrapper(tuple(patterns))
 
         with patched_settings(self.custom_settings):
             if settings.USE_I18N and request.GET.get('lang'):
