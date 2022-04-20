@@ -7,7 +7,7 @@ You are not satisfied with your generated schema? Follow these steps in order to
 schema closer to your API.
 
 .. note:: The warnings emitted by ``./manage.py spectacular --file schema.yaml --validate``
-  are intended as an indicator to where `drf-spectacular` discovered issues.
+  are intended as an indicator to where *drf-spectacular* discovered issues.
   Sane fallbacks are used wherever possible and some warnings might not even be relevant to you.
   The remaining issues can be solved with the following steps.
 
@@ -15,7 +15,7 @@ Step 1: ``queryset`` and ``serializer_class``
 ---------------------------------------------
 Introspection heavily relies on those two attributes. ``get_serializer_class()``
 and ``get_serializer()`` are also used if available. You can also set those
-on ``APIView``. Even though this is not supported by DRF, `drf-spectacular` will pick
+on ``APIView``. Even though this is not supported by DRF, *drf-spectacular* will pick
 them up and use them.
 
 
@@ -78,7 +78,7 @@ discovered in the introspection.
 
 Step 3: :py:class:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` and type hints
 ---------------------------------------------------------------------------------------------------
-A custom ``SerializerField`` might not get picked up properly. You can inform `drf-spectacular`
+A custom ``SerializerField`` might not get picked up properly. You can inform *drf-spectacular*
 on what is to be expected with the :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>`
 decorator. It takes either basic types or a ``Serializer`` as argument. In case of basic types
 (e.g. ``str``, ``int``, etc.) a type hint is already sufficient.
@@ -144,7 +144,7 @@ Usually, you cannot easily decorate or modify ``View``, ``Serializer`` or ``Fiel
 Extensions provide a way to hook into the introspection without actually touching the library.
 
 All extensions work on the same principle. You provide a ``target_class`` (import path
-string or actual class) and then state what `drf-spectcular` should use instead of what
+string or actual class) and then state what *drf-spectcular* should use instead of what
 it would normally discover.
 
 .. note:: The extensions register themselves automatically. Just be sure that the Python
@@ -161,7 +161,7 @@ it would normally discover.
 
 Replace views with :py:class:`OpenApiViewExtension <drf_spectacular.extensions.OpenApiViewExtension>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Many libraries use ``@api_view`` or ``APIView`` instead of `ViewSet` or `GenericAPIView`.
+Many libraries use ``@api_view`` or ``APIView`` instead of ``ViewSet`` or ``GenericAPIView``.
 In those cases, introspection has very little to work with. The purpose of this extension
 is to augment or switch out the encountered view (only for schema generation). Simply extending
 the discovered class ``class Fixed(self.target_class)`` with a ``queryset`` or
@@ -205,7 +205,7 @@ A simple custom HTTP header based authentication could be achieved like this:
 
 Declare field output with :py:class:`OpenApiSerializerFieldExtension <drf_spectacular.extensions.OpenApiSerializerFieldExtension>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This is mainly targeted to custom `SerializerField`'s that are within library code. This extension
+This is mainly targeted to custom ``SerializerField``'s that are within library code. This extension
 is functionally equivalent to :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>`
 
 .. code-block:: python
@@ -220,7 +220,7 @@ is functionally equivalent to :py:func:`@extend_schema_field <drf_spectacular.ut
 
 Declare serializer magic with :py:class:`OpenApiSerializerExtension <drf_spectacular.extensions.OpenApiSerializerExtension>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This is one of the more involved extension mechanisms. `drf-spectacular` uses those to implement
+This is one of the more involved extension mechanisms. *drf-spectacular* uses those to implement
 `polymorphic serializers <https://github.com/tfranzel/drf-spectacular/blob/master/drf_spectacular/serializers.py>`_.
 The usage of this extension is rarely necessary because most custom ``Serializer`` classes stay very
 close to the default behaviour.
@@ -228,9 +228,9 @@ close to the default behaviour.
 Declare custom/library filters with :py:class:`OpenApiFilterExtension <drf_spectacular.extensions.OpenApiFilterExtension>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This extension only applies to filter and pagination classes and is rarely used. Built-in support for
-`django-filters` is realized with this extension. :py:class:`OpenApiFilterExtension <drf_spectacular.extensions.OpenApiFilterExtension>`
+*django-filter* is realized with this extension. :py:class:`OpenApiFilterExtension <drf_spectacular.extensions.OpenApiFilterExtension>`
 replaces the filter's native ``get_schema_operation_parameters`` with your customized version, where you
-have full access to `drf-spectacular's` more advanced introspection features.
+have full access to *drf-spectacular*'s more advanced introspection features.
 
 
 Step 6: Postprocessing hooks

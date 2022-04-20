@@ -1,21 +1,21 @@
 FAQ
 ===
 
-I use library/app `XXX` and the generated schema is wrong or broken
+I use library/app *XXX* and the generated schema is wrong or broken
 -------------------------------------------------------------------
 Sometimes DRF libraries do not cooperate well with the introspection mechanics.
 Check the :ref:`blueprints` for already available fixes. If there aren't any,
 learn how to do easy :ref:`customization`. Feel free to contribute back missing fixes.
 
-If you think this is a bug in `drf-spectacular`, open a
+If you think this is a bug in *drf-spectacular*, open a
 `issue <https://github.com/tfranzel/drf-spectacular/issues>`_.
 
 
 I cannot use :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` on library code
 --------------------------------------------------------------------------------------------
-You can easily adapt introspection for libraries/apps with the ``Extension`` mechanism.
-``Extensions`` provide an easy way to attach schema information to code that you cannot
-modify otherwise. Have a look at :ref:`customization` on how to use ``Extensions``
+You can easily adapt introspection for libraries/apps with the *Extension* mechanism.
+*Extensions* provide an easy way to attach schema information to code that you cannot
+modify otherwise. Have a look at :ref:`customization` on how to use *Extensions*
 
 
 I get an empty schema or endpoints are missing
@@ -133,7 +133,7 @@ My authentication method is not supported
 -----------------------------------------
 You can easily specify a custom authentication with
 :py:class:`OpenApiAuthenticationExtension <drf_spectacular.extensions.OpenApiAuthenticationExtension>`.
-Have a look at :ref:`customization` on how to use ``Extensions``
+Have a look at :ref:`customization` on how to use *Extensions*
 
 
 How can I i18n/internationalize my schema and UI?
@@ -172,7 +172,7 @@ by setting ``COMPONENT_SPLIT_REQUEST = True``. Note that this influences the who
 not just components with ``FileFields``.
 
 Also consider explicitly setting ``parser_classes = [parsers.MultiPartParser]`` (or any file compatible parser)
-on your `View` or write a custom `get_parser_classes`. These fields do not work with the default ``JsonParser``
+on your ``View`` or write a custom ``get_parser_classes``. These fields do not work with the default ``JsonParser``
 and that fact should be represented in the schema.
 
 
@@ -209,10 +209,10 @@ My ``@action`` is erroneously paginated or has filter parameters that I do not w
 This usually happens when ``@extend_schema(responses=XSerializer(many=True))`` is used. Actions inherit filter
 and pagination classes from their ``ViewSet``. If the response is then marked as a list, the ``pagination_class``
 kicks in. Since actions are handled manually by the user, this behavior is usually not immediately obvious.
-To make make your intentions clear to `drf-spectacular`, you need to clear the offening classes in the action
+To make make your intentions clear to *drf-spectacular*, you need to clear the offening classes in the action
 decorator, e.g. setting ``pagination_class=None``.
 
-Users of ``django-filter`` might also see unwanted query parameters. Since the same mechanics apply here too,
+Users of *django-filter* might also see unwanted query parameters. Since the same mechanics apply here too,
 you can remove those parameters by resetting the filter backends with ``@action(...,filter_backends=[])``.
 
 .. code-block:: python

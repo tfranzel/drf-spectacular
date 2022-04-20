@@ -3,7 +3,7 @@
 Client generation
 ===============================
 
-`drf-spectacular` aims to generate the most accurate schema possible under the constraints of OpenAPI 3.0.3.
+*drf-spectacular* aims to generate the most accurate schema possible under the constraints of OpenAPI 3.0.3.
 Unfortunately, sometimes this goal conflicts with generating a good and functional client.
 
 To serve the two main use cases, i.e. documenting the API and generating clients, we opt for getting the
@@ -12,7 +12,7 @@ most accurate schema first, and then provide settings that allow to resolve pote
 .. note:: TL;DR - Simply setting ``'COMPONENT_SPLIT_REQUEST': True`` will most likely yield the best
   and most accurate client.
 
-.. note:: `drf-spectacular` generates warnings where it recognizes potential problems. Some warnings
+.. note:: *drf-spectacular* generates warnings where it recognizes potential problems. Some warnings
   are important to having a correct client. Fixing all warning is highly recommended.
 
 .. note:: For generating clients with CI, we highly recommend using

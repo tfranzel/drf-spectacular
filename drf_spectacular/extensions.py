@@ -46,7 +46,7 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
     Extension for replacing an insufficient or specifying an unknown Serializer schema.
 
     The existing implementation of ``map_serializer()`` will generate the same result
-    as `drf-spectacular` would. Either augment or replace the generated schema. The
+    as *drf-spectacular* would. Either augment or replace the generated schema. The
     view instance is available via ``auto_schema.view``, while the original serializer
     can be accessed via ``self.target``.
 
@@ -68,7 +68,7 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
     """
     Extension for replacing an insufficient or specifying an unknown SerializerField schema.
 
-    To augment the default schema, you can get what `drf-spectacular` would generate with
+    To augment the default schema, you can get what *drf-spectacular* would generate with
     ``auto_schema._map_serializer_field(self.target, direction, bypass_extensions=True)``.
     and edit the returned schema at your discretion. Beware that this may still emit
     warnings, in which case manual construction is advisable.

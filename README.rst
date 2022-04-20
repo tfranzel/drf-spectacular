@@ -135,7 +135,7 @@ these static files as a separate optional package. Usage is as follows:
 Release management
 ^^^^^^^^^^^^^^^^^^
 
-`drf-spectacular` deliberately stays below version ``1.x.x`` to signal that every
+*drf-spectacular* deliberately stays below version *1.x.x* to signal that every
 new version may potentially break you. For production we strongly recommend pinning the
 version and inspecting a schema diff on update.
 
@@ -143,8 +143,8 @@ With that said, we aim to be extremely defensive w.r.t. breaking API changes. Ho
 we also acknowledge the fact that even slight schema changes may break your toolchain,
 as any existing bug may somehow also be used as a feature.
 
-We define version increments with the following semantics. `y-stream` increments may contain
-potentially breaking changes to both API and schema. `z-stream` increments will never break the
+We define version increments with the following semantics. *y-stream* increments may contain
+potentially breaking changes to both API and schema. *z-stream* increments will never break the
 API and may only contain schema changes that should have a low chance of breaking you.
 
 
@@ -158,8 +158,8 @@ Generate your schema with the CLI:
     $ ./manage.py spectacular --file schema.yml
     $ docker run -p 80:8080 -e SWAGGER_JSON=/schema.yml -v ${PWD}/schema.yml:/schema.yml swaggerapi/swagger-ui
 
-If you also want to validate your schema add the `--validate` flag. Or serve your schema directly
-from your API. We also provide convenience wrappers for `swagger-ui` or `redoc`.
+If you also want to validate your schema add the ``--validate`` flag. Or serve your schema directly
+from your API. We also provide convenience wrappers for ``swagger-ui`` or ``redoc``.
 
 .. code:: python
 
@@ -175,7 +175,7 @@ from your API. We also provide convenience wrappers for `swagger-ui` or `redoc`.
 Usage
 -----
 
-`drf-spectacular` works pretty well out of the box. You might also want to set some metadata for your API.
+*drf-spectacular* works pretty well out of the box. You might also want to set some metadata for your API.
 Just create a ``SPECTACULAR_SETTINGS`` dictionary in your ``settings.py`` and override the defaults.
 Have a look at the `available settings <https://drf-spectacular.readthedocs.io/en/latest/settings.html>`_.
 

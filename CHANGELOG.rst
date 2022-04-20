@@ -140,8 +140,8 @@ Breaking changes / important additions:
 - Add arbitrarily deep ListSerializer nesting `#539 <https://github.com/tfranzel/drf-spectacular/issues/539>`_
 - tighten serializer assumptions `#539 <https://github.com/tfranzel/drf-spectacular/issues/539>`_
 - fix whitespace stripping on methods
-- Rename `AutoSchema._map_field_validators()` → `.insert_field_validators()`. [Nick Pope]
-- Rename `AutoSchema._map_min_max()` → `.insert_min_max()`. [Nick Pope]
+- Rename ``AutoSchema._map_field_validators()`` → ``.insert_field_validators()``. [Nick Pope]
+- Rename ``AutoSchema._map_min_max()`` → ``.insert_min_max()``. [Nick Pope]
 - Fix detection of int64 from min/max values. [Nick Pope]
 - Fix zero handling in _map_min_max(). [Nick Pope]
 - Add support for introspection of nested validators. [Nick Pope]
@@ -157,7 +157,7 @@ Breaking changes / important additions:
 
 - Added vendor specification extensions
 - Completetly overhauled validator logic and bugfixes
-- Offline UI assets with optional ``drf-spectacular-sidecar`` package
+- Offline UI assets with optional *drf-spectacular-sidecar* package
 - several internal logic improvements and stricter assumptions
 
 
@@ -206,7 +206,7 @@ Breaking changes / important additions:
 - Severely improved path parameter detection for Django-style parameters, RE parameters, and custom converters
 - Significantly more defensive settings loading for safer project imports (less prone to import loops)
 - Improved type hint support for ``Enum`` and other native types
-- Explicit support for ``drf-nested-routers``
+- Explicit support for *drf-nested-routers*
 - A lot more small improvements
 
 
@@ -260,7 +260,7 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - This is a y-stream release because we added `Django checks <https://docs.djangoproject.com/en/3.2/topics/checks/>`_
-  which might emit warnings and subsequently break CI. This can be easily suppressed with Django's `SILENCED_SYSTEM_CHECKS`.
+  which might emit warnings and subsequently break CI. This can be easily suppressed with Django's ``SILENCED_SYSTEM_CHECKS``.
 - Several small fixes and features that should not have a big impact.
 
 
@@ -293,7 +293,7 @@ Breaking changes / important additions:
 
 Breaking changes / important additions:
 
-- Hotfix release that addresses a carelessly added import in `0.17.1`. In certain use-cases,
+- Hotfix release that addresses a carelessly added import in 0.17.1. In certain use-cases,
   this may have led to an import cycle inside DRF.
 
 
@@ -399,7 +399,7 @@ Breaking changes / important additions:
 0.14.0 (2021-03-09)
 -------------------
 
-- Fixed bug with `cached_property` non-Model objects not being traversed [Luke Plant]
+- Fixed bug with ``cached_property`` non-Model objects not being traversed [Luke Plant]
 - Fixed issue `#314 <https://github.com/tfranzel/drf-spectacular/issues/314>`_ - include information about view/serializer in warnings. [Luke Plant]
 - bugfix forward/reverse model traversal `#323 <https://github.com/tfranzel/drf-spectacular/issues/323>`_
 - fix nested serializer detection & smarter metadata extraction `#319 <https://github.com/tfranzel/drf-spectacular/issues/319>`_
@@ -432,13 +432,13 @@ Breaking changes / important additions:
 
 Breaking changes / important additions:
 
-- `drf-spectacular`'s custom ``DjangoFilterBackend`` removed after previous deprecation. Just use the original class again.
-- ``django-filter`` extension received a significant refactoring so your schema may have several changes, hopefully positive ones.
+- *drf-spectacular*'s custom ``DjangoFilterBackend`` removed after previous deprecation. Just use the original class again.
+- *django-filter* extension received a significant refactoring so your schema may have several changes, hopefully positive ones.
 - Added response headers feature
 - Extended ``@extend_schema(request=X)``, where ``X`` may now also be a ``Dict[content_type, serializer_etc]``
 - Updated Swagger UI version
 - Fixed several model traveral issues that may lead to PK changes in the schema
-- Added `drf-yasg's` ``swagger_fake_view``
+- Added *drf-yasg*'s ``swagger_fake_view``
 
 
 0.13.2 (2021-02-11)
@@ -491,7 +491,7 @@ Breaking changes / important additions:
 
 Breaking changes:
 
-- several small improvements that should not have a big impact. this is a y-stream release mainly due to schema changes that may occur with ``django-filter``.
+- several small improvements that should not have a big impact. this is a y-stream release mainly due to schema changes that may occur with *django-filter*.
 
 
 0.12.0 (2020-12-19)
@@ -516,7 +516,7 @@ Breaking changes:
 
 Breaking changes:
 
-- reverted back to ``0.10.0`` Swagger UI behavior as default. Users relying on stricter CSP should use ``SpectacularSwaggerSplitView``
+- reverted back to *0.10.0* Swagger UI behavior as default. Users relying on stricter CSP should use ``SpectacularSwaggerSplitView``
 - ``tokenAuth`` slightly changed to properly model correct ``Authorization`` header
 - a lot of minor improvements that may slightly alter the schema
 
@@ -629,7 +629,7 @@ Breaking changes:
 -------------------
 
 - Temporarily pin the swagger-ui unpkg URL to 3.30.0 [Mohamed Abdulaziz]
-- Add `deepLinking` parameter [p.alekseev]
+- Add ``deepLinking`` parameter [p.alekseev]
 - added preprocessing hooks for operation list modification/filtering `#93 <https://github.com/tfranzel/drf-spectacular/issues/93>`_
 - Document effective DRF settings [John Vandenberg]
 - add format query parameter `#110 <https://github.com/tfranzel/drf-spectacular/issues/110>`_
@@ -763,7 +763,7 @@ Breaking changes:
 - explicit override for non-list serializers on ViewSet list `#49 <https://github.com/tfranzel/drf-spectacular/issues/49>`_ 
 - improve model field mapping via DRF init logic 
 - bugfix enum substitution with additional field parameters. 
-- Fix getting default parameter for `MultipleChoiceField` [p.alekseev]
+- Fix getting default parameter for ``MultipleChoiceField`` [p.alekseev]
 - bugfix model path traversal via intermediate property 
 - try to be more graceful with unknown custom model fields. `#33 <https://github.com/tfranzel/drf-spectacular/issues/33>`_ 
 
@@ -846,7 +846,7 @@ Breaking changes:
 
 Breaking changes:
 
-- removed `to_schema()` from `OpenApiParameter`. Handled in ``AutoSchema`` now.
+- removed ``to_schema()`` from ``OpenApiParameter``. Handled in ``AutoSchema`` now.
 
 0.8.8 (2020-03-21)
 ------------------

@@ -6,7 +6,7 @@
 drf-spectacular
 ===============
 
-  `Sane and flexible OpenAPI 3 schema generation for Django REST framework.`
+*Sane and flexible OpenAPI 3 schema generation for Django REST framework.*
 
 Documentation is an integral part of API development and OpenAPI 3 is finally here
 to make that process a easier. By using `drf-spectacular <https://github.com/tfranzel/drf-spectacular>`_

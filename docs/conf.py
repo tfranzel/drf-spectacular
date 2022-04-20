@@ -17,7 +17,7 @@ from django.conf import settings
 
 settings.configure(USE_I18N=False, USE_L10N=False)
 
-sys.path.insert(0, os.path.abspath('../'))
+sys.path[:0] = [os.path.abspath('../'), os.path.abspath('./')]
 
 # -- Project information -----------------------------------------------------
 
@@ -33,6 +33,7 @@ needs_sphinx = '4.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'extensions',
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
 ]
@@ -44,6 +45,8 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+default_role = 'default-role-error'
 
 nitpicky = True
 
