@@ -59,8 +59,11 @@ field. Even though it is the correct way (according to the specification), it sa
 Setting ``'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': False`` will create a less accurate schema that tends to offend
 fewer generator targets.
 
-For more information please refer to the `official documentation <https://swagger.io/docs/specification/data-models/enums/>`_ and
-more specifically the `specification proposal <https://github.com/OAI/OpenAPI-Specification/blob/master/proposals/003_Clarify-Nullable.md#if-a-schema-specifies-nullable-true-and-enum-1-2-3-does-that-schema-allow-null-values-see-1900>`_.
+For more information please refer to the `official documentation`__ and more specifically the `specification
+proposal`__.
+
+__ https://swagger.io/docs/specification/data-models/enums/
+__ https://github.com/OAI/OpenAPI-Specification/blob/main/proposals/2019-10-31-Clarify-Nullable.md#user-content-if-a-schema-specifies-nullable-true-and-enum-1-2-3-does-that-schema-allow-null-values-see-1900
 
 Relevant settings:
 

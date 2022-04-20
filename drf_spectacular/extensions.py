@@ -23,7 +23,7 @@ class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthentic
     set a higher matching priority by setting the class attribute ``priority = 1`` or higher.
 
     ``get_security_definition()`` is expected to return a valid `OpenAPI security scheme object
-    <https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#security-scheme-object>`_
+    <https://spec.openapis.org/oas/v3.0.3#securitySchemeObject>`_
     """
     _registry: List['OpenApiAuthenticationExtension'] = []
 
@@ -51,7 +51,7 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
     can be accessed via ``self.target``.
 
     ``map_serializer()`` is expected to return a valid `OpenAPI schema object
-    <https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schema-object>`_.
+    <https://spec.openapis.org/oas/v3.0.3#schemaObject>`_.
     """
     _registry: List['OpenApiSerializerExtension'] = []
 
@@ -74,7 +74,7 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
     warnings, in which case manual construction is advisable.
 
     ``map_serializer_field()`` is expected to return a valid `OpenAPI schema object
-    <https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schema-object>`_.
+    <https://spec.openapis.org/oas/v3.0.3#schemaObject>`_.
     """
     _registry: List['OpenApiSerializerFieldExtension'] = []
 
@@ -119,7 +119,7 @@ class OpenApiFilterExtension(OpenApiGeneratorExtension['OpenApiFilterExtension']
 
     ``get_schema_operation_parameters()`` is expected to return either an empty list or a list
     of valid raw `OpenAPI parameter objects
-    <https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#parameterObject>`_.
+    <https://spec.openapis.org/oas/v3.0.3#parameterObject>`_.
     Using ``drf_spectacular.plumbing.build_parameter_type`` is recommended to generate
     the appropriate raw dict objects.
     """

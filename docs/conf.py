@@ -48,6 +48,20 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 default_role = 'default-role-error'
 
+linkcheck_allowed_redirects = {
+    r"^https://tox\.wiki/$": r"https://tox\.wiki/en/latest/$",
+    r"^https://drf-spectacular\.readthedocs\.io/$": r"https://drf-spectacular\.readthedocs\.io/en/latest/$",
+    r"^https://docs\.djangoproject\.com/en/stable/": r"^https://docs\.djangoproject\.com/en/\d+\.\d+/",
+    r"^https://github\.com/tfranzel/drf-spectacular/issues/\d+": "https://github\.com/tfranzel/drf-spectacular/pull/\d+",
+}
+
+linkcheck_ignore = [
+    # Special-use addresses and domain names. (RFC 6761/6890)
+    r"^https?://(?:127\.0\.0\.1|\[::1\])(?::\d+)?/",
+    r"^https?://(?:[^/\.]+\.)*example\.(?:com|net|org)(?::\d+)?/",
+    r"^https?://(?:[^/\.]+\.)*(?:example|invalid|localhost|test)(?::\d+)?/",
+]
+
 nitpicky = True
 
 nitpick_ignore_regex = [

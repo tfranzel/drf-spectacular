@@ -37,7 +37,7 @@ Features
     - Callback operations (experimental)
     - Included support for:
         - `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_
-        - `SimpleJWT <https://github.com/SimpleJWT/django-rest-framework-simplejwt>`_
+        - `SimpleJWT <https://github.com/jazzband/djangorestframework-simplejwt>`_
         - `DjangoOAuthToolkit <https://github.com/jazzband/django-oauth-toolkit>`_
         - `djangorestframework-jwt <https://github.com/jpadilla/django-rest-framework-jwt>`_ (tested fork `drf-jwt <https://github.com/Styria-Digital/django-rest-framework-jwt>`_)
         - `dj-rest-auth <https://github.com/iMerica/dj-rest-auth>`_ (maintained fork of `django-rest-auth <https://github.com/Tivix/django-rest-auth>`_)
@@ -48,7 +48,7 @@ Features
         - `djangorestframework-dataclasses <https://github.com/oxan/djangorestframework-dataclasses>`_
 
 
-For more information visit the `documentation <https://drf-spectacular.readthedocs.io>`_.
+For more information visit the `documentation <https://drf-spectacular.readthedocs.io/>`_.
 
 License
 -------
@@ -288,16 +288,16 @@ globally, and then simply run:
     $ tox
 
 .. _Django REST framework: https://www.django-rest-framework.org/
-.. _OpenAPI 3.0: https://github.com/OAI/OpenAPI-Specification
-.. _tox: http://tox.readthedocs.org/en/latest/
+.. _OpenAPI 3.0: https://spec.openapis.org/oas/v3.0.3
+.. _tox: https://tox.wiki/
 .. _drf-spectacular-sidecar: https://github.com/tfranzel/drf-spectacular-sidecar
 
 .. |build-status| image:: https://github.com/tfranzel/drf-spectacular/actions/workflows/ci.yml/badge.svg
    :target: https://github.com/tfranzel/drf-spectacular/actions/workflows/ci.yml
 .. |pypi-version| image:: https://img.shields.io/pypi/v/drf-spectacular.svg
-   :target: https://pypi.python.org/pypi/drf-spectacular
-.. |codecov| image:: https://codecov.io/gh/tfranzel/drf-spectacular/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/tfranzel/drf-spectacular
+   :target: https://pypi.org/project/drf-spectacular/
+.. |codecov| image:: https://app.codecov.io/gh/tfranzel/drf-spectacular/branch/master/graph/badge.svg
+   :target: https://app.codecov.io/gh/tfranzel/drf-spectacular
 .. |docs| image:: https://readthedocs.org/projects/drf-spectacular/badge/
    :target: https://drf-spectacular.readthedocs.io/
 .. |pypi-dl| image:: https://img.shields.io/pypi/dm/drf-spectacular

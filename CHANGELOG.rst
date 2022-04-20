@@ -788,7 +788,7 @@ Breaking changes:
 - Parse path parameter type hints from url. closes `#34 <https://github.com/tfranzel/drf-spectacular/issues/34>`_ 
 - Consolidate duplicate warnings/add error `#28 <https://github.com/tfranzel/drf-spectacular/issues/28>`_ 
 - Prevent warning for DRF format suffix param 
-- Improve ACCEPT header handling `#42 <https://github.com/tfranzel/drf-spectacular/issues/42>`_ 
+- Improve ACCEPT header handling `#42 <https://github.com/tfranzel/drf-spectacular/issues/42>`_
 
 Breaking changes:
 
@@ -868,7 +868,7 @@ Breaking changes:
 - Warn on duplicate serializer names. 
 - Added explicit exclude flag for operation. 
 - Bugfix: PrimaryKeyRelatedField(read_only=True) failing to find type.
-- Change operation sorting to alphanumeric with option (`#6 <https://github.com/tfranzel/drf-spectacular/issues/6>`_) 
+- Change operation sorting to alphanumeric with option (`#6 <https://github.com/tfranzel/drf-spectacular/issues/6>`_)
 - Robustify serializer field support for ``@extend_schema_field``.
 - Enable field serializers support. [p.g.alekseev]
 - Adding custom tags support [p.g.alekseev]
