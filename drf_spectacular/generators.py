@@ -7,7 +7,7 @@ from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignor
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 from rest_framework.settings import api_settings
 
-from drf_spectacular.drainage import add_trace_message, reset_generator_stats
+from drf_spectacular.drainage import add_trace_message, get_override, reset_generator_stats
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
@@ -203,6 +203,12 @@ class SchemaGenerator(BaseSchemaGenerator):
             path_prefix = '^' + path_prefix  # make sure regex only matches from the start
 
         for path, path_regex, method, view in endpoints:
+            # emit queued up warnings/error that happened prior to generation (decoration)
+            for w in get_override(view, 'warnings', []):
+                warn(w)
+            for e in get_override(view, 'errors', []):
+                error(e)
+
             view.request = spectacular_settings.GET_MOCK_REQUEST(method, path, view, input_request)
 
             if not (public or self.has_view_permissions(path, method, view)):

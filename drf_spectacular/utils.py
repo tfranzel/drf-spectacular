@@ -431,7 +431,8 @@ def extend_schema(
             if operation_id is not None or operation is not None:
                 error(
                     f'using @extend_schema on viewset class {f.__name__} with parameters '
-                    f'operation_id or operation will most likely result in a broken schema.'
+                    f'operation_id or operation will most likely result in a broken schema.',
+                    delayed=f,
                 )
             # reorder schema class MRO so that view method annotation takes precedence
             # over view class annotation. only relevant if there is a method annotation
@@ -559,7 +560,8 @@ def extend_schema_view(**kwargs) -> Callable[[F], F]:
             if method_name not in available_view_methods:
                 warn(
                     f'@extend_schema_view argument "{method_name}" was not found on view '
-                    f'{view.__name__}. method override for "{method_name}" will be ignored.'
+                    f'{view.__name__}. method override for "{method_name}" will be ignored.',
+                    delayed=view
                 )
                 continue
 

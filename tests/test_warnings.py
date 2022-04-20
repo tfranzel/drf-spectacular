@@ -327,6 +327,8 @@ def test_polymorphic_proxy_serializer_misconfig(capsys, resource_type_field_name
 
 
 def test_warning_operation_id_on_extend_schema_view(capsys):
+    from drf_spectacular.drainage import GENERATOR_STATS
+
     @extend_schema(operation_id='Invalid', responses=int)
     class XAPIView(APIView):
         def get(self, request):
@@ -334,7 +336,12 @@ def test_warning_operation_id_on_extend_schema_view(capsys):
 
     generate_schema('x', view=XAPIView)
     stderr = capsys.readouterr().err
+    # check basic emittance of error message to stdout
     assert 'using @extend_schema on viewset class XAPIView with parameters' in stderr
+    # check that delayed error message was persisted on view class
+    assert getattr(XAPIView, '_spectacular_annotation', {}).get('errors')
+    # check that msg survived pre-generation warning/error cache reset
+    assert 'using @extend_schema on viewset' in list(GENERATOR_STATS._error_cache.keys())[0]
 
 
 def test_warning_request_body_not_resolvable(capsys):
