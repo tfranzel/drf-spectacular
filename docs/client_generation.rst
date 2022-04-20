@@ -1,7 +1,7 @@
 .. _client_generation:
 
 Client generation
-===============================
+=================
 
 *drf-spectacular* aims to generate the most accurate schema possible under the constraints of OpenAPI 3.0.3.
 Unfortunately, sometimes this goal conflicts with generating a good and functional client.
@@ -49,8 +49,6 @@ Relevant settings:
     # Create separate components for PATCH endpoints (without required list)
     'COMPONENT_SPLIT_PATCH': True,
 
-
-
 Enum issues
 -----------
 
@@ -71,7 +69,6 @@ Relevant settings:
 
     # Adds "blank" and "null" enum choices where appropriate. disable on client generation issues
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': True,
-
 
 Type issues
 -----------

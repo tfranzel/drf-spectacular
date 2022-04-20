@@ -14,7 +14,6 @@ __ https://pypi.org/project/djangorestframework/
   `drf-spectacular-sidecar <https://github.com/tfranzel/drf-spectacular-sidecar>`_ package. See
   :ref:`installation instructions <self-contained-ui-installation>` for further details.
 
-
 Decorators
 ----------
 

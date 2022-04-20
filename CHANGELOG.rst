@@ -32,7 +32,6 @@ Breaking changes / important additions:
 - added callback functionality (EXPERIMENTAL and subject to change due to pending issue)
 - Many thanks to all the contributors!
 
-
 0.21.2 (2022-02-01)
 -------------------
 
@@ -44,7 +43,6 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - Some minor bugfixes and feature additions. Schemas using AcceptHeaderVersioning contain a small change.
-
 
 0.21.1 (2021-12-20)
 -------------------
@@ -63,7 +61,6 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - Some minor bugfixes and small feature additions. No large schema changes are expected
-
 
 0.21.0 (2021-11-10)
 -------------------
@@ -95,7 +92,6 @@ Breaking changes / important additions:
 - Several other small fixes and additional settings for corner cases. This is mainly a y-steam release due to the potential impact
   on the Swagger UI and ``minLength`` changes.
 
-
 0.20.2 (2021-10-15)
 -------------------
 
@@ -118,7 +114,6 @@ Breaking changes / important additions:
   annotation isolation. There should be no more side effects from arbitrarily mixing and matching the decorators.
 - Improved handling of completely empty serializers with COMPONENT_SPLIT_REQUEST.
 
-
 0.20.1 (2021-10-03)
 -------------------
 
@@ -129,7 +124,6 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - Hotfix release due to regression in the Redoc template
-
 
 0.20.0 (2021-10-01)
 -------------------
@@ -159,7 +153,6 @@ Breaking changes / important additions:
 - Completetly overhauled validator logic and bugfixes
 - Offline UI assets with optional *drf-spectacular-sidecar* package
 - several internal logic improvements and stricter assumptions
-
 
 0.19.0 (2021-09-21)
 -------------------
@@ -209,7 +202,6 @@ Breaking changes / important additions:
 - Explicit support for *drf-nested-routers*
 - A lot more small improvements
 
-
 0.18.2 (2021-09-04)
 -------------------
 
@@ -221,7 +213,6 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - Primarily ironing out another issue with the Django check and some minor improvements
-
 
 0.18.1 (2021-08-31)
 -------------------
@@ -238,7 +229,6 @@ Breaking changes / important additions:
 - This is a hotfix release as the newly introduced Django check was executing the wrong code path.
 - Check also moved into the ``--deploy`` section to prevent double execution. This can be disabled with ``ENABLE_DJANGO_DEPLOY_CHECK``
 - Facitities added to utilize SwaggerUI Topbar for versioning.
-
 
 0.18.0 (2021-08-25)
 -------------------
@@ -263,7 +253,6 @@ Breaking changes / important additions:
   which might emit warnings and subsequently break CI. This can be easily suppressed with Django's ``SILENCED_SYSTEM_CHECKS``.
 - Several small fixes and features that should not have a big impact.
 
-
 0.17.3 (2021-07-26)
 -------------------
 
@@ -283,7 +272,6 @@ Breaking changes / important additions:
 
 - Just a few bugfixes and some small features with minimal impact on existing schema
 
-
 0.17.2 (2021-06-15)
 -------------------
 
@@ -295,7 +283,6 @@ Breaking changes / important additions:
 
 - Hotfix release that addresses a carelessly added import in 0.17.1. In certain use-cases,
   this may have led to an import cycle inside DRF.
-
 
 0.17.1 (2021-06-12)
 -------------------
@@ -313,7 +300,6 @@ Breaking changes / important additions:
 
 - This release is mainly for fixing incomplete type hints which mypy will potentially complain about.
 - A few small fixes that should either have no or a very small impact in schemas.
-
 
 0.17.0 (2021-06-01)
 -------------------
@@ -336,7 +322,6 @@ Breaking changes / important additions:
 - Quite a few small improvements. The biggest change is the inversion of the component discard logic.
   This should have no negative impact, but to be on the safe side we'll opt for a y-stream release.
 - The package is now marked as being typed, which should get picked up natively by mypy
-
 
 0.16.0 (2021-05-10)
 -------------------
@@ -369,7 +354,6 @@ Breaking changes / important additions:
 
 - minor release to fix newly introduced default prefix estimation.
 
-
 0.15.0 (2021-04-03)
 -------------------
 
@@ -394,7 +378,6 @@ Breaking changes / important additions:
 - explicitly set responses via ``@extend_schema`` will not get paginated/listed anymore for non ``2XX`` status codes.
 - New default ``None`` for ``SCHEMA_PATH_PREFIX`` will attempt to determine a reasonable prefix. Previous behavior is restored with ``''``
 - Added ``OpenApiResponses`` to gain access to response object descriptions.
-
 
 0.14.0 (2021-03-09)
 -------------------
@@ -440,7 +423,6 @@ Breaking changes / important additions:
 - Fixed several model traveral issues that may lead to PK changes in the schema
 - Added *drf-yasg*'s ``swagger_fake_view``
 
-
 0.13.2 (2021-02-11)
 -------------------
 
@@ -460,7 +442,6 @@ Breaking changes / important additions:
 - fix readonly related fields generating incorrect schema `#274 <https://github.com/tfranzel/drf-spectacular/issues/274>`_ [diesieben07]
 - bugfix save parameter removal `#212 <https://github.com/tfranzel/drf-spectacular/issues/212>`_
 
-
 0.13.1 (2021-01-21)
 -------------------
 
@@ -472,7 +453,6 @@ Breaking changes / important additions:
 - bugfix enum substitution for enumed arrays (multiple choice)
 - Update README.rst [Chad Ramos]
 - Create new mock request on each operation [Matthias Erll]
-
 
 0.13.0 (2021-01-13)
 -------------------
@@ -492,7 +472,6 @@ Breaking changes / important additions:
 Breaking changes:
 
 - several small improvements that should not have a big impact. this is a y-stream release mainly due to schema changes that may occur with *django-filter*.
-
 
 0.12.0 (2020-12-19)
 -------------------
@@ -794,7 +773,6 @@ Breaking changes:
 
 - all extension base classes moved to ``drf_spectacular.extensions``
 
-
 0.9.2 (2020-04-27)
 ------------------
 
@@ -885,14 +863,15 @@ Breaking changes:
 
 0.8.5 (2020-03-08)
 ------------------
+
 - Generalize ``PolymorphicResponse`` into ``PolymorphicProxySerializer``.
 - Type dict is resolved as object. 
 - Simplify hint resolution. 
 - Allow ``@extend_schema_field`` for custom serializer fields.
 
-
 0.8.4 (2020-03-06)
 ------------------
+
 - ``@extend_schema_field`` accepts Serializers and OpenApiTypes
 - Generalize query parameter. 
 - Bugfix serializer init.
@@ -901,21 +880,20 @@ Breaking changes:
 - Helper scripts for swagger and generator. 
 - Fix license. 
 
-
 0.8.3 (2020-03-02)
 ------------------
+
 - Fix parameter type resolution. 
 - Remove empty parameters. 
 - Improved assert message. 
 
-
 0.8.2 (2020-03-02)
 ------------------
+
 - Working release. 
 - Bugfix wrong call & remove yaml aliases. 
 
-
 0.8.1 (2020-03-01)
 ------------------
-- Initial published version. 
 
+- Initial published version.
