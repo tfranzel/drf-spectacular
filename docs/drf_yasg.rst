@@ -154,8 +154,7 @@ Parameter Location
 - :py:data:`~drf_yasg.openapi.IN_QUERY` is called :py:attr:`~drf_spectacular.utils.OpenApiParameter.QUERY`
 - :py:data:`~drf_yasg.openapi.IN_HEADER` is called :py:attr:`~drf_spectacular.utils.OpenApiParameter.HEADER`
 - :py:data:`~drf_yasg.openapi.IN_BODY` and :py:data:`~drf_yasg.openapi.IN_FORM` have no direct equivalent.
-  Instead you can use ``@extend_schema(request={"<media-type>": ...})`` or
-  ``@extend_schema(request={("<status-code>", "<media-type"): ...})``.
+  Instead you can use ``@extend_schema(request={"<media-type>": ...})``.
 - :py:attr:`~drf_spectacular.utils.OpenApiParameter.COOKIE` is also available.
 
 Docstring Parsing
