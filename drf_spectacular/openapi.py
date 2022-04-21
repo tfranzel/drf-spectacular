@@ -157,10 +157,22 @@ class AutoSchema(ViewInspector):
 
                 if is_basic_type(parameter.type):
                     schema = build_basic_type(parameter.type)
-                elif is_serializer(parameter.type):
+                elif is_basic_serializer(parameter.type):
                     schema = self.resolve_serializer(parameter.type, 'request').ref
-                else:
+                elif isinstance(parameter.type, dict):
                     schema = parameter.type
+                else:
+                    warn(f'unsupported type for parameter "{parameter.name}". Skipping.')
+                    continue
+
+                if parameter.many:
+                    if is_basic_type(parameter.type):
+                        schema = build_array_type(schema)
+                    else:
+                        warn(
+                            f'parameter "{parameter.name}" has many=True and is not a basic type. '
+                            f'many=True only makes sense for basic types. Ignoring.'
+                        )
 
                 if parameter.exclude:
                     result[parameter.name, parameter.location] = None

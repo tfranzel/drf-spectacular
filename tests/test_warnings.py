@@ -479,3 +479,24 @@ def test_invalid_field_names(capsys):
 
     stderr = capsys.readouterr().err
     assert 'illegal characters' in stderr
+
+
+@pytest.mark.parametrize('type_arg,many', [
+    (SimpleSerializer, True),
+    (SimpleSerializer(many=True), None),
+    (serializers.ListSerializer(child=serializers.CharField()), None),
+    (serializers.ListField(child=serializers.CharField()), None),
+])
+def test_invalid_parameter_types(capsys, type_arg, many):
+    @extend_schema(
+        request=OpenApiTypes.ANY,
+        responses=OpenApiTypes.ANY,
+        parameters=[OpenApiParameter(name='test', type=type_arg, many=many)]
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('/x/', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'parameter "test"' in stderr
