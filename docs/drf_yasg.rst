@@ -66,7 +66,7 @@ Helper Classes
   - ``schema`` argument is called ``response``
   - Order of arguments differs, so use keyword arguments.
 
-- :py:class:`~drf_spectacular.utils.OpenApiExample` is available for providing ``examples`` to 
+- :py:class:`~drf_spectacular.utils.OpenApiExample` is available for providing ``examples`` to
   :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>`.
 
 - :py:class:`~drf_yasg.openapi.Schema` is not required and can be eliminated. Use a plain :py:class:`dict` instead.
