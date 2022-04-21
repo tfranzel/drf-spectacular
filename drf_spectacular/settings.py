@@ -158,7 +158,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'ENABLE_DJANGO_DEPLOY_CHECK': True,
 
     # General schema metadata. Refer to spec for valid inputs
-    # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
+    # https://spec.openapis.org/oas/v3.0.3#openapi-object
     'TITLE': '',
     'DESCRIPTION': '',
     'TOS': None,
@@ -188,7 +188,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'EXTENSIONS_ROOT': {},
 
     # Oauth2 related settings. used for example by django-oauth2-toolkit.
-    # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#oauth-flows-object
+    # https://spec.openapis.org/oas/v3.0.3#oauthFlowsObject
     'OAUTH2_FLOWS': [],
     'OAUTH2_AUTHORIZATION_URL': None,
     'OAUTH2_TOKEN_URL': None,

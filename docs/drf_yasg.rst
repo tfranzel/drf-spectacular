@@ -1,19 +1,18 @@
-From `drf-yasg` to OpenAPI 3
+From *drf-yasg* to OpenAPI 3
 ============================
 
 `drf-yasg`__ is an excellent library and the most popular choice for generating OpenAPI 2.0 (formerly known as Swagger
 2.0) schemas with `Django REST Framework`__. Unfortunately, it currently does not provide support for OpenAPI 3.x.
-Migration from ``drf-yasg`` to ``drf-spectacular`` requires some modifications, the complexity of which depends on what
+Migration from *drf-yasg* to *drf-spectacular* requires some modifications, the complexity of which depends on what
 features are being used.
 
 __ https://pypi.org/project/drf-yasg
 __ https://pypi.org/project/djangorestframework/
 
-.. note:: In contrast to `drf-yasg`, we don't package Redoc & Swagger UI but serve them via hyperliked CDNs instead.
+.. note:: In contrast to *drf-yasg*, we don't package Redoc & Swagger UI but serve them via hyperlinked CDNs instead.
   If you want or need to serve those files yourself, you can do that with the optional
-  `drf-spectacular-sidecar <https://github.com/tfranzel/drf-spectacular-sidecar>`_. See
+  `drf-spectacular-sidecar <https://github.com/tfranzel/drf-spectacular-sidecar>`_ package. See
   :ref:`installation instructions <self-contained-ui-installation>` for further details.
-
 
 Decorators
 ----------
@@ -29,7 +28,7 @@ Decorators
 
     - Use ``None`` instead of :py:class:`drf_yasg.utils.no_body`
 
-  - ``method`` argument doesn't exist, use ``methods`` instead (also supported by ``drf-yasg``)
+  - ``method`` argument doesn't exist, use ``methods`` instead (also supported by *drf-yasg*)
   - ``auto_schema`` has no equivalent.
   - ``extra_overrides`` has no equivalent.
   - ``field_inspectors`` has no equivalent.
@@ -48,7 +47,7 @@ Decorators
 - Instead of using :py:func:`@method_decorator <django.utils.decorators.method_decorator>`, use
   :py:func:`@extend_schema_view <drf_spectacular.utils.extend_schema_view>`.
 
-- Instead of using `swagger_schema_field`, use
+- Instead of using ``swagger_schema_field``, use
   :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>` or
   :py:func:`@extend_schema_serializer <drf_spectacular.utils.extend_schema_serializer>`.
 
@@ -67,7 +66,7 @@ Helper Classes
   - ``schema`` argument is called ``response``
   - Order of arguments differs, so use keyword arguments.
 
-- :py:class:`~drf_spectacular.utils.OpenApiExample` is available for providing ``examples`` to 
+- :py:class:`~drf_spectacular.utils.OpenApiExample` is available for providing ``examples`` to
   :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>`.
 
 - :py:class:`~drf_yasg.openapi.Schema` is not required and can be eliminated. Use a plain :py:class:`dict` instead.
@@ -154,17 +153,16 @@ Parameter Location
 - :py:data:`~drf_yasg.openapi.IN_QUERY` is called :py:attr:`~drf_spectacular.utils.OpenApiParameter.QUERY`
 - :py:data:`~drf_yasg.openapi.IN_HEADER` is called :py:attr:`~drf_spectacular.utils.OpenApiParameter.HEADER`
 - :py:data:`~drf_yasg.openapi.IN_BODY` and :py:data:`~drf_yasg.openapi.IN_FORM` have no direct equivalent.
-  Instead you can use ``@extend_schema(request={"<media-type>": ...})`` or
-  ``@extend_schema(request={("<status-code>", "<media-type"): ...})``.
+  Instead you can use ``@extend_schema(request={"<media-type>": ...})``.
 - :py:attr:`~drf_spectacular.utils.OpenApiParameter.COOKIE` is also available.
 
 Docstring Parsing
 -----------------
 
-``drf-yasg`` has some special handling for docstrings that is not supported by ``drf-spectacular``.
+*drf-yasg* has some special handling for docstrings that is not supported by *drf-spectacular*.
 
 It attempts to split the first line from the rest of the docstring to use as the operation summary, and the remainder
-is used as the operation description. ``drf-spectacular`` uses the entire docstring as the description. Use the
+is used as the operation description. *drf-spectacular* uses the entire docstring as the description. Use the
 ``summary`` and ``description`` arguments of :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` instead.
 Optionally, the docstring can still be used to populate the operation description.
 
@@ -196,7 +194,7 @@ Optionally, the docstring can still be used to populate the operation descriptio
             """Return a list of all usernames in the system."""
             ...
 
-In addition, ``drf-yasg`` also supports `named sections`__, but these are not supported by ``drf-spectacular``. Again,
+In addition, *drf-yasg* also supports `named sections`__, but these are not supported by *drf-spectacular*. Again,
 use the ``summary`` and ``description`` arguments of :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>`
 instead:
 
@@ -236,9 +234,9 @@ __ https://www.django-rest-framework.org/coreapi/schemas/#schemas-as-documentati
 Authentication
 --------------
 
-In ``drf-yasg`` it was necessary to :doc:`manually describe authentication schemes <drf-yasg:security>`.
+In *drf-yasg* it was necessary to :doc:`manually describe authentication schemes <drf-yasg:security>`.
 
-In ``drf-spectacular`` there is support for auto-generating the security definitions for a number of authentication
+In *drf-spectacular* there is support for auto-generating the security definitions for a number of authentication
 classes built in to DRF as well as other popular third-party packages.
 :py:class:`~drf_spectacular.extensions.OpenApiAuthenticationExtension` is available to help tie in custom
 authentication clasees -- see the :ref:`customization guide <customization_authentication_extension>`.
@@ -246,7 +244,7 @@ authentication clasees -- see the :ref:`customization guide <customization_authe
 Compatibility
 -------------
 
-For compatibility, the following features of ``drf-yasg`` have been implemented:
+For compatibility, the following features of *drf-yasg* have been implemented:
 
 - ``ref_name`` on ``Serializer`` ``Meta`` classes is supported (excluding inlining with ``ref_name=None``)
 

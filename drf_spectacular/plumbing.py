@@ -1058,7 +1058,7 @@ def sanitize_result_object(result):
 
 
 def sanitize_specification_extensions(extensions):
-    # https://spec.openapis.org/oas/v3.0.3#specification-extensions
+    # https://spec.openapis.org/oas/v3.0.3#specificationExtensions
     output = {}
     for key, value in extensions.items():
         if not re.match(r'^x-', key):

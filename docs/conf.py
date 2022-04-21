@@ -17,7 +17,7 @@ from django.conf import settings
 
 settings.configure(USE_I18N=False, USE_L10N=False)
 
-sys.path.insert(0, os.path.abspath('../'))
+sys.path[:0] = [os.path.abspath('../'), os.path.abspath('./')]
 
 # -- Project information -----------------------------------------------------
 
@@ -33,6 +33,7 @@ needs_sphinx = '4.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'extensions',
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
 ]
@@ -44,6 +45,22 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+default_role = 'default-role-error'
+
+linkcheck_allowed_redirects = {
+    r"^https://tox\.wiki/$": r"https://tox\.wiki/en/latest/$",
+    r"^https://drf-spectacular\.readthedocs\.io/$": r"https://drf-spectacular\.readthedocs\.io/en/latest/$",
+    r"^https://docs\.djangoproject\.com/en/stable/": r"^https://docs\.djangoproject\.com/en/\d+\.\d+/",
+    r"^https://github\.com/tfranzel/drf-spectacular/issues/\d+": "https://github\.com/tfranzel/drf-spectacular/pull/\d+",
+}
+
+linkcheck_ignore = [
+    # Special-use addresses and domain names. (RFC 6761/6890)
+    r"^https?://(?:127\.0\.0\.1|\[::1\])(?::\d+)?/",
+    r"^https?://(?:[^/\.]+\.)*example\.(?:com|net|org)(?::\d+)?/",
+    r"^https?://(?:[^/\.]+\.)*(?:example|invalid|localhost|test)(?::\d+)?/",
+]
 
 nitpicky = True
 

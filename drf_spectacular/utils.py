@@ -44,7 +44,7 @@ class PolymorphicProxySerializer(Serializer):
             return Response(...)
 
     **Beware** that this is not a real serializer and it will raise an AssertionError
-    if used in that way. It **cannot** be used in views as `serializer_class`
+    if used in that way. It **cannot** be used in views as ``serializer_class``
     or as field in an actual serializer. It is solely meant for annotation purposes.
 
     Also make sure that each sub-serializer has a field named after the value of
@@ -61,7 +61,7 @@ class PolymorphicProxySerializer(Serializer):
     It is **strongly** recommended to pass the ``Serializers`` as **list**,
     and by that let *drf-spectacular* retrieve the field and handle the mapping
     automatically. In special circumstances, the field may not available when
-    drf-spectacular processes the serializer. In those cases you can explicitly state
+    *drf-spectacular* processes the serializer. In those cases you can explicitly state
     the mapping with ``{'legal': LegalPersonSerializer, ...}``, but it is then your
     responsibility to have a valid mapping.
     """
