@@ -45,7 +45,7 @@ discovered in the introspection.
             # your code
 
 .. note:: ``responses`` can be detailed further by providing a dictionary instead. This could be for example
-  ``{201: YourRequestSerializer, ...}`` or ``{(200, 'application/pdf'): OpenApiTypes.BINARY, ...}``.
+  ``{201: YourResponseSerializer, ...}`` or ``{(200, 'application/pdf'): OpenApiTypes.BINARY, ...}``.
 
 .. note:: For simple responses, you might not go through the hassle of writing an explicit serializer class.
   In those cases, you can simply specify the request/response with a call to
