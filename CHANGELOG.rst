@@ -1,6 +1,29 @@
 Changelog
 =========
 
+0.22.1 (2022-04-25)
+-------------------
+
+- Update customization.rst [Lane Zhang]
+- Remove invalid example in drf-yasg migration documentation. [Nick Pope]
+- Avoid using default role in documentation. [Nick Pope]
+- Small documentation fixes. [Nick Pope]
+- improve parameter many handling and warnings `#703 <https://github.com/tfranzel/drf-spectacular/issues/703>`_
+- bugfix unconsidered warnings/errors for return code `#706 <https://github.com/tfranzel/drf-spectacular/issues/706>`_ `#702 <https://github.com/tfranzel/drf-spectacular/issues/702>`_
+- Include a list of applications urls as a parameter for SERVE_URLCONF  `#709 <https://github.com/tfranzel/drf-spectacular/issues/709>`_ [anoirak]
+- bugfix/improve analyze_named_regex_pattern(path) `#697 <https://github.com/tfranzel/drf-spectacular/issues/697>`_ [Jon Iturmendi]
+- django-filter: added type extraction fallback for ChoiceFields `#690 <https://github.com/tfranzel/drf-spectacular/issues/690>`_
+- fix test, more precise naming, also wrap validation `#693 <https://github.com/tfranzel/drf-spectacular/issues/693>`_
+- bugfix PolymorphicProxySerializer many handling and add manual mode `#692 <https://github.com/tfranzel/drf-spectacular/issues/692>`_
+- Use Django management CommandError to eliminate the traceback on error [Brandon W Maister]
+- add ``swagger_fake_view`` FAQ entry `#321 <https://github.com/tfranzel/drf-spectacular/issues/321>`_
+- Fix `#688 <https://github.com/tfranzel/drf-spectacular/issues/688>`_ - avoid a TypeError when ChoiceFilter choices are a callable [Glenn Matthews]
+- map explicit float hints/decoration to double `#687 <https://github.com/tfranzel/drf-spectacular/issues/687>`_ `#674 <https://github.com/tfranzel/drf-spectacular/issues/674>`_
+
+Breaking changes / important additions:
+
+- Small release consisting of minor bug fixes, improved ``PolymorphicProxySerializer``, cleaned up documentation, and some improvements to **django-filter**
+
 0.22.0 (2022-03-21)
 -------------------
 
