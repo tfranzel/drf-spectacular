@@ -37,8 +37,14 @@ urlpatterns_v2 = [
 urlpatterns_v2.append(
     path('api/v2/schema/', SpectacularAPIView.as_view(urlconf=urlpatterns_v2), name='schema'),
 )
+urlpatterns_str_import = [
+    path('api/schema-str1/', SpectacularAPIView.as_view(urlconf=['tests.test_view']), name='schema_str1'),
+    path('api/schema-str2/', SpectacularAPIView.as_view(urlconf='tests.test_view'), name='schema_str2'),
+    path('api/schema-err1/', SpectacularAPIView.as_view(urlconf=['tests.error']), name='schema_err1'),
+    path('api/schema-err2/', SpectacularAPIView.as_view(urlconf='tests.error'), name='schema_err2'),
+]
 
-urlpatterns = urlpatterns_v1 + urlpatterns_v2
+urlpatterns = urlpatterns_v1 + urlpatterns_v2 + urlpatterns_str_import
 
 
 @pytest.mark.urls(__name__)
@@ -143,3 +149,19 @@ def test_spectacular_ui_param_passthrough(no_warnings):
     response = APIClient().get('/api/v2/schema/swagger-ui/?foo=bar&lang=jp&version=v2')
     assert response.status_code == 200
     assert b'url: "/api/v2/schema/?lang\\u003Djp\\u0026version\\u003Dv2"' in response.content
+
+
+@pytest.mark.parametrize('url', ['/api/schema-str1/', '/api/schema-str2/'])
+@pytest.mark.urls(__name__)
+def test_spectacular_urlconf_module_list_import(no_warnings, url):
+    response = APIClient().get(url)
+    assert response.status_code == 200
+    assert b'/api/v1/pi/' in response.content
+    assert b'/api/v2/pi/' in response.content
+
+
+@pytest.mark.parametrize('url', ['/api/schema-err1/', '/api/schema-err2/'])
+@pytest.mark.urls(__name__)
+def test_spectacular_urlconf_module_list_import_error(no_warnings, url):
+    with pytest.raises(ModuleNotFoundError):
+        APIClient().get(url)

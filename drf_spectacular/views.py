@@ -4,7 +4,6 @@ from importlib import import_module
 from typing import Any, Dict
 
 from django.conf import settings
-from django.urls import URLPattern
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -60,19 +59,19 @@ class SpectacularAPIView(APIView):
 
     @extend_schema(**SCHEMA_KWARGS)
     def get(self, request, *args, **kwargs):
+        # special handling of custom urlconf parameter
         if isinstance(self.urlconf, list) or isinstance(self.urlconf, tuple):
             ModuleWrapper = namedtuple('ModuleWrapper', ['urlpatterns'])
-            if isinstance(self.urlconf[1], URLPattern):
-                self.urlconf = ModuleWrapper(tuple(self.urlconf))
-            else:
+            if all(isinstance(i, str) for i in self.urlconf):
+                # list of import string for urlconf
                 patterns = []
                 for item in self.urlconf:
-                    try:
-                        url = import_module(item)
-                        patterns += url.urlpatterns
-                    except ModuleNotFoundError:
-                        raise ModuleNotFoundError(f'Could not import {item}')
+                    url = import_module(item)
+                    patterns += url.urlpatterns
                 self.urlconf = ModuleWrapper(tuple(patterns))
+            else:
+                # explicitly resolved urlconf
+                self.urlconf = ModuleWrapper(tuple(self.urlconf))
 
         with patched_settings(self.custom_settings):
             if settings.USE_I18N and request.GET.get('lang'):
