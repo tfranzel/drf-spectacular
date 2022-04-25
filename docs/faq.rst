@@ -1,25 +1,26 @@
 FAQ
 ===
 
-I use library/app `XXX` and the generated schema is wrong or broken
+I use library/app *XXX* and the generated schema is wrong or broken
 -------------------------------------------------------------------
+
 Sometimes DRF libraries do not cooperate well with the introspection mechanics.
 Check the :ref:`blueprints` for already available fixes. If there aren't any,
 learn how to do easy :ref:`customization`. Feel free to contribute back missing fixes.
 
-If you think this is a bug in `drf-spectacular`, open a
+If you think this is a bug in *drf-spectacular*, open a
 `issue <https://github.com/tfranzel/drf-spectacular/issues>`_.
-
 
 I cannot use :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` on library code
 --------------------------------------------------------------------------------------------
-You can easily adapt introspection for libraries/apps with the ``Extension`` mechanism.
-``Extensions`` provide an easy way to attach schema information to code that you cannot
-modify otherwise. Have a look at :ref:`customization` on how to use ``Extensions``
 
+You can easily adapt introspection for libraries/apps with the *Extension* mechanism.
+*Extensions* provide an easy way to attach schema information to code that you cannot
+modify otherwise. Have a look at :ref:`customization` on how to use *Extensions*
 
 I get an empty schema or endpoints are missing
 ----------------------------------------------
+
 This is usually due versioning (or more rarely due to permisssions).
 
 In case you use versioning on all endpoints, that might be the intended output.
@@ -35,25 +36,25 @@ This will contain unversioned endpoints together with the endpoints for the the 
 For the schema views you can either set a versioning class (implicit versioning via the request) or
 explicitly override the version with ``SpectacularAPIView.as_view(api_version='YOUR_VERSION')``.
 
-
 I expected a different schema
 -----------------------------
+
 Sometimes views declare one thing (via ``serializer_class`` and ``queryset``) and do
 a entirely different thing. Usually this is attributed to making a library code flexible
 under varying situations. In those cases it is best to override what the introspection
 decuded and state explicitly what is to be expected.
 Work through the steps in :ref:`customization` to adapt your schema.
 
-
 I get duplicated operations with a ``{format}``-suffix
 ------------------------------------------------------
+
 Your app likely uses DRF's ``format_suffix_patterns``. If those operations are
 undesireable in your schema, you can simply exclude them with an already provided
 :ref:`preprocessing hook <customization_preprocessing_hooks>`.
 
-
 I get a lot of warnings
 -----------------------
+
 The warnings are emitted to inform you of discovered schema issues. Some
 usage patterns like ``@api_view`` or ``APIView`` provide very
 little discoverable information on your API. In those cases you can
@@ -61,9 +62,9 @@ easily augment those endpoints and serializers with additional information.
 Look at :ref:`customization` options to fill those gaps and make the warnings
 disappear.
 
-
 I get warnings regarding my ``Enum`` or  my ``Enum`` names have a weird suffix
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
 This is because the ``Enum`` postprocessing hook is activated by default, which
 attempts to find a name for a set of enum choices.
 
@@ -105,7 +106,6 @@ For example:
 If you have multiple semantically distinct enums that happen to have the same
 set of values, and you want different names for them, this mechanism won't work.
 
-
 My endpoints use different serializers depending on the situation
 -----------------------------------------------------------------
 
@@ -128,16 +128,15 @@ like so:
         def retrieve(self, request, *args, **kwargs)
             pass
 
-
 My authentication method is not supported
 -----------------------------------------
+
 You can easily specify a custom authentication with
 :py:class:`OpenApiAuthenticationExtension <drf_spectacular.extensions.OpenApiAuthenticationExtension>`.
-Have a look at :ref:`customization` on how to use ``Extensions``
-
+Have a look at :ref:`customization` on how to use *Extensions*
 
 How can I i18n/internationalize my schema and UI?
-----------------------------------------------------
+-------------------------------------------------
 
 You can use the Django internationalization as you would normally do. The workflow is as one
 would expect: ``USE_I18N=True``, settings the languages, ``makemessages``, and ``compilemessages``.
@@ -161,9 +160,9 @@ falls back to the default language.
         def retrieve(self, request, *args, **kwargs)
             pass
 
-
 FileField (ImageField) is not handled properly in the schema
 ------------------------------------------------------------
+
 In contrast to most other fields, ``FileField`` behaves differently for requests and responses.
 This duality is impossible to represent in a single component schema.
 
@@ -172,9 +171,8 @@ by setting ``COMPONENT_SPLIT_REQUEST = True``. Note that this influences the who
 not just components with ``FileFields``.
 
 Also consider explicitly setting ``parser_classes = [parsers.MultiPartParser]`` (or any file compatible parser)
-on your `View` or write a custom `get_parser_classes`. These fields do not work with the default ``JsonParser``
+on your ``View`` or write a custom ``get_parser_classes``. These fields do not work with the default ``JsonParser``
 and that fact should be represented in the schema.
-
 
 I'm using ``@action(detail=False)`` but the response schema is not a list
 -------------------------------------------------------------------------
@@ -183,7 +181,6 @@ I'm using ``@action(detail=False)`` but the response schema is not a list
 The ``detail`` parameter in itself makes no statement about the action's response. Also note that the default
 for underspecified endpoints is a non-list response. To signal a listed response, you can use
 ``@extend_schema(responses=XSerializer(many=True))``.
-
 
 Using ``@extend_schema`` on ``APIView`` has no effect
 -----------------------------------------------------
@@ -202,17 +199,16 @@ The extensions register themselves automatically. Just be sure that the python i
 To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your ``PROJECT/__init__.py``
 (same directory as ``settings.py`` and ``urls.py``) with ``import PROJECT.schema``.
 
-
 My ``@action`` is erroneously paginated or has filter parameters that I do not want
 -----------------------------------------------------------------------------------
 
 This usually happens when ``@extend_schema(responses=XSerializer(many=True))`` is used. Actions inherit filter
 and pagination classes from their ``ViewSet``. If the response is then marked as a list, the ``pagination_class``
 kicks in. Since actions are handled manually by the user, this behavior is usually not immediately obvious.
-To make make your intentions clear to `drf-spectacular`, you need to clear the offening classes in the action
+To make make your intentions clear to *drf-spectacular*, you need to clear the offening classes in the action
 decorator, e.g. setting ``pagination_class=None``.
 
-Users of ``django-filter`` might also see unwanted query parameters. Since the same mechanics apply here too,
+Users of *django-filter* might also see unwanted query parameters. Since the same mechanics apply here too,
 you can remove those parameters by resetting the filter backends with ``@action(...,filter_backends=[])``.
 
 .. code-block:: python
@@ -225,7 +221,6 @@ you can remove those parameters by resetting the filter backends with ``@action(
         @action(methods=['GET'], detail=False, pagination_class=None)
         def custom_action(self):
             pass
-
 
 How to I wrap my responses? / My endpoints are wrapped in a generic envelope
 ----------------------------------------------------------------------------
@@ -258,7 +253,6 @@ Adapt to your specific requirements.
         def list(self, request, *args, **kwargs):
             ...
 
-
 How can I have multiple ``SpectacularAPIView`` with differing settings
 ----------------------------------------------------------------------
 
@@ -284,7 +278,6 @@ not allowed. ``SpectacularAPIView`` has dedicated arguments for overriding these
             }
         ), name='schema-custom'),
     ]
-
 
 How to correctly annotate function-based views that use ``@api_view()``
 -----------------------------------------------------------------------
@@ -312,7 +305,6 @@ and break down each case separately.
     @api_view(['GET', 'POST'])
     def view_func(request, format=None):
         return ...
-
 
 My ``get_queryset()`` depends on some attributes not available at schema generation time
 ----------------------------------------------------------------------------------------

@@ -32,7 +32,6 @@ Breaking changes / important additions:
 - added callback functionality (EXPERIMENTAL and subject to change due to pending issue)
 - Many thanks to all the contributors!
 
-
 0.21.2 (2022-02-01)
 -------------------
 
@@ -44,7 +43,6 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - Some minor bugfixes and feature additions. Schemas using AcceptHeaderVersioning contain a small change.
-
 
 0.21.1 (2021-12-20)
 -------------------
@@ -63,7 +61,6 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - Some minor bugfixes and small feature additions. No large schema changes are expected
-
 
 0.21.0 (2021-11-10)
 -------------------
@@ -95,7 +92,6 @@ Breaking changes / important additions:
 - Several other small fixes and additional settings for corner cases. This is mainly a y-steam release due to the potential impact
   on the Swagger UI and ``minLength`` changes.
 
-
 0.20.2 (2021-10-15)
 -------------------
 
@@ -118,7 +114,6 @@ Breaking changes / important additions:
   annotation isolation. There should be no more side effects from arbitrarily mixing and matching the decorators.
 - Improved handling of completely empty serializers with COMPONENT_SPLIT_REQUEST.
 
-
 0.20.1 (2021-10-03)
 -------------------
 
@@ -130,7 +125,6 @@ Breaking changes / important additions:
 
 - Hotfix release due to regression in the Redoc template
 
-
 0.20.0 (2021-10-01)
 -------------------
 
@@ -140,8 +134,8 @@ Breaking changes / important additions:
 - Add arbitrarily deep ListSerializer nesting `#539 <https://github.com/tfranzel/drf-spectacular/issues/539>`_
 - tighten serializer assumptions `#539 <https://github.com/tfranzel/drf-spectacular/issues/539>`_
 - fix whitespace stripping on methods
-- Rename `AutoSchema._map_field_validators()` → `.insert_field_validators()`. [Nick Pope]
-- Rename `AutoSchema._map_min_max()` → `.insert_min_max()`. [Nick Pope]
+- Rename ``AutoSchema._map_field_validators()`` → ``.insert_field_validators()``. [Nick Pope]
+- Rename ``AutoSchema._map_min_max()`` → ``.insert_min_max()``. [Nick Pope]
 - Fix detection of int64 from min/max values. [Nick Pope]
 - Fix zero handling in _map_min_max(). [Nick Pope]
 - Add support for introspection of nested validators. [Nick Pope]
@@ -157,9 +151,8 @@ Breaking changes / important additions:
 
 - Added vendor specification extensions
 - Completetly overhauled validator logic and bugfixes
-- Offline UI assets with optional ``drf-spectacular-sidecar`` package
+- Offline UI assets with optional *drf-spectacular-sidecar* package
 - several internal logic improvements and stricter assumptions
-
 
 0.19.0 (2021-09-21)
 -------------------
@@ -206,9 +199,8 @@ Breaking changes / important additions:
 - Severely improved path parameter detection for Django-style parameters, RE parameters, and custom converters
 - Significantly more defensive settings loading for safer project imports (less prone to import loops)
 - Improved type hint support for ``Enum`` and other native types
-- Explicit support for ``drf-nested-routers``
+- Explicit support for *drf-nested-routers*
 - A lot more small improvements
-
 
 0.18.2 (2021-09-04)
 -------------------
@@ -221,7 +213,6 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - Primarily ironing out another issue with the Django check and some minor improvements
-
 
 0.18.1 (2021-08-31)
 -------------------
@@ -238,7 +229,6 @@ Breaking changes / important additions:
 - This is a hotfix release as the newly introduced Django check was executing the wrong code path.
 - Check also moved into the ``--deploy`` section to prevent double execution. This can be disabled with ``ENABLE_DJANGO_DEPLOY_CHECK``
 - Facitities added to utilize SwaggerUI Topbar for versioning.
-
 
 0.18.0 (2021-08-25)
 -------------------
@@ -260,9 +250,8 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - This is a y-stream release because we added `Django checks <https://docs.djangoproject.com/en/3.2/topics/checks/>`_
-  which might emit warnings and subsequently break CI. This can be easily suppressed with Django's `SILENCED_SYSTEM_CHECKS`.
+  which might emit warnings and subsequently break CI. This can be easily suppressed with Django's ``SILENCED_SYSTEM_CHECKS``.
 - Several small fixes and features that should not have a big impact.
-
 
 0.17.3 (2021-07-26)
 -------------------
@@ -283,7 +272,6 @@ Breaking changes / important additions:
 
 - Just a few bugfixes and some small features with minimal impact on existing schema
 
-
 0.17.2 (2021-06-15)
 -------------------
 
@@ -293,9 +281,8 @@ Breaking changes / important additions:
 
 Breaking changes / important additions:
 
-- Hotfix release that addresses a carelessly added import in `0.17.1`. In certain use-cases,
+- Hotfix release that addresses a carelessly added import in 0.17.1. In certain use-cases,
   this may have led to an import cycle inside DRF.
-
 
 0.17.1 (2021-06-12)
 -------------------
@@ -313,7 +300,6 @@ Breaking changes / important additions:
 
 - This release is mainly for fixing incomplete type hints which mypy will potentially complain about.
 - A few small fixes that should either have no or a very small impact in schemas.
-
 
 0.17.0 (2021-06-01)
 -------------------
@@ -336,7 +322,6 @@ Breaking changes / important additions:
 - Quite a few small improvements. The biggest change is the inversion of the component discard logic.
   This should have no negative impact, but to be on the safe side we'll opt for a y-stream release.
 - The package is now marked as being typed, which should get picked up natively by mypy
-
 
 0.16.0 (2021-05-10)
 -------------------
@@ -369,7 +354,6 @@ Breaking changes / important additions:
 
 - minor release to fix newly introduced default prefix estimation.
 
-
 0.15.0 (2021-04-03)
 -------------------
 
@@ -395,11 +379,10 @@ Breaking changes / important additions:
 - New default ``None`` for ``SCHEMA_PATH_PREFIX`` will attempt to determine a reasonable prefix. Previous behavior is restored with ``''``
 - Added ``OpenApiResponses`` to gain access to response object descriptions.
 
-
 0.14.0 (2021-03-09)
 -------------------
 
-- Fixed bug with `cached_property` non-Model objects not being traversed [Luke Plant]
+- Fixed bug with ``cached_property`` non-Model objects not being traversed [Luke Plant]
 - Fixed issue `#314 <https://github.com/tfranzel/drf-spectacular/issues/314>`_ - include information about view/serializer in warnings. [Luke Plant]
 - bugfix forward/reverse model traversal `#323 <https://github.com/tfranzel/drf-spectacular/issues/323>`_
 - fix nested serializer detection & smarter metadata extraction `#319 <https://github.com/tfranzel/drf-spectacular/issues/319>`_
@@ -432,14 +415,13 @@ Breaking changes / important additions:
 
 Breaking changes / important additions:
 
-- `drf-spectacular`'s custom ``DjangoFilterBackend`` removed after previous deprecation. Just use the original class again.
-- ``django-filter`` extension received a significant refactoring so your schema may have several changes, hopefully positive ones.
+- *drf-spectacular*'s custom ``DjangoFilterBackend`` removed after previous deprecation. Just use the original class again.
+- *django-filter* extension received a significant refactoring so your schema may have several changes, hopefully positive ones.
 - Added response headers feature
 - Extended ``@extend_schema(request=X)``, where ``X`` may now also be a ``Dict[content_type, serializer_etc]``
 - Updated Swagger UI version
 - Fixed several model traveral issues that may lead to PK changes in the schema
-- Added `drf-yasg's` ``swagger_fake_view``
-
+- Added *drf-yasg*'s ``swagger_fake_view``
 
 0.13.2 (2021-02-11)
 -------------------
@@ -460,7 +442,6 @@ Breaking changes / important additions:
 - fix readonly related fields generating incorrect schema `#274 <https://github.com/tfranzel/drf-spectacular/issues/274>`_ [diesieben07]
 - bugfix save parameter removal `#212 <https://github.com/tfranzel/drf-spectacular/issues/212>`_
 
-
 0.13.1 (2021-01-21)
 -------------------
 
@@ -472,7 +453,6 @@ Breaking changes / important additions:
 - bugfix enum substitution for enumed arrays (multiple choice)
 - Update README.rst [Chad Ramos]
 - Create new mock request on each operation [Matthias Erll]
-
 
 0.13.0 (2021-01-13)
 -------------------
@@ -491,8 +471,7 @@ Breaking changes / important additions:
 
 Breaking changes:
 
-- several small improvements that should not have a big impact. this is a y-stream release mainly due to schema changes that may occur with ``django-filter``.
-
+- several small improvements that should not have a big impact. this is a y-stream release mainly due to schema changes that may occur with *django-filter*.
 
 0.12.0 (2020-12-19)
 -------------------
@@ -516,7 +495,7 @@ Breaking changes:
 
 Breaking changes:
 
-- reverted back to ``0.10.0`` Swagger UI behavior as default. Users relying on stricter CSP should use ``SpectacularSwaggerSplitView``
+- reverted back to *0.10.0* Swagger UI behavior as default. Users relying on stricter CSP should use ``SpectacularSwaggerSplitView``
 - ``tokenAuth`` slightly changed to properly model correct ``Authorization`` header
 - a lot of minor improvements that may slightly alter the schema
 
@@ -629,7 +608,7 @@ Breaking changes:
 -------------------
 
 - Temporarily pin the swagger-ui unpkg URL to 3.30.0 [Mohamed Abdulaziz]
-- Add `deepLinking` parameter [p.alekseev]
+- Add ``deepLinking`` parameter [p.alekseev]
 - added preprocessing hooks for operation list modification/filtering `#93 <https://github.com/tfranzel/drf-spectacular/issues/93>`_
 - Document effective DRF settings [John Vandenberg]
 - add format query parameter `#110 <https://github.com/tfranzel/drf-spectacular/issues/110>`_
@@ -763,7 +742,7 @@ Breaking changes:
 - explicit override for non-list serializers on ViewSet list `#49 <https://github.com/tfranzel/drf-spectacular/issues/49>`_ 
 - improve model field mapping via DRF init logic 
 - bugfix enum substitution with additional field parameters. 
-- Fix getting default parameter for `MultipleChoiceField` [p.alekseev]
+- Fix getting default parameter for ``MultipleChoiceField`` [p.alekseev]
 - bugfix model path traversal via intermediate property 
 - try to be more graceful with unknown custom model fields. `#33 <https://github.com/tfranzel/drf-spectacular/issues/33>`_ 
 
@@ -788,12 +767,11 @@ Breaking changes:
 - Parse path parameter type hints from url. closes `#34 <https://github.com/tfranzel/drf-spectacular/issues/34>`_ 
 - Consolidate duplicate warnings/add error `#28 <https://github.com/tfranzel/drf-spectacular/issues/28>`_ 
 - Prevent warning for DRF format suffix param 
-- Improve ACCEPT header handling `#42 <https://github.com/tfranzel/drf-spectacular/issues/42>`_ 
+- Improve ACCEPT header handling `#42 <https://github.com/tfranzel/drf-spectacular/issues/42>`_
 
 Breaking changes:
 
 - all extension base classes moved to ``drf_spectacular.extensions``
-
 
 0.9.2 (2020-04-27)
 ------------------
@@ -846,7 +824,7 @@ Breaking changes:
 
 Breaking changes:
 
-- removed `to_schema()` from `OpenApiParameter`. Handled in ``AutoSchema`` now.
+- removed ``to_schema()`` from ``OpenApiParameter``. Handled in ``AutoSchema`` now.
 
 0.8.8 (2020-03-21)
 ------------------
@@ -868,7 +846,7 @@ Breaking changes:
 - Warn on duplicate serializer names. 
 - Added explicit exclude flag for operation. 
 - Bugfix: PrimaryKeyRelatedField(read_only=True) failing to find type.
-- Change operation sorting to alphanumeric with option (`#6 <https://github.com/tfranzel/drf-spectacular/issues/6>`_) 
+- Change operation sorting to alphanumeric with option (`#6 <https://github.com/tfranzel/drf-spectacular/issues/6>`_)
 - Robustify serializer field support for ``@extend_schema_field``.
 - Enable field serializers support. [p.g.alekseev]
 - Adding custom tags support [p.g.alekseev]
@@ -885,14 +863,15 @@ Breaking changes:
 
 0.8.5 (2020-03-08)
 ------------------
+
 - Generalize ``PolymorphicResponse`` into ``PolymorphicProxySerializer``.
 - Type dict is resolved as object. 
 - Simplify hint resolution. 
 - Allow ``@extend_schema_field`` for custom serializer fields.
 
-
 0.8.4 (2020-03-06)
 ------------------
+
 - ``@extend_schema_field`` accepts Serializers and OpenApiTypes
 - Generalize query parameter. 
 - Bugfix serializer init.
@@ -901,21 +880,20 @@ Breaking changes:
 - Helper scripts for swagger and generator. 
 - Fix license. 
 
-
 0.8.3 (2020-03-02)
 ------------------
+
 - Fix parameter type resolution. 
 - Remove empty parameters. 
 - Improved assert message. 
 
-
 0.8.2 (2020-03-02)
 ------------------
+
 - Working release. 
 - Bugfix wrong call & remove yaml aliases. 
 
-
 0.8.1 (2020-03-01)
 ------------------
-- Initial published version. 
 
+- Initial published version.

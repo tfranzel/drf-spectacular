@@ -44,7 +44,7 @@ class PolymorphicProxySerializer(Serializer):
             return Response(...)
 
     **Beware** that this is not a real serializer and it will raise an AssertionError
-    if used in that way. It **cannot** be used in views as `serializer_class`
+    if used in that way. It **cannot** be used in views as ``serializer_class``
     or as field in an actual serializer. It is solely meant for annotation purposes.
 
     Also make sure that each sub-serializer has a field named after the value of
@@ -61,7 +61,7 @@ class PolymorphicProxySerializer(Serializer):
     It is **strongly** recommended to pass the ``Serializers`` as **list**,
     and by that let *drf-spectacular* retrieve the field and handle the mapping
     automatically. In special circumstances, the field may not available when
-    drf-spectacular processes the serializer. In those cases you can explicitly state
+    *drf-spectacular* processes the serializer. In those cases you can explicitly state
     the mapping with ``{'legal': LegalPersonSerializer, ...}``, but it is then your
     responsibility to have a valid mapping.
     """
@@ -172,6 +172,7 @@ class OpenApiParameter(OpenApiSchemaBase):
             explode: Optional[bool] = None,
             default: Any = None,
             allow_blank: bool = True,
+            many: Optional[bool] = None,
             examples: Optional[List[OpenApiExample]] = None,
             extensions: Optional[Dict[str, Any]] = None,
             exclude: bool = False,
@@ -188,6 +189,7 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.explode = explode
         self.default = default
         self.allow_blank = allow_blank
+        self.many = many
         self.examples = examples or []
         self.extensions = extensions
         self.exclude = exclude
@@ -431,7 +433,8 @@ def extend_schema(
             if operation_id is not None or operation is not None:
                 error(
                     f'using @extend_schema on viewset class {f.__name__} with parameters '
-                    f'operation_id or operation will most likely result in a broken schema.'
+                    f'operation_id or operation will most likely result in a broken schema.',
+                    delayed=f,
                 )
             # reorder schema class MRO so that view method annotation takes precedence
             # over view class annotation. only relevant if there is a method annotation
@@ -559,7 +562,8 @@ def extend_schema_view(**kwargs) -> Callable[[F], F]:
             if method_name not in available_view_methods:
                 warn(
                     f'@extend_schema_view argument "{method_name}" was not found on view '
-                    f'{view.__name__}. method override for "{method_name}" will be ignored.'
+                    f'{view.__name__}. method override for "{method_name}" will be ignored.',
+                    delayed=view
                 )
                 continue
 

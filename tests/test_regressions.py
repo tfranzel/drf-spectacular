@@ -2852,3 +2852,19 @@ def test_external_docs(no_warnings):
 
     schema = generate_schema('/x/', view_function=view_func)
     assert schema['paths']['/x/']['get']['externalDocs'] == {'url': 'https://example.com'}
+
+
+def test_basic_parameters_with_many(no_warnings):
+    @extend_schema(
+        request=OpenApiTypes.ANY,
+        responses=OpenApiTypes.ANY,
+        parameters=[OpenApiParameter(name='test', type=int, many=True)]
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['paths']['/x/']['post']['parameters'][0]['schema'] == {
+        'type': 'array', 'items': {'type': 'integer'}
+    }

@@ -327,6 +327,8 @@ def test_polymorphic_proxy_serializer_misconfig(capsys, resource_type_field_name
 
 
 def test_warning_operation_id_on_extend_schema_view(capsys):
+    from drf_spectacular.drainage import GENERATOR_STATS
+
     @extend_schema(operation_id='Invalid', responses=int)
     class XAPIView(APIView):
         def get(self, request):
@@ -334,7 +336,12 @@ def test_warning_operation_id_on_extend_schema_view(capsys):
 
     generate_schema('x', view=XAPIView)
     stderr = capsys.readouterr().err
+    # check basic emittance of error message to stdout
     assert 'using @extend_schema on viewset class XAPIView with parameters' in stderr
+    # check that delayed error message was persisted on view class
+    assert getattr(XAPIView, '_spectacular_annotation', {}).get('errors')
+    # check that msg survived pre-generation warning/error cache reset
+    assert 'using @extend_schema on viewset' in list(GENERATOR_STATS._error_cache.keys())[0]
 
 
 def test_warning_request_body_not_resolvable(capsys):
@@ -472,3 +479,24 @@ def test_invalid_field_names(capsys):
 
     stderr = capsys.readouterr().err
     assert 'illegal characters' in stderr
+
+
+@pytest.mark.parametrize('type_arg,many', [
+    (SimpleSerializer, True),
+    (SimpleSerializer(many=True), None),
+    (serializers.ListSerializer(child=serializers.CharField()), None),
+    (serializers.ListField(child=serializers.CharField()), None),
+])
+def test_invalid_parameter_types(capsys, type_arg, many):
+    @extend_schema(
+        request=OpenApiTypes.ANY,
+        responses=OpenApiTypes.ANY,
+        parameters=[OpenApiParameter(name='test', type=type_arg, many=many)]
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('/x/', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'parameter "test"' in stderr

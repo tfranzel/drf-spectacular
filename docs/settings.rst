@@ -3,7 +3,6 @@
 Settings
 ========
 
-
 Settings are configurable in ``settings.py`` in the scope ``SPECTACULAR_SETTINGS``.
 You can override any setting, otherwise the defaults below are used.
 
@@ -11,7 +10,6 @@ You can override any setting, otherwise the defaults below are used.
 .. literalinclude:: ../drf_spectacular/settings.py
    :start-after: APISettings
    :end-before: IMPORT_STRINGS
-
 
 Django Rest Framework settings
 ------------------------------
@@ -37,9 +35,8 @@ The following are known to be effective:
 
 - ``SCHEMA_COERCE_PATH_PK``
 
-
 Example: SwaggerUI settings
-----------------------------
+---------------------------
 
 We currently support passing through all basic SwaggerUI `configuration parameters <https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/>`_.
 For more customization options (e.g. JS functions), you can modify and override the
