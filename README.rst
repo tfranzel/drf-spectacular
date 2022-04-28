@@ -296,8 +296,8 @@ globally, and then simply run:
    :target: https://github.com/tfranzel/drf-spectacular/actions/workflows/ci.yml
 .. |pypi-version| image:: https://img.shields.io/pypi/v/drf-spectacular.svg
    :target: https://pypi.org/project/drf-spectacular/
-.. |codecov| image:: https://app.codecov.io/gh/tfranzel/drf-spectacular/branch/master/graph/badge.svg
-   :target: https://app.codecov.io/gh/tfranzel/drf-spectacular
+.. |codecov| image:: https://codecov.io/gh/tfranzel/drf-spectacular/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/tfranzel/drf-spectacular
 .. |docs| image:: https://readthedocs.org/projects/drf-spectacular/badge/
    :target: https://drf-spectacular.readthedocs.io/
 .. |pypi-dl| image:: https://img.shields.io/pypi/dm/drf-spectacular
