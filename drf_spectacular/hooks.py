@@ -97,46 +97,57 @@ def postprocess_schema_enums(result, generator, **kwargs):
                 enum_name_mapping[prop_hash] = enum_name
             enum_name_mapping[(prop_hash, prop_name)] = enum_name
 
+    def replace_enum(component, path, schema):
+        is_array = schema.get('type') == 'array'
+        if is_array:
+            schema = schema.get('items', {})
+
+        if 'enum' not in schema:
+            return
+
+        prop_enum_original_list = schema['enum']
+        schema['enum'] = [i for i in schema['enum'] if i not in ['', None]]
+        prop_hash = list_hash(schema['enum'])
+        # when choice sets are reused under multiple names, the generated name cannot be
+        # resolved from the hash alone. fall back to prop_name and hash for resolution.
+        enum_name = enum_name_mapping.get(prop_hash) or enum_name_mapping.get((prop_hash, prop_name))
+        if not enum_name:
+            return
+
+        # split property into remaining property and enum component parts
+        enum_schema = {k: v for k, v in schema.items() if k in ['type', 'enum']}
+        schema = {k: v for k, v in schema.items() if k not in ['type', 'enum']}
+
+        components = [
+            create_enum_component(enum_name, schema=enum_schema)
+        ]
+        if spectacular_settings.ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE:
+            if '' in prop_enum_original_list:
+                components.append(create_enum_component('BlankEnum', schema={'enum': ['']}))
+            if None in prop_enum_original_list:
+                components.append(create_enum_component('NullEnum', schema={'enum': [None]}))
+
+        if len(components) == 1:
+            schema.update(components[0].ref)
+        else:
+            schema.update({'oneOf': [c.ref for c in components]})
+
+        if is_array:
+            component[path]['items'] = safe_ref(schema)
+        else:
+            component[path] = safe_ref(schema)
+
     # replace all enum occurrences with a enum schema component. cut out the
     # enum, replace it with a reference and add a corresponding component.
     for _, props in iter_prop_containers(schemas):
         for prop_name, prop_schema in props.items():
-            is_array = prop_schema.get('type') == 'array'
-            if is_array:
-                prop_schema = prop_schema.get('items', {})
+            replace_enum(props, prop_name, prop_schema)
 
-            if 'enum' not in prop_schema:
-                continue
-
-            prop_enum_original_list = prop_schema['enum']
-            prop_schema['enum'] = [i for i in prop_schema['enum'] if i not in ['', None]]
-            prop_hash = list_hash(prop_schema['enum'])
-            # when choice sets are reused under multiple names, the generated name cannot be
-            # resolved from the hash alone. fall back to prop_name and hash for resolution.
-            enum_name = enum_name_mapping.get(prop_hash) or enum_name_mapping[prop_hash, prop_name]
-
-            # split property into remaining property and enum component parts
-            enum_schema = {k: v for k, v in prop_schema.items() if k in ['type', 'enum']}
-            prop_schema = {k: v for k, v in prop_schema.items() if k not in ['type', 'enum']}
-
-            components = [
-                create_enum_component(enum_name, schema=enum_schema)
-            ]
-            if spectacular_settings.ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE:
-                if '' in prop_enum_original_list:
-                    components.append(create_enum_component('BlankEnum', schema={'enum': ['']}))
-                if None in prop_enum_original_list:
-                    components.append(create_enum_component('NullEnum', schema={'enum': [None]}))
-
-            if len(components) == 1:
-                prop_schema.update(components[0].ref)
-            else:
-                prop_schema.update({'oneOf': [c.ref for c in components]})
-
-            if is_array:
-                props[prop_name]['items'] = safe_ref(prop_schema)
-            else:
-                props[prop_name] = safe_ref(prop_schema)
+    # replace all parameter enum occurrences with a enum schema, if one exists
+    for path in result['paths'].values():
+        for operation in path.values():
+            for parameter in operation.get('parameters', []):
+                replace_enum(parameter, 'schema', parameter['schema'])
 
     # sort again with additional components
     result['components'] = generator.registry.build(spectacular_settings.APPEND_COMPONENTS)

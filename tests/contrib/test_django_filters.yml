@@ -20,10 +20,7 @@ paths:
       - in: query
         name: category
         schema:
-          type: string
-          enum:
-          - A
-          - B
+          $ref: '#/components/schemas/CategoryEnum'
         description: some category description
       - in: query
         name: custom_filter
@@ -34,10 +31,7 @@ paths:
         schema:
           type: array
           items:
-            type: string
-            enum:
-            - A
-            - B
+            $ref: '#/components/schemas/CategoryEnum'
         description: Multiple values may be separated by commas.
         explode: false
         style: form
@@ -51,10 +45,7 @@ paths:
         schema:
           type: array
           items:
-            type: string
-            enum:
-            - A
-            - B
+            $ref: '#/components/schemas/CategoryEnum'
         description: Multiple values may be separated by commas.
         explode: false
         style: form
@@ -93,10 +84,7 @@ paths:
         schema:
           type: array
           items:
-            type: string
-            enum:
-            - A
-            - B
+            $ref: '#/components/schemas/CategoryEnum'
         description: some category description
         explode: true
         style: form
@@ -111,10 +99,7 @@ paths:
       - in: query
         name: model_single_cat
         schema:
-          type: string
-          enum:
-          - A
-          - B
+          $ref: '#/components/schemas/CategoryEnum'
         description: some category description
       - in: query
         name: number_id
