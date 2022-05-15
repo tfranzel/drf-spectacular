@@ -117,7 +117,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 schema = build_basic_type(OpenApiTypes.NUMBER)  # TODO may be improved
             else:
                 schema = build_basic_type(OpenApiTypes.NUMBER)
-        elif isinstance(filter_field, filters.ChoiceFilter):
+        elif isinstance(filter_field, (filters.ChoiceFilter, filters.MultipleChoiceFilter)):
             try:
                 schema = self._get_schema_from_model_field(auto_schema, filter_field, model)
             except Exception:
