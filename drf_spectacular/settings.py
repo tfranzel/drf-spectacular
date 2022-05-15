@@ -118,7 +118,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'GET_MOCK_REQUEST': 'drf_spectacular.plumbing.build_mock_request',
 
     # Camelize names like operationId and path parameter names
-    # Camelization of example JSON responses and Schema requires the addition of 
+    # Camelization of the operation schema itself requires the addition of
     # 'drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields'
     # to POSTPROCESSING_HOOKS
     'CAMELIZE_NAMES': False,
