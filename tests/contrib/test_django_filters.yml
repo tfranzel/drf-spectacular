@@ -26,6 +26,10 @@ paths:
           - B
         description: some category description
       - in: query
+        name: choice_field_enum_override
+        schema:
+          type: string
+      - in: query
         name: custom_filter
         schema:
           type: boolean

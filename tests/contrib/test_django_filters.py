@@ -123,6 +123,8 @@ class ProductFilter(FilterSet):
 
     cat_callable = ChoiceFilter(field_name="category", choices=get_choices)
 
+    choice_field_enum_override = extend_schema_field(OpenApiTypes.STR)(ChoiceFilter(choices=(('A', 'aaa'), )))
+
     # will guess type from choices as a last resort
     untyped_choice_field_method_with_explicit_choices = ChoiceFilter(
         method="filter_method_untyped",
