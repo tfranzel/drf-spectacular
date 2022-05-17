@@ -301,6 +301,7 @@ def build_parameter_type(
         required=False,
         description=None,
         enum=None,
+        pattern=None,
         deprecated=False,
         explode=None,
         style=None,
@@ -329,6 +330,8 @@ def build_parameter_type(
         schema['style'] = style
     if enum:
         schema['schema']['enum'] = sorted(enum)
+    if pattern is not None:
+        schema['schema']['pattern'] = pattern
     if default is not None and 'default' not in irrelevant_field_meta:
         schema['schema']['default'] = default
     if not allow_blank and schema['schema'].get('type') == 'string':
@@ -847,10 +850,8 @@ def resolve_regex_path_parameter(path_regex, variable):
 
         return build_parameter_type(
             name=variable,
-            schema={
-                **build_basic_type(OpenApiTypes.STR),
-                'pattern': anchor_pattern(pattern),
-            },
+            schema=build_basic_type(OpenApiTypes.STR),
+            pattern=anchor_pattern(pattern),
             location=OpenApiParameter.PATH,
         )
 

@@ -167,6 +167,7 @@ class OpenApiParameter(OpenApiSchemaBase):
             required: bool = False,
             description: str = '',
             enum: Optional[List[Any]] = None,
+            pattern: Optional[str] = None,
             deprecated: bool = False,
             style: Optional[str] = None,
             explode: Optional[bool] = None,
@@ -184,6 +185,7 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.required = required
         self.description = description
         self.enum = enum
+        self.pattern = pattern
         self.deprecated = deprecated
         self.style = style
         self.explode = explode

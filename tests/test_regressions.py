@@ -2868,3 +2868,21 @@ def test_basic_parameters_with_many(no_warnings):
     assert schema['paths']['/x/']['post']['parameters'][0]['schema'] == {
         'type': 'array', 'items': {'type': 'integer'}
     }
+
+
+def test_parameter_with_pattern(no_warnings):
+    @extend_schema(
+        request=OpenApiTypes.ANY,
+        responses=OpenApiTypes.ANY,
+        parameters=[OpenApiParameter(name='test', type=OpenApiTypes.REGEX, pattern='^[0-9]{3}$')]
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['paths']['/x/']['post']['parameters'][0]['schema'] == {
+        'pattern': '^[0-9]{3}$',
+        'type': 'string',
+        'format': 'regex'
+    }
