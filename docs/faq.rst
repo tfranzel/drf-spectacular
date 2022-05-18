@@ -21,7 +21,7 @@ modify otherwise. Have a look at :ref:`customization` on how to use *Extensions*
 I get an empty schema or endpoints are missing
 ----------------------------------------------
 
-This is usually due versioning (or more rarely due to permisssions).
+This is usually due versioning (or more rarely due to permissions).
 
 In case you use versioning on all endpoints, that might be the intended output.
 By default the schema will only contain unversioned endpoints. Explicitly specify
@@ -325,3 +325,40 @@ attribute ``swagger_fake_view`` and simply return an empty queryset of the corre
                 return YourModel.objects.none()
             # your usual logic
 
+
+How to serve in-memory generated files or files in general outside ``FileField``
+--------------------------------------------------------------------------------
+
+DRF provides a convenient ``FileField`` for storing files persistently within a ``Model``.
+``drf-spectacular`` handles these correctly by default. But to serve binary files that are
+*generated in-memory*, follow the following recipe. This example uses the method
+`recommended by Django <https://docs.djangoproject.com/en/4.0/ref/request-response/#telling-the-browser-to-treat-the-response-as-a-file-attachment>`_
+for treating a ``Response`` as a file and sets up an appropriate ``Renderer`` that will handle the
+client ``Accept`` header for this response content type. ``responses=bytes`` expresses that the
+response is a binary blob without further details on it's structure.
+
+.. code-block:: python
+
+    from django.http import HttpResponse
+    from rest_framework.renderers import BaseRenderer
+
+
+    class BinaryRenderer(BaseRenderer):
+        media_type = "application/octet-stream"
+        format = "bin"
+
+
+    class FileViewSet(RetrieveModelMixin, GenericViewSet):
+        ...
+        renderer_classes = [BinaryRenderer]
+
+        @extend_schema(responses=bytes)
+        def retrieve(self, request, *args, **kwargs):
+            export_data = b"..."
+            return HttpResponse(
+                export_data,
+                content_type=BinaryRenderer.media_type,
+                headers={
+                    "Content-Disposition": "attachment; filename=out.bin",
+                },
+            )
