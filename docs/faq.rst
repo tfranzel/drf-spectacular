@@ -326,15 +326,16 @@ attribute ``swagger_fake_view`` and simply return an empty queryset of the corre
             # your usual logic
 
 
-How to serve in-memory generated files
---------------------------------------
+How to serve in-memory generated files or files in general outside ``FileField``
+--------------------------------------------------------------------------------
 
 DRF provides a convenient ``FileField`` for storing files persistently within a ``Model``.
 ``drf-spectacular`` handles these correctly by default. But to serve binary files that are
 *generated in memory*, follow the following recipe. This example uses the method
 `recommended by Django <https://docs.djangoproject.com/en/4.0/ref/request-response/#telling-the-browser-to-treat-the-response-as-a-file-attachment>`_
 for treating a ``Response`` as a file and sets up an appropriate ``Renderer`` that will handle the
-client ``Accept`` header for this response content type.
+client ``Accept`` header for this response content type. ``responses=bytes`` expresses that the
+response is a binary blob without further details on it's structure.
 
 .. code-block:: python
 
