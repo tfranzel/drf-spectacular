@@ -1,0 +1,123 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /x/:
+    get:
+      operationId: x_list
+      tags:
+      - x
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Point'
+          description: ''
+  /x/{id}/:
+    get:
+      operationId: x_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - x
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Point'
+          description: ''
+components:
+  schemas:
+    Point:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        id:
+          type: integer
+          readOnly: true
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - Polygon
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+                example:
+                - - 22.4707
+                  - 70.0577
+                - - 12.9721
+                  - 77.5933
+                minItems: 4
+              example:
+              - - 0.0
+                - 0.0
+              - - 0.0
+                - 50.0
+              - - 50.0
+                - 50.0
+              - - 50.0
+                - 0.0
+              - - 0.0
+                - 0.0
+        properties:
+          type: object
+          description: |-
+            A subclass of ModelSerializer
+            that outputs geojson-ready data as
+            features and feature collections
+          properties:
+            random_field1:
+              type: string
+              maxLength: 32
+            random_field2:
+              type: integer
+          required:
+          - id
+          - location
+          - random_field1
+          - random_field2
+    TypeEnum:
+      type: string
+      enum:
+      - Feature
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

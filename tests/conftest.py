@@ -31,7 +31,7 @@ def pytest_configure(config):
     settings.configure(
         DEBUG_PROPAGATE_EXCEPTIONS=True,
         DATABASES={'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
+            'ENGINE': 'django.contrib.gis.db.backends.spatialite',
             'NAME': ':memory:'
         }},
         SITE_ID=1,
