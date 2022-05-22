@@ -20,6 +20,7 @@ def pytest_configure(config):
         'allauth.account',
         'oauth2_provider',
         'django_filters',
+        'rest_framework_gis',
         # this is not strictly required and when added django-polymorphic
         # currently breaks the whole Django/DRF upstream testing.
         # 'polymorphic',

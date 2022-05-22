@@ -46,6 +46,7 @@ Features
         - `drf-nested-routers <https://github.com/alanjds/drf-nested-routers>`_
         - `djangorestframework-recursive <https://github.com/heywbj/django-rest-framework-recursive>`_
         - `djangorestframework-dataclasses <https://github.com/oxan/djangorestframework-dataclasses>`_
+        - `django-rest-framework-gis <https://github.com/openwisp/django-rest-framework-gis>`_
 
 
 For more information visit the `documentation <https://drf-spectacular.readthedocs.io/>`_.
