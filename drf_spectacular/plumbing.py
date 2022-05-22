@@ -95,6 +95,18 @@ def is_list_serializer(obj) -> bool:
     return isinstance(force_instance(obj), serializers.ListSerializer)
 
 
+def get_list_serializer(obj):
+    return force_instance(obj) if is_list_serializer(obj) else get_class(obj)(many=True)
+
+
+def is_list_serializer_customized(obj) -> bool:
+    return (
+        is_serializer(obj)
+        and get_class(get_list_serializer(obj)).to_representation  # type: ignore
+        is not serializers.ListSerializer.to_representation
+    )
+
+
 def is_basic_serializer(obj) -> bool:
     return is_serializer(obj) and not is_list_serializer(obj)
 

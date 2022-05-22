@@ -229,6 +229,10 @@ This is one of the more involved extension mechanisms. *drf-spectacular* uses th
 The usage of this extension is rarely necessary because most custom ``Serializer`` classes stay very
 close to the default behaviour.
 
+In case your ``Serializer`` makes use of a custom ``ListSerializer`` (i.e. a custom ``to_representation()``),
+you can write a dedicated extensions for that. This is usually the case when ``many=True`` does not result
+in a plain list, but rather in augmented object with additional fields (e.g. envelopes).
+
 Declare custom/library filters with :py:class:`OpenApiFilterExtension <drf_spectacular.extensions.OpenApiFilterExtension>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

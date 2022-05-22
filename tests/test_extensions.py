@@ -5,9 +5,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from drf_spectacular.extensions import (
-    OpenApiAuthenticationExtension, OpenApiSerializerFieldExtension, OpenApiViewExtension,
+    OpenApiAuthenticationExtension, OpenApiSerializerExtension, OpenApiSerializerFieldExtension,
+    OpenApiViewExtension,
 )
-from drf_spectacular.plumbing import build_basic_type
+from drf_spectacular.plumbing import (
+    ResolvedComponent, build_array_type, build_basic_type, build_object_type,
+)
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from tests import generate_schema, get_response_schema
@@ -145,3 +148,48 @@ def test_multi_auth_scheme_extension(no_warnings):
         'appId': {'type': 'apiKey', 'in': 'header', 'name': 'X-APP-ID'}
     }
     assert schema['paths']['/x/']['get']['security'] == [{'apiKey': [], 'appId': []}]
+
+
+def test_serializer_list_extension(no_warnings):
+
+    class CustomListSerializer(serializers.ListSerializer):
+        def to_representation(self, data):
+            return {'foo': 1, 'data': super().to_representation(data)}   # pragma: no cover
+
+    # ListSerializer can be injected either via Meta attribute or by overriding many_init()
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = SimpleModel
+            fields = '__all__'
+            list_serializer_class = CustomListSerializer
+
+    class CustomListExtension(OpenApiSerializerExtension):
+        target_class = CustomListSerializer
+
+        def map_serializer(self, auto_schema, direction):
+            component = auto_schema.resolve_serializer(self.target.child, direction)
+            schema = build_object_type(
+                properties={'foo': build_basic_type(int), 'data': build_array_type(component.ref)}
+            )
+            list_component = ResolvedComponent(
+                name=f'{component.name}List',
+                type=ResolvedComponent.SCHEMA,
+                object=self.target.child,
+                schema=schema
+            )
+            auto_schema.registry.register_on_missing(list_component)
+            return list_component.ref
+
+    class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = XSerializer
+
+    schema = generate_schema('x', XViewset)
+    op_schema = get_response_schema(schema['paths']['/x/']['get'])
+    assert op_schema == {'$ref': '#/components/schemas/XList'}
+    assert schema['components']['schemas']['XList'] == {
+        'type': 'object',
+        'properties': {
+            'foo': {'type': 'integer'},
+            'data': {'type': 'array', 'items': {'$ref': '#/components/schemas/X'}}
+        }
+    }
