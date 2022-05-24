@@ -29,11 +29,12 @@ from drf_spectacular.plumbing import (
     assert_basic_serializer, build_array_type, build_basic_type, build_choice_field,
     build_examples_list, build_generic_type, build_listed_example_value, build_media_type_object,
     build_mocked_view, build_object_type, build_parameter_type, error, follow_field_source,
-    follow_model_field_lookup, force_instance, get_doc, get_type_hints, get_view_model,
-    is_basic_serializer, is_basic_type, is_field, is_list_serializer, is_patched_serializer,
-    is_serializer, is_trivial_string_variation, modify_media_types_for_versioning,
-    resolve_django_path_parameter, resolve_regex_path_parameter, resolve_type_hint, safe_ref,
-    sanitize_specification_extensions, warn, whitelisted,
+    follow_model_field_lookup, force_instance, get_doc, get_list_serializer, get_type_hints,
+    get_view_model, is_basic_serializer, is_basic_type, is_field, is_list_serializer,
+    is_list_serializer_customized, is_patched_serializer, is_serializer,
+    is_trivial_string_variation, modify_media_types_for_versioning, resolve_django_path_parameter,
+    resolve_regex_path_parameter, resolve_type_hint, safe_ref, sanitize_specification_extensions,
+    warn, whitelisted,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -1330,7 +1331,16 @@ class AutoSchema(ViewInspector):
             and get_override(serializer, 'many') is not False
             and ('200' <= status_code < '300' or spectacular_settings.ENABLE_LIST_MECHANICS_ON_NON_2XX)
         ):
-            schema = build_array_type(schema)
+            # In case of a non-default ListSerializer, check for matching extension and
+            # bypass regular list wrapping by delegating handling to extension.
+            if (
+                is_list_serializer_customized(serializer)
+                and OpenApiSerializerExtension.get_match(get_list_serializer(serializer))
+            ):
+                schema = self._map_serializer(get_list_serializer(serializer), 'response')
+            else:
+                schema = build_array_type(schema)
+
             paginator = self._get_paginator()
 
             if (

@@ -8,4 +8,5 @@ __all__ = [
     'rest_framework_simplejwt',
     'django_filters',
     'rest_framework_recursive',
+    'rest_framework_gis',
 ]
