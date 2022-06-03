@@ -4,6 +4,7 @@ from importlib import import_module
 from typing import Any, Dict
 
 from django.conf import settings
+from django.templatetags.static import static
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -113,7 +114,7 @@ class SpectacularJSONAPIView(SpectacularAPIView):
 
 
 def _get_sidecar_url(package):
-    return f'{settings.STATIC_URL}drf_spectacular_sidecar/{package}'
+    return static(f'drf_spectacular_sidecar/{package}')
 
 
 class SpectacularSwaggerView(APIView):
