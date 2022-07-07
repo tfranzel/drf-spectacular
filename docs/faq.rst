@@ -157,7 +157,7 @@ falls back to the default language.
         """)
 
         @extend_schema(summary=_('Main endpoint for creating person'))
-        def retrieve(self, request, *args, **kwargs)
+        def retrieve(self, request, *args, **kwargs):
             pass
 
 FileField (ImageField) is not handled properly in the schema
@@ -321,7 +321,7 @@ attribute ``swagger_fake_view`` and simply return an empty queryset of the corre
         ...
 
         def get_queryset(self):
-            if getattr(self, 'swagger_fake_view', False)  # drf-yasg comp
+            if getattr(self, 'swagger_fake_view', False):  # drf-yasg comp
                 return YourModel.objects.none()
             # your usual logic
 
