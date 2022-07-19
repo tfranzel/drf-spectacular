@@ -129,7 +129,7 @@ class OpenApiExample(OpenApiSchemaBase):
             response_only: bool = False,
             parameter_only: Optional[Tuple[str, _ParameterLocationType]] = None,
             media_type: str = 'application/json',
-            status_codes: Optional[List[str]] = None,
+            status_codes: Optional[List[Union[str, int]]] = None,
     ):
         self.name = name
         self.summary = summary
@@ -140,7 +140,7 @@ class OpenApiExample(OpenApiSchemaBase):
         self.response_only = response_only
         self.parameter_only = parameter_only
         self.media_type = media_type
-        self.status_codes = status_codes or ['200', '201']
+        self.status_codes = list(map(str, status_codes)) if status_codes else ['200', '201']
 
 
 class OpenApiParameter(OpenApiSchemaBase):

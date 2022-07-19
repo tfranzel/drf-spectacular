@@ -100,10 +100,14 @@ paths:
                 type: object
                 additionalProperties: {}
               examples:
-                CreateError403Example:
+                CreateError403IntegerExample:
                   value:
-                    field: error
-                  summary: Create Error 403 Example
+                    field: error (int)
+                  summary: Create Error 403 Integer Example
+                CreateError403StringExample:
+                  value:
+                    field: error (str)
+                  summary: Create Error 403 String Example
           description: ''
   /schema/{id}/:
     get:
