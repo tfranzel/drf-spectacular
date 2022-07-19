@@ -1,6 +1,6 @@
 import pytest
 from rest_framework import __version__ as DRF_VERSION  # type: ignore[attr-defined]
-from rest_framework import generics, pagination, serializers, viewsets
+from rest_framework import generics, pagination, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -93,8 +93,14 @@ class ExampleTestWithExtendedViewSet(viewsets.GenericViewSet):
                 value={'field': 33},
             ),
             OpenApiExample(
-                'Create Error 403 Example',
-                value={'field': 'error'},
+                'Create Error 403 Integer Example',
+                value={'field': 'error (int)'},
+                response_only=True,
+                status_codes=[status.HTTP_403_FORBIDDEN],
+            ),
+            OpenApiExample(
+                'Create Error 403 String Example',
+                value={'field': 'error (str)'},
                 response_only=True,
                 status_codes=['403']
             ),
