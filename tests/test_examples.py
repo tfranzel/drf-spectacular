@@ -177,7 +177,7 @@ def test_example_pagination(no_warnings):
                 'count': 123,
                 'next': 'http://api.example.org/accounts/?offset=400&limit=100',
                 'previous': 'http://api.example.org/accounts/?offset=200&limit=100',
-                'results': {'field': 111}
+                'results': [{'field': 111}],
             },
             'summary': 'Serializer C Example RO'
         }
