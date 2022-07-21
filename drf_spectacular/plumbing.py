@@ -1265,7 +1265,7 @@ def build_listed_example_value(value: Any, paginator, direction):
     schema = paginator.get_paginated_response_schema(sentinel)
     try:
         return {
-            field_name: value if field_schema is sentinel else field_schema['example']
+            field_name: [value] if field_schema is sentinel else field_schema['example']
             for field_name, field_schema in schema['properties'].items()
         }
     except (AttributeError, KeyError):
