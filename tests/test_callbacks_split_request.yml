@@ -53,13 +53,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Health'
+              $ref: '#/components/schemas/HealthRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Health'
+              $ref: '#/components/schemas/HealthRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Health'
+              $ref: '#/components/schemas/HealthRequest'
         required: true
       security:
       - cookieAuth: []
@@ -98,7 +98,7 @@ paths:
                   content:
                     application/json:
                       schema:
-                        $ref: '#/components/schemas/Event'
+                        $ref: '#/components/schemas/EventRequest'
                   description: ''
             patch:
               requestBody:
@@ -118,13 +118,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Subscribe'
+              $ref: '#/components/schemas/SubscribeRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Subscribe'
+              $ref: '#/components/schemas/SubscribeRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Subscribe'
+              $ref: '#/components/schemas/SubscribeRequest'
         required: true
       security:
       - cookieAuth: []
@@ -160,19 +160,29 @@ components:
           readOnly: true
         change:
           type: string
+      required:
+      - change
+      - id
+    EventRequest:
+      type: object
+      properties:
+        change:
+          type: string
+          minLength: 1
         external_id:
           type: string
           writeOnly: true
+          minLength: 1
       required:
       - change
       - external_id
-      - id
-    Health:
+    HealthRequest:
       type: object
       properties:
         callbackUrl:
           type: string
           format: uri
+          minLength: 1
       required:
       - callbackUrl
     Simple:
@@ -183,12 +193,13 @@ components:
           readOnly: true
       required:
       - id
-    Subscribe:
+    SubscribeRequest:
       type: object
       properties:
         callbackUrl:
           type: string
           format: uri
+          minLength: 1
       required:
       - callbackUrl
   securitySchemes:

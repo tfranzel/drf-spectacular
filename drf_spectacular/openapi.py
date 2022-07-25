@@ -149,7 +149,7 @@ class AutoSchema(ViewInspector):
         """ override this for custom behaviour """
         return []
 
-    def _process_override_parameters(self):
+    def _process_override_parameters(self, direction='request'):
         result = {}
         for parameter in self.get_override_parameters():
             if isinstance(parameter, OpenApiParameter):
@@ -159,7 +159,7 @@ class AutoSchema(ViewInspector):
                 if is_basic_type(parameter.type):
                     schema = build_basic_type(parameter.type)
                 elif is_basic_serializer(parameter.type):
-                    schema = self.resolve_serializer(parameter.type, 'request').ref
+                    schema = self.resolve_serializer(parameter.type, direction).ref
                 elif isinstance(parameter.type, dict):
                     schema = parameter.type
                 else:
@@ -394,7 +394,7 @@ class AutoSchema(ViewInspector):
                 if summary:
                     operation['summary'] = summary
 
-                request_body = mocked_view.schema._get_request_body()
+                request_body = mocked_view.schema._get_request_body('response')
                 if request_body:
                     operation['requestBody'] = request_body
 
@@ -402,7 +402,7 @@ class AutoSchema(ViewInspector):
                 if deprecated:
                     operation['deprecated'] = deprecated
 
-                operation['responses'] = mocked_view.schema._get_response_bodies()
+                operation['responses'] = mocked_view.schema._get_response_bodies('request')
 
                 extensions = mocked_view.schema.get_extensions()
                 if extensions:
@@ -1161,7 +1161,7 @@ class AutoSchema(ViewInspector):
 
         return build_examples_list(filtered_examples)
 
-    def _get_request_body(self):
+    def _get_request_body(self, direction='request'):
         # only unsafe methods can have a body
         if self.method not in ('PUT', 'PATCH', 'POST'):
             return None
@@ -1172,18 +1172,18 @@ class AutoSchema(ViewInspector):
             content = []
             request_body_required = True
             for media_type, serializer in request_serializer.items():
-                schema, partial_request_body_required = self._get_request_for_media_type(serializer)
-                examples = self._get_examples(serializer, 'request', media_type)
+                schema, partial_request_body_required = self._get_request_for_media_type(serializer, direction)
+                examples = self._get_examples(serializer, direction, media_type)
                 if schema is None:
                     continue
                 content.append((media_type, schema, examples))
                 request_body_required &= partial_request_body_required
         else:
-            schema, request_body_required = self._get_request_for_media_type(request_serializer)
+            schema, request_body_required = self._get_request_for_media_type(request_serializer, direction)
             if schema is None:
                 return None
             content = [
-                (media_type, schema, self._get_examples(request_serializer, 'request', media_type))
+                (media_type, schema, self._get_examples(request_serializer, direction, media_type))
                 for media_type in self.map_parsers()
             ]
 
@@ -1197,11 +1197,11 @@ class AutoSchema(ViewInspector):
             request_body['required'] = request_body_required
         return request_body
 
-    def _get_request_for_media_type(self, serializer):
+    def _get_request_for_media_type(self, serializer, direction='request'):
         serializer = force_instance(serializer)
 
         if is_list_serializer(serializer):
-            schema = self._unwrap_list_serializer(serializer, 'request')
+            schema = self._unwrap_list_serializer(serializer, direction)
             request_body_required = bool(schema)
         elif is_serializer(serializer):
             if self.method == 'PATCH':
@@ -1210,7 +1210,7 @@ class AutoSchema(ViewInspector):
                 # may be reused; prevent race conditions by modifying a copy.
                 serializer = copy.copy(serializer)
                 serializer.partial = True
-            component = self.resolve_serializer(serializer, 'request')
+            component = self.resolve_serializer(serializer, direction)
             if not component:
                 # serializer is empty so skip content enumeration
                 return None, False
@@ -1238,7 +1238,7 @@ class AutoSchema(ViewInspector):
             request_body_required = False
         return schema, request_body_required
 
-    def _get_response_bodies(self):
+    def _get_response_bodies(self, direction='response'):
         response_serializers = self.get_response_serializers()
 
         if (
@@ -1249,8 +1249,8 @@ class AutoSchema(ViewInspector):
             if self.method == 'DELETE':
                 return {'204': {'description': _('No response body')}}
             if self._is_create_operation():
-                return {'201': self._get_response_for_code(response_serializers, '201')}
-            return {'200': self._get_response_for_code(response_serializers, '200')}
+                return {'201': self._get_response_for_code(response_serializers, '201', direction=direction)}
+            return {'200': self._get_response_for_code(response_serializers, '200', direction=direction)}
         elif isinstance(response_serializers, dict):
             # custom handling for overriding default return codes with @extend_schema
             responses = {}
@@ -1259,7 +1259,7 @@ class AutoSchema(ViewInspector):
                     code, media_types = str(code[0]), code[1:]
                 else:
                     code, media_types = str(code), None
-                content_response = self._get_response_for_code(serializer, code, media_types)
+                content_response = self._get_response_for_code(serializer, code, media_types, direction)
                 if code in responses:
                     responses[code]['content'].update(content_response['content'])
                 else:
@@ -1273,7 +1273,7 @@ class AutoSchema(ViewInspector):
             )
             schema = build_basic_type(OpenApiTypes.OBJECT)
             schema['description'] = _('Unspecified response body')
-            return {'200': self._get_response_for_code(schema, '200')}
+            return {'200': self._get_response_for_code(schema, '200', direction=direction)}
 
     def _unwrap_list_serializer(self, serializer, direction) -> typing.Optional[dict]:
         if is_field(serializer):
@@ -1287,7 +1287,7 @@ class AutoSchema(ViewInspector):
         else:
             assert False, 'Serializer is of unknown type.'
 
-    def _get_response_for_code(self, serializer, status_code, media_types=None):
+    def _get_response_for_code(self, serializer, status_code, media_types=None, direction='response'):
         if isinstance(serializer, OpenApiResponse):
             serializer, description, examples = (
                 serializer.response, serializer.description, serializer.examples
@@ -1296,17 +1296,17 @@ class AutoSchema(ViewInspector):
             description, examples = '', []
 
         serializer = force_instance(serializer)
-        headers = self._get_response_headers_for_code(status_code)
+        headers = self._get_response_headers_for_code(status_code, direction)
         headers = {'headers': headers} if headers else {}
 
         if not serializer:
             return {**headers, 'description': description or _('No response body')}
         elif is_list_serializer(serializer):
-            schema = self._unwrap_list_serializer(serializer.child, 'response')
+            schema = self._unwrap_list_serializer(serializer.child, direction)
             if not schema:
                 return {**headers, 'description': description or _('No response body')}
         elif is_serializer(serializer):
-            component = self.resolve_serializer(serializer, 'response')
+            component = self.resolve_serializer(serializer, direction)
             if not component:
                 return {**headers, 'description': description or _('No response body')}
             schema = component.ref
@@ -1337,7 +1337,7 @@ class AutoSchema(ViewInspector):
                 is_list_serializer_customized(serializer)
                 and OpenApiSerializerExtension.get_match(get_list_serializer(serializer))
             ):
-                schema = self._map_serializer(get_list_serializer(serializer), 'response')
+                schema = self._map_serializer(get_list_serializer(serializer), direction)
             else:
                 schema = build_array_type(schema)
 
@@ -1370,14 +1370,14 @@ class AutoSchema(ViewInspector):
             'content': {
                 media_type: build_media_type_object(
                     schema,
-                    self._get_examples(serializer, 'response', media_type, status_code, examples)
+                    self._get_examples(serializer, direction, media_type, status_code, examples)
                 )
                 for media_type in media_types
             },
             'description': description
         }
 
-    def _get_response_headers_for_code(self, status_code) -> dict:
+    def _get_response_headers_for_code(self, status_code, direction='response') -> dict:
         result = {}
         for parameter in self.get_override_parameters():
             if not isinstance(parameter, OpenApiParameter):
@@ -1393,7 +1393,7 @@ class AutoSchema(ViewInspector):
             if is_basic_type(parameter.type):
                 schema = build_basic_type(parameter.type)
             elif is_serializer(parameter.type):
-                schema = self.resolve_serializer(parameter.type, 'response').ref
+                schema = self.resolve_serializer(parameter.type, direction).ref
             else:
                 schema = parameter.type
 
