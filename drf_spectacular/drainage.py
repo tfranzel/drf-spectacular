@@ -22,7 +22,10 @@ class GeneratorStats:
         if not self.__dict__:
             from drf_spectacular.settings import spectacular_settings
             self.silent = spectacular_settings.DISABLE_ERRORS_AND_WARNINGS
-        return getattr(self, name)
+        try:
+            return self.__dict__[name]
+        except KeyError:
+            raise AttributeError(name)
 
     def __bool__(self):
         return bool(self._warn_cache or self._error_cache)
