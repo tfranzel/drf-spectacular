@@ -19,6 +19,8 @@ class GeneratorStats:
     _error_cache: DefaultDict[str, int] = defaultdict(int)
 
     def __getattr__(self, name):
+        if not name == 'silent':
+            raise AttributeError(name)
         if not self.__dict__:
             from drf_spectacular.settings import spectacular_settings
             self.silent = spectacular_settings.DISABLE_ERRORS_AND_WARNINGS
