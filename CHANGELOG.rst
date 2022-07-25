@@ -1,6 +1,34 @@
 Changelog
 =========
 
+0.23.0 (2022-07-25)
+-------------------
+
+- fix infinite recursion when accessing missing attributes in generator stats [Oleg Hoefling]
+- fix list pagination when examples are provided [topher235]
+- accept integer status codes in OpenApiExample [Nicholas Guriev]
+- Missing ":" in example documentation [Josué Millán Zamora]
+- Flip direction for callbacks serializers [Justas]
+- grammar fix [Kojo Idrissa]
+- fix sidecar for alternate staticfile storages `#718 <https://github.com/tfranzel/drf-spectacular/issues/718>`_
+- add support for ``rest_framework_gis``
+- add mechanism to handle custom ListSerializers with extensions
+- Update based on review [johnthagen]
+- Hyphenate in-memory [johnthagen]
+- Add FAQ entry for how to serve in-memory generated files [johnthagen]
+- add pattern to OpenApiParameter `#738 <https://github.com/tfranzel/drf-spectacular/issues/738>`_
+- Add test that extend_schema_field on django-filter is not modified [Take Weiland]
+- Do not forcefully overwrite enum setting on custom django-filter schema [Take Weiland]
+- django-filter: Enable type extraction fallback for MultipleChoiceFilter as well [Take Weiland]
+- Add examples camelization note to settings.py [Zac Miller]
+- fix codecov badge url issue on github `#713 <https://github.com/tfranzel/drf-spectacular/issues/713>`_
+
+Breaking changes / important additions:
+
+- A whole bunch of smaller bug fixes.
+- OpenAPI Callbacks should now be production ready
+- Introduction of ``rest_framework_gis`` support. This might impact APIs that are using GIS so this is a y-stream release.
+
 0.22.1 (2022-04-25)
 -------------------
 
