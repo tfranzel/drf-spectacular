@@ -120,7 +120,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Camelize names like operationId and path parameter names
     # Camelization of the operation schema itself requires the addition of
     # 'drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields'
-    # to POSTPROCESSING_HOOKS
+    # to POSTPROCESSING_HOOKS. Please note that the hook depends on
+    # ``djangorestframework_camel_case``, while CAMELIZE_NAMES itself does not.
     'CAMELIZE_NAMES': False,
 
     # Determines if and how free-form 'additionalProperties' should be emitted in the schema. Some
