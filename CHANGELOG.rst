@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.23.1 (2022-07-26)
+-------------------
+
+- improve CAMELIZE_NAMES doc `#774 <https://github.com/tfranzel/drf-spectacular/issues/774>`_
+- move import into build_geo_schema function [bidaya0]
+
+Breaking changes / important additions:
+
+- Hotfix release to mitigate unwanted import of optional GIS features that depend on GDAL. GDAL is **not** a new requirement.
+
 0.23.0 (2022-07-25)
 -------------------
 
