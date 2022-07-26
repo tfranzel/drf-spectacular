@@ -1,4 +1,3 @@
-from django.contrib.gis.db import models
 from rest_framework.utils.model_meta import get_field_info
 
 from drf_spectacular.drainage import warn
@@ -83,6 +82,7 @@ def build_bbox_schema():
 
 
 def build_geo_schema(model_field):
+    from django.contrib.gis.db import models
     if isinstance(model_field, models.PointField):
         return build_point_geo_schema()
     elif isinstance(model_field, models.LineStringField):
