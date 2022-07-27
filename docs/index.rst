@@ -26,8 +26,9 @@ Table of Contents
    faq.rst
    blueprints.rst
    drf_yasg.rst
-   license.rst
+   contributing.rst
    changelog.rst
+   license.rst
    drf_spectacular.rst
 
 Indices and Tables
