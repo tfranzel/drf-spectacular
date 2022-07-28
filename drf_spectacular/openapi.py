@@ -28,10 +28,10 @@ from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta,
     assert_basic_serializer, build_array_type, build_basic_type, build_choice_field,
     build_examples_list, build_generic_type, build_listed_example_value, build_media_type_object,
-    build_mocked_view, build_object_type, build_parameter_type, error, follow_field_source,
-    follow_model_field_lookup, force_instance, get_doc, get_list_serializer, get_type_hints,
-    get_view_model, is_basic_serializer, is_basic_type, is_field, is_list_serializer,
-    is_list_serializer_customized, is_patched_serializer, is_serializer,
+    build_mocked_view, build_object_type, build_parameter_type, error, filter_supported_arguments,
+    follow_field_source, follow_model_field_lookup, force_instance, get_doc, get_list_serializer,
+    get_type_hints, get_view_model, is_basic_serializer, is_basic_type, is_field,
+    is_list_serializer, is_list_serializer_customized, is_patched_serializer, is_serializer,
     is_trivial_string_variation, modify_media_types_for_versioning, resolve_django_path_parameter,
     resolve_regex_path_parameter, resolve_type_hint, safe_ref, sanitize_specification_extensions,
     warn, whitelisted,
@@ -1422,11 +1422,17 @@ class AutoSchema(ViewInspector):
 
         return result
 
-    def _get_serializer_name(self, serializer, direction):
+    def _get_serializer_name(self, serializer, direction, bypass_extensions=False):
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
-        if serializer_extension and serializer_extension.get_name():
-            # library override mechanisms
-            name = serializer_extension.get_name()
+        if serializer_extension and not bypass_extensions:
+            custom_name = serializer_extension.get_name(**filter_supported_arguments(
+                serializer_extension.get_name, auto_schema=self, direction=direction
+            ))
+        else:
+            custom_name = None
+
+        if custom_name:
+            name = custom_name
         elif has_override(serializer, 'component_name'):
             name = get_override(serializer, 'component_name')
         elif getattr(getattr(serializer, 'Meta', None), 'ref_name', None) is not None:
@@ -1457,13 +1463,13 @@ class AutoSchema(ViewInspector):
 
         return name
 
-    def resolve_serializer(self, serializer, direction) -> ResolvedComponent:
+    def resolve_serializer(self, serializer, direction, bypass_extensions=False) -> ResolvedComponent:
         assert_basic_serializer(serializer)
         serializer = force_instance(serializer)
 
         with add_trace_message(serializer.__class__.__name__):
             component = ResolvedComponent(
-                name=self._get_serializer_name(serializer, direction),
+                name=self._get_serializer_name(serializer, direction, bypass_extensions),
                 type=ResolvedComponent.SCHEMA,
                 object=serializer,
             )
@@ -1471,7 +1477,7 @@ class AutoSchema(ViewInspector):
                 return self.registry[component]  # return component with schema
 
             self.registry.register(component)
-            component.schema = self._map_serializer(serializer, direction)
+            component.schema = self._map_serializer(serializer, direction, bypass_extensions)
 
             discard_component = (
                 # components with empty schemas serve no purpose

@@ -1,3 +1,6 @@
+from typing import TYPE_CHECKING
+from unittest import mock
+
 from rest_framework import fields, mixins, permissions, serializers, viewsets
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.decorators import api_view
@@ -12,9 +15,12 @@ from drf_spectacular.plumbing import (
     ResolvedComponent, build_array_type, build_basic_type, build_object_type,
 )
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import Direction, extend_schema
 from tests import generate_schema, get_response_schema
 from tests.models import SimpleModel, SimpleSerializer
+
+if TYPE_CHECKING:
+    from drf_spectacular.openapi import AutoSchema
 
 
 class Base64Field(fields.Field):
@@ -193,3 +199,50 @@ def test_serializer_list_extension(no_warnings):
             'data': {'type': 'array', 'items': {'$ref': '#/components/schemas/X'}}
         }
     }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_serializer_envelope_through_extension(no_warnings):
+    class EnvelopeMixin:
+        pass
+
+    # actual enveloping not implemented. This could be done internally with
+    # to_representation or externally with a custom Renderer
+    class XSerializer(EnvelopeMixin, serializers.ModelSerializer):
+        name = serializers.CharField()
+
+        class Meta:
+            model = SimpleModel
+            fields = '__all__'
+            envelope = 'foo'  # some arbitrary addition to Meta for example
+
+    class EnvelopeFix(OpenApiSerializerExtension):
+        target_class = EnvelopeMixin
+        match_subclasses = True
+
+        def get_name(self, auto_schema: 'AutoSchema', direction: Direction):
+            if direction == 'request':
+                return None
+            else:
+                return f"Enveloped{self.target.__class__.__name__}"
+
+        def map_serializer(self, auto_schema: 'AutoSchema', direction: Direction):
+            if direction == 'request':
+                return auto_schema._map_serializer(self.target, direction, bypass_extensions=True)
+            else:
+                component = auto_schema.resolve_serializer(self.target, direction, bypass_extensions=True)
+                if not component:
+                    return {}
+                return build_object_type(
+                    properties={self.target.Meta.envelope: component.ref}
+                )
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.none()
+
+    schema = generate_schema('/x', XViewset)
+    assert 'X' in schema['components']['schemas']
+    assert 'EnvelopedX' in schema['components']['schemas']
+    assert 'XRequest' in schema['components']['schemas']
+    assert 'PatchedXRequest' in schema['components']['schemas']

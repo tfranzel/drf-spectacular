@@ -1275,3 +1275,10 @@ def build_listed_example_value(value: Any, paginator, direction):
             f"provide example values themselves. Using the plain example value as fallback."
         )
         return value
+
+
+def filter_supported_arguments(func, **kwargs):
+    sig = inspect.signature(func)
+    return {
+        arg: val for arg, val in kwargs.items() if arg in sig.parameters
+    }
