@@ -60,6 +60,10 @@ Helper Classes
   - ``schema`` argument should be passed as ``type``.
   - ``format`` argument is merged into ``type`` argument by using
     :py:class:`OpenApiTypes <drf_spectacular.types.OpenApiTypes>`.
+  - setting the ``many`` argument to ``True`` causes the argument to take an
+    array of values, and generates a schema similar to using the drf_yasg
+    ``Items`` class on the ``items`` property.  The type of the items in the
+    array are defined by the ``type`` argument.
 
 - :py:class:`~drf_yasg.openapi.Response` is largely identical to :py:class:`~drf_spectacular.utils.OpenApiResponse`.
 
@@ -124,7 +128,11 @@ provides the :py:class:`~drf_spectacular.types.OpenApiTypes` enum:
 - :py:data:`~drf_yasg.openapi.TYPE_STRING` with :py:data:`~drf_yasg.openapi.FORMAT_SLUG` has no direct equivalent. Use
   :py:attr:`~drf_spectacular.types.OpenApiTypes.STR` or :py:class:`str` instead.
 
-- :py:data:`~drf_yasg.openapi.TYPE_ARRAY` has no direct equivalent.
+- :py:data:`~drf_yasg.openapi.TYPE_ARRAY` is handled by setting the
+  :py:attr:`~drf_spectacular.utils.OpenApiParameter.many` attribute to `True`
+  in the parameter declaration.  There is no need to set the `items` property
+  on the parameter - the presence of `many=True` turns the parameter into an
+  array parameter.
 
 - The following additional types are also available:
 
