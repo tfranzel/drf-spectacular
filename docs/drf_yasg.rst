@@ -129,9 +129,9 @@ provides the :py:class:`~drf_spectacular.types.OpenApiTypes` enum:
   :py:attr:`~drf_spectacular.types.OpenApiTypes.STR` or :py:class:`str` instead.
 
 - :py:data:`~drf_yasg.openapi.TYPE_ARRAY` is handled by setting the
-  :py:attr:`~drf_spectacular.utils.OpenApiParameter.many` attribute to `True`
+  :py:attr:`~drf_spectacular.utils.OpenApiParameter.many` attribute to ``True``
   in the parameter declaration.  There is no need to set the `items` property
-  on the parameter - the presence of `many=True` turns the parameter into an
+  on the parameter - the presence of ``many=True`` turns the parameter into an
   array parameter.
 
 - The following additional types are also available:
