@@ -330,6 +330,9 @@ def build_parameter_type(
         'name': name,
         'schema': {k: v for k, v in schema.items() if k not in irrelevant_field_meta},
     }
+    type_schema = schema['schema']
+    if type_schema['type'] == 'array':
+        type_schema = schema['schema']['items']
     if description:
         schema['description'] = description
     if required or location == 'path':
@@ -341,9 +344,9 @@ def build_parameter_type(
     if style is not None:
         schema['style'] = style
     if enum:
-        schema['schema']['enum'] = sorted(enum)
+        type_schema['enum'] = sorted(enum)
     if pattern is not None:
-        schema['schema']['pattern'] = pattern
+        type_schema['pattern'] = pattern
     if default is not None and 'default' not in irrelevant_field_meta:
         schema['schema']['default'] = default
     if not allow_blank and schema['schema'].get('type') == 'string':
