@@ -55,7 +55,7 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
     """
     _registry: List['OpenApiSerializerExtension'] = []
 
-    def get_name(self) -> Optional[str]:
+    def get_name(self, auto_schema: 'AutoSchema', direction: Direction) -> Optional[str]:
         """ return str for overriding default name extraction """
         return None
 
