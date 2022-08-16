@@ -5,7 +5,7 @@ import re
 import shutil
 import sys
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 name = 'drf-spectacular'
 package = 'drf_spectacular'
@@ -29,16 +29,6 @@ def get_version(package):
     init_py = open(os.path.join(package, '__init__.py')).read()
     return re.search("^__version__ = ['\"]([^'\"]+)['\"]",
                      init_py, re.MULTILINE).group(1)
-
-
-def get_packages(package):
-    """
-    Return root package and all sub-packages.
-    """
-    return [
-        dirpath for dirpath, dirnames, filenames in os.walk(package)
-        if os.path.exists(os.path.join(dirpath, '__init__.py'))
-    ]
 
 
 version = get_version(package)
@@ -79,7 +69,7 @@ setup(
     long_description_content_type='text/x-rst',
     author=author,
     author_email=author_email,
-    packages=get_packages(package),
+    packages=find_packages(exclude=('tests*',)),
     include_package_data=True,
     python_requires=">=3.6",
     install_requires=requirements,
