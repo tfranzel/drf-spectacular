@@ -26,6 +26,10 @@ paths:
           - B
         description: some category description
       - in: query
+        name: choice_field_enum_override
+        schema:
+          type: string
+      - in: query
         name: custom_filter
         schema:
           type: boolean
@@ -187,6 +191,16 @@ paths:
           type: integer
           enum:
           - 1
+      - in: query
+        name: untyped_multiple_choice_field_method_with_explicit_choices
+        schema:
+          type: array
+          items:
+            type: integer
+            enum:
+            - 1
+        explode: true
+        style: form
       tags:
       - products
       security:

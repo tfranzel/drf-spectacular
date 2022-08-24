@@ -95,6 +95,18 @@ def is_list_serializer(obj) -> bool:
     return isinstance(force_instance(obj), serializers.ListSerializer)
 
 
+def get_list_serializer(obj):
+    return force_instance(obj) if is_list_serializer(obj) else get_class(obj)(many=True)
+
+
+def is_list_serializer_customized(obj) -> bool:
+    return (
+        is_serializer(obj)
+        and get_class(get_list_serializer(obj)).to_representation  # type: ignore
+        is not serializers.ListSerializer.to_representation
+    )
+
+
 def is_basic_serializer(obj) -> bool:
     return is_serializer(obj) and not is_list_serializer(obj)
 
@@ -301,6 +313,7 @@ def build_parameter_type(
         required=False,
         description=None,
         enum=None,
+        pattern=None,
         deprecated=False,
         explode=None,
         style=None,
@@ -329,6 +342,8 @@ def build_parameter_type(
         schema['style'] = style
     if enum:
         schema['schema']['enum'] = sorted(enum)
+    if pattern is not None:
+        schema['schema']['pattern'] = pattern
     if default is not None and 'default' not in irrelevant_field_meta:
         schema['schema']['default'] = default
     if not allow_blank and schema['schema'].get('type') == 'string':
@@ -847,10 +862,8 @@ def resolve_regex_path_parameter(path_regex, variable):
 
         return build_parameter_type(
             name=variable,
-            schema={
-                **build_basic_type(OpenApiTypes.STR),
-                'pattern': anchor_pattern(pattern),
-            },
+            schema=build_basic_type(OpenApiTypes.STR),
+            pattern=anchor_pattern(pattern),
             location=OpenApiParameter.PATH,
         )
 
@@ -947,7 +960,7 @@ def analyze_named_regex_pattern(path):
             skip = True
             name_capture = True
             ff = 4
-        elif path[i] in '(':
+        elif path[i] in '(' and regex_capture:
             stack += 1
             ff = 1
         elif path[i] == '>' and name_capture:
@@ -956,8 +969,8 @@ def analyze_named_regex_pattern(path):
             regex_capture = True
             skip = True
             ff = 1
-        elif path[i] in ')':
-            if regex_capture and not stack:
+        elif path[i] in ')' and regex_capture:
+            if not stack:
                 regex_capture = False
                 result[name_buffer] = regex_buffer
                 name_buffer, regex_buffer = '', ''
@@ -1058,7 +1071,7 @@ def sanitize_result_object(result):
 
 
 def sanitize_specification_extensions(extensions):
-    # https://spec.openapis.org/oas/v3.0.3#specification-extensions
+    # https://spec.openapis.org/oas/v3.0.3#specificationExtensions
     output = {}
     for key, value in extensions.items():
         if not re.match(r'^x-', key):
@@ -1252,7 +1265,7 @@ def build_listed_example_value(value: Any, paginator, direction):
     schema = paginator.get_paginated_response_schema(sentinel)
     try:
         return {
-            field_name: value if field_schema is sentinel else field_schema['example']
+            field_name: [value] if field_schema is sentinel else field_schema['example']
             for field_name, field_schema in schema['properties'].items()
         }
     except (AttributeError, KeyError):
@@ -1262,3 +1275,10 @@ def build_listed_example_value(value: Any, paginator, direction):
             f"provide example values themselves. Using the plain example value as fallback."
         )
         return value
+
+
+def filter_supported_arguments(func, **kwargs):
+    sig = inspect.signature(func)
+    return {
+        arg: val for arg, val in kwargs.items() if arg in sig.parameters
+    }

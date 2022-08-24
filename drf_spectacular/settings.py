@@ -118,6 +118,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'GET_MOCK_REQUEST': 'drf_spectacular.plumbing.build_mock_request',
 
     # Camelize names like operationId and path parameter names
+    # Camelization of the operation schema itself requires the addition of
+    # 'drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields'
+    # to POSTPROCESSING_HOOKS. Please note that the hook depends on
+    # ``djangorestframework_camel_case``, while CAMELIZE_NAMES itself does not.
     'CAMELIZE_NAMES': False,
 
     # Determines if and how free-form 'additionalProperties' should be emitted in the schema. Some
@@ -158,7 +162,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'ENABLE_DJANGO_DEPLOY_CHECK': True,
 
     # General schema metadata. Refer to spec for valid inputs
-    # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
+    # https://spec.openapis.org/oas/v3.0.3#openapi-object
     'TITLE': '',
     'DESCRIPTION': '',
     'TOS': None,
@@ -188,7 +192,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'EXTENSIONS_ROOT': {},
 
     # Oauth2 related settings. used for example by django-oauth2-toolkit.
-    # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#oauth-flows-object
+    # https://spec.openapis.org/oas/v3.0.3#oauthFlowsObject
     'OAUTH2_FLOWS': [],
     'OAUTH2_AUTHORIZATION_URL': None,
     'OAUTH2_TOKEN_URL': None,

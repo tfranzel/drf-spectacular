@@ -1,8 +1,10 @@
 import json
 from collections import namedtuple
+from importlib import import_module
 from typing import Any, Dict
 
 from django.conf import settings
+from django.templatetags.static import static
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -58,9 +60,19 @@ class SpectacularAPIView(APIView):
 
     @extend_schema(**SCHEMA_KWARGS)
     def get(self, request, *args, **kwargs):
+        # special handling of custom urlconf parameter
         if isinstance(self.urlconf, list) or isinstance(self.urlconf, tuple):
             ModuleWrapper = namedtuple('ModuleWrapper', ['urlpatterns'])
-            self.urlconf = ModuleWrapper(tuple(self.urlconf))
+            if all(isinstance(i, str) for i in self.urlconf):
+                # list of import string for urlconf
+                patterns = []
+                for item in self.urlconf:
+                    url = import_module(item)
+                    patterns += url.urlpatterns
+                self.urlconf = ModuleWrapper(tuple(patterns))
+            else:
+                # explicitly resolved urlconf
+                self.urlconf = ModuleWrapper(tuple(self.urlconf))
 
         with patched_settings(self.custom_settings):
             if settings.USE_I18N and request.GET.get('lang'):
@@ -102,7 +114,7 @@ class SpectacularJSONAPIView(SpectacularAPIView):
 
 
 def _get_sidecar_url(package):
-    return f'{settings.STATIC_URL}drf_spectacular_sidecar/{package}'
+    return static(f'drf_spectacular_sidecar/{package}')
 
 
 class SpectacularSwaggerView(APIView):

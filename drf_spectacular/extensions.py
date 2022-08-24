@@ -23,7 +23,7 @@ class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthentic
     set a higher matching priority by setting the class attribute ``priority = 1`` or higher.
 
     ``get_security_definition()`` is expected to return a valid `OpenAPI security scheme object
-    <https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#security-scheme-object>`_
+    <https://spec.openapis.org/oas/v3.0.3#securitySchemeObject>`_
     """
     _registry: List['OpenApiAuthenticationExtension'] = []
 
@@ -46,16 +46,16 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
     Extension for replacing an insufficient or specifying an unknown Serializer schema.
 
     The existing implementation of ``map_serializer()`` will generate the same result
-    as `drf-spectacular` would. Either augment or replace the generated schema. The
+    as *drf-spectacular* would. Either augment or replace the generated schema. The
     view instance is available via ``auto_schema.view``, while the original serializer
     can be accessed via ``self.target``.
 
     ``map_serializer()`` is expected to return a valid `OpenAPI schema object
-    <https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schema-object>`_.
+    <https://spec.openapis.org/oas/v3.0.3#schemaObject>`_.
     """
     _registry: List['OpenApiSerializerExtension'] = []
 
-    def get_name(self) -> Optional[str]:
+    def get_name(self, auto_schema: 'AutoSchema', direction: Direction) -> Optional[str]:
         """ return str for overriding default name extraction """
         return None
 
@@ -68,13 +68,13 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
     """
     Extension for replacing an insufficient or specifying an unknown SerializerField schema.
 
-    To augment the default schema, you can get what `drf-spectacular` would generate with
+    To augment the default schema, you can get what *drf-spectacular* would generate with
     ``auto_schema._map_serializer_field(self.target, direction, bypass_extensions=True)``.
     and edit the returned schema at your discretion. Beware that this may still emit
     warnings, in which case manual construction is advisable.
 
     ``map_serializer_field()`` is expected to return a valid `OpenAPI schema object
-    <https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schema-object>`_.
+    <https://spec.openapis.org/oas/v3.0.3#schemaObject>`_.
     """
     _registry: List['OpenApiSerializerFieldExtension'] = []
 
@@ -119,7 +119,7 @@ class OpenApiFilterExtension(OpenApiGeneratorExtension['OpenApiFilterExtension']
 
     ``get_schema_operation_parameters()`` is expected to return either an empty list or a list
     of valid raw `OpenAPI parameter objects
-    <https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#parameterObject>`_.
+    <https://spec.openapis.org/oas/v3.0.3#parameterObject>`_.
     Using ``drf_spectacular.plumbing.build_parameter_type`` is recommended to generate
     the appropriate raw dict objects.
     """

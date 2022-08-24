@@ -85,8 +85,10 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         filter_method = self._get_filter_method(filterset_class, filter_field)
         filter_method_hint = self._get_filter_method_hint(filter_method)
         filter_choices = self._get_explicit_filter_choices(filter_field)
+        schema_from_override = False
 
         if has_override(filter_field, 'field') or has_override(filter_method, 'field'):
+            schema_from_override = True
             annotation = (
                 get_override(filter_field, 'field') or get_override(filter_method, 'field')
             )
@@ -117,7 +119,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 schema = build_basic_type(OpenApiTypes.NUMBER)  # TODO may be improved
             else:
                 schema = build_basic_type(OpenApiTypes.NUMBER)
-        elif isinstance(filter_field, filters.ChoiceFilter):
+        elif isinstance(filter_field, (filters.ChoiceFilter, filters.MultipleChoiceFilter)):
             try:
                 schema = self._get_schema_from_model_field(auto_schema, filter_field, model)
             except Exception:
@@ -148,7 +150,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         # enrich schema with additional info from filter_field
         enum = schema.pop('enum', None)
         # explicit filter choices may disable enum retrieved from model
-        if filter_choices is not None:
+        if not schema_from_override and filter_choices is not None:
             enum = filter_choices
         if enum:
             schema['enum'] = sorted(enum, key=str)

@@ -37,7 +37,7 @@ Features
     - Callback operations (experimental)
     - Included support for:
         - `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_
-        - `SimpleJWT <https://github.com/SimpleJWT/django-rest-framework-simplejwt>`_
+        - `SimpleJWT <https://github.com/jazzband/djangorestframework-simplejwt>`_
         - `DjangoOAuthToolkit <https://github.com/jazzband/django-oauth-toolkit>`_
         - `djangorestframework-jwt <https://github.com/jpadilla/django-rest-framework-jwt>`_ (tested fork `drf-jwt <https://github.com/Styria-Digital/django-rest-framework-jwt>`_)
         - `dj-rest-auth <https://github.com/iMerica/dj-rest-auth>`_ (maintained fork of `django-rest-auth <https://github.com/Tivix/django-rest-auth>`_)
@@ -46,9 +46,10 @@ Features
         - `drf-nested-routers <https://github.com/alanjds/drf-nested-routers>`_
         - `djangorestframework-recursive <https://github.com/heywbj/django-rest-framework-recursive>`_
         - `djangorestframework-dataclasses <https://github.com/oxan/djangorestframework-dataclasses>`_
+        - `django-rest-framework-gis <https://github.com/openwisp/django-rest-framework-gis>`_
 
 
-For more information visit the `documentation <https://drf-spectacular.readthedocs.io>`_.
+For more information visit the `documentation <https://drf-spectacular.readthedocs.io/>`_.
 
 License
 -------
@@ -59,7 +60,7 @@ Requirements
 ------------
 
 -  Python >= 3.6
--  Django (2.2, 3.2, 4.0)
+-  Django (2.2, 3.2, 4.0, 4.1)
 -  Django REST Framework (3.10, 3.11, 3.12, 3.13)
 
 Installation
@@ -135,7 +136,7 @@ these static files as a separate optional package. Usage is as follows:
 Release management
 ^^^^^^^^^^^^^^^^^^
 
-`drf-spectacular` deliberately stays below version ``1.x.x`` to signal that every
+*drf-spectacular* deliberately stays below version *1.x.x* to signal that every
 new version may potentially break you. For production we strongly recommend pinning the
 version and inspecting a schema diff on update.
 
@@ -143,8 +144,8 @@ With that said, we aim to be extremely defensive w.r.t. breaking API changes. Ho
 we also acknowledge the fact that even slight schema changes may break your toolchain,
 as any existing bug may somehow also be used as a feature.
 
-We define version increments with the following semantics. `y-stream` increments may contain
-potentially breaking changes to both API and schema. `z-stream` increments will never break the
+We define version increments with the following semantics. *y-stream* increments may contain
+potentially breaking changes to both API and schema. *z-stream* increments will never break the
 API and may only contain schema changes that should have a low chance of breaking you.
 
 
@@ -158,8 +159,8 @@ Generate your schema with the CLI:
     $ ./manage.py spectacular --file schema.yml
     $ docker run -p 80:8080 -e SWAGGER_JSON=/schema.yml -v ${PWD}/schema.yml:/schema.yml swaggerapi/swagger-ui
 
-If you also want to validate your schema add the `--validate` flag. Or serve your schema directly
-from your API. We also provide convenience wrappers for `swagger-ui` or `redoc`.
+If you also want to validate your schema add the ``--validate`` flag. Or serve your schema directly
+from your API. We also provide convenience wrappers for ``swagger-ui`` or ``redoc``.
 
 .. code:: python
 
@@ -175,7 +176,7 @@ from your API. We also provide convenience wrappers for `swagger-ui` or `redoc`.
 Usage
 -----
 
-`drf-spectacular` works pretty well out of the box. You might also want to set some metadata for your API.
+*drf-spectacular* works pretty well out of the box. You might also want to set some metadata for your API.
 Just create a ``SPECTACULAR_SETTINGS`` dictionary in your ``settings.py`` and override the defaults.
 Have a look at the `available settings <https://drf-spectacular.readthedocs.io/en/latest/settings.html>`_.
 
@@ -288,14 +289,14 @@ globally, and then simply run:
     $ tox
 
 .. _Django REST framework: https://www.django-rest-framework.org/
-.. _OpenAPI 3.0: https://github.com/OAI/OpenAPI-Specification
-.. _tox: http://tox.readthedocs.org/en/latest/
+.. _OpenAPI 3.0: https://spec.openapis.org/oas/v3.0.3
+.. _tox: https://tox.wiki/
 .. _drf-spectacular-sidecar: https://github.com/tfranzel/drf-spectacular-sidecar
 
 .. |build-status| image:: https://github.com/tfranzel/drf-spectacular/actions/workflows/ci.yml/badge.svg
    :target: https://github.com/tfranzel/drf-spectacular/actions/workflows/ci.yml
 .. |pypi-version| image:: https://img.shields.io/pypi/v/drf-spectacular.svg
-   :target: https://pypi.python.org/pypi/drf-spectacular
+   :target: https://pypi.org/project/drf-spectacular/
 .. |codecov| image:: https://codecov.io/gh/tfranzel/drf-spectacular/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/tfranzel/drf-spectacular
 .. |docs| image:: https://readthedocs.org/projects/drf-spectacular/badge/
