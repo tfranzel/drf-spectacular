@@ -114,8 +114,11 @@ class OpenApiExample(OpenApiSchemaBase):
     Helper class to document a API parameter / request body / response body
     with a concrete example value.
 
+    It is recommended to provide a singular example value, since pagination
+    and list responses are handled by drf-spectacular.
+
     The example will be attached to the operation object where appropriate,
-    i. e. where the given ``media_type``, ``status_code`` and modifiers match.
+    i.e. where the given ``media_type``, ``status_code`` and modifiers match.
     Example that do not match any scenario are ignored.
     """
     def __init__(
