@@ -1282,3 +1282,10 @@ def filter_supported_arguments(func, **kwargs):
     return {
         arg: val for arg, val in kwargs.items() if arg in sig.parameters
     }
+
+
+def build_serializer_context(view) -> typing.Dict[str, Any]:
+    try:
+        return view.get_serializer_context()
+    except:  # noqa
+        return {'request': view.request}
