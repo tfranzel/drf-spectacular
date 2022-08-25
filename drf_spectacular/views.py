@@ -261,3 +261,34 @@ class SpectacularRedocView(APIView):
             lang=request.GET.get('lang'),
             version=request.GET.get('version')
         )
+
+
+class SpectacularElementsView(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
+    permission_classes = spectacular_settings.SERVE_PERMISSIONS
+    authentication_classes = AUTHENTICATION_CLASSES
+    url_name = 'schema'
+    url = None
+    template_name = 'drf_spectacular/elements.html'
+    title = spectacular_settings.TITLE
+
+    @extend_schema(exclude=True)
+    def get(self, request, *args, **kwargs):
+
+        return Response(
+            data={
+                'title': self.title,
+                'js_dist': spectacular_settings.ELEMENTS_JS_DIST,
+                'css_dist': spectacular_settings.ELEMENTS_CSS_DIST,
+                'schema_url': self._get_schema_url(request),
+            },
+            template_name=self.template_name
+        )
+
+    def _get_schema_url(self, request):
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
+        return set_query_parameters(
+            url=schema_url,
+            lang=request.GET.get('lang'),
+            version=request.GET.get('version')
+        )

@@ -32,7 +32,8 @@ Features
     - Vendor specification extensions (``x-*``) in info, operations, parameters, components, and security schemes
     - Sane fallbacks
     - Sane ``operation_id`` naming (based on path)
-    - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)
+    - Schema serving with ``SpectacularAPIView``
+    - `Elements <https://github.com/stoplightio/elements>`_, `Redoc <https://github.com/Redocly/redoc>`_, and `Swagger-UI <https://swagger.io/tools/swagger-ui/>`_ API documentation UI
     - Optional input/output serializer component split
     - Callback operations (experimental)
     - Included support for:
@@ -171,6 +172,7 @@ from your API. We also provide convenience wrappers for ``swagger-ui`` or ``redo
         # Optional UI:
         path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
         path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+        path('api/schema/elements/', SpectacularElementsView.as_view(url_name='schema'), name='elements'),
     ]
 
 Usage
