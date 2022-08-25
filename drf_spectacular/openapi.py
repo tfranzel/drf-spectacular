@@ -312,7 +312,10 @@ class AutoSchema(ViewInspector):
 
             security_requirements = scheme.get_security_requirement(self)
             if security_requirements is not None:
-                auths.append(security_requirements)
+                if isinstance(security_requirements, dict):
+                    auths.append(security_requirements)
+                else:
+                    auths.extend(security_requirements)
 
             if isinstance(scheme.name, str):
                 names, definitions = [scheme.name], [scheme.get_security_definition(self)]

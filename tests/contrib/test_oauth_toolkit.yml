@@ -58,7 +58,9 @@ paths:
       - oauth2:
         - create1
         - scope2
+      - oauth2:
         - alt-scope3
+      - oauth2:
         - alt-scope4
         - alt-scope5
       responses:

@@ -22,6 +22,10 @@ class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthentic
     can be accessed via ``self.target``. If you want to override an included extension, be sure to
     set a higher matching priority by setting the class attribute ``priority = 1`` or higher.
 
+    get_security_requirement is expected to return a dict with security object names as keys and a
+    scope list as value (usually just []). More than one key in the dict means that each entry is
+    required (AND). If you need alternate variations (OR), return a list of those dicts instead.
+
     ``get_security_definition()`` is expected to return a valid `OpenAPI security scheme object
     <https://spec.openapis.org/oas/v3.0.3#securitySchemeObject>`_
     """
@@ -29,7 +33,9 @@ class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthentic
 
     name: Union[str, List[str]]
 
-    def get_security_requirement(self, auto_schema: 'AutoSchema') -> Dict[str, List[Any]]:
+    def get_security_requirement(
+            self, auto_schema: 'AutoSchema'
+    ) -> Union[Dict[str, List[Any]], List[Dict[str, List[Any]]]]:
         assert self.name, 'name(s) must be specified'
         if isinstance(self.name, str):
             return {self.name: []}

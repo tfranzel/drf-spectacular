@@ -14,10 +14,9 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
 
         for permission in auto_schema.view.get_permissions():
             if isinstance(permission, TokenMatchesOASRequirements):
-                # OpenAPI has no scope grouping so we simply flatten the list of alternatives
                 alt_scopes = permission.get_required_alternate_scopes(request, view)
                 alt_scopes = alt_scopes.get(auto_schema.method, [])
-                return {self.name: [alt for group in alt_scopes for alt in group]}
+                return [{self.name: group} for group in alt_scopes]
             if isinstance(permission, IsAuthenticatedOrTokenHasScope):
                 return {self.name: TokenHasScope().get_scopes(request, view)}
             if isinstance(permission, TokenHasScope):
