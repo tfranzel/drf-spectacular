@@ -231,15 +231,23 @@ class SpectacularRedocView(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
-
         return Response(
             data={
                 'title': self.title,
                 'dist': self._redoc_dist(),
                 'schema_url': self._get_schema_url(request),
+                'settings': self._dump(spectacular_settings.REDOC_UI_SETTINGS),
             },
             template_name=self.template_name
         )
+
+    def _dump(self, data):
+        if not data:
+            return None
+        elif isinstance(data, str):
+            return data
+        else:
+            return json.dumps(data, indent=2)
 
     def _redoc_dist(self):
         if spectacular_settings.REDOC_DIST == 'SIDECAR':

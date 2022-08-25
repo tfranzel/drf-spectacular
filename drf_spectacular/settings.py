@@ -69,8 +69,15 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/oauth2/
     'SWAGGER_UI_OAUTH2_CONFIG': {},
 
+    # Dictionary of general configuration to pass to the Redoc.init({ ... })
+    # https://github.com/Redocly/redoc#redoc-options-object
+    # The settings are serialized with json.dumps(). If you need customized JS, use a
+    # string instead. The string must then contain valid JS and is passed unchanged.
+    'REDOC_UI_SETTINGS': {},
+
     # CDNs for swagger and redoc. You can change the version or even host your
-    # own depending on your requirements.
+    # own depending on your requirements. For self-hosting, have a look at
+    # the sidecar option in the README.
     'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest',
     'SWAGGER_UI_FAVICON_HREF': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/favicon-32x32.png',
     'REDOC_DIST': 'https://cdn.jsdelivr.net/npm/redoc@latest',

@@ -13,7 +13,16 @@
     </style>
   </head>
   <body>
+    {% if settings %}
+    <div id="redoc-container"></div>
+    <script src="{{ dist }}/bundles/redoc.standalone.js"></script>
+    <script>
+      const redocSettings = {{ settings|safe }};
+      Redoc.init("{{ schema_url }}", redocSettings, document.getElementById('redoc-container'))
+    </script>
+    {% else %}
     <redoc spec-url="{{ schema_url }}"></redoc>
     <script src="{{ dist }}/bundles/redoc.standalone.js"></script>
+    {% endif %}
   </body>
 </html>
