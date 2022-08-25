@@ -664,9 +664,17 @@ class AutoSchema(ViewInspector):
                 if isinstance(field.parent, serializers.ManyRelatedField):
                     model = field.parent.parent.Meta.model
                     source = field.parent.source.split('.')
-                else:
+                elif hasattr(field.parent, 'Meta'):
                     model = field.parent.Meta.model
                     source = field.source.split('.')
+                else:
+                    warn(
+                        f'Could not derive type for under-specified PrimaryKeyRelatedField '
+                        f'"{field.field_name}". The serializer has no associated model (Meta class) '
+                        f'and this particular field has no type without a model association. Consider '
+                        f'changing the field or adding a Meta class. defaulting to string.'
+                    )
+                    return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
                 # estimates the relating model field and jumps to it's target model PK field.
                 # also differentiate as source can be direct (pk) or relation field (model).

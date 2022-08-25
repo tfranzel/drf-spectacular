@@ -500,3 +500,17 @@ def test_invalid_parameter_types(capsys, type_arg, many):
     generate_schema('/x/', view_function=view_func)
     stderr = capsys.readouterr().err
     assert 'parameter "test"' in stderr
+
+
+def test_primary_key_related_field_without_serializer_meta(capsys):
+    class XSerializer(serializers.Serializer):
+        field = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    @extend_schema(responses=XSerializer, request=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('/x/', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'Could not derive type for under-specified PrimaryKeyRelatedField "field"' in stderr
