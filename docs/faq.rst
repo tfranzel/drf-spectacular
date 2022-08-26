@@ -11,6 +11,58 @@ learn how to do easy :ref:`customization`. Feel free to contribute back missing 
 If you think this is a bug in *drf-spectacular*, open a
 `issue <https://github.com/tfranzel/drf-spectacular/issues>`_.
 
+My Swagger UI and/or Redoc page is blank
+----------------------------------------
+
+Chances are high that you are using `django-csp <https://django-csp.readthedocs.io/en/latest/index.html>`_.
+Take a look inside your browser console and confirm that you have ``Content Security Policy`` errors.
+By default, ``django-csp`` usually breaks our UIs for 2 reasons: external assets and inline scripts.
+
+Using the `sidecar <https://github.com/tfranzel/drf-spectacular#self-contained-ui-installation>`_
+will mitigate the remote asset loading violation by serving the asset from your ``self``. Alternatively,
+you can also adapt ``CSP_DEFAULT_SRC`` to allow for those CDN assets instead.
+
+Solution for Swagger UI:
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    # Option: SIDECAR
+    SPECTACULAR_SETTINGS = {
+         ...
+        'SWAGGER_UI_DIST': 'SIDECAR',
+        'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    }
+    CSP_DEFAULT_SRC = ("'self'", "'unsafe-inline'")
+    CSP_IMG_SRC = ("'self'", "data:")
+
+    # Option: CDN
+    CSP_DEFAULT_SRC = ("'self'", "'unsafe-inline'", "cdn.jsdelivr.net")
+    CSP_IMG_SRC = ("'self'", "data:", "cdn.jsdelivr.net")
+
+.. note:: Depending on how paranoid you are, you may avoid having to use ``unsafe-inline`` by using
+  ``SpectacularSwaggerSplitView`` instead, which does a separate request for the script. Note however
+  that some URL rewriting deployments will break it. Use this option only if you really need to.
+
+Solution for Redoc:
+^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    # Option: SIDECAR
+    SPECTACULAR_SETTINGS = {
+         ...
+        'REDOC_DIST': 'SIDECAR',
+    }
+    # Option: CDN
+    CSP_DEFAULT_SRC = ("'self'", "cdn.jsdelivr.net")
+
+    # required for both CDN and SIDECAR
+    CSP_WORKER_SRC = ("'self'", "blob:")
+    CSP_IMG_SRC = ("'self'", "data:", "cdn.redoc.ly")
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "fonts.googleapis.com")
+    CSP_FONT_SRC = ("'self'", "fonts.gstatic.com")
+
 I cannot use :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` on library code
 --------------------------------------------------------------------------------------------
 
