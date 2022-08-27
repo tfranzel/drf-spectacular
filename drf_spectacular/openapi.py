@@ -28,13 +28,13 @@ from drf_spectacular.plumbing import (
     ComponentRegistry, ResolvedComponent, UnableToProceedError, append_meta,
     assert_basic_serializer, build_array_type, build_basic_type, build_choice_field,
     build_examples_list, build_generic_type, build_listed_example_value, build_media_type_object,
-    build_mocked_view, build_object_type, build_parameter_type, error, filter_supported_arguments,
-    follow_field_source, follow_model_field_lookup, force_instance, get_doc, get_list_serializer,
-    get_type_hints, get_view_model, is_basic_serializer, is_basic_type, is_field,
-    is_list_serializer, is_list_serializer_customized, is_patched_serializer, is_serializer,
-    is_trivial_string_variation, modify_media_types_for_versioning, resolve_django_path_parameter,
-    resolve_regex_path_parameter, resolve_type_hint, safe_ref, sanitize_specification_extensions,
-    warn, whitelisted,
+    build_mocked_view, build_object_type, build_parameter_type, build_serializer_context, error,
+    filter_supported_arguments, follow_field_source, follow_model_field_lookup, force_instance,
+    get_doc, get_list_serializer, get_type_hints, get_view_model, is_basic_serializer,
+    is_basic_type, is_field, is_list_serializer, is_list_serializer_customized,
+    is_patched_serializer, is_serializer, is_trivial_string_variation,
+    modify_media_types_for_versioning, resolve_django_path_parameter, resolve_regex_path_parameter,
+    resolve_type_hint, safe_ref, sanitize_specification_extensions, warn, whitelisted,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -953,6 +953,10 @@ class AutoSchema(ViewInspector):
     def _map_basic_serializer(self, serializer, direction):
         assert_basic_serializer(serializer)
         serializer = force_instance(serializer)
+        # serializers provided through @extend_schema will not receive the mock context
+        # via _get_serializer(). Establish behavioral symmetry for those use-cases.
+        if not serializer.context:
+            serializer.context.update(build_serializer_context(self.view))
         required = set()
         properties = {}
 
@@ -1097,20 +1101,21 @@ class AutoSchema(ViewInspector):
 
     def _get_serializer(self):
         view = self.view
+        context = build_serializer_context(view)
         try:
             if isinstance(view, GenericAPIView):
                 # try to circumvent queryset issues with calling get_serializer. if view has NOT
                 # overridden get_serializer, its safe to use get_serializer_class.
                 if view.__class__.get_serializer == GenericAPIView.get_serializer:
-                    return view.get_serializer_class()()
-                return view.get_serializer()
+                    return view.get_serializer_class()(context=context)
+                return view.get_serializer(context=context)
             elif isinstance(view, APIView):
                 # APIView does not implement the required interface, but be lenient and make
                 # good guesses before giving up and emitting a warning.
                 if callable(getattr(view, 'get_serializer', None)):
-                    return view.get_serializer()
+                    return view.get_serializer(context=context)
                 elif callable(getattr(view, 'get_serializer_class', None)):
-                    return view.get_serializer_class()()
+                    return view.get_serializer_class()(context=context)
                 elif hasattr(view, 'serializer_class'):
                     return view.serializer_class
                 else:

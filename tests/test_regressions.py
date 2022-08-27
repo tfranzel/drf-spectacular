@@ -275,8 +275,9 @@ def test_serializer_retrieval_from_view(no_warnings):
     class X1Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
         serializer_class = UnusedSerializer
 
-        def get_serializer(self):
-            return XSerializer()
+        def get_serializer(self, *args, **kwargs):
+            assert 'request' in kwargs['context']
+            return XSerializer(*args, **kwargs)
 
     class X2Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
         def get_serializer_class(self):
@@ -2886,3 +2887,28 @@ def test_parameter_with_pattern(no_warnings):
         'type': 'string',
         'format': 'regex'
     }
+
+
+def test_mock_request_in_serializer_context(no_warnings):
+    # split test into 2 serializers as get_fields is used through a cached property
+    # and thus the assert may not be executed for the annotated case.
+    class AnnotatedSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+        def get_fields(self):
+            assert self.context and 'request' in self.context
+            return super().get_fields()
+
+    class RegularSerializer(serializers.Serializer):
+        field = serializers.IntegerField()
+
+        def get_fields(self):
+            assert self.context and 'request' in self.context
+            return super().get_fields()
+
+    @extend_schema_view(retrieve=extend_schema(responses=AnnotatedSerializer))
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = RegularSerializer
+        queryset = SimpleModel.objects.all()
+
+    generate_schema('/x', XViewset)
