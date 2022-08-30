@@ -2912,3 +2912,9 @@ def test_mock_request_in_serializer_context(no_warnings):
         queryset = SimpleModel.objects.all()
 
     generate_schema('/x', XViewset)
+
+
+def test_drf_authtoken_schema_override_bug(no_warnings):
+    from rest_framework.authtoken.views import ObtainAuthToken
+
+    generate_schema('/token/', view=ObtainAuthToken)
