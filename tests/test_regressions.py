@@ -2918,3 +2918,20 @@ def test_drf_authtoken_schema_override_bug(no_warnings):
     from rest_framework.authtoken.views import ObtainAuthToken
 
     generate_schema('/token/', view=ObtainAuthToken)
+
+
+def test_safestring_serialization(no_warnings):
+    from django.utils.safestring import mark_safe
+
+    @extend_schema(
+        responses=SimpleSerializer,
+        summary=mark_safe('<h1>Woah!</h1>'),
+        description=mark_safe('<h1>Woah!</h1>that\'s<b>bold</b>'),
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert b"<h1>Woah!</h1>" in OpenApiJsonRenderer().render(schema)
+    assert b"<h1>Woah!</h1>" in OpenApiYamlRenderer().render(schema)

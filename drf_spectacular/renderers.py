@@ -3,6 +3,7 @@ from decimal import Decimal
 from uuid import UUID
 
 import yaml
+from django.utils.safestring import SafeString
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.renderers import BaseRenderer, JSONRenderer
 
@@ -47,6 +48,10 @@ class OpenApiYamlRenderer(BaseRenderer):
         def uuid_representer(dumper, data):
             return dumper.represent_str(str(data))
         Dumper.add_representer(UUID, uuid_representer)
+
+        def safestring_representer(dumper, data):
+            return dumper.represent_str(data)
+        Dumper.add_representer(SafeString, safestring_representer)
 
         return yaml.dump(
             data,
