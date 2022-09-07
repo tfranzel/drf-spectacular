@@ -1,7 +1,7 @@
 Django>=2.2
 djangorestframework>=3.10
 uritemplate>=2.0.0
-PyYAML>=5.1
+PyYAML>=6.0
 jsonschema>=2.6.0
 inflection>=0.3.1
 typing-extensions; python_version < "3.8"
