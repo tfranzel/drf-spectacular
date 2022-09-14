@@ -1,6 +1,27 @@
 Changelog
 =========
 
+0.24.0 (2022-09-14)
+-------------------
+
+- fix yaml serialization error on Django SafeString `#802 <https://github.com/tfranzel/drf-spectacular/issues/802>`_
+- mitigate DRF bug in ObtainAuthToken < 3.12.0 `#796 <https://github.com/tfranzel/drf-spectacular/issues/796>`_
+- add FAQ entry for django-csp errors `#173 <https://github.com/tfranzel/drf-spectacular/issues/173>`_ `#797 <https://github.com/tfranzel/drf-spectacular/issues/797>`_
+- bugfix TokenMatchesOASRequirements `#469 <https://github.com/tfranzel/drf-spectacular/issues/469>`_ and JWTCookieAuthentication `#626 <https://github.com/tfranzel/drf-spectacular/issues/626>`_
+- add custom redoc settings option
+- fix error with PrimaryKeyRelatedField on non-ModelSerializer `#353 <https://github.com/tfranzel/drf-spectacular/issues/353>`_
+- provide context to serializer for @extend_schema use-cases `#699 <https://github.com/tfranzel/drf-spectacular/issues/699>`_
+- add example value hint to doc `#788 <https://github.com/tfranzel/drf-spectacular/issues/788>`_
+- fix packages= so top_level.txt is correct [anthony sottile]
+- Adding documentation for the OpenApiParameter 'many' argument [Paul Wayper]
+- Extend OpenApiSerializerExtension interface. `#392 <https://github.com/tfranzel/drf-spectacular/issues/392>`_ `#705 <https://github.com/tfranzel/drf-spectacular/issues/705>`_
+- Include context with request when instantiating serializers [Mike Hansen]
+
+Breaking changes / important additions:
+
+- Some minor gaps closed in the extension interface and serializer context initialization. It is a y-stream release,
+  because there remains a small chance of change for users that sport non-standard customizations.
+
 0.23.1 (2022-07-26)
 -------------------
 
