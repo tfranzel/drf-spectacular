@@ -2935,3 +2935,24 @@ def test_safestring_serialization(no_warnings):
     schema = generate_schema('/x/', view_function=view_func)
     assert b"<h1>Woah!</h1>" in OpenApiJsonRenderer().render(schema)
     assert b"<h1>Woah!</h1>" in OpenApiYamlRenderer().render(schema)
+
+
+def test_many_parameter_item_enum():
+    @extend_schema(
+        parameters=[OpenApiParameter(
+            'status', type=int, many=True, style="form", explode=False, enum=[1, 2, 3]
+        )],
+        responses=SimpleSerializer,
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['paths']['/x/']['get']['parameters'][0] == {
+        'in': 'query',
+        'name': 'status',
+        'schema': {'type': 'array', 'items': {'type': 'integer', 'enum': [1, 2, 3]}},
+        'explode': False,
+        'style': 'form'
+    }

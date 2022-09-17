@@ -341,9 +341,17 @@ def build_parameter_type(
     if style is not None:
         schema['style'] = style
     if enum:
-        schema['schema']['enum'] = sorted(enum)
+        # in case of array schema, enum makes little sense on the array itself
+        if schema['schema'].get('type') == 'array':
+            schema['schema']['items']['enum'] = sorted(enum)
+        else:
+            schema['schema']['enum'] = sorted(enum)
     if pattern is not None:
-        schema['schema']['pattern'] = pattern
+        # in case of array schema, pattern only makes sense on the items
+        if schema['schema'].get('type') == 'array':
+            schema['schema']['items']['pattern'] = pattern
+        else:
+            schema['schema']['pattern'] = pattern
     if default is not None and 'default' not in irrelevant_field_meta:
         schema['schema']['default'] = default
     if not allow_blank and schema['schema'].get('type') == 'string':
