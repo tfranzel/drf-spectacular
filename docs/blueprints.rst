@@ -90,6 +90,17 @@ __ https://mrin9.github.io/RapiDoc/
 
 .. literalinclude:: blueprints/rapidoc.html
 
+Elements
+--------
+
+`Elements`__ is another documentation tool that can be used as an alternate to Redoc or Swagger UI.
+
+__ https://stoplight.io/open-source/elements
+
+.. literalinclude:: blueprints/elements.py
+
+.. literalinclude:: blueprints/elements.html
+
 
 drf-rw-serializers
 ------------------
