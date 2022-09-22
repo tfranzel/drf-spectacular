@@ -17,6 +17,7 @@ def test_rest_framework_gis(no_warnings, clear_caches):
         GeometryCollectionField, GeometryField, LineStringField, MultiLineStringField,
         MultiPointField, MultiPolygonField, PointField, PolygonField,
     )
+    from rest_framework_gis.fields import GeometryField as SerializerGeometryField
     from rest_framework_gis.pagination import GeoJsonPagination
     from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
@@ -33,6 +34,10 @@ def test_rest_framework_gis(no_warnings, clear_caches):
         field_multipoint = MultiPointField()
         field_multilinestring = MultiLineStringField()
         field_geometrycollection = GeometryCollectionField()
+
+    class GeoModel2(models.Model):
+        related_model = models.OneToOneField(GeoModel, on_delete=models.DO_NOTHING)
+        field_point = PointField()
 
     router = routers.SimpleRouter()
 
@@ -58,9 +63,11 @@ def test_rest_framework_gis(no_warnings, clear_caches):
 
     # plain serializer with GIS fields but without restructured container object
     class PlainSerializer(serializers.ModelSerializer):
+        field_gis_related = SerializerGeometryField(source="geomodel2.field_point")
+
         class Meta:
             model = GeoModel
-            fields = ['id', 'field_random1', 'field_random2', 'field_gis_plain']
+            fields = ['id', 'field_random1', 'field_random2', 'field_gis_plain', 'field_gis_related']
 
     class PlainViewset(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
         serializer_class = PlainSerializer

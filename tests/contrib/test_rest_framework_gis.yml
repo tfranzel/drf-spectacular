@@ -998,8 +998,26 @@ components:
               - 77.5933
               minItems: 2
               maxItems: 3
+        field_gis_related:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+                format: float
+              example:
+              - 12.9721
+              - 77.5933
+              minItems: 2
+              maxItems: 3
       required:
       - field_gis_plain
+      - field_gis_related
       - field_random1
       - field_random2
       - id
