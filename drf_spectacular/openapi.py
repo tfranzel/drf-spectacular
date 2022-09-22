@@ -811,7 +811,13 @@ class AutoSchema(ViewInspector):
 
             return append_meta(self._map_response_type_hint(method), meta)
 
-        if isinstance(field, (serializers.BooleanField, serializers.NullBooleanField)):
+        # NullBooleanField was removed in 3.14. Since 3.12.0 NullBooleanField was a subclass of BooleanField
+        if hasattr(serializers, "NullBooleanField"):
+            boolean_field_classes = (serializers.BooleanField, serializers.NullBooleanField)
+        else:
+            boolean_field_classes = (serializers.BooleanField,)
+
+        if isinstance(field, boolean_field_classes):
             return append_meta(build_basic_type(OpenApiTypes.BOOL), meta)
 
         if isinstance(field, serializers.JSONField):
