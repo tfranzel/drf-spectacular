@@ -1,6 +1,21 @@
 Changelog
 =========
 
+0.24.1 (2022-09-23)
+-------------------
+
+- bugfix GeometryFilter for GIS and django-filter `#814 <https://github.com/tfranzel/drf-spectacular/issues/814>`_
+- NullBooleanField comment and add 3.14.0 to test suite `#818 <https://github.com/tfranzel/drf-spectacular/issues/818>`_
+- fix:  `#816 <https://github.com/tfranzel/drf-spectacular/issues/816>`_ NullBooleanField does not exist in DRF >= 3.14.0 [Laurent Tramoy]
+- fix GIS source lookup with hops `#813 <https://github.com/tfranzel/drf-spectacular/issues/813>`_
+- Add blueprint for Stoplight Elements docs UI [Alex Burgel]
+- fix OpenApiParameter enum and pattern for many=True `#808 <https://github.com/tfranzel/drf-spectacular/issues/808>`_
+
+Breaking changes / important additions:
+
+- Hotfix release to mitigate removal of ``NullBooleanField`` in DRF 3.14.0
+- Small fixes to OpenApiParameter and ``django-filter``
+
 0.24.0 (2022-09-14)
 -------------------
 
