@@ -87,3 +87,40 @@ def test_rest_framework_gis(no_warnings, clear_caches):
         generate_schema(None, patterns=router.urls),
         'tests/contrib/test_rest_framework_gis.yml'
     )
+
+
+@pytest.mark.contrib('rest_framework_gis', 'django_filter')
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {})
+def test_geo_filter_set(no_warnings):
+    from django.contrib.gis.db.models import PointField
+    from django_filters import filters
+    from django_filters.rest_framework import DjangoFilterBackend
+    from rest_framework_gis.filters import GeometryFilter
+    from rest_framework_gis.filterset import GeoFilterSet
+
+    class GeoRegionModel(models.Model):
+        slug = models.CharField(max_length=32)
+        geom = PointField()
+
+    class RegionFilter(GeoFilterSet):
+        slug = filters.CharFilter(field_name='slug', lookup_expr='istartswith')
+        contains_geom = GeometryFilter(field_name='geom', lookup_expr='contains')
+
+        class Meta:
+            model = GeoRegionModel
+            fields = ['slug', 'contains_geom']
+
+    class XSerializer(serializers.Serializer):
+        slug = serializers.CharField()
+
+    class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = XSerializer
+        queryset = GeoRegionModel.objects.none()
+        filterset_class = RegionFilter
+        filter_backends = [DjangoFilterBackend]
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/']['get']['parameters'] == [
+        {'in': 'query', 'name': 'contains_geom', 'schema': {'type': 'string'}},
+        {'in': 'query', 'name': 'slug', 'schema': {'type': 'string'}}
+    ]
