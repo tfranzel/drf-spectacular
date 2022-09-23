@@ -236,7 +236,24 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         # potential side effects. Only after that fails, attempt to call
         # get_queryset() to check for potential query annotations.
         model_field = self._get_model_field(filter_field, model)
+
+        # this is a cross feature between rest-framework-gis and django-filter. Regular
+        # behavior needs to be sidestepped as the model information is lost down the line.
+        # TODO for now this will be just a string to cover WKT, WKB, and urlencoded GeoJSON
+        #   build_geo_schema(model_field) would yield the correct result
+        if self._is_gis(model_field):
+            return build_basic_type(OpenApiTypes.STR)
+
         if not isinstance(model_field, models.Field):
             qs = auto_schema.view.get_queryset()
             model_field = qs.query.annotations[filter_field.field_name].field
         return auto_schema._map_model_field(model_field, direction=None)
+
+    def _is_gis(self, field):
+        try:
+            from django.contrib.gis.db.models import GeometryField
+            from rest_framework_gis.filters import GeometryFilter
+
+            return isinstance(field, (GeometryField, GeometryFilter))
+        except ImportError:
+            return False

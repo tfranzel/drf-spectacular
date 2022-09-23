@@ -2,7 +2,9 @@ from rest_framework.utils.model_meta import get_field_info
 
 from drf_spectacular.drainage import warn
 from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerializerFieldExtension
-from drf_spectacular.plumbing import ResolvedComponent, build_array_type, build_object_type, get_doc
+from drf_spectacular.plumbing import (
+    ResolvedComponent, build_array_type, build_object_type, follow_field_source, get_doc,
+)
 
 
 def build_point_schema():
@@ -210,7 +212,7 @@ class GeometryFieldExtension(OpenApiSerializerFieldExtension):
         # robustly checking the proper condition is harder.
         try:
             model = self.target.parent.Meta.model
-            model_field = get_field_info(model).fields[self.target.source]
+            model_field = follow_field_source(model, self.target.source.split('.'))
             return build_geo_schema(model_field)
         except:  # noqa: E722
             warn(f'Encountered an issue resolving field {self.target}. defaulting to generic object.')
