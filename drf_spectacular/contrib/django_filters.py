@@ -249,11 +249,15 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             model_field = qs.query.annotations[filter_field.field_name].field
         return auto_schema._map_model_field(model_field, direction=None)
 
-    def _is_gis(self, field):
+    @classmethod
+    def _is_gis(cls, field):
+        if not getattr(cls, '_has_gis', True):
+            return False
         try:
             from django.contrib.gis.db.models import GeometryField
             from rest_framework_gis.filters import GeometryFilter
 
             return isinstance(field, (GeometryField, GeometryFilter))
-        except ImportError:
+        except: # noqa
+            cls._has_gis = False
             return False
