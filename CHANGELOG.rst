@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.24.2 (2022-09-26)
+-------------------
+
+- robustify extension class loading `#821 <https://github.com/tfranzel/drf-spectacular/issues/821>`_
+- fix regression due to GIS import for django-filter `#821 <https://github.com/tfranzel/drf-spectacular/issues/821>`_
+
+Breaking changes / important additions:
+
+- Hotfix release to mitigate optional GDAL import errors for django-filter.
+
 0.24.1 (2022-09-23)
 -------------------
 
