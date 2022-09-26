@@ -708,6 +708,14 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
                     f'has an installed app but target class was not found.'
                 )
             cls.target_class = None
+        except Exception as e:  # pragma: no cover
+            installed_apps = apps.app_configs.keys()
+            if any(cls.target_class.startswith(app + '.') for app in installed_apps):
+                warn(
+                    f'Unexpected error {e.__class__.__name__} occurred when attempting '
+                    f'to import {cls.target_class} for extension {cls.__name__} ({e}).'
+                )
+            cls.target_class = None
 
     @classmethod
     def _matches(cls, target) -> bool:
