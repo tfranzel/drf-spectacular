@@ -1,3 +1,4 @@
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
 from drf_spectacular.drainage import add_trace_message, get_override, has_override, warn
@@ -8,6 +9,16 @@ from drf_spectacular.plumbing import (
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
+
+
+try:
+    from django.contrib.gis.db.models import GeometryField
+    from rest_framework_gis.filters import GeometryFilter
+except (ImportError, ImproperlyConfigured):
+    HAS_GIS = False
+else:
+    HAS_GIS = True
+
 
 _NoHint = object()
 
@@ -250,10 +261,4 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         return auto_schema._map_model_field(model_field, direction=None)
 
     def _is_gis(self, field):
-        try:
-            from django.contrib.gis.db.models import GeometryField
-            from rest_framework_gis.filters import GeometryFilter
-
-            return isinstance(field, (GeometryField, GeometryFilter))
-        except ImportError:
-            return False
+        return HAS_GIS and isinstance(field, (GeometryField, GeometryFilter))
