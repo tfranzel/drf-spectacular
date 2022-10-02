@@ -627,7 +627,9 @@ class AutoSchema(ViewInspector):
         serializer_field_extension = OpenApiSerializerFieldExtension.get_match(field)
         if serializer_field_extension and not bypass_extensions:
             schema = serializer_field_extension.map_serializer_field(self, direction)
-            if serializer_field_extension.get_name():
+            if schema is None:
+                return None
+            elif serializer_field_extension.get_name():
                 component = ResolvedComponent(
                     name=serializer_field_extension.get_name(),
                     type=ResolvedComponent.SCHEMA,
