@@ -96,7 +96,7 @@ def is_list_serializer(obj) -> bool:
 
 
 def get_list_serializer(obj):
-    return force_instance(obj) if is_list_serializer(obj) else get_class(obj)(many=True)
+    return force_instance(obj) if is_list_serializer(obj) else get_class(obj)(many=True, context=obj.context)
 
 
 def is_list_serializer_customized(obj) -> bool:
