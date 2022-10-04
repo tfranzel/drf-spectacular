@@ -52,7 +52,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         if not model:
             return []
 
-        filterset_class = self.target.get_filterset_class(auto_schema.view, model.objects.none())
+        filterset_class = self.target.get_filterset_class(auto_schema.view, model._default_manager.none())
         if not filterset_class:
             return []
 

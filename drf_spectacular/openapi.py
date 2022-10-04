@@ -561,13 +561,13 @@ class AutoSchema(ViewInspector):
             # special case handling only for _resolve_path_parameters() where neither queryset nor
             # parent is set by build_field. patch in queryset as _map_serializer_field requires it
             if not field.queryset:
-                field.queryset = model_field.related_model.objects.none()
+                field.queryset = model_field.related_model._default_manager.none()
             return self._map_serializer_field(field, direction)
         elif isinstance(field, serializers.ManyRelatedField):
             # special case handling similar to the case above. "parent.parent" on child_relation
             # is None and there is no queryset. patch in as _map_serializer_field requires one.
             if not field.child_relation.queryset:
-                field.child_relation.queryset = model_field.related_model.objects.none()
+                field.child_relation.queryset = model_field.related_model._default_manager.none()
             return self._map_serializer_field(field, direction)
         elif field and not isinstance(field, (serializers.ReadOnlyField, serializers.ModelField)):
             return self._map_serializer_field(field, direction)
