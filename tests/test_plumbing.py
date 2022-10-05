@@ -17,10 +17,16 @@ from drf_spectacular.drainage import TypedDict
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     analyze_named_regex_pattern, build_basic_type, detype_pattern, follow_field_source,
-    force_instance, is_field, is_serializer, resolve_type_hint,
+    force_instance, get_list_serializer, is_field, is_serializer, resolve_type_hint,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
+
+
+def test_get_list_serializer_preserves_context():
+    serializer = serializers.Serializer(context={"foo": "bar"})
+    list_serializer = get_list_serializer(serializer)
+    assert list_serializer.context == {"foo": "bar"}
 
 
 def test_is_serializer():
