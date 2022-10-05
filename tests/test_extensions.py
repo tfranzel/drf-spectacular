@@ -48,15 +48,18 @@ def test_serializer_field_extension(no_warnings):
 def test_serializer_field_extension_can_return_none(no_warnings):
     """Field extensions can return None, which should exclude them from schema"""
 
+    class BlindBase64Field(fields.Field):
+        pass  # pragma: no cover
+
     class Base64FieldExtension(OpenApiSerializerFieldExtension):
-        target_class = 'tests.test_extensions.Base64Field'
+        target_class = BlindBase64Field
 
         def map_serializer_field(self, auto_schema, direction):
             return None
 
     # At least 1 field is required to generate schema, include 'other'
     class XSerializer(serializers.Serializer):
-        hash = Base64Field()
+        hash = BlindBase64Field()
         other = fields.CharField()
 
     class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
