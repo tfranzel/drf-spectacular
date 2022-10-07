@@ -769,13 +769,18 @@ def load_enum_name_overrides():
             choices = [c.value for c in choices]
         normalized_choices = []
         for choice in choices:
-            if isinstance(choice, str):
+            # Allow None values in the simple values list case
+            if isinstance(choice, str) or choice is None:
                 normalized_choices.append((choice, choice))  # simple choice list
             elif isinstance(choice[1], (list, tuple)):
                 normalized_choices.extend(choice[1])  # categorized nested choices
             else:
                 normalized_choices.append(choice)  # normal 2-tuple form
-        overrides[list_hash(list(dict(normalized_choices).keys()))] = name
+
+        # Get all of choice values that should be used in the hash, blank and None values get excluded
+        # in the post-processing hook for enum overrides, so we do the same here to ensure the hashes match
+        hashable_values = list(value for value in dict(normalized_choices).keys() if value not in ['', None])
+        overrides[list_hash(hashable_values)] = name
 
     if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
         error(
