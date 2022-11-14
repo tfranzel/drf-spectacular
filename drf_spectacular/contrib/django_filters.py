@@ -160,6 +160,8 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             description = filter_field.extra['help_text']
         elif filter_field.label is not None:
             description = filter_field.label
+            
+        deprecated = filter_field.extra.get('deprecated', False)
 
         # parameter style variations based on filter base class
         if isinstance(filter_field, filters.BaseCSVFilter):
@@ -195,7 +197,8 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 description=description,
                 schema=schema,
                 explode=explode,
-                style=style
+                style=style,
+                deprecated=deprecated
             )
             for field_name in field_names
         ]
