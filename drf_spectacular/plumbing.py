@@ -565,7 +565,7 @@ def follow_field_source(model, path, emit_warnings=True):
                 f'consider annotating the field/property? Defaulting to "string". (Exception: {exc})'
             )
 
-    def dummy_property(obj) -> str:
+    def dummy_property(obj) -> str:  # type: ignore
         pass  # pragma: no cover
     return dummy_property
 

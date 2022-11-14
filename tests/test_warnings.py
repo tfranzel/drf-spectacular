@@ -221,7 +221,7 @@ def test_unable_to_traverse_union_type_hint(capsys):
 
     class FailingFieldSourceTraversalModel3(models.Model):
         @property
-        def foo_or_bar(self) -> Union[Foo, Bar]:
+        def foo_or_bar(self) -> Union[Foo, Bar]:  # type: ignore
             pass  # pragma: no cover
 
     class XSerializer(serializers.ModelSerializer):
