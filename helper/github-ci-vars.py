@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import re
 import subprocess
 
@@ -20,5 +21,6 @@ for env in envs:
         'experimental': bool('master' in env)
     })
 
-print(f"::set-output name=date::{datetime.date.today()}")
-print(f"::set-output name=matrix::{json.dumps(matrix)}")
+with open(os.environ['GITHUB_OUTPUT'], "a") as fh:
+    fh.write(f"date={datetime.date.today()}\n")
+    fh.write(f"matrix={json.dumps(matrix)}\n")
