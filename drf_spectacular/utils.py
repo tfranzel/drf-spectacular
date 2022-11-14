@@ -1,6 +1,6 @@
 import inspect
 import sys
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar, Union
 
 # direct import due to https://github.com/microsoft/pyright/issues/3025
 if sys.version_info >= (3, 8):
@@ -68,7 +68,7 @@ class PolymorphicProxySerializer(Serializer):
     def __init__(
             self,
             component_name: str,
-            serializers: Union[List[_SerializerType], Dict[str, _SerializerType]],
+            serializers: Union[Sequence[_SerializerType], Dict[str, _SerializerType]],
             resource_type_field_name: Optional[str],
             many: Optional[bool] = None,
     ):
@@ -132,7 +132,7 @@ class OpenApiExample(OpenApiSchemaBase):
             response_only: bool = False,
             parameter_only: Optional[Tuple[str, _ParameterLocationType]] = None,
             media_type: str = 'application/json',
-            status_codes: Optional[List[Union[str, int]]] = None,
+            status_codes: Optional[Sequence[Union[str, int]]] = None,
     ):
         self.name = name
         self.summary = summary
@@ -169,7 +169,7 @@ class OpenApiParameter(OpenApiSchemaBase):
             location: _ParameterLocationType = QUERY,
             required: bool = False,
             description: str = '',
-            enum: Optional[List[Any]] = None,
+            enum: Optional[Sequence[Any]] = None,
             pattern: Optional[str] = None,
             deprecated: bool = False,
             style: Optional[str] = None,
@@ -177,10 +177,10 @@ class OpenApiParameter(OpenApiSchemaBase):
             default: Any = None,
             allow_blank: bool = True,
             many: Optional[bool] = None,
-            examples: Optional[List[OpenApiExample]] = None,
+            examples: Optional[Sequence[OpenApiExample]] = None,
             extensions: Optional[Dict[str, Any]] = None,
             exclude: bool = False,
-            response: Union[bool, List[Union[int, str]]] = False,
+            response: Union[bool, Sequence[Union[int, str]]] = False,
     ):
         self.name = name
         self.type = type
@@ -214,7 +214,7 @@ class OpenApiResponse(OpenApiSchemaBase):
             self,
             response: Any = None,
             description: str = '',
-            examples: Optional[List[OpenApiExample]] = None
+            examples: Optional[Sequence[OpenApiExample]] = None
     ):
         self.response = response
         self.description = description
@@ -256,22 +256,22 @@ class OpenApiCallback(OpenApiSchemaBase):
 
 def extend_schema(
         operation_id: Optional[str] = None,
-        parameters: Optional[List[Union[OpenApiParameter, _SerializerType]]] = None,
+        parameters: Optional[Sequence[Union[OpenApiParameter, _SerializerType]]] = None,
         request: Any = empty,
         responses: Any = empty,
-        auth: Optional[List[str]] = None,
+        auth: Optional[Sequence[str]] = None,
         description: Optional[str] = None,
         summary: Optional[str] = None,
         deprecated: Optional[bool] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[Sequence[str]] = None,
         filters: Optional[bool] = None,
         exclude: bool = False,
         operation: Optional[Dict] = None,
-        methods: Optional[List[str]] = None,
-        versions: Optional[List[str]] = None,
-        examples: Optional[List[OpenApiExample]] = None,
+        methods: Optional[Sequence[str]] = None,
+        versions: Optional[Sequence[str]] = None,
+        examples: Optional[Sequence[OpenApiExample]] = None,
         extensions: Optional[Dict[str, Any]] = None,
-        callbacks: Optional[List[OpenApiCallback]] = None,
+        callbacks: Optional[Sequence[OpenApiCallback]] = None,
         external_docs: Optional[Union[Dict[str, str], str]] = None,
 ) -> Callable[[F], F]:
     """
@@ -505,9 +505,9 @@ def extend_schema_field(
 
 def extend_schema_serializer(
         many: Optional[bool] = None,
-        exclude_fields: Optional[List[str]] = None,
-        deprecate_fields: Optional[List[str]] = None,
-        examples: Optional[List[OpenApiExample]] = None,
+        exclude_fields: Optional[Sequence[str]] = None,
+        deprecate_fields: Optional[Sequence[str]] = None,
+        examples: Optional[Sequence[OpenApiExample]] = None,
         extensions: Optional[Dict[str, Any]] = None,
         component_name: Optional[str] = None,
 ) -> Callable[[F], F]:
