@@ -56,16 +56,29 @@ components:
             fieldFive:
               type: object
               properties:
-                fieldSix:
-                  type: integer
                 fieldSeven:
+                  type: integer
+                fieldEight:
                   type: string
               required:
+              - fieldEight
               - fieldSeven
-              - fieldSix
+            fieldSix:
+              type: array
+              items:
+                type: object
+                properties:
+                  fieldSeven:
+                    type: integer
+                  fieldEight:
+                    type: string
+                required:
+                - fieldEight
+                - fieldSeven
           required:
           - fieldFive
           - fieldFour
+          - fieldSix
           - fieldThree
           readOnly: true
       required:
