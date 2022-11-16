@@ -39,7 +39,7 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
 from uritemplate import URITemplate
 
-from drf_spectacular.drainage import Literal, _TypedDictMeta, cache, error, warn
+from drf_spectacular.drainage import cache, error, warn
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
     DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,
@@ -57,6 +57,23 @@ if hasattr(types, 'UnionType'):
     UNION_TYPES: Tuple[Any, ...] = (typing.Union, types.UnionType)  # type: ignore
 else:
     UNION_TYPES = (typing.Union,)
+
+LITERAL_TYPES: Tuple[Any, ...] = ()
+TYPED_DICT_META_TYPES: Tuple[Any, ...] = ()
+
+if sys.version_info >= (3, 8):
+    from typing import Literal as _PyLiteral
+    from typing import _TypedDictMeta as _PyTypedDictMeta  # type: ignore[attr-defined]
+    LITERAL_TYPES += (_PyLiteral,)
+    TYPED_DICT_META_TYPES += (_PyTypedDictMeta,)
+
+try:
+    from typing_extensions import Literal as _PxLiteral
+    from typing_extensions import _TypedDictMeta as _PxTypedDictMeta  # type: ignore[attr-defined]
+    LITERAL_TYPES += (_PxLiteral,)
+    TYPED_DICT_META_TYPES += (_PxTypedDictMeta,)
+except ImportError:
+    pass
 
 if sys.version_info >= (3, 8):
     CACHED_PROPERTY_FUNCS = (functools.cached_property, cached_property)  # type: ignore
@@ -1167,7 +1184,7 @@ def _resolve_typeddict(hint):
     """resolve required fields for TypedDicts if on 3.9 or above"""
     required = None
 
-    if sys.version_info >= (3, 9):
+    if hasattr(hint, '__required_keys__'):
         required = [h for h in hint.__required_keys__]
 
     return build_object_type(
@@ -1211,7 +1228,7 @@ def resolve_type_hint(hint):
         return build_array_type(resolve_type_hint(args[0]))
     elif origin is frozenset:
         return build_array_type(resolve_type_hint(args[0]))
-    elif origin is Literal:
+    elif origin in LITERAL_TYPES:
         # Literal only works for python >= 3.8 despite typing_extensions, because it
         # behaves slightly different w.r.t. __origin__
         schema = {'enum': list(args)}
@@ -1224,7 +1241,7 @@ def resolve_type_hint(hint):
         if mixin_base_types:
             schema.update(build_basic_type(mixin_base_types[0]))
         return schema
-    elif isinstance(hint, _TypedDictMeta):
+    elif isinstance(hint, TYPED_DICT_META_TYPES):
         return _resolve_typeddict(hint)
     elif origin in UNION_TYPES:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721

@@ -4,15 +4,6 @@ import sys
 from collections import defaultdict
 from typing import DefaultDict
 
-if sys.version_info >= (3, 8):
-    from typing import (  # type: ignore[attr-defined] # noqa: F401
-        Final, Literal, TypedDict, _TypedDictMeta,
-    )
-else:
-    from typing_extensions import (  # type: ignore[attr-defined] # noqa: F401
-        Final, Literal, TypedDict, _TypedDictMeta,
-    )
-
 
 class GeneratorStats:
     _warn_cache: DefaultDict[str, int] = defaultdict(int)
