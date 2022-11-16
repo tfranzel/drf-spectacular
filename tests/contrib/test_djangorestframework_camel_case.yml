@@ -46,7 +46,30 @@ components:
           type: string
         fieldTwo:
           type: string
+        fieldNested:
+          type: object
+          properties:
+            fieldThree:
+              type: integer
+            fieldFour:
+              type: string
+            fieldFive:
+              type: object
+              properties:
+                fieldSix:
+                  type: integer
+                fieldSeven:
+                  type: string
+              required:
+              - fieldSeven
+              - fieldSix
+          required:
+          - fieldFive
+          - fieldFour
+          - fieldThree
+          readOnly: true
       required:
+      - fieldNested
       - fieldOne
       - fieldTwo
   securitySchemes:
