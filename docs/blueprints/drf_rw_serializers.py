@@ -8,10 +8,10 @@ class CustomAutoSchema(AutoSchema):
 
     def get_request_serializer(self):
         if isinstance(self.view, RWGenericAPIView):
-            return self.view.get_write_serializer_class()()
+            return self.view.get_write_serializer()
         return self._get_serializer()
 
     def get_response_serializers(self):
         if isinstance(self.view, RWGenericAPIView):
-            return self.view.get_read_serializer_class()()
+            return self.view.get_read_serializer()
         return self._get_serializer()
