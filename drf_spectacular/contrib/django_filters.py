@@ -57,7 +57,8 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             return []
 
         result = []
-        with add_trace_message(filterset_class.__name__):
+        path = auto_schema.view.request._request.path
+        with add_trace_message(filterset_class.__name__, suffix=path):
             for field_name, filter_field in filterset_class.base_filters.items():
                 result += self.resolve_filter_field(
                     auto_schema, model, filterset_class, field_name, filter_field
