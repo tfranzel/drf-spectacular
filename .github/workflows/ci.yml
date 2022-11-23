@@ -19,7 +19,7 @@ jobs:
         run: python helper/github-ci-vars.py
   tests:
     needs: prep-tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: tests-${{ matrix.setup.toxenv }}
     continue-on-error: ${{ matrix.setup.experimental }}
     strategy:
