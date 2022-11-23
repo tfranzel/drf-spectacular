@@ -5,7 +5,7 @@ import pytest
 from django.urls import path
 from rest_framework.decorators import api_view
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_serializer
 from tests import assert_schema, generate_schema
 
 
@@ -17,9 +17,15 @@ def test_rest_framework_dataclasses(no_warnings):
     from rest_framework_dataclasses.serializers import DataclassSerializer
 
     @dataclass
+    class PersonDetail:
+        name: str
+        length: int
+
+    @dataclass
     class Person:
         name: str
         length: int
+        detail: PersonDetail
 
     @dataclass
     class Group:
@@ -31,6 +37,18 @@ def test_rest_framework_dataclasses(no_warnings):
         class Meta:
             dataclass = Group
 
+    class GroupSerializer2(DataclassSerializer):
+        class Meta:
+            dataclass = Group
+            ref_name = "CustomGroupNameFromRefName"
+
+    @extend_schema_serializer(component_name='CustomGroupNameFromDecoration')
+    @dataclass
+    class Group2:
+        name: str
+        leader: Person
+        members: typing.List[Person]
+
     @extend_schema(responses=GroupSerializer)
     @api_view(['GET'])
     def named(request):
@@ -41,9 +59,21 @@ def test_rest_framework_dataclasses(no_warnings):
     def anonymous(request):
         pass  # pragma: no cover
 
+    @extend_schema(responses=GroupSerializer2(many=True))
+    @api_view(['GET'])
+    def custom_name_via_ref(request):
+        pass  # pragma: no cover
+
+    @extend_schema(responses=DataclassSerializer(dataclass=Group2))
+    @api_view(['GET'])
+    def custom_name_via_decoration(request):
+        pass  # pragma: no cover
+
     urlpatterns = [
         path('named', named),
         path('anonymous', anonymous),
+        path('custom_name_via_ref', custom_name_via_ref),
+        path('custom_name_via_decoration', custom_name_via_decoration)
     ]
     assert_schema(
         generate_schema(None, patterns=urlpatterns),

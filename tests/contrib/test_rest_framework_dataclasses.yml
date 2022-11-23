@@ -19,6 +19,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/Person'
           description: ''
+  /custom_name_via_decoration:
+    get:
+      operationId: custom_name_via_decoration_retrieve
+      tags:
+      - custom_name_via_decoration
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomGroupNameFromDecoration'
+          description: ''
+  /custom_name_via_ref:
+    get:
+      operationId: custom_name_via_ref_list
+      tags:
+      - custom_name_via_ref
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomGroupNameFromRefName'
+          description: ''
   /named:
     get:
       operationId: named_retrieve
@@ -37,6 +71,36 @@ paths:
           description: ''
 components:
   schemas:
+    CustomGroupNameFromDecoration:
+      type: object
+      properties:
+        name:
+          type: string
+        leader:
+          $ref: '#/components/schemas/Person'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+      required:
+      - leader
+      - members
+      - name
+    CustomGroupNameFromRefName:
+      type: object
+      properties:
+        name:
+          type: string
+        leader:
+          $ref: '#/components/schemas/Person'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+      required:
+      - leader
+      - members
+      - name
     Group:
       type: object
       properties:
@@ -53,6 +117,19 @@ components:
       - members
       - name
     Person:
+      type: object
+      properties:
+        name:
+          type: string
+        length:
+          type: integer
+        detail:
+          $ref: '#/components/schemas/PersonDetail'
+      required:
+      - detail
+      - length
+      - name
+    PersonDetail:
       type: object
       properties:
         name:

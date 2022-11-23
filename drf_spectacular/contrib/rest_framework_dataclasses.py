@@ -1,3 +1,4 @@
+from drf_spectacular.drainage import get_override, has_override
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.plumbing import get_doc
 from drf_spectacular.utils import Direction
@@ -9,6 +10,10 @@ class OpenApiDataclassSerializerExtensions(OpenApiSerializerExtension):
 
     def get_name(self):
         """Use the dataclass name in the schema, instead of the serializer prefix (which can be just Dataclass)."""
+        if getattr(getattr(self.target, 'Meta', None), 'ref_name', None) is not None:
+            return self.target.Meta.ref_name
+        if has_override(self.target.dataclass_definition.dataclass_type, 'component_name'):
+            return get_override(self.target.dataclass_definition.dataclass_type, 'component_name')
         return self.target.dataclass_definition.dataclass_type.__name__
 
     def strip_library_doc(self, schema):
