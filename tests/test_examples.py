@@ -6,10 +6,10 @@ from rest_framework.response import Response
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
-    OpenApiExample, OpenApiParameter, extend_schema, extend_schema_serializer,
+    OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_serializer,
 )
 from tests import assert_schema, generate_schema
-from tests.models import SimpleModel
+from tests.models import SimpleModel, SimpleSerializer
 
 
 @extend_schema_serializer(
@@ -204,4 +204,46 @@ def test_example_request_response_listed_examples(no_warnings):
     assert operation['responses']['201']['content']['application/json'] == {
         'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/A'}},
         'examples': {'Ex': {'value': [{'id': '1234'}]}}
+    }
+
+
+def test_examples_list_detection_on_non_200_decoration(no_warnings):
+    class ExceptionSerializer(serializers.Serializer):
+        api_status_code = serializers.CharField()
+        extra = serializers.DictField(required=False)
+
+    @extend_schema(
+        responses={
+            200: SimpleSerializer,
+            400: OpenApiResponse(
+                response=ExceptionSerializer,
+                examples=[
+                    OpenApiExample(
+                        "Date parse error",
+                        value={"api_status_code": "DATE_PARSE_ERROR", "extra": {"details": "foobar"}},
+                        status_codes=['400']
+                    )
+                ],
+            ),
+        },
+    )
+    class XListView(generics.ListAPIView):
+        model = SimpleModel
+        serializer_class = SimpleSerializer
+        pagination_class = pagination.LimitOffsetPagination
+
+    schema = generate_schema('/x/', view=XListView)
+    # regular response listed/paginated
+    assert schema['paths']['/x/']['get']['responses']['200']['content']['application/json'] == {
+        'schema': {'$ref': '#/components/schemas/PaginatedSimpleList'}
+    }
+    # non-200 error response example NOT listed/paginated
+    assert schema['paths']['/x/']['get']['responses']['400']['content']['application/json'] == {
+        'examples': {
+            'DateParseError': {
+                'summary': 'Date parse error',
+                'value': {'api_status_code': 'DATE_PARSE_ERROR', 'extra': {'details': 'foobar'}}
+            }
+        },
+        'schema': {'$ref': '#/components/schemas/Exception'},
     }

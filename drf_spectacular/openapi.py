@@ -1176,6 +1176,10 @@ class AutoSchema(ViewInspector):
             if (
                 self._is_list_view(serializer)
                 and get_override(serializer, 'many') is not False
+                and (
+                    direction == 'request' or '200' <= status_code < '300'
+                    or spectacular_settings.ENABLE_LIST_MECHANICS_ON_NON_2XX
+                )
             ):
                 # contain modification to this context so "listing" is not propagated elsewhere
                 example = copy.copy(example)
