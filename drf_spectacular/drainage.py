@@ -2,7 +2,7 @@ import contextlib
 import functools
 import sys
 from collections import defaultdict
-from typing import DefaultDict, Union, List
+from typing import DefaultDict, List, Union
 
 
 class GeneratorStats:
