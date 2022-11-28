@@ -723,7 +723,10 @@ class AutoSchema(ViewInspector):
             return append_meta(build_array_type(build_choice_field(field)), meta)
 
         if isinstance(field, serializers.ChoiceField):
-            return append_meta(build_choice_field(field), meta)
+            schema = build_choice_field(field)
+            if 'description' in meta:
+                meta['description'] = meta['description'] + '\n\n' + schema.pop('description')
+            return append_meta(schema, meta)
 
         if isinstance(field, serializers.ListField):
             if isinstance(field.child, _UnvalidatedField):

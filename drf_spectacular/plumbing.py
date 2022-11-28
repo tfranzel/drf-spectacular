@@ -423,7 +423,15 @@ def build_choice_field(field):
     # Ref: https://tools.ietf.org/html/draft-wright-json-schema-validation-00#section-5.21
     if type:
         schema['type'] = type
+
+    if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
+        schema['description'] = build_choice_description_list(field.choices.items())
+
     return schema
+
+
+def build_choice_description_list(choices) -> str:
+    return '\n'.join(f'* `{value}` - {label}' for value, label in choices)
 
 
 def build_bearer_security_scheme_object(header_name, token_prefix, bearer_format=None):

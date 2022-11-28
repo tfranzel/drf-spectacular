@@ -269,6 +269,10 @@ paths:
             - b
             - c
             type: string
+            description: |-
+              * `a` - a
+              * `b` - b
+              * `c` - c
           default:
           - a
       - in: query
@@ -367,6 +371,9 @@ components:
       - a
       - b
       type: string
+      description: |-
+        * `a` - a
+        * `b` - b
     GammaEpsilon:
       type: object
       properties:
@@ -394,6 +401,10 @@ components:
       - b
       - c
       type: string
+      description: |-
+        * `a` - a
+        * `b` - b
+        * `c` - c
     Query:
       type: object
       properties:

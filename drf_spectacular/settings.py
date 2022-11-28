@@ -112,6 +112,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'ENUM_NAME_OVERRIDES': {},
     # Adds "blank" and "null" enum choices where appropriate. disable on client generation issues
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': True,
+    # Add/Append a list of (``choice value`` - choice name) to the enum description string.
+    'ENUM_GENERATE_CHOICE_DESCRIPTION': True,
 
     # function that returns a list of all classes that should be excluded from doc string extraction
     'GET_LIB_DOC_EXCLUDES': 'drf_spectacular.plumbing.get_lib_doc_excludes',
