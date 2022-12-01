@@ -185,4 +185,5 @@ def test_swagger_oauth_redirect_view(get_params):
         # older django versions test client directly returns the response instance
         assert response.url == '/static/drf_spectacular_sidecar/swagger-ui-dist/oauth2-redirect.html?' + get_params
     else:
-        assert response.headers['Location'] == '/static/drf_spectacular_sidecar/swagger-ui-dist/oauth2-redirect.html?' + get_params
+        assert response.headers['Location'] ==\
+               '/static/drf_spectacular_sidecar/swagger-ui-dist/oauth2-redirect.html?' + get_params
