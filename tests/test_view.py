@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 import yaml
 from django import __version__ as DJANGO_VERSION
+from django.http import HttpResponseRedirect
 from django.urls import path
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -175,6 +176,13 @@ def test_spectacular_urlconf_module_list_import_error(no_warnings, url):
 @pytest.mark.parametrize('get_params', ['', 'code=foobar123&state=xyz&session_state=hello-world'])
 @pytest.mark.urls(__name__)
 def test_swagger_oauth_redirect_view(get_params):
+    # act
     response = APIClient().get('/api/v1/schema/swagger-ui/oauth2-redirect.html?' + get_params)
+
+    # assert
     assert response.status_code == 302
-    assert response.headers['Location'] == '/static/drf_spectacular_sidecar/swagger-ui-dist/oauth2-redirect.html?' + get_params
+    if isinstance(response, HttpResponseRedirect):
+        # older django versions test client directly returns the response instance
+        assert response.url == '/static/drf_spectacular_sidecar/swagger-ui-dist/oauth2-redirect.html?' + get_params
+    else:
+        assert response.headers['Location'] == '/static/drf_spectacular_sidecar/swagger-ui-dist/oauth2-redirect.html?' + get_params
