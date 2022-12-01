@@ -13,8 +13,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
 from drf_spectacular.views import (
-    SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerSplitView, SpectacularSwaggerView,
-    SpectacularSwaggerOauthRedirectView,
+    SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerOauthRedirectView,
+    SpectacularSwaggerSplitView, SpectacularSwaggerView,
 )
 
 
