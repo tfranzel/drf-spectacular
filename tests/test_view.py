@@ -13,6 +13,7 @@ from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
 from drf_spectacular.views import (
     SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerSplitView, SpectacularSwaggerView,
+    SwaggerOauthRedirectView,
 )
 
 
@@ -31,6 +32,7 @@ urlpatterns_v2 = [
     path('api/v2/pi/', pi),
     path('api/v2/pi-fast/', pi),
     path('api/v2/schema/swagger-ui/', SpectacularSwaggerView.as_view(), name='swagger'),
+    path("api/v1/schema/swagger-ui/oauth2-redirect.html", SwaggerOauthRedirectView.as_view(), name="swagger-oauth-redirect"),
     path('api/v2/schema/swagger-ui-alt/', SpectacularSwaggerSplitView.as_view(), name='swagger-alt'),
     path('api/v2/schema/redoc/', SpectacularRedocView.as_view(), name='redoc'),
 ]
@@ -165,3 +167,11 @@ def test_spectacular_urlconf_module_list_import(no_warnings, url):
 def test_spectacular_urlconf_module_list_import_error(no_warnings, url):
     with pytest.raises(ModuleNotFoundError):
         APIClient().get(url)
+
+
+@pytest.mark.parametrize('get_params', ['', 'code=foobar123&state=xyz&session_state=hello-world'])
+@pytest.mark.urls(__name__)
+def test_swagger_oauth_redirect_view(get_params):
+    response = APIClient().get('/api/v1/schema/swagger-ui/oauth2-redirect.html?' + get_params)
+    assert response.status_code == 302
+    assert response.headers['Location'] == '/static/drf_spectacular_sidecar/swagger-ui-dist/oauth2-redirect.html?' + get_params
