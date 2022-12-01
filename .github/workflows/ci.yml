@@ -35,7 +35,9 @@ jobs:
         with:
           python-version: ${{ matrix.setup.python-version }}
       - name: Install system dependencies
-        run: sudo apt-get install -y gdal-bin libsqlite3-mod-spatialite
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libsqlite3-mod-spatialite
       - name: Install tox
         run: pip install tox
       - name: Run Tox
