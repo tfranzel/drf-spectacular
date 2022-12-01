@@ -13,7 +13,7 @@ from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
 from drf_spectacular.views import (
     SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerSplitView, SpectacularSwaggerView,
-    SwaggerOauthRedirectView,
+    SpectacularSwaggerOauthRedirectView,
 )
 
 
@@ -32,7 +32,10 @@ urlpatterns_v2 = [
     path('api/v2/pi/', pi),
     path('api/v2/pi-fast/', pi),
     path('api/v2/schema/swagger-ui/', SpectacularSwaggerView.as_view(), name='swagger'),
-    path("api/v1/schema/swagger-ui/oauth2-redirect.html", SwaggerOauthRedirectView.as_view(), name="swagger-oauth-redirect"),
+    path(
+        "api/v1/schema/swagger-ui/oauth2-redirect.html",
+        SpectacularSwaggerOauthRedirectView.as_view(),
+        name="swagger-oauth-redirect"),
     path('api/v2/schema/swagger-ui-alt/', SpectacularSwaggerSplitView.as_view(), name='swagger-alt'),
     path('api/v2/schema/redoc/', SpectacularRedocView.as_view(), name='redoc'),
 ]

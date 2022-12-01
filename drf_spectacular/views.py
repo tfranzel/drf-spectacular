@@ -264,7 +264,7 @@ class SpectacularRedocView(APIView):
         )
 
 
-class SwaggerOauthRedirectView(RedirectView):
+class SpectacularSwaggerOauthRedirectView(RedirectView):
     """
     A view that serves the SwaggerUI oauth2-redirect.html file so that SwaggerUI can authenticate itself using Oauth2
 
