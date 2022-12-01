@@ -3,8 +3,8 @@ from django.db import models
 from drf_spectacular.drainage import add_trace_message, get_override, has_override, warn
 from drf_spectacular.extensions import OpenApiFilterExtension
 from drf_spectacular.plumbing import (
-    build_array_type, build_basic_type, build_parameter_type, follow_field_source, get_type_hints,
-    get_view_model, is_basic_type,
+    build_array_type, build_basic_type, build_parameter_type, follow_field_source, get_manager,
+    get_type_hints, get_view_model, is_basic_type,
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
@@ -52,7 +52,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         if not model:
             return []
 
-        filterset_class = self.target.get_filterset_class(auto_schema.view, model.objects.none())
+        filterset_class = self.target.get_filterset_class(auto_schema.view, get_manager(model).none())
         if not filterset_class:
             return []
 

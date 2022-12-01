@@ -2937,7 +2937,7 @@ def test_safestring_serialization(no_warnings):
     assert b"<h1>Woah!</h1>" in OpenApiYamlRenderer().render(schema)
 
 
-def test_many_parameter_item_enum():
+def test_many_parameter_item_enum(no_warnings):
     @extend_schema(
         parameters=[OpenApiParameter(
             'status', type=int, many=True, style="form", explode=False, enum=[1, 2, 3]
@@ -2955,4 +2955,35 @@ def test_many_parameter_item_enum():
         'schema': {'type': 'array', 'items': {'type': 'integer', 'enum': [1, 2, 3]}},
         'explode': False,
         'style': 'form'
+    }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.DEFAULT_QUERY_MANAGER', '_default_manager')
+def test_custom_default_manager(no_warnings):
+    class RelatedModelForCustomManager(models.Model):
+        foo = models.Manager()
+
+    class ModelWithCustomManagerRelation(models.Model):
+        related_field = models.ForeignKey(
+            RelatedModelForCustomManager, on_delete=models.PROTECT, editable=False
+        )
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = ModelWithCustomManagerRelation
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = ModelWithCustomManagerRelation.objects.none()
+
+    router = routers.SimpleRouter()
+    router.register('x/<related_field>', XViewset)
+
+    # cross-check that the test works
+    assert not hasattr(RelatedModelForCustomManager, 'objects')
+
+    schema = generate_schema(None, patterns=router.urls)
+    assert schema['paths']['/x/{related_field}/']['get']['parameters'][0] == {
+        'in': 'path', 'name': 'related_field', 'schema': {'type': 'integer'}, 'required': True
     }
