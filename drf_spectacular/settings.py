@@ -149,6 +149,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # list responses with ListSerializers/many=True irrespective of the status code.
     'ENABLE_LIST_MECHANICS_ON_NON_2XX': False,
 
+    # This setting allows you to deviate from the default manager by accessing a different model
+    # property. We use "objects" by default for compatibility reasons. Using "_default_manager"
+    # will likely fix most issues, though you are free to choose any name.
+    "DEFAULT_QUERY_MANAGER": 'objects',
+
     # Controls which authentication methods are exposed in the schema. If not empty, will hide
     # authentication classes that are not contained in the whitelist. Use full import paths
     # like ['rest_framework.authentication.TokenAuthentication', ...]

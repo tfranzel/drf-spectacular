@@ -30,7 +30,7 @@ from drf_spectacular.plumbing import (
     build_examples_list, build_generic_type, build_listed_example_value, build_media_type_object,
     build_mocked_view, build_object_type, build_parameter_type, build_serializer_context, error,
     filter_supported_arguments, follow_field_source, follow_model_field_lookup, force_instance,
-    get_doc, get_list_serializer, get_type_hints, get_view_model, is_basic_serializer,
+    get_doc, get_list_serializer, get_manager, get_type_hints, get_view_model, is_basic_serializer,
     is_basic_type, is_field, is_list_serializer, is_list_serializer_customized,
     is_patched_serializer, is_serializer, is_trivial_string_variation,
     modify_media_types_for_versioning, resolve_django_path_parameter, resolve_regex_path_parameter,
@@ -561,13 +561,13 @@ class AutoSchema(ViewInspector):
             # special case handling only for _resolve_path_parameters() where neither queryset nor
             # parent is set by build_field. patch in queryset as _map_serializer_field requires it
             if not field.queryset:
-                field.queryset = model_field.related_model.objects.none()
+                field.queryset = get_manager(model_field.related_model).none()
             return self._map_serializer_field(field, direction)
         elif isinstance(field, serializers.ManyRelatedField):
             # special case handling similar to the case above. "parent.parent" on child_relation
             # is None and there is no queryset. patch in as _map_serializer_field requires one.
             if not field.child_relation.queryset:
-                field.child_relation.queryset = model_field.related_model.objects.none()
+                field.child_relation.queryset = get_manager(model_field.related_model).none()
             return self._map_serializer_field(field, direction)
         elif field and not isinstance(field, (serializers.ReadOnlyField, serializers.ModelField)):
             return self._map_serializer_field(field, direction)

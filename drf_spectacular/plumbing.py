@@ -244,6 +244,16 @@ def get_openapi_type_mapping():
     }
 
 
+def get_manager(model):
+    if not hasattr(model, spectacular_settings.DEFAULT_QUERY_MANAGER):
+        error(
+            f'Failed to obtain queryset from model "{model.__name__}" because manager '
+            f'"{spectacular_settings.DEFAULT_QUERY_MANAGER}" was not found. You may '
+            f'need to change the DEFAULT_QUERY_MANAGER setting. bailing.'
+        )
+    return getattr(model, spectacular_settings.DEFAULT_QUERY_MANAGER)
+
+
 def build_generic_type():
     if spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES is None:
         return {'type': 'object'}
