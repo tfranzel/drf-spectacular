@@ -7,6 +7,7 @@ from django.conf import settings
 from django.templatetags.static import static
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
+from django.views.generic import RedirectView
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -261,3 +262,15 @@ class SpectacularRedocView(APIView):
             lang=request.GET.get('lang'),
             version=request.GET.get('version')
         )
+
+
+class SpectacularSwaggerOauthRedirectView(RedirectView):
+    """
+    A view that serves the SwaggerUI oauth2-redirect.html file so that SwaggerUI can authenticate itself using Oauth2
+
+    This view should be served as ``./oauth2-redirect.html`` relative to the SwaggerUI itself.
+    If that is not possible, this views absolute url can also be set via the
+    ``SPECTACULAR_SETTINGS.SWAGGER_UI_SETTINGS.oauth2RedirectUrl`` django settings.
+    """
+    def get_redirect_url(self, *args, **kwargs):
+        return _get_sidecar_url("swagger-ui-dist") + "/oauth2-redirect.html?" + self.request.GET.urlencode()
