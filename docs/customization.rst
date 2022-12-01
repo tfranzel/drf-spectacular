@@ -148,11 +148,23 @@ All extensions work on the same principle. You provide a ``target_class`` (impor
 string or actual class) and then state what *drf-spectcular* should use instead of what
 it would normally discover.
 
-.. note:: The extensions register themselves automatically. Just be sure that the Python
+.. important:: The extensions register themselves automatically. Just be sure that the Python
   interpreter sees them at least once.
-  To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your
-  ``PROJECT/__init__.py`` (same directory as ``settings.py`` and ``urls.py``)
-  with ``import PROJECT.schema``.
+
+  It is good practice to collect your extensions in ``YOUR_MAIN_APP_NAME/schema.py`` and importing that
+  file in your ``YOUR_MAIN_APP_NAME/apps.py``. Every proper Django app will already have an auto-generated
+  ``apps.py`` file. Although not strictly necessary, doing the import in ``ready()`` is the most robust
+  approach. It will make sure your environment (e.g. settings) is properly set up prior to loading.
+
+  .. code-block:: python
+
+    # your_main_app_name/apps.py
+    class YourMainAppNameConfig(AppConfig):
+        default_auto_field = "django.db.models.BigAutoField"
+        name = "your_main_app_name"
+
+        def ready(self):
+            import your_main_app_name.schema  # noqa: E402
 
 .. note:: Only the first Extension matching the criteria is used. By setting the ``priority`` attribute
   on your extension, you can influence the matching order (default ``0``).

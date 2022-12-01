@@ -1128,9 +1128,9 @@ class AutoSchema(ViewInspector):
                     return view.serializer_class
                 else:
                     error(
-                        'unable to guess serializer. This is graceful '
-                        'fallback handling for APIViews. Consider using GenericAPIView as view base '
-                        'class, if view is under your control. Ignoring view for now. '
+                        'unable to guess serializer. This is graceful fallback handling for APIViews. '
+                        'Consider using GenericAPIView as view base class, if view is under your control. '
+                        'Either way you may want to add a serializer_class (or method). Ignoring view for now.'
                     )
             else:
                 error('Encountered unknown view base class. Please report this issue. Ignoring for now')
