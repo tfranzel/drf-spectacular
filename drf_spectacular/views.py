@@ -269,7 +269,8 @@ class SwaggerOauthRedirectView(RedirectView):
     A view that serves the SwaggerUI oauth2-redirect.html file so that SwaggerUI can authenticate itself using Oauth2
 
     This view should be served as ``./oauth2-redirect.html`` relative to the SwaggerUI itself.
-    If that is not possible, this views absolute url can also be set via the ``SPECTACULAR_SETTINGS.SWAGGER_UI_SETTINGS.oauth2RedirectUrl`` django settings.
+    If that is not possible, this views absolute url can also be set via the
+    ``SPECTACULAR_SETTINGS.SWAGGER_UI_SETTINGS.oauth2RedirectUrl`` django settings.
     """
     def get_redirect_url(self, *args, **kwargs):
         return _get_sidecar_url("swagger-ui-dist") + "/oauth2-redirect.html?" + self.request.GET.urlencode()
