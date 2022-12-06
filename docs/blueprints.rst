@@ -138,3 +138,12 @@ django-auth-adfs
 The blueprint works for the Azure AD configuration guide (see: https://django-auth-adfs.readthedocs.io/en/latest/azure_ad_config_guide.html).
 
 .. literalinclude:: blueprints/django_auth_adfs.py
+
+
+django-parler-rest
+------------------
+
+`django-parler-rest <https://github.com/django-parler/django-parler-rest>`_ integration for
+translation package `django-parler <https://github.com/django-parler/django-parler>`_.
+
+.. literalinclude:: blueprints/django_parler_rest.py
