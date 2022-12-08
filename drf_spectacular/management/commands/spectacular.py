@@ -40,12 +40,16 @@ class Command(BaseCommand):
         parser.add_argument('--validate', dest="validate", default=False, action='store_true')
         parser.add_argument('--api-version', dest="api_version", default=None, type=str)
         parser.add_argument('--lang', dest="lang", default=None, type=str)
+        parser.add_argument('--color', dest="color", default=False, action='store_true')
 
     def handle(self, *args, **options):
         if options['generator_class']:
             generator_class = import_string(options['generator_class'])
         else:
             generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
+
+        if options['color']:
+            GENERATOR_STATS.enable_color()
 
         generator = generator_class(
             urlconf=options['urlconf'],

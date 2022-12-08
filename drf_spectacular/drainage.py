@@ -1,5 +1,6 @@
 import contextlib
 import functools
+import inspect
 import sys
 from collections import defaultdict
 from typing import DefaultDict
@@ -8,9 +9,13 @@ from typing import DefaultDict
 class GeneratorStats:
     _warn_cache: DefaultDict[str, int] = defaultdict(int)
     _error_cache: DefaultDict[str, int] = defaultdict(int)
+    _blue = ''
+    _red = ''
+    _yellow = ''
+    _clear = ''
 
     def __getattr__(self, name):
-        if not self.__dict__:
+        if 'silent' not in self.__dict__:
             from drf_spectacular.settings import spectacular_settings
             self.silent = spectacular_settings.DISABLE_ERRORS_AND_WARNINGS
         try:
@@ -33,12 +38,25 @@ class GeneratorStats:
         self._warn_cache.clear()
         self._error_cache.clear()
 
+    def enable_color(self):
+        self._blue = '\033[0;34m'
+        self._red = '\033[0;31m'
+        self._yellow = '\033[0;33m'
+        self._clear = '\033[0m'
+
     def emit(self, msg, severity):
         assert severity in ['warning', 'error']
-        msg = _get_current_trace() + str(msg)
         cache = self._warn_cache if severity == 'warning' else self._error_cache
+
+        source_location, breadcrumbs = _get_current_trace()
+        prefix = f'{self._blue}{source_location}: ' if source_location else ''
+        prefix += self._yellow if severity == 'warning' else self._red
+        prefix += f'{severity.capitalize()}'
+        prefix += f' [{breadcrumbs}]: ' if breadcrumbs else ': '
+
+        msg = prefix + self._clear + str(msg)
         if not self.silent and msg not in cache:
-            print(f'{severity.capitalize()} #{len(cache)}: {msg}', file=sys.stderr)
+            print(msg, file=sys.stderr)
         cache[msg] += 1
 
     def emit_summary(self):
@@ -80,17 +98,34 @@ _TRACES = []
 
 
 @contextlib.contextmanager
-def add_trace_message(trace_message):
+def add_trace_message(obj):
     """
     Adds a message to be used as a prefix when emitting warnings and errors.
     """
-    _TRACES.append(trace_message)
+    sourcefile, lineno = _get_source_location(obj)
+    _TRACES.append((sourcefile, lineno, obj.__name__))
     yield
     _TRACES.pop()
 
 
+@functools.lru_cache(maxsize=1000)
+def _get_source_location(obj):
+    try:
+        sourcefile = inspect.getsourcefile(obj)
+        lineno = inspect.getsourcelines(obj)[1]
+        return sourcefile, lineno
+    except:  # noqa: E722
+        return None, None
+
+
 def _get_current_trace():
-    return ''.join(f"{trace}: " for trace in _TRACES if trace)
+    source_locations = [t for t in _TRACES if t[0]]
+    if source_locations:
+        source_location = f"{source_locations[-1][0]}:{source_locations[-1][1]}"
+    else:
+        source_location = ''
+    breadcrumbs = ' > '.join(t[2] for t in _TRACES)
+    return source_location, breadcrumbs
 
 
 def has_override(obj, prop):

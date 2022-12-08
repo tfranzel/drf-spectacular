@@ -1495,7 +1495,7 @@ class AutoSchema(ViewInspector):
         assert_basic_serializer(serializer)
         serializer = force_instance(serializer)
 
-        with add_trace_message(serializer.__class__.__name__):
+        with add_trace_message(serializer.__class__):
             component = ResolvedComponent(
                 name=self._get_serializer_name(serializer, direction, bypass_extensions),
                 type=ResolvedComponent.SCHEMA,

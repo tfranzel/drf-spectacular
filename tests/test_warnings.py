@@ -122,7 +122,9 @@ def test_serializer_not_found(capsys):
         pass  # pragma: no cover
 
     generate_schema('x', XViewset)
-    assert 'XViewset: exception raised while getting serializer.' in capsys.readouterr().err
+    assert (
+        'Error [XViewset]: exception raised while getting serializer.'
+    ) in capsys.readouterr().err
 
 
 def test_extend_schema_unknown_class(capsys):
@@ -157,7 +159,7 @@ def test_no_serializer_class_on_apiview(capsys):
             pass  # pragma: no cover
 
     generate_schema('x', view=XView)
-    assert 'XView: unable to guess serializer.' in capsys.readouterr().err
+    assert 'Error [XView]: unable to guess serializer.' in capsys.readouterr().err
 
 
 def test_unable_to_follow_field_source_through_intermediate_property_warning(capsys):
@@ -180,7 +182,7 @@ def test_unable_to_follow_field_source_through_intermediate_property_warning(cap
 
     generate_schema('x', view=XAPIView)
     assert (
-        'XAPIView: XSerializer: could not follow field source through intermediate property'
+        '[XAPIView > XSerializer]: could not follow field source through intermediate property'
     ) in capsys.readouterr().err
 
 
@@ -208,8 +210,8 @@ def test_unable_to_derive_function_type_warning(capsys):
 
     generate_schema('x', view=XAPIView)
     stderr = capsys.readouterr().err
-    assert 'XAPIView: XSerializer: unable to resolve type hint for function "x"' in stderr
-    assert 'XAPIView: XSerializer: unable to resolve type hint for function "get_y"' in stderr
+    assert '[XAPIView > XSerializer]: unable to resolve type hint for function "x"' in stderr
+    assert '[XAPIView > XSerializer]: unable to resolve type hint for function "get_y"' in stderr
 
 
 def test_unable_to_traverse_union_type_hint(capsys):
