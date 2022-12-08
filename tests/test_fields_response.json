@@ -14,10 +14,14 @@
   "field_list_serializer": [
     {
       "id": "0ac6930d-87f4-40e8-8242-10a3ed31a335",
+      "url": "https://xkcd.com",
       "field_foreign": null
     }
   ],
-  "field_related_slug": "0ac6930d-87f4-40e8-8242-10a3ed31a335",
+  "field_related_slug": "https://xkcd.com",
+  "field_related_slug_many": [
+      "https://xkcd.com"
+  ],
   "field_related_string": "Aux object (0ac6930d-87f4-40e8-8242-10a3ed31a335)",
   "field_related_hyperlink": "http://testserver/aux/0ac6930d-87f4-40e8-8242-10a3ed31a335/",
   "field_identity_hyperlink": "http://testserver/allfields/1/",

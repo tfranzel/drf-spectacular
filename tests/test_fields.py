@@ -35,6 +35,7 @@ fs = FileSystemStorage(location=tempfile.gettempdir())
 class Aux(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     field_foreign = models.ForeignKey('Aux', null=True, on_delete=models.CASCADE)
+    url = models.URLField(unique=True)
 
 
 class AuxSerializer(serializers.ModelSerializer):
@@ -191,7 +192,10 @@ class AllFieldsSerializer(serializers.ModelSerializer):
 
     # extra related fields
     field_related_slug = serializers.SlugRelatedField(
-        read_only=True, source='field_foreign', slug_field='id'
+        read_only=True, source='field_foreign', slug_field='url',
+    )  # type: ignore
+    field_related_slug_many = serializers.SlugRelatedField(
+        many=True, read_only=True, source='field_m2m', slug_field='url',
     )  # type: ignore
     field_related_string = serializers.StringRelatedField(
         source='field_foreign'
@@ -292,7 +296,10 @@ def test_fields(no_warnings):
 @pytest.mark.urls(__name__)
 @pytest.mark.django_db
 def test_model_setup_is_valid():
-    aux = Aux(id='0ac6930d-87f4-40e8-8242-10a3ed31a335')
+    aux = Aux(
+        id='0ac6930d-87f4-40e8-8242-10a3ed31a335',
+        url='https://xkcd.com'
+    )
     aux.save()
 
     m = AllFields(
