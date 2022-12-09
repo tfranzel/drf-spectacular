@@ -114,8 +114,8 @@ class SpectacularJSONAPIView(SpectacularAPIView):
     renderer_classes = [OpenApiJsonRenderer, OpenApiJsonRenderer2]
 
 
-def _get_sidecar_url(package):
-    return static(f'drf_spectacular_sidecar/{package}')
+def _get_sidecar_url(filepath):
+    return static(f'drf_spectacular_sidecar/{filepath}')
 
 
 class SpectacularSwaggerView(APIView):
@@ -133,7 +133,9 @@ class SpectacularSwaggerView(APIView):
         return Response(
             data={
                 'title': self.title,
-                'dist': self._swagger_ui_dist(),
+                'swagger_ui_css': self._swagger_ui_resource('swagger-ui.css'),
+                'swagger_ui_bundle': self._swagger_ui_resource('swagger-ui-bundle.js'),
+                'swagger_ui_standalone': self._swagger_ui_resource('swagger-ui-standalone-preset.js'),
                 'favicon_href': self._swagger_ui_favicon(),
                 'schema_url': self._get_schema_url(request),
                 'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
@@ -172,14 +174,16 @@ class SpectacularSwaggerView(APIView):
         ]
         return [auth.name for auth in auth_extensions if auth]
 
-    def _swagger_ui_dist(self):
+    @staticmethod
+    def _swagger_ui_resource(filename):
         if spectacular_settings.SWAGGER_UI_DIST == 'SIDECAR':
-            return _get_sidecar_url('swagger-ui-dist')
-        return spectacular_settings.SWAGGER_UI_DIST
+            return _get_sidecar_url(f'swagger-ui-dist/{filename}')
+        return f'{spectacular_settings.SWAGGER_UI_DIST}/{filename}'
 
-    def _swagger_ui_favicon(self):
+    @staticmethod
+    def _swagger_ui_favicon():
         if spectacular_settings.SWAGGER_UI_FAVICON_HREF == 'SIDECAR':
-            return _get_sidecar_url('swagger-ui-dist') + '/favicon-32x32.png'
+            return _get_sidecar_url('swagger-ui-dist/favicon-32x32.png')
         return spectacular_settings.SWAGGER_UI_FAVICON_HREF
 
 
@@ -209,7 +213,9 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
             return Response(
                 data={
                     'title': self.title,
-                    'dist': self._swagger_ui_dist(),
+                    'swagger_ui_css': self._swagger_ui_resource('swagger-ui.css'),
+                    'swagger_ui_bundle': self._swagger_ui_resource('swagger-ui-bundle.js'),
+                    'swagger_ui_standalone': self._swagger_ui_resource('swagger-ui-standalone-preset.js'),
                     'favicon_href': self._swagger_ui_favicon(),
                     'script_url': set_query_parameters(
                         url=script_url,
@@ -235,7 +241,7 @@ class SpectacularRedocView(APIView):
         return Response(
             data={
                 'title': self.title,
-                'dist': self._redoc_dist(),
+                'redoc_standalone': self._redoc_standalone(),
                 'schema_url': self._get_schema_url(request),
                 'settings': self._dump(spectacular_settings.REDOC_UI_SETTINGS),
             },
@@ -250,10 +256,11 @@ class SpectacularRedocView(APIView):
         else:
             return json.dumps(data, indent=2)
 
-    def _redoc_dist(self):
+    @staticmethod
+    def _redoc_standalone():
         if spectacular_settings.REDOC_DIST == 'SIDECAR':
-            return _get_sidecar_url('redoc')
-        return spectacular_settings.REDOC_DIST
+            return _get_sidecar_url('redoc/bundles/redoc.standalone.js')
+        return f'{spectacular_settings.REDOC_DIST}/bundles/redoc.standalone.js'
 
     def _get_schema_url(self, request):
         schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
@@ -273,4 +280,4 @@ class SpectacularSwaggerOauthRedirectView(RedirectView):
     ``SPECTACULAR_SETTINGS.SWAGGER_UI_SETTINGS.oauth2RedirectUrl`` django settings.
     """
     def get_redirect_url(self, *args, **kwargs):
-        return _get_sidecar_url("swagger-ui-dist") + "/oauth2-redirect.html?" + self.request.GET.urlencode()
+        return _get_sidecar_url("swagger-ui-dist/oauth2-redirect.html") + "?" + self.request.GET.urlencode()
