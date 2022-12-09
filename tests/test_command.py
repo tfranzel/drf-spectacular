@@ -19,7 +19,7 @@ def test_command_plain(capsys):
     assert 'paths' in schema
 
 
-def test_command_parameterized(capsys):
+def test_command_parameterized():
     with tempfile.NamedTemporaryFile() as fh:
         management.call_command(
             'spectacular',
@@ -44,8 +44,23 @@ def test_command_fail(capsys):
             '--urlconf=tests.test_command',
         )
     stderr = capsys.readouterr().err
-    assert 'Error #0: func: unable to guess serializer' in stderr
+    assert 'Error [func]: unable to guess serializer' in stderr
     assert 'Schema generation summary:' in stderr
+
+
+def test_command_color(capsys):
+    management.call_command(
+        'spectacular',
+        '--color',
+        '--urlconf=tests.test_command',
+    )
+    stderr = capsys.readouterr().err
+    assert '\033[0;31mError [func]:' in stderr
+
+    # undo global state change
+    from drf_spectacular.drainage import GENERATOR_STATS
+    GENERATOR_STATS._red = GENERATOR_STATS._blue = ''
+    GENERATOR_STATS._yellow = GENERATOR_STATS._clear = ''
 
 
 def test_command_check(capsys):

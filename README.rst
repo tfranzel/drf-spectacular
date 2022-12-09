@@ -156,7 +156,7 @@ Generate your schema with the CLI:
 
 .. code:: bash
 
-    $ ./manage.py spectacular --file schema.yml
+    $ ./manage.py spectacular --color --file schema.yml
     $ docker run -p 80:8080 -e SWAGGER_JSON=/schema.yml -v ${PWD}/schema.yml:/schema.yml swaggerapi/swagger-ui
 
 If you also want to validate your schema add the ``--validate`` flag. Or serve your schema directly
