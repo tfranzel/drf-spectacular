@@ -659,7 +659,7 @@ class AutoSchema(ViewInspector):
             schema.pop('readOnly', None)
             array_type = build_array_type(schema)
             if description and 'description' not in array_type:
-                array_type['description'] = f"[{description}]"
+                array_type['description'] = description
             return append_meta(array_type, meta)
 
         if isinstance(field, (serializers.PrimaryKeyRelatedField, serializers.SlugRelatedField)):

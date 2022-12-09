@@ -134,7 +134,7 @@ components:
           items:
             type: string
             format: uri
-          description: '[URL identifier for Aux]'
+          description: URL identifier for Aux
           readOnly: true
         field_related_string:
           type: string
