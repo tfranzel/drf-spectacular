@@ -659,11 +659,13 @@ class AutoSchema(ViewInspector):
             schema.pop('readOnly', None)
             return append_meta(build_array_type(schema), meta)
 
-        if isinstance(field, serializers.PrimaryKeyRelatedField):
+        if isinstance(field, (serializers.PrimaryKeyRelatedField, serializers.SlugRelatedField)):
+            # SlugRelatedField is essentially a non-pk version of PrimaryKeyRelatedField.
+            is_slug = isinstance(field, serializers.SlugRelatedField)
             # read_only fields do not have a Manager by design. go around and get field
             # from parent. also avoid calling Manager. __bool__ as it might be customized
             # to hit the database.
-            if getattr(field, 'queryset', None) is not None:
+            if getattr(field, 'queryset', None) is not None and not is_slug:
                 model_field = field.queryset.model._meta.pk
             else:
                 if isinstance(field.parent, serializers.ManyRelatedField):
@@ -674,14 +676,17 @@ class AutoSchema(ViewInspector):
                     source = field.source.split('.')
                 else:
                     warn(
-                        f'Could not derive type for under-specified PrimaryKeyRelatedField '
+                        f'Could not derive type for under-specified {field.__class__.__name__} '
                         f'"{field.field_name}". The serializer has no associated model (Meta class) '
                         f'and this particular field has no type without a model association. Consider '
                         f'changing the field or adding a Meta class. defaulting to string.'
                     )
                     return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
-                # estimates the relating model field and jumps to it's target model PK field.
+                if is_slug:
+                    source.append(field.slug_field)
+
+                # estimates the relating model field and jumps to its target model PK field.
                 # also differentiate as source can be direct (pk) or relation field (model).
                 model_field = follow_field_source(model, source)
                 if callable(model_field):
@@ -695,9 +700,6 @@ class AutoSchema(ViewInspector):
             return append_meta(schema, meta)
 
         if isinstance(field, serializers.StringRelatedField):
-            return append_meta(build_basic_type(OpenApiTypes.STR), meta)
-
-        if isinstance(field, serializers.SlugRelatedField):
             return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
         if isinstance(field, serializers.HyperlinkedIdentityField):
