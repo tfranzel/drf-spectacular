@@ -114,8 +114,8 @@ class SpectacularJSONAPIView(SpectacularAPIView):
     renderer_classes = [OpenApiJsonRenderer, OpenApiJsonRenderer2]
 
 
-def _get_sidecar_url(package):
-    return static(f'drf_spectacular_sidecar/{package}')
+def _get_sidecar_url(filepath):
+    return static(f'drf_spectacular_sidecar/{filepath}')
 
 
 class SpectacularSwaggerView(APIView):
