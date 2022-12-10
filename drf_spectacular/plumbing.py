@@ -779,7 +779,7 @@ def load_enum_name_overrides():
 
         # Get all of choice values that should be used in the hash, blank and None values get excluded
         # in the post-processing hook for enum overrides, so we do the same here to ensure the hashes match
-        hashable_values = list(value for value in dict(normalized_choices).keys() if value not in ['', None])
+        hashable_values = [value for value, _ in normalized_choices if value not in ['', None]]
         overrides[list_hash(hashable_values)] = name
 
     if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
