@@ -63,6 +63,14 @@ def test_command_color(capsys):
     GENERATOR_STATS._yellow = GENERATOR_STATS._clear = ''
 
 
+CUSTOM = {'DESCRIPTION': 'custom setting'}
+
+
+def test_command_custom_settings(capsys):
+    management.call_command('spectacular', '--custom-settings=tests.test_command.CUSTOM')
+    assert 'description: custom setting' in capsys.readouterr().out
+
+
 def test_command_check(capsys):
     management.call_command('check', '--deploy')
     stderr = capsys.readouterr().err
