@@ -655,8 +655,9 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.ManyRelatedField):
             schema = self._map_serializer_field(field.child_relation, direction)
             # remove hand-over initkwargs applying only to outer scope
-            schema.pop('description', None)
             schema.pop('readOnly', None)
+            if meta.get('description') == schema.get('description'):
+                schema.pop('description', None)
             return append_meta(build_array_type(schema), meta)
 
         if isinstance(field, (serializers.PrimaryKeyRelatedField, serializers.SlugRelatedField)):

@@ -35,7 +35,7 @@ fs = FileSystemStorage(location=tempfile.gettempdir())
 class Aux(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     field_foreign = models.ForeignKey('Aux', null=True, on_delete=models.CASCADE)
-    url = models.URLField(unique=True)
+    url = models.URLField(unique=True, help_text="URL identifier for Aux")
 
 
 class AuxSerializer(serializers.ModelSerializer):

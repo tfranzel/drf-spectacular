@@ -127,12 +127,14 @@ components:
         field_related_slug:
           type: string
           format: uri
+          description: URL identifier for Aux
           readOnly: true
         field_related_slug_many:
           type: array
           items:
             type: string
             format: uri
+            description: URL identifier for Aux
           readOnly: true
         field_related_string:
           type: string
@@ -368,6 +370,7 @@ components:
         url:
           type: string
           format: uri
+          description: URL identifier for Aux
           maxLength: 200
         field_foreign:
           type: string
