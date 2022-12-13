@@ -22,12 +22,12 @@ Changelog
 - decouple TypedDict class from Py version `#861 <https://github.com/tfranzel/drf-spectacular/issues/861>`_ `#654 <https://github.com/tfranzel/drf-spectacular/issues/654>`_
 - bugfix djangorestframework_camel_case `#861 <https://github.com/tfranzel/drf-spectacular/issues/861>`_
 - bugfix djangorestframework_camel_case nested object handling `#861 <https://github.com/tfranzel/drf-spectacular/issues/861>`_
-- Utils: Replace `List[]` with `Sequence[]`, because of Mypy note 'List is invariant. Consider using Sequence instead.' [Hans Aarne Liblik]
+- Utils: Replace ``List[]`` with ``Sequence[]``, because of Mypy note 'List is invariant. Consider using Sequence instead.' [Hans Aarne Liblik]
 - Fixed minor typos [Conrad]
 - Removing blank and null keys when generating the overridden choices hash to match the hash generation logic in the enum post processor hook [Trent Holliday]
 - fix test fixture overlap `#826 <https://github.com/tfranzel/drf-spectacular/issues/826>`_
 - specifiy min patch release for DRF (fixes `#812 <https://github.com/tfranzel/drf-spectacular/issues/812>`_)
-- Preserve context in `get_list_serializer`. [Brady Dean]
+- Preserve context in ``get_list_serializer``. [Brady Dean]
 - Allow field extensions to return None from map_serializer_field [Andrew Backer]
 
 Breaking changes / important additions:
