@@ -1,6 +1,41 @@
 Changelog
 =========
 
+0.25.0 (2022-12-13)
+-------------------
+
+- Fix missing description for ManyRelatedField and tested for SlugField (`#895 <https://github.com/tfranzel/drf-spectacular/issues/895>`_) [StopMotionCuber]
+- Simplify hashable_values `#833 <https://github.com/tfranzel/drf-spectacular/issues/833>`_
+- Add custom settings to CLI (view parity) `#892 <https://github.com/tfranzel/drf-spectacular/issues/892>`_
+- fix function misnomer `#891 <https://github.com/tfranzel/drf-spectacular/issues/891>`_
+- improve trace messages / warnings & add color `#866 <https://github.com/tfranzel/drf-spectacular/issues/866>`_
+- Treat SlugRelatedField analog to PrimaryKeyRelatedField `#854 <https://github.com/tfranzel/drf-spectacular/issues/854>`_
+- Include filename in call to _get_sidecar_url [Justin Spencer]
+- add django-parler blueprint `#887 <https://github.com/tfranzel/drf-spectacular/issues/887>`_
+- add a view to handle SwaggerUI oauth callbacks (`#882 <https://github.com/tfranzel/drf-spectacular/issues/882>`_) [Finn-Thorben Sell]
+- improve documentation
+- Introduce setting DEFAULT_QUERY_MANAGER to allow other managers for querset retrieval
+- fix flake8 6.0.0 breaking change
+- fix example list detection (symmetry with schema) `#872 <https://github.com/tfranzel/drf-spectacular/issues/872>`_
+- Use direct view methods for getting serializer instances [Numerlor]
+- name overrides for rest_framework_dataclasses `#839 <https://github.com/tfranzel/drf-spectacular/issues/839>`_
+- decouple TypedDict class from Py version `#861 <https://github.com/tfranzel/drf-spectacular/issues/861>`_ `#654 <https://github.com/tfranzel/drf-spectacular/issues/654>`_
+- bugfix djangorestframework_camel_case `#861 <https://github.com/tfranzel/drf-spectacular/issues/861>`_
+- bugfix djangorestframework_camel_case nested object handling `#861 <https://github.com/tfranzel/drf-spectacular/issues/861>`_
+- Utils: Replace `List[]` with `Sequence[]`, because of Mypy note 'List is invariant. Consider using Sequence instead.' [Hans Aarne Liblik]
+- Fixed minor typos [Conrad]
+- Removing blank and null keys when generating the overridden choices hash to match the hash generation logic in the enum post processor hook [Trent Holliday]
+- fix test fixture overlap `#826 <https://github.com/tfranzel/drf-spectacular/issues/826>`_
+- specifiy min patch release for DRF (fixes `#812 <https://github.com/tfranzel/drf-spectacular/issues/812>`_)
+- Preserve context in `get_list_serializer`. [Brady Dean]
+- Allow field extensions to return None from map_serializer_field [Andrew Backer]
+
+Breaking changes / important additions:
+
+- Officially set the lower bound for DRF version to ``3.10.3``
+- Refactored the CLI warning system for better code navigation / orientation, GUI support and color!
+- Some minor mechanics changes, several overall improvements, feature additions, and a few bugfixes.
+
 0.24.2 (2022-09-26)
 -------------------
 
