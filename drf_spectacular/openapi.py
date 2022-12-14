@@ -666,8 +666,13 @@ class AutoSchema(ViewInspector):
             # read_only fields do not have a Manager by design. go around and get field
             # from parent. also avoid calling Manager. __bool__ as it might be customized
             # to hit the database.
-            if getattr(field, 'queryset', None) is not None and not is_slug:
-                model_field = field.queryset.model._meta.pk
+            if getattr(field, 'queryset', None) is not None:
+                if is_slug:
+                    model = field.queryset.model
+                    source = [field.slug_field]
+                    model_field = follow_field_source(model, source, default=models.TextField())
+                else:
+                    model_field = field.queryset.model._meta.pk
             else:
                 if isinstance(field.parent, serializers.ManyRelatedField):
                     model = field.parent.parent.Meta.model
@@ -689,10 +694,8 @@ class AutoSchema(ViewInspector):
 
                 # estimates the relating model field and jumps to its target model PK field.
                 # also differentiate as source can be direct (pk) or relation field (model).
-                model_field = follow_field_source(model, source)
-                if callable(model_field):
-                    # follow_field_source bailed with a warning. be graceful and default to str.
-                    model_field = models.TextField()
+                # be graceful and default to string.
+                model_field = follow_field_source(model, source, default=models.TextField())
 
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
             # signals that attribute. however this does not apply in the context of relations.

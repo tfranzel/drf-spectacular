@@ -194,6 +194,9 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     field_related_slug = serializers.SlugRelatedField(
         read_only=True, source='field_foreign', slug_field='url',
     )  # type: ignore
+    field_related_slug_queryset = serializers.SlugRelatedField(
+        source='field_foreign', slug_field='url', queryset=Aux.objects.all()
+    )  # type: ignore
     field_related_slug_many = serializers.SlugRelatedField(
         many=True, read_only=True, source='field_m2m', slug_field='url',
     )  # type: ignore
