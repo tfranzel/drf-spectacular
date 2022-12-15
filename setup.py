@@ -5,7 +5,7 @@ import re
 import shutil
 import sys
 
-from setuptools import find_packages, setup
+from setuptools import find_namespace_packages, setup
 
 name = 'drf-spectacular'
 package = 'drf_spectacular'
@@ -69,7 +69,7 @@ setup(
     long_description_content_type='text/x-rst',
     author=author,
     author_email=author_email,
-    packages=find_packages(exclude=('tests*',)),
+    packages=[p for p in find_namespace_packages(exclude=('tests*',)) if p.startswith(package)],
     include_package_data=True,
     python_requires=">=3.6",
     install_requires=requirements,
