@@ -572,7 +572,7 @@ def _follow_return_type(a_callable):
     return target_type
 
 
-def follow_field_source(model, path, emit_warnings=True):
+def follow_field_source(model, path, default=None, emit_warnings=True):
     """
     a model traversal chain "foreignkey.foreignkey.value" can either end with an actual model field
     instance "value" or a model property function named "value". differentiate the cases.
@@ -594,7 +594,7 @@ def follow_field_source(model, path, emit_warnings=True):
 
     def dummy_property(obj) -> str:  # type: ignore
         pass  # pragma: no cover
-    return dummy_property
+    return default or dummy_property
 
 
 def follow_model_field_lookup(model, lookup):

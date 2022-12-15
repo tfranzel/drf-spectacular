@@ -129,6 +129,10 @@ components:
           format: uri
           description: URL identifier for Aux
           readOnly: true
+        field_related_slug_queryset:
+          type: string
+          format: uri
+          description: URL identifier for Aux
         field_related_slug_many:
           type: array
           items:
@@ -341,6 +345,7 @@ components:
       - field_related_hyperlink
       - field_related_slug
       - field_related_slug_many
+      - field_related_slug_queryset
       - field_related_string
       - field_slug
       - field_smallint

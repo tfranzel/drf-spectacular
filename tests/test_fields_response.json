@@ -19,6 +19,7 @@
     }
   ],
   "field_related_slug": "https://xkcd.com",
+  "field_related_slug_queryset": "https://xkcd.com",
   "field_related_slug_many": [
       "https://xkcd.com"
   ],
