@@ -112,16 +112,20 @@ def add_trace_message(obj):
 def _get_source_location(obj):
     try:
         sourcefile = inspect.getsourcefile(obj)
-        lineno = inspect.getsourcelines(obj)[1]
-        return sourcefile, lineno
     except:  # noqa: E722
-        return None, None
+        sourcefile = None
+    try:
+        lineno = inspect.getsourcelines(obj)[1]
+    except:  # noqa: E722
+        lineno = None
+    return sourcefile, lineno
 
 
 def _get_current_trace():
     source_locations = [t for t in _TRACES if t[0]]
     if source_locations:
-        source_location = f"{source_locations[-1][0]}:{source_locations[-1][1]}"
+        sourcefile, lineno, _ = source_locations[-1]
+        source_location = f'{sourcefile}:{lineno}' if lineno else sourcefile
     else:
         source_location = ''
     breadcrumbs = ' > '.join(t[2] for t in _TRACES)
