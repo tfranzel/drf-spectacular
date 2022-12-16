@@ -1,6 +1,18 @@
 Changelog
 =========
 
+0.25.1 (2022-12-16)
+-------------------
+
+- Fix warning source line performance regression `#889 <https://github.com/tfranzel/drf-spectacular/issues/889>`_ `#897 <https://github.com/tfranzel/drf-spectacular/issues/897>`_
+- improve warning for transient @api_view objects `#889 <https://github.com/tfranzel/drf-spectacular/issues/889>`_
+- adapt package arg due to setuptools deprecation `#786 <https://github.com/tfranzel/drf-spectacular/issues/786>`_
+- utilize queryset for SlugRelatedField `#897 <https://github.com/tfranzel/drf-spectacular/issues/897>`_
+
+Breaking changes / important additions:
+
+- Bugfix release that addresses a performance regression in ``SpectacularApiView`` and an oversight in the now stricter handling of ``SlugRelatedField``
+
 0.25.0 (2022-12-13)
 -------------------
 
