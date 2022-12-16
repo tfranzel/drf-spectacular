@@ -10,7 +10,7 @@ from django.urls import path
 from rest_framework.decorators import api_view
 
 
-def test_command_plain(capsys):
+def test_command_plain(capsys, clear_generator_settings):
     management.call_command('spectacular', validate=True, fail_on_warn=True)
     schema_stdout = capsys.readouterr().out
     schema = yaml.load(schema_stdout, Loader=yaml.SafeLoader)
@@ -19,7 +19,7 @@ def test_command_plain(capsys):
     assert 'paths' in schema
 
 
-def test_command_parameterized():
+def test_command_parameterized(clear_generator_settings):
     with tempfile.NamedTemporaryFile() as fh:
         management.call_command(
             'spectacular',
@@ -36,7 +36,7 @@ def test_command_parameterized():
     assert 'paths' in schema
 
 
-def test_command_fail(capsys):
+def test_command_fail(capsys, clear_generator_settings):
     with pytest.raises(CommandError):
         management.call_command(
             'spectacular',
@@ -44,11 +44,11 @@ def test_command_fail(capsys):
             '--urlconf=tests.test_command',
         )
     stderr = capsys.readouterr().err
-    assert 'Error [func]: unable to guess serializer' in stderr
+    assert '/tests/test_command.py: Error [func]: unable to guess serializer' in stderr
     assert 'Schema generation summary:' in stderr
 
 
-def test_command_color(capsys):
+def test_command_color(capsys, clear_generator_settings):
     management.call_command(
         'spectacular',
         '--color',
@@ -57,16 +57,11 @@ def test_command_color(capsys):
     stderr = capsys.readouterr().err
     assert '\033[0;31mError [func]:' in stderr
 
-    # undo global state change
-    from drf_spectacular.drainage import GENERATOR_STATS
-    GENERATOR_STATS._red = GENERATOR_STATS._blue = ''
-    GENERATOR_STATS._yellow = GENERATOR_STATS._clear = ''
-
 
 CUSTOM = {'DESCRIPTION': 'custom setting'}
 
 
-def test_command_custom_settings(capsys):
+def test_command_custom_settings(capsys, clear_generator_settings):
     management.call_command('spectacular', '--custom-settings=tests.test_command.CUSTOM')
     assert 'description: custom setting' in capsys.readouterr().out
 

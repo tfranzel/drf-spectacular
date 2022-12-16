@@ -150,6 +150,15 @@ def warnings(capsys):
 
 
 @pytest.fixture()
+def clear_generator_settings():
+    from drf_spectacular.drainage import GENERATOR_STATS
+    yield
+    GENERATOR_STATS._trace_lineno = False
+    GENERATOR_STATS._red = GENERATOR_STATS._blue = ''
+    GENERATOR_STATS._yellow = GENERATOR_STATS._clear = ''
+
+
+@pytest.fixture()
 def clear_caches():
     from drf_spectacular.plumbing import get_openapi_type_mapping, load_enum_name_overrides
     load_enum_name_overrides.cache_clear()

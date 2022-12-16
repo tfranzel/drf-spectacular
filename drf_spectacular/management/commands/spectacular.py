@@ -49,6 +49,8 @@ class Command(BaseCommand):
         else:
             generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
 
+        GENERATOR_STATS.enable_trace_lineno()
+
         if options['color']:
             GENERATOR_STATS.enable_color()
 
