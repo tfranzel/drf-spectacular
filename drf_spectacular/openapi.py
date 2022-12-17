@@ -948,7 +948,14 @@ class AutoSchema(ViewInspector):
                 if not field.read_only:
                     meta['minLength'] = 1
         if field.default is not None and field.default != empty and not callable(field.default):
-            if isinstance(field, (serializers.ModelField, serializers.SerializerMethodField)):
+            if isinstance(
+                field,
+                (
+                    serializers.ModelField,
+                    serializers.SerializerMethodField,
+                    serializers.PrimaryKeyRelatedField,
+                ),
+            ):
                 # Skip coercion for lack of a better solution. ModelField.to_representation()
                 # and SerializerMethodField.to_representation() are special in that they require
                 # a model instance or object (which we don't have) instead of a plain value.
