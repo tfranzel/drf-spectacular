@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from unittest import mock
 
-from rest_framework import fields, mixins, permissions, serializers, viewsets
+from rest_framework import fields, mixins, pagination, permissions, serializers, viewsets
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -12,10 +12,10 @@ from drf_spectacular.extensions import (
     OpenApiViewExtension,
 )
 from drf_spectacular.plumbing import (
-    ResolvedComponent, build_array_type, build_basic_type, build_object_type,
+    ResolvedComponent, build_array_type, build_basic_type, build_object_type, force_instance,
 )
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import Direction, extend_schema
+from drf_spectacular.utils import Direction, extend_schema, extend_schema_field
 from tests import generate_schema, get_response_schema
 from tests.models import SimpleModel, SimpleSerializer
 
@@ -274,3 +274,55 @@ def test_serializer_envelope_through_extension(no_warnings):
     assert 'EnvelopedX' in schema['components']['schemas']
     assert 'XRequest' in schema['components']['schemas']
     assert 'PatchedXRequest' in schema['components']['schemas']
+
+
+def test_serializer_method_pagination_through_extension(no_warnings):
+    class PaginationWrapper(serializers.BaseSerializer):
+        def __init__(self, serializer_class, pagination_class, **kwargs):
+            self.serializer_class = serializer_class
+            self.pagination_class = pagination_class
+            super().__init__(**kwargs)
+
+    class PaginationWrapperExtension(OpenApiSerializerExtension):
+        target_class = PaginationWrapper
+
+        def get_name(self, auto_schema, direction):
+            return auto_schema.get_paginated_name(
+                auto_schema._get_serializer_name(
+                    serializer=force_instance(self.target.serializer_class),
+                    direction=direction
+                )
+            )
+
+        def map_serializer(self, auto_schema, direction):
+            component = auto_schema.resolve_serializer(self.target.serializer_class, direction)
+            paginated_schema = self.target.pagination_class().get_paginated_response_schema(component.ref)
+            return paginated_schema
+
+    class XSerializer(serializers.ModelSerializer):
+        method = serializers.SerializerMethodField()
+
+        @extend_schema_field(
+            PaginationWrapper(
+                serializer_class=SimpleSerializer,
+                pagination_class=pagination.LimitOffsetPagination
+            )
+        )
+        def get_method(self, obj):
+            pass  # pragma: no cover
+
+        class Meta:
+            fields = '__all__'
+            model = SimpleModel
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.none()
+
+    schema = generate_schema('x', XViewset)
+
+    assert 'Simple' in schema['components']['schemas']
+    assert 'PaginatedSimpleList' in schema['components']['schemas']
+    assert schema['components']['schemas']['PaginatedSimpleList']['properties']['results'] == {
+        '$ref': '#/components/schemas/Simple'
+    }
