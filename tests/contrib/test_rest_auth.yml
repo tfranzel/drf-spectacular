@@ -492,6 +492,7 @@ components:
       properties:
         key:
           type: string
+          writeOnly: true
       required:
       - key
   securitySchemes:
