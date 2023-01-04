@@ -258,7 +258,7 @@ Step 6: Postprocessing hooks
 
 The generated schema is still not to your liking? You are no easy customer, but there is one
 more thing you can do. Postprocessing hooks run at the very end of schema generation. This is how
-the choice ``Enum`` are consolidated into component objects. You can register additional hooks with the
+the choice ``Enum`` are consolidated into component objects. You can register hooks with the
 ``POSTPROCESSING_HOOKS`` setting.
 
 .. code-block:: python
@@ -266,6 +266,9 @@ the choice ``Enum`` are consolidated into component objects. You can register ad
     def custom_postprocessing_hook(result, generator, request, public):
         # your modifications to the schema in parameter result
         return result
+
+.. note:: Please note that setting ``POSTPROCESSING_HOOKS`` will override the default. If you intend to
+   keep the ``Enum`` hook, be sure to add ``'drf_spectacular.hooks.postprocess_schema_enums'`` back into the list.
 
 Step 7: Preprocessing hooks
 ---------------------------
