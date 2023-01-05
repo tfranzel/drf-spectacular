@@ -39,6 +39,7 @@ class CustomURLField(serializers.URLField):
     def to_representation(self, value):
         return urlsafe_base64_encode(b'\xf0\xf1\xf2')  # pragma: no cover
 
+
 @extend_schema_field({"oneOf": [build_basic_type(OpenApiTypes.URI), {"enum": [""], "type": "string"}]})
 class BlankUrlField(serializers.URLField):
     pass
