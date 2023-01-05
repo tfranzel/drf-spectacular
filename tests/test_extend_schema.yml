@@ -375,7 +375,15 @@ components:
         image_data:
           type: string
           format: byte
+        blank_url_field:
+          oneOf:
+          - type: string
+            format: uri
+          - enum:
+            - ''
+            type: string
       required:
+      - blank_url_field
       - encoding
       - image_data
     Inline:

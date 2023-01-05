@@ -6,6 +6,7 @@ from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from drf_spectacular.openapi import AutoSchema
+from drf_spectacular.plumbing import build_basic_type
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
@@ -33,10 +34,21 @@ class CustomField(serializers.Field):
         return urlsafe_base64_encode(b'\xf0\xf1\xf2')  # pragma: no cover
 
 
+@extend_schema_field(OpenApiTypes.BYTE)
+class CustomURLField(serializers.URLField):
+    def to_representation(self, value):
+        return urlsafe_base64_encode(b'\xf0\xf1\xf2')  # pragma: no cover
+
+@extend_schema_field({"oneOf": [build_basic_type(OpenApiTypes.URI), {"enum": [""], "type": "string"}]})
+class BlankUrlField(serializers.URLField):
+    pass
+
+
 @extend_schema_serializer(component_name='GammaEpsilon')
 class GammaSerializer(serializers.Serializer):
     encoding = serializers.CharField()
     image_data = CustomField()
+    blank_url_field = BlankUrlField()
 
 
 class InlineSerializer(serializers.Serializer):
