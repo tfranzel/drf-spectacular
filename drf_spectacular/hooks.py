@@ -143,6 +143,12 @@ def postprocess_schema_enums(result, generator, **kwargs):
     return result
 
 
+def postprocess_schema_security_definitions(result, generator, **kwargs):
+    """Post-process the schema's security definitions."""
+    result["components"].pop("securitySchemes")
+    return result
+
+
 def preprocess_exclude_path_format(endpoints, **kwargs):
     """
         preprocessing hook that filters out {format} suffixed paths, in case
