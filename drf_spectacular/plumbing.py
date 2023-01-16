@@ -37,6 +37,7 @@ from rest_framework.compat import unicode_http_header
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
+from rest_framework.utils.serializer_helpers import ReturnList, ReturnDict
 from uritemplate import URITemplate
 
 from drf_spectacular.drainage import cache, error, warn
@@ -1224,7 +1225,7 @@ def resolve_type_hint(hint):
         else:
             properties = {k: build_basic_type(OpenApiTypes.ANY) for k in hint._fields}
         return build_object_type(properties=properties, required=properties.keys())
-    elif origin is list or hint is list:
+    elif origin is list or hint is list or hint is ReturnList:
         return build_array_type(
             resolve_type_hint(args[0]) if args else build_basic_type(OpenApiTypes.ANY)
         )
@@ -1234,7 +1235,7 @@ def resolve_type_hint(hint):
             max_length=len(args),
             min_length=len(args),
         )
-    elif origin is dict or origin is defaultdict or origin is OrderedDict:
+    elif origin is dict or origin is defaultdict or origin is OrderedDict or hint is ReturnDict:
         schema = build_basic_type(OpenApiTypes.OBJECT)
         if args and args[1] is not typing.Any:
             schema['additionalProperties'] = resolve_type_hint(args[1])
