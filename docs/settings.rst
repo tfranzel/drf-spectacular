@@ -39,7 +39,7 @@ Example: SwaggerUI settings
 ---------------------------
 
 We currently support passing through all basic SwaggerUI `configuration parameters <https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/>`_.
-For more customization options (e.g. JS functions), you can modify and override the
+For more customization options (e.g. CSS, JS functions), you can extend or override the
 `SwaggerUI template <https://github.com/tfranzel/drf-spectacular/blob/master/drf_spectacular/templates/drf_spectacular/swagger_ui.html>`_
 in your project files.
 
