@@ -37,7 +37,7 @@ from rest_framework.compat import unicode_http_header
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
-from rest_framework.utils.serializer_helpers import ReturnList, ReturnDict
+from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from uritemplate import URITemplate
 
 from drf_spectacular.drainage import cache, error, warn
