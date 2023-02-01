@@ -190,14 +190,14 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # Tags defined in the global scope. Determines the order of appearance and allows
     # to configure additional information for each tag.
-    # e.g. [{'name': 'AUTH:SESSION', 'description': 'Text', 'x-displayName': 'Session'}]
+    # e.g. [{'name': 'Auth:Session', 'description': 'Text', 'x-displayName': 'Session'}]
     # https://redocly.com/docs/api-reference-docs/specification-extensions/x-display-name/
     'TAGS': [],
 
     # If present, it HAS TO denote each tag that appears in the documentation.
     # Otherwise, operations associated with a tag not enlisted here, will not appear
     # at all.
-    # e.g. [{'name': 'Accounts', 'tags': ['AUTH_SESSION']}]
+    # e.g. [{'name': 'Accounts', 'tags': ['Auth:Session']}]
     # https://redocly.com/docs/api-reference-docs/specification-extensions/x-tag-groups/
     'TAG_GROUPS': [],
 
