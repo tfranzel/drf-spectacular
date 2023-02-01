@@ -478,6 +478,8 @@ def build_root_object(paths, components, version):
         root['servers'] = settings.SERVERS
     if settings.TAGS:
         root['tags'] = settings.TAGS
+    if settings.TAG_GROUPS:
+        root['x-tagGroups'] = settings.TAG_GROUPS
     if settings.EXTERNAL_DOCS:
         root['externalDocs'] = settings.EXTERNAL_DOCS
     return root

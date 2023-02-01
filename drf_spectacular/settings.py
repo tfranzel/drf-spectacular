@@ -187,8 +187,20 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Each entry MUST contain "url", MAY contain "description", "variables"
     # e.g. [{'url': 'https://example.com/v1', 'description': 'Text'}, ...]
     'SERVERS': [],
-    # Tags defined in the global scope
+
+    # Tags defined in the global scope. Determines the order of appearance and allows
+    # to configure additional information for each tag.
+    # e.g. [{'name': 'AUTH:SESSION', 'description': 'Text', 'x-displayName': 'Session'}]
+    # https://redocly.com/docs/api-reference-docs/specification-extensions/x-display-name/
     'TAGS': [],
+
+    # If present, it HAS TO denote each tag that appears in the documentation.
+    # Otherwise, operations associated with a tag not enlisted here, will not appear
+    # at all.
+    # e.g. [{'name': 'Accounts', 'tags': ['AUTH_SESSION']}]
+    # https://redocly.com/docs/api-reference-docs/specification-extensions/x-tag-groups/
+    'TAG_GROUPS': [],
+
     # Optional: MUST contain 'url', may contain "description"
     'EXTERNAL_DOCS': {},
 
