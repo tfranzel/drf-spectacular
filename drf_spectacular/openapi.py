@@ -954,7 +954,11 @@ class AutoSchema(ViewInspector):
                 # a model instance or object (which we don't have) instead of a plain value.
                 default = field.default
             else:
-                default = field.to_representation(field.default)
+                try:
+                    # gracefully attempt to transform value or just use as plain on error
+                    default = field.to_representation(field.default)
+                except:  # noqa: E722
+                    default = field.default
             if isinstance(default, set):
                 default = list(default)
             meta['default'] = default

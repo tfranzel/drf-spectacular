@@ -2987,3 +2987,24 @@ def test_custom_default_manager(no_warnings):
     assert schema['paths']['/x/{related_field}/']['get']['parameters'][0] == {
         'in': 'path', 'name': 'related_field', 'schema': {'type': 'integer'}, 'required': True
     }
+
+
+def test_primary_key_related_field_default_value(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.PrimaryKeyRelatedField(
+            queryset=SimpleModel.objects.none(), many=True, default=[]
+        )
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'field': {
+            'type': 'array',
+            # this nested default is wrong but a consequence of DRF's init system
+            'items': {'type': 'integer', 'default': []},
+            'default': []
+        }
+    }
