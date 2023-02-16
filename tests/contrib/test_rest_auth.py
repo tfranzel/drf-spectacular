@@ -30,8 +30,8 @@ def test_rest_auth(no_warnings):
 
 @pytest.mark.contrib('dj_rest_auth', 'allauth', 'rest_framework_simplejwt')
 @mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX', '')
+@mock.patch('dj_rest_auth.app_settings.api_settings.USE_JWT', True)
 def test_rest_auth_token(no_warnings, settings):
-    settings.REST_USE_JWT = True
     # flush module import cache to re-evaluate conditional import
     import dj_rest_auth.urls
     reload(dj_rest_auth.urls)
