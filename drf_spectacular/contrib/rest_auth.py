@@ -100,10 +100,12 @@ class RestAuthPasswordResetConfirmView(RestAuthDefaultResponseView):
 
 class RestAuthVerifyEmailView(RestAuthDefaultResponseView):
     target_class = 'dj_rest_auth.registration.views.VerifyEmailView'
+    optional = True
 
 
 class RestAuthResendEmailVerificationView(RestAuthDefaultResponseView):
     target_class = 'dj_rest_auth.registration.views.ResendEmailVerificationView'
+    optional = True
 
 
 class RestAuthJWTSerializer(OpenApiSerializerExtension):
@@ -118,6 +120,7 @@ class RestAuthJWTSerializer(OpenApiSerializerExtension):
 
 class CookieTokenRefreshSerializerExtension(TokenRefreshSerializerExtension):
     target_class = 'dj_rest_auth.jwt_auth.CookieTokenRefreshSerializer'
+    optional = True
 
     def get_name(self):
         return 'TokenRefresh'
@@ -125,6 +128,7 @@ class CookieTokenRefreshSerializerExtension(TokenRefreshSerializerExtension):
 
 class RestAuthRegisterView(OpenApiViewExtension):
     target_class = 'dj_rest_auth.registration.views.RegisterView'
+    optional = True
 
     def view_replacement(self):
         from allauth.account.app_settings import EMAIL_VERIFICATION, EmailVerificationMethod
@@ -144,6 +148,7 @@ class RestAuthRegisterView(OpenApiViewExtension):
 
 class SimpleJWTCookieScheme(SimpleJWTScheme):
     target_class = 'dj_rest_auth.jwt_auth.JWTCookieAuthentication'
+    optional = True
     name = ['jwtHeaderAuth', 'jwtCookieAuth']  # type: ignore
 
     def get_security_requirement(self, auto_schema):

@@ -715,6 +715,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
     target_class: Union[None, str, Type[object]] = None
     match_subclasses = False
     priority = 0
+    optional = False
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -729,7 +730,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
             cls.target_class = import_string(cls.target_class)
         except ImportError:
             installed_apps = apps.app_configs.keys()
-            if any(cls.target_class.startswith(app + '.') for app in installed_apps):
+            if any(cls.target_class.startswith(app + '.') for app in installed_apps) and not cls.optional:
                 warn(
                     f'registered extensions {cls.__name__} for "{cls.target_class}" '
                     f'has an installed app but target class was not found.'
