@@ -1106,7 +1106,7 @@ class AutoSchema(ViewInspector):
 
         # Either use whitelist or default back to old behavior by excluding BrowsableAPIRenderer
         def use_renderer(r):
-            if spectacular_settings.RENDERER_WHITELIST:
+            if spectacular_settings.RENDERER_WHITELIST is not None:
                 return whitelisted(r, spectacular_settings.RENDERER_WHITELIST)
             else:
                 return not isinstance(r, renderers.BrowsableAPIRenderer)

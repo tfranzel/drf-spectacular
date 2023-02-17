@@ -1273,8 +1273,8 @@ def resolve_type_hint(hint):
         raise UnableToProceedError()
 
 
-def whitelisted(obj: object, classes: List[Type[object]], exact=False):
-    if not classes:
+def whitelisted(obj: object, classes: Optional[List[Type[object]]], exact=False):
+    if classes is None:
         return True
     if exact:
         return obj.__class__ in classes
