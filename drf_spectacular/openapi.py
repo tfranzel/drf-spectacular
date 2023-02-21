@@ -697,9 +697,16 @@ class AutoSchema(ViewInspector):
                 # be graceful and default to string.
                 model_field = follow_field_source(model, source, default=models.TextField())
 
+            # Special case: SlugRelatedField also allows to point to a callable @property.
+            if callable(model_field):
+                schema = self._map_response_type_hint(model_field)
+            elif isinstance(model_field, models.Field):
+                schema = self._map_model_field(model_field, direction)
+            else:
+                assert False, f'Field "{field.field_name}" must point to either a property or a model field.'
+
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
             # signals that attribute. however this does not apply in the context of relations.
-            schema = self._map_model_field(model_field, direction)
             schema.pop('readOnly', None)
             return append_meta(schema, meta)
 
