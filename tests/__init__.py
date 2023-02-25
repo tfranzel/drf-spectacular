@@ -101,3 +101,15 @@ def get_response_schema(operation, status=None, content_type='application/json')
 
 def get_request_schema(operation, content_type='application/json'):
     return operation['requestBody']['content'][content_type]['schema']
+
+
+def is_gis_installed():
+    # only load GIS if library is installed. This is required for the GIS test to work
+    from django.core.exceptions import ImproperlyConfigured
+
+    try:
+        from django.contrib.gis.gdal import gdal_version  # noqa: F401
+    except ImproperlyConfigured:
+        return False
+    else:
+        return True
