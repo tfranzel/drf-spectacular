@@ -5,6 +5,8 @@ import django
 import pytest
 from django.core import management
 
+from tests import is_gis_installed
+
 
 def pytest_configure(config):
     from django.conf import settings
@@ -20,12 +22,15 @@ def pytest_configure(config):
         'allauth.account',
         'oauth2_provider',
         'django_filters',
-        'rest_framework_gis',
         # this is not strictly required and when added django-polymorphic
         # currently breaks the whole Django/DRF upstream testing.
         # 'polymorphic',
         # 'rest_framework_jwt',
     ]
+
+    # only load GIS if library is installed. This is required for the GIS test to work
+    if is_gis_installed():
+        contrib_apps.append('rest_framework_gis')
 
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -118,11 +123,19 @@ def pytest_addoption(parser):
         default=False,
         help="run contrib tests but allow them to fail"
     )
+    parser.addoption(
+        "--allow-skip-extra-system-req",
+        action="store_true",
+        default=False,
+        help=""
+    )
 
 
 def pytest_collection_modifyitems(config, items):
     skip_missing_contrib = pytest.mark.skip(reason="skip tests for missing contrib package")
     allow_contrib_fail = pytest.mark.xfail(reason="contrib test were allowed to fail")
+    allow_sys_requirement_fail = pytest.mark.xfail(reason="may fail due to missing system library")
+
     for item in items:
         for marker in item.own_markers:
             if marker.name == 'contrib' and config.getoption("--skip-missing-contrib"):
@@ -130,6 +143,9 @@ def pytest_collection_modifyitems(config, items):
                     item.add_marker(skip_missing_contrib)
             if marker.name == 'contrib' and config.getoption("--allow-contrib-fail"):
                 item.add_marker(allow_contrib_fail)
+            if marker.name == 'system_requirement_fulfilled' and config.getoption("--allow-skip-extra-system-req"):
+                if not marker.args[0]:
+                    item.add_marker(allow_sys_requirement_fail)
 
 
 @pytest.fixture()
