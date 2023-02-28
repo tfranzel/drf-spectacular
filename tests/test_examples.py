@@ -247,3 +247,27 @@ def test_examples_list_detection_on_non_200_decoration(no_warnings):
         },
         'schema': {'$ref': '#/components/schemas/Exception'},
     }
+
+
+def test_inherited_status_code_from_response_container(no_warnings):
+    @extend_schema(
+        responses={
+            400: OpenApiResponse(
+                response=SimpleSerializer,
+                examples=[
+                    # prior to the fix this required the argument status_code=[400]
+                    # as the code was not passed down and the filtering sorted it out.
+                    OpenApiExample("an example", value={"id": 3})
+                ],
+            ),
+        },
+    )
+    class XListView(generics.ListAPIView):
+        model = SimpleModel
+        serializer_class = SimpleSerializer
+
+    schema = generate_schema('/x/', view=XListView)
+    assert schema['paths']['/x/']['get']['responses']['400']['content']['application/json'] == {
+        'schema': {'$ref': '#/components/schemas/Simple'},
+        'examples': {'AnExample': {'value': {'id': 3}, 'summary': 'an example'}}
+    }

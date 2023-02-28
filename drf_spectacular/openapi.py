@@ -1185,9 +1185,19 @@ class AutoSchema(ViewInspector):
                 continue
             if direction == 'response' and example.request_only:
                 continue
-            if media_type and media_type != example.media_type:
+            # default to 'application/json' unless nested in OpenApiResponse, in which case inherit
+            if not example.media_type:
+                example_media_type = media_type if (example in extras) else 'application/json'
+            else:
+                example_media_type = example.media_type
+            if media_type and media_type != example_media_type:
                 continue
-            if status_code and status_code not in example.status_codes:
+            # default to [200, 201] unless nested in OpenApiResponse, in which case inherit
+            if not example.status_codes:
+                example_status_codes = (status_code,) if (example in extras) else ('200', '201')
+            else:
+                example_status_codes = tuple(map(str, example.status_codes))
+            if status_code and status_code not in example_status_codes:
                 continue
 
             if (

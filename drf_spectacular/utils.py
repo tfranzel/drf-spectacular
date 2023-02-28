@@ -120,6 +120,11 @@ class OpenApiExample(OpenApiSchemaBase):
     The example will be attached to the operation object where appropriate,
     i.e. where the given ``media_type``, ``status_code`` and modifiers match.
     Example that do not match any scenario are ignored.
+
+    - media_type will default to 'application/json' unless implicitly specified
+      through :class:`.OpenApiResponse`
+    - status_codes will default to [200, 201] unless implicitly specified
+      through :class:`.OpenApiResponse`
     """
     def __init__(
             self,
@@ -131,7 +136,7 @@ class OpenApiExample(OpenApiSchemaBase):
             request_only: bool = False,
             response_only: bool = False,
             parameter_only: Optional[Tuple[str, _ParameterLocationType]] = None,
-            media_type: str = 'application/json',
+            media_type: Optional[str] = None,
             status_codes: Optional[Sequence[Union[str, int]]] = None,
     ):
         self.name = name
@@ -143,7 +148,7 @@ class OpenApiExample(OpenApiSchemaBase):
         self.response_only = response_only
         self.parameter_only = parameter_only
         self.media_type = media_type
-        self.status_codes = list(map(str, status_codes)) if status_codes else ['200', '201']
+        self.status_codes = status_codes
 
 
 class OpenApiParameter(OpenApiSchemaBase):
