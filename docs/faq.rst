@@ -8,7 +8,7 @@ Sometimes DRF libraries do not cooperate well with the introspection mechanics.
 Check the :ref:`blueprints` for already available fixes. If there aren't any,
 learn how to do easy :ref:`customization`. Feel free to contribute back missing fixes.
 
-If you think this is a bug in *drf-spectacular*, open a
+If you think this is a bug in *drf-spectacular*, open an
 `issue <https://github.com/tfranzel/drf-spectacular/issues>`_.
 
 My Swagger UI and/or Redoc page is blank
@@ -73,7 +73,7 @@ modify otherwise. Have a look at :ref:`customization` on how to use *Extensions*
 I get an empty schema or endpoints are missing
 ----------------------------------------------
 
-This is usually due versioning (or more rarely due to permissions).
+This is usually due to versioning (or more rarely due to permissions).
 
 In case you use versioning on all endpoints, that might be the intended output.
 By default the schema will only contain unversioned endpoints. Explicitly specify
@@ -94,14 +94,14 @@ I expected a different schema
 Sometimes views declare one thing (via ``serializer_class`` and ``queryset``) and do
 a entirely different thing. Usually this is attributed to making a library code flexible
 under varying situations. In those cases it is best to override what the introspection
-decuded and state explicitly what is to be expected.
+decided and state explicitly what is to be expected.
 Work through the steps in :ref:`customization` to adapt your schema.
 
 I get duplicated operations with a ``{format}``-suffix
 ------------------------------------------------------
 
 Your app likely uses DRF's ``format_suffix_patterns``. If those operations are
-undesireable in your schema, you can simply exclude them with an already provided
+undesirable in your schema, you can simply exclude them with an already provided
 :ref:`preprocessing hook <customization_preprocessing_hooks>`.
 
 I get a lot of warnings
@@ -257,7 +257,7 @@ My ``@action`` is erroneously paginated or has filter parameters that I do not w
 This usually happens when ``@extend_schema(responses=XSerializer(many=True))`` is used. Actions inherit filter
 and pagination classes from their ``ViewSet``. If the response is then marked as a list, the ``pagination_class``
 kicks in. Since actions are handled manually by the user, this behavior is usually not immediately obvious.
-To make make your intentions clear to *drf-spectacular*, you need to clear the offening classes in the action
+To make your intentions clear to *drf-spectacular*, you need to clear the offending classes in the action
 decorator, e.g. setting ``pagination_class=None``.
 
 Users of *django-filter* might also see unwanted query parameters. Since the same mechanics apply here too,
@@ -274,10 +274,10 @@ you can remove those parameters by resetting the filter backends with ``@action(
         def custom_action(self):
             pass
 
-How to I wrap my responses? / My endpoints are wrapped in a generic envelope
+How do I wrap my responses? / My endpoints are wrapped in a generic envelope
 ----------------------------------------------------------------------------
 
-This non-native behavior can be conventiently modeled with a simple helper function. You simply need
+This non-native behavior can be conveniently modeled with a simple helper function. You simply need
 to wrap the actual serializer with your envelope serializer and provide it to ``@extend_schema``.
 
 Here is an example on how to build an ``enveloper`` helper function. In this example, the actual
@@ -387,7 +387,7 @@ DRF provides a convenient ``FileField`` for storing files persistently within a 
 `recommended by Django <https://docs.djangoproject.com/en/4.0/ref/request-response/#telling-the-browser-to-treat-the-response-as-a-file-attachment>`_
 for treating a ``Response`` as a file and sets up an appropriate ``Renderer`` that will handle the
 client ``Accept`` header for this response content type. ``responses=bytes`` expresses that the
-response is a binary blob without further details on it's structure.
+response is a binary blob without further details on its structure.
 
 .. code-block:: python
 
