@@ -96,7 +96,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 schema = build_basic_type(annotation)
             else:
                 # allow injecting raw schema via @extend_schema_field decorator
-                schema = annotation
+                schema = annotation.copy()
         elif filter_method_hint is not _NoHint:
             if is_basic_type(filter_method_hint):
                 schema = build_basic_type(filter_method_hint)
