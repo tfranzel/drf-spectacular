@@ -371,9 +371,9 @@ def build_parameter_type(
     if enum:
         # in case of array schema, enum makes little sense on the array itself
         if schema['schema'].get('type') == 'array':
-            schema['schema']['items']['enum'] = sorted(enum)
+            schema['schema']['items']['enum'] = sorted(enum, key=str)
         else:
-            schema['schema']['enum'] = sorted(enum)
+            schema['schema']['enum'] = sorted(enum, key=str)
     if pattern is not None:
         # in case of array schema, pattern only makes sense on the items
         if schema['schema'].get('type') == 'array':

@@ -152,8 +152,6 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         # explicit filter choices may disable enum retrieved from model
         if not schema_from_override and filter_choices is not None:
             enum = filter_choices
-        if enum:
-            schema['enum'] = sorted(enum, key=str)
 
         description = schema.pop('description', None)
         if filter_field.extra.get('help_text', None):
@@ -194,6 +192,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 location=OpenApiParameter.QUERY,
                 description=description,
                 schema=schema,
+                enum=enum,
                 explode=explode,
                 style=style
             )
