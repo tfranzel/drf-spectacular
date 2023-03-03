@@ -70,6 +70,11 @@ components:
       - ru
       - cn
       type: string
+      description: |-
+        * `en` - en
+        * `es` - es
+        * `ru` - ru
+        * `cn` - cn
     NullEnum:
       enum:
       - null
@@ -79,6 +84,10 @@ components:
       - 0
       - -1
       type: integer
+      description: |-
+        * `1` - Positive
+        * `0` - Neutral
+        * `-1` - Negative
   securitySchemes:
     basicAuth:
       type: http

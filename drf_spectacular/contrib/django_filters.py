@@ -3,9 +3,10 @@ from django.db import models
 from drf_spectacular.drainage import add_trace_message, get_override, has_override, warn
 from drf_spectacular.extensions import OpenApiFilterExtension
 from drf_spectacular.plumbing import (
-    build_array_type, build_basic_type, build_parameter_type, follow_field_source, get_manager,
-    get_type_hints, get_view_model, is_basic_type,
+    build_array_type, build_basic_type, build_choice_description_list, build_parameter_type,
+    follow_field_source, get_manager, get_type_hints, get_view_model, is_basic_type,
 )
+from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
 
@@ -152,14 +153,10 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         # explicit filter choices may disable enum retrieved from model
         if not schema_from_override and filter_choices is not None:
             enum = filter_choices
-        if enum:
-            schema['enum'] = sorted(enum, key=str)
 
         description = schema.pop('description', None)
-        if filter_field.extra.get('help_text', None):
-            description = filter_field.extra['help_text']
-        elif filter_field.label is not None:
-            description = filter_field.label
+        if not schema_from_override:
+            description = self._get_field_description(filter_field, description)
 
         # parameter style variations based on filter base class
         if isinstance(filter_field, filters.BaseCSVFilter):
@@ -194,6 +191,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 location=OpenApiParameter.QUERY,
                 description=description,
                 schema=schema,
+                enum=enum,
                 explode=explode,
                 style=style
             )
@@ -248,6 +246,35 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             qs = auto_schema.view.get_queryset()
             model_field = qs.query.annotations[filter_field.field_name].field
         return auto_schema._map_model_field(model_field, direction=None)
+
+    def _get_field_description(self, filter_field, description):
+        # Try to improve description beyond auto-generated model description
+        if filter_field.extra.get('help_text', None):
+            description = filter_field.extra['help_text']
+        elif filter_field.label is not None:
+            description = filter_field.label
+
+        choices = filter_field.extra.get('choices')
+        if choices and callable(choices):
+            # remove auto-generated enum list, since choices come from a callable
+            if '\n\n*' in (description or ''):
+                description, _, _ = description.partition('\n\n*')
+            return description
+
+        choice_description = ''
+        if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION and choices and not callable(choices):
+            choice_description = build_choice_description_list(choices)
+
+        if not choices:
+            return description
+
+        if description:
+            # replace or append model choice description
+            if '\n\n*' in description:
+                description, _, _ = description.partition('\n\n*')
+            return description + '\n\n' + choice_description
+        else:
+            return choice_description
 
     @classmethod
     def _is_gis(cls, field):

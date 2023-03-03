@@ -119,6 +119,14 @@ def postprocess_schema_enums(result, generator, **kwargs):
             enum_schema = {k: v for k, v in prop_schema.items() if k in ['type', 'enum']}
             prop_schema = {k: v for k, v in prop_schema.items() if k not in ['type', 'enum']}
 
+            # separate actual description from name-value tuples
+            if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
+                if prop_schema.get('description', '').startswith('*'):
+                    enum_schema['description'] = prop_schema.pop('description')
+                elif '\n\n*' in prop_schema.get('description', ''):
+                    _, _, post = prop_schema['description'].partition('\n\n*')
+                    enum_schema['description'] = '*' + post
+
             components = [
                 create_enum_component(enum_name, schema=enum_schema)
             ]

@@ -371,9 +371,9 @@ def build_parameter_type(
     if enum:
         # in case of array schema, enum makes little sense on the array itself
         if schema['schema'].get('type') == 'array':
-            schema['schema']['items']['enum'] = sorted(enum)
+            schema['schema']['items']['enum'] = sorted(enum, key=str)
         else:
-            schema['schema']['enum'] = sorted(enum)
+            schema['schema']['enum'] = sorted(enum, key=str)
     if pattern is not None:
         # in case of array schema, pattern only makes sense on the items
         if schema['schema'].get('type') == 'array':
@@ -423,7 +423,15 @@ def build_choice_field(field):
     # Ref: https://tools.ietf.org/html/draft-wright-json-schema-validation-00#section-5.21
     if type:
         schema['type'] = type
+
+    if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
+        schema['description'] = build_choice_description_list(field.choices.items())
+
     return schema
+
+
+def build_choice_description_list(choices) -> str:
+    return '\n'.join(f'* `{value}` - {label}' for value, label in choices)
 
 
 def build_bearer_security_scheme_object(header_name, token_prefix, bearer_format=None):

@@ -24,7 +24,11 @@ paths:
           enum:
           - A
           - B
-        description: some category description
+        description: |-
+          some category description
+
+          * `A` - aaa
+          * `B` - b
       - in: query
         name: choice_field_enum_override
         schema:
@@ -101,7 +105,11 @@ paths:
             enum:
             - A
             - B
-        description: some category description
+        description: |-
+          some category description
+
+          * `A` - aaa
+          * `B` - b
         explode: true
         style: form
       - in: query
@@ -119,7 +127,11 @@ paths:
           enum:
           - A
           - B
-        description: some category description
+        description: |-
+          some category description
+
+          * `A` - aaa
+          * `B` - b
       - in: query
         name: number_id
         schema:
@@ -140,7 +152,13 @@ paths:
             - -price
             - in_stock
             - price
-        description: Ordering
+        description: |-
+          Ordering
+
+          * `price` - Price
+          * `-price` - Price (descending)
+          * `in_stock` - in stock
+          * `-in_stock` - in stock (descending)
         explode: false
         style: form
       - in: query
@@ -191,6 +209,7 @@ paths:
           type: integer
           enum:
           - 1
+        description: '* `1` - one'
       - in: query
         name: untyped_multiple_choice_field_method_with_explicit_choices
         schema:
@@ -199,6 +218,7 @@ paths:
             type: integer
             enum:
             - 1
+        description: '* `1` - one'
         explode: true
         style: form
       tags:
@@ -246,6 +266,9 @@ components:
       - A
       - B
       type: string
+      description: |-
+        * `A` - aaa
+        * `B` - b
     Product:
       type: object
       properties:
@@ -255,7 +278,11 @@ components:
         category:
           allOf:
           - $ref: '#/components/schemas/CategoryEnum'
-          description: some category description
+          description: |-
+            some category description
+
+            * `A` - aaa
+            * `B` - b
         in_stock:
           type: boolean
         price:
