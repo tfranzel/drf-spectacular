@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    {% block head %}
     <title>{{ title|default:"Swagger" }}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,8 +12,10 @@
       *, *:after, *:before { box-sizing: inherit; }
       body { background: #fafafa; margin: 0; }
     </style>
+    {% endblock head %}
   </head>
   <body>
+    {% block body %}
     <div id="swagger-ui"></div>
     <script src="{{ swagger_ui_bundle }}"></script>
     <script src="{{ swagger_ui_standalone }}"></script>
@@ -23,5 +26,6 @@
     {% include template_name_js %}
     </script>
     {% endif %}
+    {% endblock %}
   </body>
 </html>
