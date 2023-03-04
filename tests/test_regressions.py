@@ -3071,3 +3071,34 @@ def test_serializer_foreign_key_default_value_handling(no_warnings):
         'field_related': {'type': 'integer', 'default': 1},
         'field_related_slug': {'type': 'string', 'default': 'foo'},
     }
+
+
+def test_serializer_method_docstring_precedence(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field_method1 = serializers.SerializerMethodField()
+        field_method2 = serializers.SerializerMethodField(help_text='help_text 2')
+        field_method3 = serializers.SerializerMethodField()
+
+        def get_field_method1(self) -> str:
+            """ docstring 1 """
+            return ''  # pragma: no cover
+
+        def get_field_method2(self) -> int:
+            """ docstring 2 """
+            return 1  # pragma: no cover
+
+        @extend_schema_field(OpenApiTypes.DATETIME)
+        def get_field_method3(self):
+            """ docstring 3 """
+            pass  # pragma: no cover
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'field_method1': {'type': 'string', 'description': 'docstring 1', 'readOnly': True},
+        'field_method2': {'type': 'integer', 'description': 'help_text 2', 'readOnly': True},
+        'field_method3': {'type': 'string', 'description': 'docstring 3', 'format': 'date-time', 'readOnly': True},
+    }
