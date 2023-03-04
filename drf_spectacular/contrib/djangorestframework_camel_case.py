@@ -1,17 +1,29 @@
 import re
+from typing import Optional
 
 
 def camelize_serializer_fields(result, generator, request, public):
+    from djangorestframework_camel_case.settings import api_settings
     from djangorestframework_camel_case.util import camelize_re, underscore_to_camel
 
-    def camelize_str(str):
-        return re.sub(camelize_re, underscore_to_camel, str)
+    # prunes subtrees from camelization based on owning field name
+    ignore_fields = api_settings.JSON_UNDERSCOREIZE.get("ignore_fields") or ()
+    # ignore certain field names while camelizing
+    ignore_keys = api_settings.JSON_UNDERSCOREIZE.get("ignore_keys") or ()
 
-    def camelize_component(schema: dict):
-        if schema.get('type') == 'object':
+    def camelize_str(key: str) -> str:
+        new_key = re.sub(camelize_re, underscore_to_camel, key) if "_" in key else key
+        if key in ignore_keys or new_key in ignore_keys:
+            return key
+        return new_key
+
+    def camelize_component(schema: dict, name: Optional[str] = None) -> dict:
+        if name is not None and (name in ignore_fields or camelize_str(name) in ignore_fields):
+            return schema
+        elif schema.get('type') == 'object':
             if 'properties' in schema:
                 schema['properties'] = {
-                    camelize_str(field_name): camelize_component(field_schema)
+                    camelize_str(field_name): camelize_component(field_schema, field_name)
                     for field_name, field_schema in schema['properties'].items()
                 }
             if 'required' in schema:

@@ -28,15 +28,21 @@ class NestedObject(TypedDict):
     field_four: str
     field_five: NestedObject2
     field_six: List[NestedObject2]
+    field_ignored: int
 
 
 class FakeSerializer(serializers.Serializer):
     field_one = serializers.CharField()
     field_two = serializers.CharField()
+    field_ignored = serializers.CharField()
 
     field_nested = serializers.SerializerMethodField()
+    field_nested_ignored = serializers.SerializerMethodField()
 
     def get_field_nested(self) -> NestedObject:  # type: ignore
+        pass  # pragma: no cover
+
+    def get_field_nested_ignored(self) -> NestedObject:  # type: ignore
         pass  # pragma: no cover
 
 
@@ -52,6 +58,14 @@ class FakeViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
 @mock.patch(
     'drf_spectacular.settings.spectacular_settings.POSTPROCESSING_HOOKS',
     [camelize_serializer_fields]
+)
+@mock.patch(
+    'djangorestframework_camel_case.settings.api_settings.JSON_UNDERSCOREIZE',
+    {
+        'no_underscore_before_number': False,
+        'ignore_fields': ('field_nested_ignored',),
+        'ignore_keys': ('field_ignored',),
+    }
 )
 @pytest.mark.contrib('djangorestframework_camel_case')
 def test_camelize_serializer_fields():

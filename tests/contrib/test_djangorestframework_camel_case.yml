@@ -46,6 +46,8 @@ components:
           type: string
         fieldTwo:
           type: string
+        field_ignored:
+          type: string
         fieldNested:
           type: object
           properties:
@@ -75,14 +77,57 @@ components:
                 required:
                 - fieldEight
                 - fieldSeven
+            field_ignored:
+              type: integer
           required:
           - fieldFive
           - fieldFour
+          - field_ignored
           - fieldSix
           - fieldThree
           readOnly: true
+        fieldNestedIgnored:
+          type: object
+          properties:
+            field_three:
+              type: integer
+            field_four:
+              type: string
+            field_five:
+              type: object
+              properties:
+                field_seven:
+                  type: integer
+                field_eight:
+                  type: string
+              required:
+              - field_eight
+              - field_seven
+            field_six:
+              type: array
+              items:
+                type: object
+                properties:
+                  field_seven:
+                    type: integer
+                  field_eight:
+                    type: string
+                required:
+                - field_eight
+                - field_seven
+            field_ignored:
+              type: integer
+          required:
+          - field_five
+          - field_four
+          - field_ignored
+          - field_six
+          - field_three
+          readOnly: true
       required:
+      - field_ignored
       - fieldNested
+      - fieldNestedIgnored
       - fieldOne
       - fieldTwo
   securitySchemes:
