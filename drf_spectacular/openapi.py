@@ -1052,20 +1052,24 @@ class AutoSchema(ViewInspector):
         for v in field.validators:
             if schema_type == 'string':
                 if isinstance(v, validators.EmailValidator):
-                    schema['format'] = 'email'
+                    if 'format' not in schema:
+                        schema['format'] = 'email'
                 elif isinstance(v, validators.URLValidator):
-                    schema['format'] = 'uri'
+                    if 'format' not in schema:
+                        schema['format'] = 'uri'
                 elif isinstance(v, validators.RegexValidator):
-                    pattern = v.regex.pattern.encode('ascii', 'backslashreplace').decode()
-                    pattern = pattern.replace(r'\x', r'\u00')  # unify escaping
-                    pattern = pattern.replace(r'\Z', '$').replace(r'\A', '^')  # ECMA anchors
-                    schema['pattern'] = pattern
+                    if 'pattern' not in schema:
+                        pattern = v.regex.pattern.encode('ascii', 'backslashreplace').decode()
+                        pattern = pattern.replace(r'\x', r'\u00')  # unify escaping
+                        pattern = pattern.replace(r'\Z', '$').replace(r'\A', '^')  # ECMA anchors
+                        schema['pattern'] = pattern
                 elif isinstance(v, validators.MaxLengthValidator):
                     update_constraint(schema, 'maxLength', min, v.limit_value)
                 elif isinstance(v, validators.MinLengthValidator):
                     update_constraint(schema, 'minLength', max, v.limit_value)
                 elif isinstance(v, validators.FileExtensionValidator) and v.allowed_extensions:
-                    schema['pattern'] = '(?:%s)$' % '|'.join([re.escape(extn) for extn in v.allowed_extensions])
+                    if 'pattern' not in schema:
+                        schema['pattern'] = '(?:%s)$' % '|'.join([re.escape(extn) for extn in v.allowed_extensions])
             elif schema_type in ('integer', 'number'):
                 if isinstance(v, validators.MaxValueValidator):
                     update_constraint(schema, 'maximum', min, v.limit_value)

@@ -382,7 +382,11 @@ components:
         image_data:
           type: string
           format: byte
+        custom_url_field:
+          type: string
+          format: byte
       required:
+      - custom_url_field
       - encoding
       - image_data
     Inline:
