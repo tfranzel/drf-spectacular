@@ -1,28 +1,30 @@
 import contextlib
 import functools
+import inspect
 import sys
 from collections import defaultdict
-from typing import DefaultDict
-
-if sys.version_info >= (3, 8):
-    from typing import (  # type: ignore[attr-defined] # noqa: F401
-        Final, Literal, TypedDict, _TypedDictMeta,
-    )
-else:
-    from typing_extensions import (  # type: ignore[attr-defined] # noqa: F401
-        Final, Literal, TypedDict, _TypedDictMeta,
-    )
+from typing import DefaultDict, List, Optional, Tuple
 
 
 class GeneratorStats:
     _warn_cache: DefaultDict[str, int] = defaultdict(int)
     _error_cache: DefaultDict[str, int] = defaultdict(int)
+    _traces: List[Tuple[Optional[str], Optional[str], str]] = []
+    _trace_lineno = False
+
+    _blue = ''
+    _red = ''
+    _yellow = ''
+    _clear = ''
 
     def __getattr__(self, name):
-        if not self.__dict__:
+        if 'silent' not in self.__dict__:
             from drf_spectacular.settings import spectacular_settings
             self.silent = spectacular_settings.DISABLE_ERRORS_AND_WARNINGS
-        return getattr(self, name)
+        try:
+            return self.__dict__[name]
+        except KeyError:
+            raise AttributeError(name)
 
     def __bool__(self):
         return bool(self._warn_cache or self._error_cache)
@@ -39,12 +41,38 @@ class GeneratorStats:
         self._warn_cache.clear()
         self._error_cache.clear()
 
+    def enable_color(self):
+        self._blue = '\033[0;34m'
+        self._red = '\033[0;31m'
+        self._yellow = '\033[0;33m'
+        self._clear = '\033[0m'
+
+    def enable_trace_lineno(self):
+        self._trace_lineno = True
+
+    def _get_current_trace(self):
+        source_locations = [t for t in self._traces if t[0]]
+        if source_locations:
+            sourcefile, lineno, _ = source_locations[-1]
+            source_location = f'{sourcefile}:{lineno}' if lineno else sourcefile
+        else:
+            source_location = ''
+        breadcrumbs = ' > '.join(t[2] for t in self._traces)
+        return source_location, breadcrumbs
+
     def emit(self, msg, severity):
         assert severity in ['warning', 'error']
-        msg = _get_current_trace() + str(msg)
         cache = self._warn_cache if severity == 'warning' else self._error_cache
+
+        source_location, breadcrumbs = self._get_current_trace()
+        prefix = f'{self._blue}{source_location}: ' if source_location else ''
+        prefix += self._yellow if severity == 'warning' else self._red
+        prefix += f'{severity.capitalize()}'
+        prefix += f' [{breadcrumbs}]: ' if breadcrumbs else ': '
+
+        msg = prefix + self._clear + str(msg)
         if not self.silent and msg not in cache:
-            print(f'{severity.capitalize()} #{len(cache)}: {msg}', file=sys.stderr)
+            print(msg, file=sys.stderr)
         cache[msg] += 1
 
     def emit_summary(self):
@@ -60,33 +88,52 @@ class GeneratorStats:
 GENERATOR_STATS = GeneratorStats()
 
 
-def warn(msg):
-    GENERATOR_STATS.emit(msg, 'warning')
+def warn(msg, delayed=None):
+    if delayed:
+        warnings = get_override(delayed, 'warnings', [])
+        warnings.append(msg)
+        set_override(delayed, 'warnings', warnings)
+    else:
+        GENERATOR_STATS.emit(msg, 'warning')
 
 
-def error(msg):
-    GENERATOR_STATS.emit(msg, 'error')
+def error(msg, delayed=None):
+    if delayed:
+        errors = get_override(delayed, 'errors', [])
+        errors.append(msg)
+        set_override(delayed, 'errors', errors)
+    else:
+        GENERATOR_STATS.emit(msg, 'error')
 
 
 def reset_generator_stats():
     GENERATOR_STATS.reset()
 
 
-_TRACES = []
-
-
 @contextlib.contextmanager
-def add_trace_message(trace_message):
+def add_trace_message(obj):
     """
     Adds a message to be used as a prefix when emitting warnings and errors.
     """
-    _TRACES.append(trace_message)
+    sourcefile, lineno = _get_source_location(obj)
+    GENERATOR_STATS._traces.append((sourcefile, lineno, obj.__name__))
     yield
-    _TRACES.pop()
+    GENERATOR_STATS._traces.pop()
 
 
-def _get_current_trace():
-    return ''.join(f"{trace}: " for trace in _TRACES if trace)
+@functools.lru_cache(maxsize=1000)
+def _get_source_location(obj):
+    try:
+        sourcefile = inspect.getsourcefile(obj)
+    except:  # noqa: E722
+        sourcefile = None
+    try:
+        # This is a rather expensive operation. Only do it when explicitly enabled (CLI)
+        # and cache results to speed up some recurring objects like serializers.
+        lineno = inspect.getsourcelines(obj)[1] if GENERATOR_STATS._trace_lineno else None
+    except:  # noqa: E722
+        lineno = None
+    return sourcefile, lineno
 
 
 def has_override(obj, prop):

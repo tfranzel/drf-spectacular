@@ -1,15 +1,15 @@
 import pytest
 from rest_framework import __version__ as DRF_VERSION  # type: ignore[attr-defined]
-from rest_framework import generics, pagination, serializers, viewsets
+from rest_framework import generics, pagination, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
-    OpenApiExample, OpenApiParameter, extend_schema, extend_schema_serializer,
+    OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_serializer,
 )
 from tests import assert_schema, generate_schema
-from tests.models import SimpleModel
+from tests.models import SimpleModel, SimpleSerializer
 
 
 @extend_schema_serializer(
@@ -93,8 +93,14 @@ class ExampleTestWithExtendedViewSet(viewsets.GenericViewSet):
                 value={'field': 33},
             ),
             OpenApiExample(
-                'Create Error 403 Example',
-                value={'field': 'error'},
+                'Create Error 403 Integer Example',
+                value={'field': 'error (int)'},
+                response_only=True,
+                status_codes=[status.HTTP_403_FORBIDDEN],
+            ),
+            OpenApiExample(
+                'Create Error 403 String Example',
+                value={'field': 'error (str)'},
                 response_only=True,
                 status_codes=['403']
             ),
@@ -171,7 +177,7 @@ def test_example_pagination(no_warnings):
                 'count': 123,
                 'next': 'http://api.example.org/accounts/?offset=400&limit=100',
                 'previous': 'http://api.example.org/accounts/?offset=200&limit=100',
-                'results': {'field': 111}
+                'results': [{'field': 111}],
             },
             'summary': 'Serializer C Example RO'
         }
@@ -198,4 +204,70 @@ def test_example_request_response_listed_examples(no_warnings):
     assert operation['responses']['201']['content']['application/json'] == {
         'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/A'}},
         'examples': {'Ex': {'value': [{'id': '1234'}]}}
+    }
+
+
+def test_examples_list_detection_on_non_200_decoration(no_warnings):
+    class ExceptionSerializer(serializers.Serializer):
+        api_status_code = serializers.CharField()
+        extra = serializers.DictField(required=False)
+
+    @extend_schema(
+        responses={
+            200: SimpleSerializer,
+            400: OpenApiResponse(
+                response=ExceptionSerializer,
+                examples=[
+                    OpenApiExample(
+                        "Date parse error",
+                        value={"api_status_code": "DATE_PARSE_ERROR", "extra": {"details": "foobar"}},
+                        status_codes=['400']
+                    )
+                ],
+            ),
+        },
+    )
+    class XListView(generics.ListAPIView):
+        model = SimpleModel
+        serializer_class = SimpleSerializer
+        pagination_class = pagination.LimitOffsetPagination
+
+    schema = generate_schema('/x/', view=XListView)
+    # regular response listed/paginated
+    assert schema['paths']['/x/']['get']['responses']['200']['content']['application/json'] == {
+        'schema': {'$ref': '#/components/schemas/PaginatedSimpleList'}
+    }
+    # non-200 error response example NOT listed/paginated
+    assert schema['paths']['/x/']['get']['responses']['400']['content']['application/json'] == {
+        'examples': {
+            'DateParseError': {
+                'summary': 'Date parse error',
+                'value': {'api_status_code': 'DATE_PARSE_ERROR', 'extra': {'details': 'foobar'}}
+            }
+        },
+        'schema': {'$ref': '#/components/schemas/Exception'},
+    }
+
+
+def test_inherited_status_code_from_response_container(no_warnings):
+    @extend_schema(
+        responses={
+            400: OpenApiResponse(
+                response=SimpleSerializer,
+                examples=[
+                    # prior to the fix this required the argument status_code=[400]
+                    # as the code was not passed down and the filtering sorted it out.
+                    OpenApiExample("an example", value={"id": 3})
+                ],
+            ),
+        },
+    )
+    class XListView(generics.ListAPIView):
+        model = SimpleModel
+        serializer_class = SimpleSerializer
+
+    schema = generate_schema('/x/', view=XListView)
+    assert schema['paths']['/x/']['get']['responses']['400']['content']['application/json'] == {
+        'schema': {'$ref': '#/components/schemas/Simple'},
+        'examples': {'AnExample': {'value': {'id': 3}, 'summary': 'an example'}}
     }

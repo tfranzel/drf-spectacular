@@ -4,7 +4,7 @@ Extension Blueprints
 ====================
 
 Blueprints are a collection of schema fixes for Django and REST Framework apps.
-Some libraries/apps do not play well with `drf-spectacular`'s automatic introspection.
+Some libraries/apps do not play well with *drf-spectacular*'s automatic introspection.
 With extensions you can manually provide the necessary information to generate a better schema.
 
 There is no blueprint for the app you are looking for? No problem, you can easily write extensions
@@ -39,7 +39,7 @@ djangorestframework-api-key
 ---------------------------
 
 Since `djangorestframework-api-key <https://github.com/florimondmanca/djangorestframework-api-key>`_ has
-no entry in ``authentication_classes``, `drf-spectacular` cannot pick up this library. To alleviate
+no entry in ``authentication_classes``, *drf-spectacular* cannot pick up this library. To alleviate
 this shortcoming, you can manually add the appropriate security scheme.
 
 .. note:: Usage of the ``SECURITY`` setting is discouraged, unless there are special circumstances
@@ -90,6 +90,17 @@ __ https://mrin9.github.io/RapiDoc/
 
 .. literalinclude:: blueprints/rapidoc.html
 
+Elements
+--------
+
+`Elements`__ is another documentation tool that can be used as an alternate to Redoc or Swagger UI.
+
+__ https://stoplight.io/open-source/elements
+
+.. literalinclude:: blueprints/elements.py
+
+.. literalinclude:: blueprints/elements.html
+
 
 drf-rw-serializers
 ------------------
@@ -97,7 +108,7 @@ drf-rw-serializers
 `drf-rw-serializers`__ provides generic views, viewsets and mixins that extend the Django REST
 Framework ones adding separated serializers for read and write operations.
 
-`drf-spectacular` requires just a small ``AutoSchema`` augmentation to make it aware of
+*drf-spectacular* requires just a small ``AutoSchema`` augmentation to make it aware of
 ``drf-rw-serializers``. Remember to replace the ``AutoSchema`` in ``DEFAULT_SCHEMA_CLASS``.
 
 __ https://github.com/vintasoftware/drf-rw-serializers
@@ -127,3 +138,12 @@ django-auth-adfs
 The blueprint works for the Azure AD configuration guide (see: https://django-auth-adfs.readthedocs.io/en/latest/azure_ad_config_guide.html).
 
 .. literalinclude:: blueprints/django_auth_adfs.py
+
+
+django-parler-rest
+------------------
+
+`django-parler-rest <https://github.com/django-parler/django-parler-rest>`_ integration for
+translation package `django-parler <https://github.com/django-parler/django-parler>`_.
+
+.. literalinclude:: blueprints/django_parler_rest.py

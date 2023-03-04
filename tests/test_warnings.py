@@ -122,7 +122,9 @@ def test_serializer_not_found(capsys):
         pass  # pragma: no cover
 
     generate_schema('x', XViewset)
-    assert 'XViewset: exception raised while getting serializer.' in capsys.readouterr().err
+    assert (
+        'Error [XViewset]: exception raised while getting serializer.'
+    ) in capsys.readouterr().err
 
 
 def test_extend_schema_unknown_class(capsys):
@@ -157,7 +159,7 @@ def test_no_serializer_class_on_apiview(capsys):
             pass  # pragma: no cover
 
     generate_schema('x', view=XView)
-    assert 'XView: unable to guess serializer.' in capsys.readouterr().err
+    assert 'Error [XView]: unable to guess serializer.' in capsys.readouterr().err
 
 
 def test_unable_to_follow_field_source_through_intermediate_property_warning(capsys):
@@ -180,7 +182,7 @@ def test_unable_to_follow_field_source_through_intermediate_property_warning(cap
 
     generate_schema('x', view=XAPIView)
     assert (
-        'XAPIView: XSerializer: could not follow field source through intermediate property'
+        '[XAPIView > XSerializer]: could not follow field source through intermediate property'
     ) in capsys.readouterr().err
 
 
@@ -208,8 +210,8 @@ def test_unable_to_derive_function_type_warning(capsys):
 
     generate_schema('x', view=XAPIView)
     stderr = capsys.readouterr().err
-    assert 'XAPIView: XSerializer: unable to resolve type hint for function "x"' in stderr
-    assert 'XAPIView: XSerializer: unable to resolve type hint for function "get_y"' in stderr
+    assert '[XAPIView > XSerializer]: unable to resolve type hint for function "x"' in stderr
+    assert '[XAPIView > XSerializer]: unable to resolve type hint for function "get_y"' in stderr
 
 
 def test_unable_to_traverse_union_type_hint(capsys):
@@ -221,7 +223,7 @@ def test_unable_to_traverse_union_type_hint(capsys):
 
     class FailingFieldSourceTraversalModel3(models.Model):
         @property
-        def foo_or_bar(self) -> Union[Foo, Bar]:
+        def foo_or_bar(self) -> Union[Foo, Bar]:  # type: ignore
             pass  # pragma: no cover
 
     class XSerializer(serializers.ModelSerializer):
@@ -327,6 +329,8 @@ def test_polymorphic_proxy_serializer_misconfig(capsys, resource_type_field_name
 
 
 def test_warning_operation_id_on_extend_schema_view(capsys):
+    from drf_spectacular.drainage import GENERATOR_STATS
+
     @extend_schema(operation_id='Invalid', responses=int)
     class XAPIView(APIView):
         def get(self, request):
@@ -334,7 +338,12 @@ def test_warning_operation_id_on_extend_schema_view(capsys):
 
     generate_schema('x', view=XAPIView)
     stderr = capsys.readouterr().err
+    # check basic emittance of error message to stdout
     assert 'using @extend_schema on viewset class XAPIView with parameters' in stderr
+    # check that delayed error message was persisted on view class
+    assert getattr(XAPIView, '_spectacular_annotation', {}).get('errors')
+    # check that msg survived pre-generation warning/error cache reset
+    assert 'using @extend_schema on viewset' in list(GENERATOR_STATS._error_cache.keys())[0]
 
 
 def test_warning_request_body_not_resolvable(capsys):
@@ -472,3 +481,38 @@ def test_invalid_field_names(capsys):
 
     stderr = capsys.readouterr().err
     assert 'illegal characters' in stderr
+
+
+@pytest.mark.parametrize('type_arg,many', [
+    (SimpleSerializer, True),
+    (SimpleSerializer(many=True), None),
+    (serializers.ListSerializer(child=serializers.CharField()), None),
+    (serializers.ListField(child=serializers.CharField()), None),
+])
+def test_invalid_parameter_types(capsys, type_arg, many):
+    @extend_schema(
+        request=OpenApiTypes.ANY,
+        responses=OpenApiTypes.ANY,
+        parameters=[OpenApiParameter(name='test', type=type_arg, many=many)]
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('/x/', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'parameter "test"' in stderr
+
+
+def test_primary_key_related_field_without_serializer_meta(capsys):
+    class XSerializer(serializers.Serializer):
+        field = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    @extend_schema(responses=XSerializer, request=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('/x/', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'Could not derive type for under-specified PrimaryKeyRelatedField "field"' in stderr

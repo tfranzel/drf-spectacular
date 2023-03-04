@@ -212,6 +212,9 @@ components:
       - POP
       - ROCK
       type: string
+      description: |-
+        * `POP` - Pop
+        * `ROCK` - Rock
     PatchedAlbum:
       type: object
       properties:

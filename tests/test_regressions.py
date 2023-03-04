@@ -275,8 +275,9 @@ def test_serializer_retrieval_from_view(no_warnings):
     class X1Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
         serializer_class = UnusedSerializer
 
-        def get_serializer(self):
-            return XSerializer()
+        def get_serializer(self, *args, **kwargs):
+            assert 'request' in kwargs['context']
+            return XSerializer(*args, **kwargs)
 
     class X2Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
         def get_serializer_class(self):
@@ -2852,3 +2853,221 @@ def test_external_docs(no_warnings):
 
     schema = generate_schema('/x/', view_function=view_func)
     assert schema['paths']['/x/']['get']['externalDocs'] == {'url': 'https://example.com'}
+
+
+def test_basic_parameters_with_many(no_warnings):
+    @extend_schema(
+        request=OpenApiTypes.ANY,
+        responses=OpenApiTypes.ANY,
+        parameters=[OpenApiParameter(name='test', type=int, many=True)]
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['paths']['/x/']['post']['parameters'][0]['schema'] == {
+        'type': 'array', 'items': {'type': 'integer'}
+    }
+
+
+def test_parameter_with_pattern(no_warnings):
+    @extend_schema(
+        request=OpenApiTypes.ANY,
+        responses=OpenApiTypes.ANY,
+        parameters=[OpenApiParameter(name='test', type=OpenApiTypes.REGEX, pattern='^[0-9]{3}$')]
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['paths']['/x/']['post']['parameters'][0]['schema'] == {
+        'pattern': '^[0-9]{3}$',
+        'type': 'string',
+        'format': 'regex'
+    }
+
+
+def test_mock_request_in_serializer_context(no_warnings):
+    # split test into 2 serializers as get_fields is used through a cached property
+    # and thus the assert may not be executed for the annotated case.
+    class AnnotatedSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+        def get_fields(self):
+            assert self.context and 'request' in self.context
+            return super().get_fields()
+
+    class RegularSerializer(serializers.Serializer):
+        field = serializers.IntegerField()
+
+        def get_fields(self):
+            assert self.context and 'request' in self.context
+            return super().get_fields()
+
+    @extend_schema_view(retrieve=extend_schema(responses=AnnotatedSerializer))
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = RegularSerializer
+        queryset = SimpleModel.objects.all()
+
+    generate_schema('/x', XViewset)
+
+
+def test_drf_authtoken_schema_override_bug(no_warnings):
+    from rest_framework.authtoken.views import ObtainAuthToken
+
+    generate_schema('/token/', view=ObtainAuthToken)
+
+
+def test_safestring_serialization(no_warnings):
+    from django.utils.safestring import mark_safe
+
+    @extend_schema(
+        responses=SimpleSerializer,
+        summary=mark_safe('<h1>Woah!</h1>'),
+        description=mark_safe('<h1>Woah!</h1>that\'s<b>bold</b>'),
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert b"<h1>Woah!</h1>" in OpenApiJsonRenderer().render(schema)
+    assert b"<h1>Woah!</h1>" in OpenApiYamlRenderer().render(schema)
+
+
+def test_many_parameter_item_enum(no_warnings):
+    @extend_schema(
+        parameters=[OpenApiParameter(
+            'status', type=int, many=True, style="form", explode=False, enum=[1, 2, 3]
+        )],
+        responses=SimpleSerializer,
+    )
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['paths']['/x/']['get']['parameters'][0] == {
+        'in': 'query',
+        'name': 'status',
+        'schema': {'type': 'array', 'items': {'type': 'integer', 'enum': [1, 2, 3]}},
+        'explode': False,
+        'style': 'form'
+    }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.DEFAULT_QUERY_MANAGER', '_default_manager')
+def test_custom_default_manager(no_warnings):
+    class RelatedModelForCustomManager(models.Model):
+        foo = models.Manager()
+
+    class ModelWithCustomManagerRelation(models.Model):
+        related_field = models.ForeignKey(
+            RelatedModelForCustomManager, on_delete=models.PROTECT, editable=False
+        )
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            fields = '__all__'
+            model = ModelWithCustomManagerRelation
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = ModelWithCustomManagerRelation.objects.none()
+
+    router = routers.SimpleRouter()
+    router.register('x/<related_field>', XViewset)
+
+    # cross-check that the test works
+    assert not hasattr(RelatedModelForCustomManager, 'objects')
+
+    schema = generate_schema(None, patterns=router.urls)
+    assert schema['paths']['/x/{related_field}/']['get']['parameters'][0] == {
+        'in': 'path', 'name': 'related_field', 'schema': {'type': 'integer'}, 'required': True
+    }
+
+
+def test_primary_key_related_field_default_value(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.PrimaryKeyRelatedField(
+            queryset=SimpleModel.objects.none(), many=True, default=[]
+        )
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'field': {
+            'type': 'array',
+            # this nested default is wrong but a consequence of DRF's init system
+            'items': {'type': 'integer', 'default': []},
+            'default': []
+        }
+    }
+
+
+def test_slug_related_field_to_model_property(no_warnings):
+    class M10(models.Model):
+        @property
+        def property_field(self) -> float:
+            return 42
+
+    class M11(models.Model):
+        field = models.ForeignKey(M10, on_delete=models.CASCADE)
+
+    class XSerializer(serializers.ModelSerializer):
+        # How the field is defined in a Serializer
+        field = serializers.SlugRelatedField(slug_field="property_field", read_only=True)
+
+        class Meta:
+            fields = '__all__'
+            model = M11
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = M11.objects.all()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'id': {'type': 'integer', 'readOnly': True},
+        'field': {'format': 'double', 'readOnly': True, 'type': 'number'}
+    }
+
+
+def test_serializer_foreign_key_default_value_handling(no_warnings):
+    class M10(models.Model):
+        field = models.CharField(unique=True)
+
+    class M11(models.Model):
+        field_related = models.ForeignKey(M10, on_delete=models.CASCADE, default=1)
+
+    class XSerializer(serializers.ModelSerializer):
+        field_related = serializers.PrimaryKeyRelatedField(
+            queryset=M11.objects.all(),
+            default=1,
+        )
+        field_related_slug = serializers.SlugRelatedField(
+            source='field_related',
+            slug_field='field',
+            queryset=M10.objects.all(),
+            default='foo',
+        )
+
+        class Meta:
+            fields = '__all__'
+            model = M11
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = M11.objects.none()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'id': {'type': 'integer', 'readOnly': True},
+        'field_related': {'type': 'integer', 'default': 1},
+        'field_related_slug': {'type': 'string', 'default': 'foo'},
+    }

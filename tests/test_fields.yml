@@ -126,6 +126,19 @@ components:
             $ref: '#/components/schemas/Aux'
         field_related_slug:
           type: string
+          format: uri
+          description: URL identifier for Aux
+          readOnly: true
+        field_related_slug_queryset:
+          type: string
+          format: uri
+          description: URL identifier for Aux
+        field_related_slug_many:
+          type: array
+          items:
+            type: string
+            format: uri
+            description: URL identifier for Aux
           readOnly: true
         field_related_string:
           type: string
@@ -338,6 +351,8 @@ components:
       - field_regex
       - field_related_hyperlink
       - field_related_slug
+      - field_related_slug_many
+      - field_related_slug_queryset
       - field_related_string
       - field_slug
       - field_smallint
@@ -364,12 +379,18 @@ components:
           type: string
           format: uuid
           readOnly: true
+        url:
+          type: string
+          format: uri
+          description: URL identifier for Aux
+          maxLength: 200
         field_foreign:
           type: string
           format: uuid
           nullable: true
       required:
       - id
+      - url
   securitySchemes:
     basicAuth:
       type: http

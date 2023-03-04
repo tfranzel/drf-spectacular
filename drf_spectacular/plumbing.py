@@ -37,9 +37,10 @@ from rest_framework.compat import unicode_http_header
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
+from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from uritemplate import URITemplate
 
-from drf_spectacular.drainage import Literal, _TypedDictMeta, cache, error, warn
+from drf_spectacular.drainage import cache, error, warn
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
     DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,
@@ -57,6 +58,23 @@ if hasattr(types, 'UnionType'):
     UNION_TYPES: Tuple[Any, ...] = (typing.Union, types.UnionType)  # type: ignore
 else:
     UNION_TYPES = (typing.Union,)
+
+LITERAL_TYPES: Tuple[Any, ...] = ()
+TYPED_DICT_META_TYPES: Tuple[Any, ...] = ()
+
+if sys.version_info >= (3, 8):
+    from typing import Literal as _PyLiteral
+    from typing import _TypedDictMeta as _PyTypedDictMeta  # type: ignore[attr-defined]
+    LITERAL_TYPES += (_PyLiteral,)
+    TYPED_DICT_META_TYPES += (_PyTypedDictMeta,)
+
+try:
+    from typing_extensions import Literal as _PxLiteral
+    from typing_extensions import _TypedDictMeta as _PxTypedDictMeta  # type: ignore[attr-defined]
+    LITERAL_TYPES += (_PxLiteral,)
+    TYPED_DICT_META_TYPES += (_PxTypedDictMeta,)
+except ImportError:
+    pass
 
 if sys.version_info >= (3, 8):
     CACHED_PROPERTY_FUNCS = (functools.cached_property, cached_property)  # type: ignore
@@ -93,6 +111,18 @@ def is_serializer(obj) -> bool:
 
 def is_list_serializer(obj) -> bool:
     return isinstance(force_instance(obj), serializers.ListSerializer)
+
+
+def get_list_serializer(obj):
+    return force_instance(obj) if is_list_serializer(obj) else get_class(obj)(many=True, context=obj.context)
+
+
+def is_list_serializer_customized(obj) -> bool:
+    return (
+        is_serializer(obj)
+        and get_class(get_list_serializer(obj)).to_representation  # type: ignore
+        is not serializers.ListSerializer.to_representation
+    )
 
 
 def is_basic_serializer(obj) -> bool:
@@ -215,6 +245,16 @@ def get_openapi_type_mapping():
     }
 
 
+def get_manager(model):
+    if not hasattr(model, spectacular_settings.DEFAULT_QUERY_MANAGER):
+        error(
+            f'Failed to obtain queryset from model "{model.__name__}" because manager '
+            f'"{spectacular_settings.DEFAULT_QUERY_MANAGER}" was not found. You may '
+            f'need to change the DEFAULT_QUERY_MANAGER setting. bailing.'
+        )
+    return getattr(model, spectacular_settings.DEFAULT_QUERY_MANAGER)
+
+
 def build_generic_type():
     if spectacular_settings.GENERIC_ADDITIONAL_PROPERTIES is None:
         return {'type': 'object'}
@@ -301,6 +341,7 @@ def build_parameter_type(
         required=False,
         description=None,
         enum=None,
+        pattern=None,
         deprecated=False,
         explode=None,
         style=None,
@@ -328,7 +369,17 @@ def build_parameter_type(
     if style is not None:
         schema['style'] = style
     if enum:
-        schema['schema']['enum'] = sorted(enum)
+        # in case of array schema, enum makes little sense on the array itself
+        if schema['schema'].get('type') == 'array':
+            schema['schema']['items']['enum'] = sorted(enum, key=str)
+        else:
+            schema['schema']['enum'] = sorted(enum, key=str)
+    if pattern is not None:
+        # in case of array schema, pattern only makes sense on the items
+        if schema['schema'].get('type') == 'array':
+            schema['schema']['items']['pattern'] = pattern
+        else:
+            schema['schema']['pattern'] = pattern
     if default is not None and 'default' not in irrelevant_field_meta:
         schema['schema']['default'] = default
     if not allow_blank and schema['schema'].get('type') == 'string':
@@ -372,7 +423,15 @@ def build_choice_field(field):
     # Ref: https://tools.ietf.org/html/draft-wright-json-schema-validation-00#section-5.21
     if type:
         schema['type'] = type
+
+    if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
+        schema['description'] = build_choice_description_list(field.choices.items())
+
     return schema
+
+
+def build_choice_description_list(choices) -> str:
+    return '\n'.join(f'* `{value}` - {label}' for value, label in choices)
 
 
 def build_bearer_security_scheme_object(header_name, token_prefix, bearer_format=None):
@@ -522,7 +581,7 @@ def _follow_return_type(a_callable):
     return target_type
 
 
-def follow_field_source(model, path, emit_warnings=True):
+def follow_field_source(model, path, default=None, emit_warnings=True):
     """
     a model traversal chain "foreignkey.foreignkey.value" can either end with an actual model field
     instance "value" or a model property function named "value". differentiate the cases.
@@ -542,9 +601,9 @@ def follow_field_source(model, path, emit_warnings=True):
                 f'consider annotating the field/property? Defaulting to "string". (Exception: {exc})'
             )
 
-    def dummy_property(obj) -> str:
+    def dummy_property(obj) -> str:  # type: ignore
         pass  # pragma: no cover
-    return dummy_property
+    return default or dummy_property
 
 
 def follow_model_field_lookup(model, lookup):
@@ -665,6 +724,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
     target_class: Union[None, str, Type[object]] = None
     match_subclasses = False
     priority = 0
+    optional = False
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -679,10 +739,18 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
             cls.target_class = import_string(cls.target_class)
         except ImportError:
             installed_apps = apps.app_configs.keys()
-            if any(cls.target_class.startswith(app + '.') for app in installed_apps):
+            if any(cls.target_class.startswith(app + '.') for app in installed_apps) and not cls.optional:
                 warn(
                     f'registered extensions {cls.__name__} for "{cls.target_class}" '
                     f'has an installed app but target class was not found.'
+                )
+            cls.target_class = None
+        except Exception as e:  # pragma: no cover
+            installed_apps = apps.app_configs.keys()
+            if any(cls.target_class.startswith(app + '.') for app in installed_apps):
+                warn(
+                    f'Unexpected error {e.__class__.__name__} occurred when attempting '
+                    f'to import {cls.target_class} for extension {cls.__name__} ({e}).'
                 )
             cls.target_class = None
 
@@ -738,13 +806,18 @@ def load_enum_name_overrides():
             choices = [c.value for c in choices]
         normalized_choices = []
         for choice in choices:
-            if isinstance(choice, str):
+            # Allow None values in the simple values list case
+            if isinstance(choice, str) or choice is None:
                 normalized_choices.append((choice, choice))  # simple choice list
             elif isinstance(choice[1], (list, tuple)):
                 normalized_choices.extend(choice[1])  # categorized nested choices
             else:
                 normalized_choices.append(choice)  # normal 2-tuple form
-        overrides[list_hash(list(dict(normalized_choices).keys()))] = name
+
+        # Get all of choice values that should be used in the hash, blank and None values get excluded
+        # in the post-processing hook for enum overrides, so we do the same here to ensure the hashes match
+        hashable_values = [value for value, _ in normalized_choices if value not in ['', None]]
+        overrides[list_hash(hashable_values)] = name
 
     if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
         error(
@@ -847,10 +920,8 @@ def resolve_regex_path_parameter(path_regex, variable):
 
         return build_parameter_type(
             name=variable,
-            schema={
-                **build_basic_type(OpenApiTypes.STR),
-                'pattern': anchor_pattern(pattern),
-            },
+            schema=build_basic_type(OpenApiTypes.STR),
+            pattern=anchor_pattern(pattern),
             location=OpenApiParameter.PATH,
         )
 
@@ -947,7 +1018,7 @@ def analyze_named_regex_pattern(path):
             skip = True
             name_capture = True
             ff = 4
-        elif path[i] in '(':
+        elif path[i] in '(' and regex_capture:
             stack += 1
             ff = 1
         elif path[i] == '>' and name_capture:
@@ -956,8 +1027,8 @@ def analyze_named_regex_pattern(path):
             regex_capture = True
             skip = True
             ff = 1
-        elif path[i] in ')':
-            if regex_capture and not stack:
+        elif path[i] in ')' and regex_capture:
+            if not stack:
                 regex_capture = False
                 result[name_buffer] = regex_buffer
                 name_buffer, regex_buffer = '', ''
@@ -1058,7 +1129,7 @@ def sanitize_result_object(result):
 
 
 def sanitize_specification_extensions(extensions):
-    # https://spec.openapis.org/oas/v3.0.3#specification-extensions
+    # https://spec.openapis.org/oas/v3.0.3#specificationExtensions
     output = {}
     for key, value in extensions.items():
         if not re.match(r'^x-', key):
@@ -1138,7 +1209,7 @@ def _resolve_typeddict(hint):
     """resolve required fields for TypedDicts if on 3.9 or above"""
     required = None
 
-    if sys.version_info >= (3, 9):
+    if hasattr(hint, '__required_keys__'):
         required = [h for h in hint.__required_keys__]
 
     return build_object_type(
@@ -1163,7 +1234,7 @@ def resolve_type_hint(hint):
         else:
             properties = {k: build_basic_type(OpenApiTypes.ANY) for k in hint._fields}
         return build_object_type(properties=properties, required=properties.keys())
-    elif origin is list or hint is list:
+    elif origin is list or hint is list or hint is ReturnList:
         return build_array_type(
             resolve_type_hint(args[0]) if args else build_basic_type(OpenApiTypes.ANY)
         )
@@ -1173,7 +1244,7 @@ def resolve_type_hint(hint):
             max_length=len(args),
             min_length=len(args),
         )
-    elif origin is dict or origin is defaultdict or origin is OrderedDict:
+    elif origin is dict or origin is defaultdict or origin is OrderedDict or hint is ReturnDict:
         schema = build_basic_type(OpenApiTypes.OBJECT)
         if args and args[1] is not typing.Any:
             schema['additionalProperties'] = resolve_type_hint(args[1])
@@ -1182,7 +1253,7 @@ def resolve_type_hint(hint):
         return build_array_type(resolve_type_hint(args[0]))
     elif origin is frozenset:
         return build_array_type(resolve_type_hint(args[0]))
-    elif origin is Literal:
+    elif origin in LITERAL_TYPES:
         # Literal only works for python >= 3.8 despite typing_extensions, because it
         # behaves slightly different w.r.t. __origin__
         schema = {'enum': list(args)}
@@ -1195,7 +1266,7 @@ def resolve_type_hint(hint):
         if mixin_base_types:
             schema.update(build_basic_type(mixin_base_types[0]))
         return schema
-    elif isinstance(hint, _TypedDictMeta):
+    elif isinstance(hint, TYPED_DICT_META_TYPES):
         return _resolve_typeddict(hint)
     elif origin in UNION_TYPES:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
@@ -1212,8 +1283,8 @@ def resolve_type_hint(hint):
         raise UnableToProceedError()
 
 
-def whitelisted(obj: object, classes: List[Type[object]], exact=False):
-    if not classes:
+def whitelisted(obj: object, classes: Optional[List[Type[object]]], exact=False):
+    if classes is None:
         return True
     if exact:
         return obj.__class__ in classes
@@ -1252,7 +1323,7 @@ def build_listed_example_value(value: Any, paginator, direction):
     schema = paginator.get_paginated_response_schema(sentinel)
     try:
         return {
-            field_name: value if field_schema is sentinel else field_schema['example']
+            field_name: [value] if field_schema is sentinel else field_schema['example']
             for field_name, field_schema in schema['properties'].items()
         }
     except (AttributeError, KeyError):
@@ -1262,3 +1333,17 @@ def build_listed_example_value(value: Any, paginator, direction):
             f"provide example values themselves. Using the plain example value as fallback."
         )
         return value
+
+
+def filter_supported_arguments(func, **kwargs):
+    sig = inspect.signature(func)
+    return {
+        arg: val for arg, val in kwargs.items() if arg in sig.parameters
+    }
+
+
+def build_serializer_context(view) -> typing.Dict[str, Any]:
+    try:
+        return view.get_serializer_context()
+    except:  # noqa
+        return {'request': view.request}

@@ -1,6 +1,6 @@
 import inspect
 import sys
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar, Union
 
 # direct import due to https://github.com/microsoft/pyright/issues/3025
 if sys.version_info >= (3, 8):
@@ -44,7 +44,7 @@ class PolymorphicProxySerializer(Serializer):
             return Response(...)
 
     **Beware** that this is not a real serializer and it will raise an AssertionError
-    if used in that way. It **cannot** be used in views as `serializer_class`
+    if used in that way. It **cannot** be used in views as ``serializer_class``
     or as field in an actual serializer. It is solely meant for annotation purposes.
 
     Also make sure that each sub-serializer has a field named after the value of
@@ -61,14 +61,22 @@ class PolymorphicProxySerializer(Serializer):
     It is **strongly** recommended to pass the ``Serializers`` as **list**,
     and by that let *drf-spectacular* retrieve the field and handle the mapping
     automatically. In special circumstances, the field may not available when
-    drf-spectacular processes the serializer. In those cases you can explicitly state
+    *drf-spectacular* processes the serializer. In those cases you can explicitly state
     the mapping with ``{'legal': LegalPersonSerializer, ...}``, but it is then your
     responsibility to have a valid mapping.
+
+    It is also permissible to provide a callable with no parameters for ``serializers``,
+    such as a lambda that will return an appropriate list or dict when evaluated.
     """
     def __init__(
             self,
             component_name: str,
-            serializers: Union[List[_SerializerType], Dict[str, _SerializerType]],
+            serializers: Union[
+                Sequence[_SerializerType],
+                Dict[str, _SerializerType],
+                Callable[[], Sequence[_SerializerType]],
+                Callable[[], Dict[str, _SerializerType]]
+            ],
             resource_type_field_name: Optional[str],
             many: Optional[bool] = None,
     ):
@@ -87,6 +95,16 @@ class PolymorphicProxySerializer(Serializer):
             instance = super().__new__(cls, *args, **kwargs)
         instance._many = many
         return instance
+
+    @property
+    def serializers(self):
+        if callable(self._serializers):
+            self._serializers = self._serializers()
+        return self._serializers
+
+    @serializers.setter
+    def serializers(self, value):
+        self._serializers = value
 
     @property
     def data(self):
@@ -114,9 +132,17 @@ class OpenApiExample(OpenApiSchemaBase):
     Helper class to document a API parameter / request body / response body
     with a concrete example value.
 
+    It is recommended to provide a singular example value, since pagination
+    and list responses are handled by drf-spectacular.
+
     The example will be attached to the operation object where appropriate,
-    i. e. where the given ``media_type``, ``status_code`` and modifiers match.
+    i.e. where the given ``media_type``, ``status_code`` and modifiers match.
     Example that do not match any scenario are ignored.
+
+    - media_type will default to 'application/json' unless implicitly specified
+      through :class:`.OpenApiResponse`
+    - status_codes will default to [200, 201] unless implicitly specified
+      through :class:`.OpenApiResponse`
     """
     def __init__(
             self,
@@ -128,8 +154,8 @@ class OpenApiExample(OpenApiSchemaBase):
             request_only: bool = False,
             response_only: bool = False,
             parameter_only: Optional[Tuple[str, _ParameterLocationType]] = None,
-            media_type: str = 'application/json',
-            status_codes: Optional[List[str]] = None,
+            media_type: Optional[str] = None,
+            status_codes: Optional[Sequence[Union[str, int]]] = None,
     ):
         self.name = name
         self.summary = summary
@@ -140,7 +166,7 @@ class OpenApiExample(OpenApiSchemaBase):
         self.response_only = response_only
         self.parameter_only = parameter_only
         self.media_type = media_type
-        self.status_codes = status_codes or ['200', '201']
+        self.status_codes = status_codes
 
 
 class OpenApiParameter(OpenApiSchemaBase):
@@ -166,16 +192,18 @@ class OpenApiParameter(OpenApiSchemaBase):
             location: _ParameterLocationType = QUERY,
             required: bool = False,
             description: str = '',
-            enum: Optional[List[Any]] = None,
+            enum: Optional[Sequence[Any]] = None,
+            pattern: Optional[str] = None,
             deprecated: bool = False,
             style: Optional[str] = None,
             explode: Optional[bool] = None,
             default: Any = None,
             allow_blank: bool = True,
-            examples: Optional[List[OpenApiExample]] = None,
+            many: Optional[bool] = None,
+            examples: Optional[Sequence[OpenApiExample]] = None,
             extensions: Optional[Dict[str, Any]] = None,
             exclude: bool = False,
-            response: Union[bool, List[Union[int, str]]] = False,
+            response: Union[bool, Sequence[Union[int, str]]] = False,
     ):
         self.name = name
         self.type = type
@@ -183,11 +211,13 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.required = required
         self.description = description
         self.enum = enum
+        self.pattern = pattern
         self.deprecated = deprecated
         self.style = style
         self.explode = explode
         self.default = default
         self.allow_blank = allow_blank
+        self.many = many
         self.examples = examples or []
         self.extensions = extensions
         self.exclude = exclude
@@ -207,7 +237,7 @@ class OpenApiResponse(OpenApiSchemaBase):
             self,
             response: Any = None,
             description: str = '',
-            examples: Optional[List[OpenApiExample]] = None
+            examples: Optional[Sequence[OpenApiExample]] = None
     ):
         self.response = response
         self.description = description
@@ -249,22 +279,22 @@ class OpenApiCallback(OpenApiSchemaBase):
 
 def extend_schema(
         operation_id: Optional[str] = None,
-        parameters: Optional[List[Union[OpenApiParameter, _SerializerType]]] = None,
+        parameters: Optional[Sequence[Union[OpenApiParameter, _SerializerType]]] = None,
         request: Any = empty,
         responses: Any = empty,
-        auth: Optional[List[str]] = None,
+        auth: Optional[Sequence[str]] = None,
         description: Optional[str] = None,
         summary: Optional[str] = None,
         deprecated: Optional[bool] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[Sequence[str]] = None,
         filters: Optional[bool] = None,
         exclude: bool = False,
         operation: Optional[Dict] = None,
-        methods: Optional[List[str]] = None,
-        versions: Optional[List[str]] = None,
-        examples: Optional[List[OpenApiExample]] = None,
+        methods: Optional[Sequence[str]] = None,
+        versions: Optional[Sequence[str]] = None,
+        examples: Optional[Sequence[OpenApiExample]] = None,
         extensions: Optional[Dict[str, Any]] = None,
-        callbacks: Optional[List[OpenApiCallback]] = None,
+        callbacks: Optional[Sequence[OpenApiCallback]] = None,
         external_docs: Optional[Union[Dict[str, str], str]] = None,
 ) -> Callable[[F], F]:
     """
@@ -431,7 +461,8 @@ def extend_schema(
             if operation_id is not None or operation is not None:
                 error(
                     f'using @extend_schema on viewset class {f.__name__} with parameters '
-                    f'operation_id or operation will most likely result in a broken schema.'
+                    f'operation_id or operation will most likely result in a broken schema.',
+                    delayed=f,
                 )
             # reorder schema class MRO so that view method annotation takes precedence
             # over view class annotation. only relevant if there is a method annotation
@@ -497,9 +528,9 @@ def extend_schema_field(
 
 def extend_schema_serializer(
         many: Optional[bool] = None,
-        exclude_fields: Optional[List[str]] = None,
-        deprecate_fields: Optional[List[str]] = None,
-        examples: Optional[List[OpenApiExample]] = None,
+        exclude_fields: Optional[Sequence[str]] = None,
+        deprecate_fields: Optional[Sequence[str]] = None,
+        examples: Optional[Sequence[OpenApiExample]] = None,
         extensions: Optional[Dict[str, Any]] = None,
         component_name: Optional[str] = None,
 ) -> Callable[[F], F]:
@@ -559,7 +590,8 @@ def extend_schema_view(**kwargs) -> Callable[[F], F]:
             if method_name not in available_view_methods:
                 warn(
                     f'@extend_schema_view argument "{method_name}" was not found on view '
-                    f'{view.__name__}. method override for "{method_name}" will be ignored.'
+                    f'{view.__name__}. method override for "{method_name}" will be ignored.',
+                    delayed=view
                 )
                 continue
 

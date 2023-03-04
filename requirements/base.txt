@@ -1,5 +1,5 @@
 Django>=2.2
-djangorestframework>=3.10
+djangorestframework>=3.10.3
 uritemplate>=2.0.0
 PyYAML>=5.1
 jsonschema>=2.6.0

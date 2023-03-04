@@ -1,26 +1,79 @@
 FAQ
 ===
 
-I use library/app `XXX` and the generated schema is wrong or broken
+I use library/app *XXX* and the generated schema is wrong or broken
 -------------------------------------------------------------------
+
 Sometimes DRF libraries do not cooperate well with the introspection mechanics.
 Check the :ref:`blueprints` for already available fixes. If there aren't any,
 learn how to do easy :ref:`customization`. Feel free to contribute back missing fixes.
 
-If you think this is a bug in `drf-spectacular`, open a
+If you think this is a bug in *drf-spectacular*, open an
 `issue <https://github.com/tfranzel/drf-spectacular/issues>`_.
 
+My Swagger UI and/or Redoc page is blank
+----------------------------------------
+
+Chances are high that you are using `django-csp <https://django-csp.readthedocs.io/en/latest/index.html>`_.
+Take a look inside your browser console and confirm that you have ``Content Security Policy`` errors.
+By default, ``django-csp`` usually breaks our UIs for 2 reasons: external assets and inline scripts.
+
+Using the `sidecar <https://github.com/tfranzel/drf-spectacular#self-contained-ui-installation>`_
+will mitigate the remote asset loading violation by serving the asset from your ``self``. Alternatively,
+you can also adapt ``CSP_DEFAULT_SRC`` to allow for those CDN assets instead.
+
+Solution for Swagger UI:
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    # Option: SIDECAR
+    SPECTACULAR_SETTINGS = {
+         ...
+        'SWAGGER_UI_DIST': 'SIDECAR',
+        'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    }
+    CSP_DEFAULT_SRC = ("'self'", "'unsafe-inline'")
+    CSP_IMG_SRC = ("'self'", "data:")
+
+    # Option: CDN
+    CSP_DEFAULT_SRC = ("'self'", "'unsafe-inline'", "cdn.jsdelivr.net")
+    CSP_IMG_SRC = ("'self'", "data:", "cdn.jsdelivr.net")
+
+.. note:: Depending on how paranoid you are, you may avoid having to use ``unsafe-inline`` by using
+  ``SpectacularSwaggerSplitView`` instead, which does a separate request for the script. Note however
+  that some URL rewriting deployments will break it. Use this option only if you really need to.
+
+Solution for Redoc:
+^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    # Option: SIDECAR
+    SPECTACULAR_SETTINGS = {
+         ...
+        'REDOC_DIST': 'SIDECAR',
+    }
+    # Option: CDN
+    CSP_DEFAULT_SRC = ("'self'", "cdn.jsdelivr.net")
+
+    # required for both CDN and SIDECAR
+    CSP_WORKER_SRC = ("'self'", "blob:")
+    CSP_IMG_SRC = ("'self'", "data:", "cdn.redoc.ly")
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "fonts.googleapis.com")
+    CSP_FONT_SRC = ("'self'", "fonts.gstatic.com")
 
 I cannot use :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` on library code
 --------------------------------------------------------------------------------------------
-You can easily adapt introspection for libraries/apps with the ``Extension`` mechanism.
-``Extensions`` provide an easy way to attach schema information to code that you cannot
-modify otherwise. Have a look at :ref:`customization` on how to use ``Extensions``
 
+You can easily adapt introspection for libraries/apps with the *Extension* mechanism.
+*Extensions* provide an easy way to attach schema information to code that you cannot
+modify otherwise. Have a look at :ref:`customization` on how to use *Extensions*
 
 I get an empty schema or endpoints are missing
 ----------------------------------------------
-This is usually due versioning (or more rarely due to permisssions).
+
+This is usually due to versioning (or more rarely due to permissions).
 
 In case you use versioning on all endpoints, that might be the intended output.
 By default the schema will only contain unversioned endpoints. Explicitly specify
@@ -35,25 +88,25 @@ This will contain unversioned endpoints together with the endpoints for the the 
 For the schema views you can either set a versioning class (implicit versioning via the request) or
 explicitly override the version with ``SpectacularAPIView.as_view(api_version='YOUR_VERSION')``.
 
-
 I expected a different schema
 -----------------------------
+
 Sometimes views declare one thing (via ``serializer_class`` and ``queryset``) and do
 a entirely different thing. Usually this is attributed to making a library code flexible
 under varying situations. In those cases it is best to override what the introspection
-decuded and state explicitly what is to be expected.
+decided and state explicitly what is to be expected.
 Work through the steps in :ref:`customization` to adapt your schema.
-
 
 I get duplicated operations with a ``{format}``-suffix
 ------------------------------------------------------
-Your app likely uses DRF's ``format_suffix_patterns``. If those operations are
-undesireable in your schema, you can simply exclude them with an already provided
-:ref:`preprocessing hook <customization_preprocessing_hooks>`.
 
+Your app likely uses DRF's ``format_suffix_patterns``. If those operations are
+undesirable in your schema, you can simply exclude them with an already provided
+:ref:`preprocessing hook <customization_preprocessing_hooks>`.
 
 I get a lot of warnings
 -----------------------
+
 The warnings are emitted to inform you of discovered schema issues. Some
 usage patterns like ``@api_view`` or ``APIView`` provide very
 little discoverable information on your API. In those cases you can
@@ -61,9 +114,9 @@ easily augment those endpoints and serializers with additional information.
 Look at :ref:`customization` options to fill those gaps and make the warnings
 disappear.
 
-
 I get warnings regarding my ``Enum`` or  my ``Enum`` names have a weird suffix
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
 This is because the ``Enum`` postprocessing hook is activated by default, which
 attempts to find a name for a set of enum choices.
 
@@ -105,7 +158,6 @@ For example:
 If you have multiple semantically distinct enums that happen to have the same
 set of values, and you want different names for them, this mechanism won't work.
 
-
 My endpoints use different serializers depending on the situation
 -----------------------------------------------------------------
 
@@ -128,16 +180,15 @@ like so:
         def retrieve(self, request, *args, **kwargs)
             pass
 
-
 My authentication method is not supported
 -----------------------------------------
+
 You can easily specify a custom authentication with
 :py:class:`OpenApiAuthenticationExtension <drf_spectacular.extensions.OpenApiAuthenticationExtension>`.
-Have a look at :ref:`customization` on how to use ``Extensions``
-
+Have a look at :ref:`customization` on how to use *Extensions*
 
 How can I i18n/internationalize my schema and UI?
-----------------------------------------------------
+-------------------------------------------------
 
 You can use the Django internationalization as you would normally do. The workflow is as one
 would expect: ``USE_I18N=True``, settings the languages, ``makemessages``, and ``compilemessages``.
@@ -158,12 +209,12 @@ falls back to the default language.
         """)
 
         @extend_schema(summary=_('Main endpoint for creating person'))
-        def retrieve(self, request, *args, **kwargs)
+        def retrieve(self, request, *args, **kwargs):
             pass
-
 
 FileField (ImageField) is not handled properly in the schema
 ------------------------------------------------------------
+
 In contrast to most other fields, ``FileField`` behaves differently for requests and responses.
 This duality is impossible to represent in a single component schema.
 
@@ -172,9 +223,8 @@ by setting ``COMPONENT_SPLIT_REQUEST = True``. Note that this influences the who
 not just components with ``FileFields``.
 
 Also consider explicitly setting ``parser_classes = [parsers.MultiPartParser]`` (or any file compatible parser)
-on your `View` or write a custom `get_parser_classes`. These fields do not work with the default ``JsonParser``
+on your ``View`` or write a custom ``get_parser_classes``. These fields do not work with the default ``JsonParser``
 and that fact should be represented in the schema.
-
 
 I'm using ``@action(detail=False)`` but the response schema is not a list
 -------------------------------------------------------------------------
@@ -183,7 +233,6 @@ I'm using ``@action(detail=False)`` but the response schema is not a list
 The ``detail`` parameter in itself makes no statement about the action's response. Also note that the default
 for underspecified endpoints is a non-list response. To signal a listed response, you can use
 ``@extend_schema(responses=XSerializer(many=True))``.
-
 
 Using ``@extend_schema`` on ``APIView`` has no effect
 -----------------------------------------------------
@@ -202,17 +251,16 @@ The extensions register themselves automatically. Just be sure that the python i
 To that end, we suggest creating a ``PROJECT/schema.py`` file and importing it in your ``PROJECT/__init__.py``
 (same directory as ``settings.py`` and ``urls.py``) with ``import PROJECT.schema``.
 
-
 My ``@action`` is erroneously paginated or has filter parameters that I do not want
 -----------------------------------------------------------------------------------
 
 This usually happens when ``@extend_schema(responses=XSerializer(many=True))`` is used. Actions inherit filter
 and pagination classes from their ``ViewSet``. If the response is then marked as a list, the ``pagination_class``
 kicks in. Since actions are handled manually by the user, this behavior is usually not immediately obvious.
-To make make your intentions clear to `drf-spectacular`, you need to clear the offening classes in the action
+To make your intentions clear to *drf-spectacular*, you need to clear the offending classes in the action
 decorator, e.g. setting ``pagination_class=None``.
 
-Users of ``django-filter`` might also see unwanted query parameters. Since the same mechanics apply here too,
+Users of *django-filter* might also see unwanted query parameters. Since the same mechanics apply here too,
 you can remove those parameters by resetting the filter backends with ``@action(...,filter_backends=[])``.
 
 .. code-block:: python
@@ -226,11 +274,10 @@ you can remove those parameters by resetting the filter backends with ``@action(
         def custom_action(self):
             pass
 
-
-How to I wrap my responses? / My endpoints are wrapped in a generic envelope
+How do I wrap my responses? / My endpoints are wrapped in a generic envelope
 ----------------------------------------------------------------------------
 
-This non-native behavior can be conventiently modeled with a simple helper function. You simply need
+This non-native behavior can be conveniently modeled with a simple helper function. You simply need
 to wrap the actual serializer with your envelope serializer and provide it to ``@extend_schema``.
 
 Here is an example on how to build an ``enveloper`` helper function. In this example, the actual
@@ -258,7 +305,6 @@ Adapt to your specific requirements.
         def list(self, request, *args, **kwargs):
             ...
 
-
 How can I have multiple ``SpectacularAPIView`` with differing settings
 ----------------------------------------------------------------------
 
@@ -284,7 +330,6 @@ not allowed. ``SpectacularAPIView`` has dedicated arguments for overriding these
             }
         ), name='schema-custom'),
     ]
-
 
 How to correctly annotate function-based views that use ``@api_view()``
 -----------------------------------------------------------------------
@@ -313,7 +358,6 @@ and break down each case separately.
     def view_func(request, format=None):
         return ...
 
-
 My ``get_queryset()`` depends on some attributes not available at schema generation time
 ----------------------------------------------------------------------------------------
 
@@ -329,7 +373,44 @@ attribute ``swagger_fake_view`` and simply return an empty queryset of the corre
         ...
 
         def get_queryset(self):
-            if getattr(self, 'swagger_fake_view', False)  # drf-yasg comp
+            if getattr(self, 'swagger_fake_view', False):  # drf-yasg comp
                 return YourModel.objects.none()
             # your usual logic
 
+
+How to serve in-memory generated files or files in general outside ``FileField``
+--------------------------------------------------------------------------------
+
+DRF provides a convenient ``FileField`` for storing files persistently within a ``Model``.
+``drf-spectacular`` handles these correctly by default. But to serve binary files that are
+*generated in-memory*, follow the following recipe. This example uses the method
+`recommended by Django <https://docs.djangoproject.com/en/4.0/ref/request-response/#telling-the-browser-to-treat-the-response-as-a-file-attachment>`_
+for treating a ``Response`` as a file and sets up an appropriate ``Renderer`` that will handle the
+client ``Accept`` header for this response content type. ``responses=bytes`` expresses that the
+response is a binary blob without further details on its structure.
+
+.. code-block:: python
+
+    from django.http import HttpResponse
+    from rest_framework.renderers import BaseRenderer
+
+
+    class BinaryRenderer(BaseRenderer):
+        media_type = "application/octet-stream"
+        format = "bin"
+
+
+    class FileViewSet(RetrieveModelMixin, GenericViewSet):
+        ...
+        renderer_classes = [BinaryRenderer]
+
+        @extend_schema(responses=bytes)
+        def retrieve(self, request, *args, **kwargs):
+            export_data = b"..."
+            return HttpResponse(
+                export_data,
+                content_type=BinaryRenderer.media_type,
+                headers={
+                    "Content-Disposition": "attachment; filename=out.bin",
+                },
+            )

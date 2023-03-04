@@ -269,6 +269,10 @@ paths:
             - b
             - c
             type: string
+            description: |-
+              * `a` - a
+              * `b` - b
+              * `c` - c
           default:
           - a
       - in: query
@@ -367,6 +371,9 @@ components:
       - a
       - b
       type: string
+      description: |-
+        * `a` - a
+        * `b` - b
     GammaEpsilon:
       type: object
       properties:
@@ -375,7 +382,11 @@ components:
         image_data:
           type: string
           format: byte
+        custom_url_field:
+          type: string
+          format: byte
       required:
+      - custom_url_field
       - encoding
       - image_data
     Inline:
@@ -394,6 +405,10 @@ components:
       - b
       - c
       type: string
+      description: |-
+        * `a` - a
+        * `b` - b
+        * `c` - c
     Query:
       type: object
       properties:

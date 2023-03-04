@@ -1,9 +1,9 @@
 .. _client_generation:
 
 Client generation
-===============================
+=================
 
-`drf-spectacular` aims to generate the most accurate schema possible under the constraints of OpenAPI 3.0.3.
+*drf-spectacular* aims to generate the most accurate schema possible under the constraints of OpenAPI 3.0.3.
 Unfortunately, sometimes this goal conflicts with generating a good and functional client.
 
 To serve the two main use cases, i.e. documenting the API and generating clients, we opt for getting the
@@ -12,7 +12,7 @@ most accurate schema first, and then provide settings that allow to resolve pote
 .. note:: TL;DR - Simply setting ``'COMPONENT_SPLIT_REQUEST': True`` will most likely yield the best
   and most accurate client.
 
-.. note:: `drf-spectacular` generates warnings where it recognizes potential problems. Some warnings
+.. note:: *drf-spectacular* generates warnings where it recognizes potential problems. Some warnings
   are important to having a correct client. Fixing all warning is highly recommended.
 
 .. note:: For generating clients with CI, we highly recommend using
@@ -49,8 +49,6 @@ Relevant settings:
     # Create separate components for PATCH endpoints (without required list)
     'COMPONENT_SPLIT_PATCH': True,
 
-
-
 Enum issues
 -----------
 
@@ -59,8 +57,11 @@ field. Even though it is the correct way (according to the specification), it sa
 Setting ``'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': False`` will create a less accurate schema that tends to offend
 fewer generator targets.
 
-For more information please refer to the `official documentation <https://swagger.io/docs/specification/data-models/enums/>`_ and
-more specifically the `specification proposal <https://github.com/OAI/OpenAPI-Specification/blob/master/proposals/003_Clarify-Nullable.md#if-a-schema-specifies-nullable-true-and-enum-1-2-3-does-that-schema-allow-null-values-see-1900>`_.
+For more information please refer to the `official documentation`__ and more specifically the `specification
+proposal`__.
+
+__ https://swagger.io/docs/specification/data-models/enums/
+__ https://github.com/OAI/OpenAPI-Specification/blob/main/proposals/2019-10-31-Clarify-Nullable.md#user-content-if-a-schema-specifies-nullable-true-and-enum-1-2-3-does-that-schema-allow-null-values-see-1900
 
 Relevant settings:
 
@@ -68,7 +69,6 @@ Relevant settings:
 
     # Adds "blank" and "null" enum choices where appropriate. disable on client generation issues
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': True,
-
 
 Type issues
 -----------

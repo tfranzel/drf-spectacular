@@ -1,0 +1,1181 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /geometry/:
+    get:
+      operationId: geometry_list
+      tags:
+      - geometry
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeometryList'
+          description: ''
+  /geometry/{id}/:
+    get:
+      operationId: geometry_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - geometry
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Geometry'
+          description: ''
+  /geometrycollection/:
+    get:
+      operationId: geometrycollection_list
+      tags:
+      - geometrycollection
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeometrycollectionList'
+          description: ''
+  /geometrycollection/{id}/:
+    get:
+      operationId: geometrycollection_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - geometrycollection
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Geometrycollection'
+          description: ''
+  /linestring/:
+    get:
+      operationId: linestring_list
+      tags:
+      - linestring
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinestringList'
+          description: ''
+  /linestring/{id}/:
+    get:
+      operationId: linestring_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - linestring
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Linestring'
+          description: ''
+  /multilinestring/:
+    get:
+      operationId: multilinestring_list
+      tags:
+      - multilinestring
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultilinestringList'
+          description: ''
+  /multilinestring/{id}/:
+    get:
+      operationId: multilinestring_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - multilinestring
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Multilinestring'
+          description: ''
+  /multipoint/:
+    get:
+      operationId: multipoint_list
+      tags:
+      - multipoint
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultipointList'
+          description: ''
+  /multipoint/{id}/:
+    get:
+      operationId: multipoint_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - multipoint
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Multipoint'
+          description: ''
+  /multipolygon/:
+    get:
+      operationId: multipolygon_list
+      tags:
+      - multipolygon
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultipolygonList'
+          description: ''
+  /multipolygon/{id}/:
+    get:
+      operationId: multipolygon_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - multipolygon
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Multipolygon'
+          description: ''
+  /paginated/:
+    get:
+      operationId: paginated_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - paginated
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPlainList'
+          description: ''
+  /paginated/{id}/:
+    get:
+      operationId: paginated_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - paginated
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plain'
+          description: ''
+  /plain/:
+    get:
+      operationId: plain_list
+      tags:
+      - plain
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Plain'
+          description: ''
+  /plain/{id}/:
+    get:
+      operationId: plain_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - plain
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plain'
+          description: ''
+  /point/:
+    get:
+      operationId: point_list
+      tags:
+      - point
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointList'
+          description: ''
+  /point/{id}/:
+    get:
+      operationId: point_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - point
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Point'
+          description: ''
+  /polygon/:
+    get:
+      operationId: polygon_list
+      tags:
+      - polygon
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolygonList'
+          description: ''
+  /polygon/{id}/:
+    get:
+      operationId: polygon_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this geo model.
+        required: true
+      tags:
+      - polygon
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Polygon'
+          description: ''
+components:
+  schemas:
+    Geometry:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureEnum'
+        id:
+          type: integer
+          readOnly: true
+        geometry:
+          oneOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - Point
+              coordinates:
+                type: array
+                items:
+                  type: number
+                  format: float
+                example:
+                - 12.9721
+                - 77.5933
+                minItems: 2
+                maxItems: 3
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - LineString
+              coordinates:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+                example:
+                - - 22.4707
+                  - 70.0577
+                - - 12.9721
+                  - 77.5933
+                minItems: 2
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - Polygon
+              coordinates:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    example:
+                    - 12.9721
+                    - 77.5933
+                    minItems: 2
+                    maxItems: 3
+                  example:
+                  - - 22.4707
+                    - 70.0577
+                  - - 12.9721
+                    - 77.5933
+                  minItems: 4
+                example:
+                - - - 0.0
+                    - 0.0
+                  - - 0.0
+                    - 50.0
+                  - - 50.0
+                    - 50.0
+                  - - 50.0
+                    - 0.0
+                  - - 0.0
+                    - 0.0
+        properties:
+          type: object
+          properties:
+            field_random1:
+              type: string
+              maxLength: 32
+            field_random2:
+              type: integer
+            field_gis_plain:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - Point
+                coordinates:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+    GeometryList:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureCollectionEnum'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Geometry'
+    Geometrycollection:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureEnum'
+        id:
+          type: integer
+          readOnly: true
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - GeometryCollection
+            coordinates:
+              type: array
+              items:
+                oneOf:
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - Point
+                    coordinates:
+                      type: array
+                      items:
+                        type: number
+                        format: float
+                      example:
+                      - 12.9721
+                      - 77.5933
+                      minItems: 2
+                      maxItems: 3
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - LineString
+                    coordinates:
+                      type: array
+                      items:
+                        type: array
+                        items:
+                          type: number
+                          format: float
+                        example:
+                        - 12.9721
+                        - 77.5933
+                        minItems: 2
+                        maxItems: 3
+                      example:
+                      - - 22.4707
+                        - 70.0577
+                      - - 12.9721
+                        - 77.5933
+                      minItems: 2
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - Polygon
+                    coordinates:
+                      type: array
+                      items:
+                        type: array
+                        items:
+                          type: array
+                          items:
+                            type: number
+                            format: float
+                          example:
+                          - 12.9721
+                          - 77.5933
+                          minItems: 2
+                          maxItems: 3
+                        example:
+                        - - 22.4707
+                          - 70.0577
+                        - - 12.9721
+                          - 77.5933
+                        minItems: 4
+                      example:
+                      - - - 0.0
+                          - 0.0
+                        - - 0.0
+                          - 50.0
+                        - - 50.0
+                          - 50.0
+                        - - 50.0
+                          - 0.0
+                        - - 0.0
+                          - 0.0
+        properties:
+          type: object
+          properties:
+            field_random1:
+              type: string
+              maxLength: 32
+            field_random2:
+              type: integer
+            field_gis_plain:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - Point
+                coordinates:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+    GeometrycollectionList:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureCollectionEnum'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Geometrycollection'
+    GisFeatureCollectionEnum:
+      type: string
+      enum:
+      - FeatureCollection
+    GisFeatureEnum:
+      type: string
+      enum:
+      - Feature
+    Linestring:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureEnum'
+        id:
+          type: integer
+          readOnly: true
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - LineString
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: number
+                  format: float
+                example:
+                - 12.9721
+                - 77.5933
+                minItems: 2
+                maxItems: 3
+              example:
+              - - 22.4707
+                - 70.0577
+              - - 12.9721
+                - 77.5933
+              minItems: 2
+        properties:
+          type: object
+          properties:
+            field_random1:
+              type: string
+              maxLength: 32
+            field_random2:
+              type: integer
+            field_gis_plain:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - Point
+                coordinates:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+    LinestringList:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureCollectionEnum'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Linestring'
+    Multilinestring:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureEnum'
+        id:
+          type: integer
+          readOnly: true
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - MultiLineString
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+                example:
+                - - 22.4707
+                  - 70.0577
+                - - 12.9721
+                  - 77.5933
+                minItems: 2
+        properties:
+          type: object
+          properties:
+            field_random1:
+              type: string
+              maxLength: 32
+            field_random2:
+              type: integer
+            field_gis_plain:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - Point
+                coordinates:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+    MultilinestringList:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureCollectionEnum'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Multilinestring'
+    Multipoint:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureEnum'
+        id:
+          type: integer
+          readOnly: true
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - MultiPoint
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: number
+                  format: float
+                example:
+                - 12.9721
+                - 77.5933
+                minItems: 2
+                maxItems: 3
+        properties:
+          type: object
+          properties:
+            field_random1:
+              type: string
+              maxLength: 32
+            field_random2:
+              type: integer
+            field_gis_plain:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - Point
+                coordinates:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+    MultipointList:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureCollectionEnum'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Multipoint'
+    Multipolygon:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureEnum'
+        id:
+          type: integer
+          readOnly: true
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - MultiPolygon
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    example:
+                    - 12.9721
+                    - 77.5933
+                    minItems: 2
+                    maxItems: 3
+                  example:
+                  - - 22.4707
+                    - 70.0577
+                  - - 12.9721
+                    - 77.5933
+                  minItems: 4
+                example:
+                - - - 0.0
+                    - 0.0
+                  - - 0.0
+                    - 50.0
+                  - - 50.0
+                    - 50.0
+                  - - 50.0
+                    - 0.0
+                  - - 0.0
+                    - 0.0
+        properties:
+          type: object
+          properties:
+            field_random1:
+              type: string
+              maxLength: 32
+            field_random2:
+              type: integer
+            field_gis_plain:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - Point
+                coordinates:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+    MultipolygonList:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureCollectionEnum'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Multipolygon'
+    PaginatedPlainList:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureCollectionEnum'
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Plain'
+    Plain:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        field_random1:
+          type: string
+          maxLength: 32
+        field_random2:
+          type: integer
+        field_gis_plain:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+                format: float
+              example:
+              - 12.9721
+              - 77.5933
+              minItems: 2
+              maxItems: 3
+        field_gis_related:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+                format: float
+              example:
+              - 12.9721
+              - 77.5933
+              minItems: 2
+              maxItems: 3
+      required:
+      - field_gis_plain
+      - field_gis_related
+      - field_random1
+      - field_random2
+      - id
+    Point:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureEnum'
+        id:
+          type: integer
+          readOnly: true
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+                format: float
+              example:
+              - 12.9721
+              - 77.5933
+              minItems: 2
+              maxItems: 3
+        properties:
+          type: object
+          properties:
+            field_random1:
+              type: string
+              maxLength: 32
+            field_random2:
+              type: integer
+            field_gis_plain:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - Point
+                coordinates:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+    PointList:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureCollectionEnum'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Point'
+    Polygon:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureEnum'
+        id:
+          type: integer
+          readOnly: true
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - Polygon
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+                example:
+                - - 22.4707
+                  - 70.0577
+                - - 12.9721
+                  - 77.5933
+                minItems: 4
+              example:
+              - - - 0.0
+                  - 0.0
+                - - 0.0
+                  - 50.0
+                - - 50.0
+                  - 50.0
+                - - 50.0
+                  - 0.0
+                - - 0.0
+                  - 0.0
+        bbox:
+          type: array
+          items:
+            type: number
+          minItems: 4
+          maxItems: 4
+          example:
+          - 12.9721
+          - 77.5933
+          - 12.9721
+          - 77.5933
+        properties:
+          type: object
+          properties:
+            field_random1:
+              type: string
+              maxLength: 32
+            field_random2:
+              type: integer
+            field_gis_plain:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - Point
+                coordinates:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+    PolygonList:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureCollectionEnum'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Polygon'
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

@@ -6,7 +6,7 @@ from django.utils.module_loading import import_string
 
 from drf_spectacular.drainage import GENERATOR_STATS
 from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
-from drf_spectacular.settings import spectacular_settings
+from drf_spectacular.settings import patched_settings, spectacular_settings
 from drf_spectacular.validation import validate_schema
 
 
@@ -40,6 +40,8 @@ class Command(BaseCommand):
         parser.add_argument('--validate', dest="validate", default=False, action='store_true')
         parser.add_argument('--api-version', dest="api_version", default=None, type=str)
         parser.add_argument('--lang', dest="lang", default=None, type=str)
+        parser.add_argument('--color', dest="color", default=False, action='store_true')
+        parser.add_argument('--custom-settings', dest="custom_settings", default=None, type=str)
 
     def handle(self, *args, **options):
         if options['generator_class']:
@@ -47,15 +49,27 @@ class Command(BaseCommand):
         else:
             generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
 
+        GENERATOR_STATS.enable_trace_lineno()
+
+        if options['color']:
+            GENERATOR_STATS.enable_color()
+
         generator = generator_class(
             urlconf=options['urlconf'],
             api_version=options['api_version'],
         )
-        if options['lang']:
-            with translation.override(options['lang']):
-                schema = generator.get_schema(request=None, public=True)
+
+        if options['custom_settings']:
+            custom_settings = import_string(options['custom_settings'])
         else:
-            schema = generator.get_schema(request=None, public=True)
+            custom_settings = None
+
+        with patched_settings(custom_settings):
+            if options['lang']:
+                with translation.override(options['lang']):
+                    schema = generator.get_schema(request=None, public=True)
+            else:
+                schema = generator.get_schema(request=None, public=True)
 
         GENERATOR_STATS.emit_summary()
 

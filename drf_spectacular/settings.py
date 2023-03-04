@@ -7,7 +7,7 @@ from rest_framework.settings import APISettings, perform_import
 SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # A regex specifying the common denominator for all operation paths. If
     # SCHEMA_PATH_PREFIX is set to None, drf-spectacular will attempt to estimate
-    # a common prefix. use '' to disable.
+    # a common prefix. Use '' to disable.
     # Mainly used for tag extraction, where paths like '/api/v1/albums' with
     # a SCHEMA_PATH_PREFIX regex '/api/v[0-9]' would yield the tag 'albums'.
     'SCHEMA_PATH_PREFIX': None,
@@ -19,18 +19,15 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # behind a proxy and Django is not aware of that. Alternatively, prefixes can
     # also specified via SERVERS, but this makes the operation path more explicit.
     'SCHEMA_PATH_PREFIX_INSERT': '',
-
     # Coercion of {pk} to {id} is controlled by SCHEMA_COERCE_PATH_PK. Additionally,
     # some libraries (e.g. drf-nested-routers) use "_pk" suffixed path variables.
     # This setting globally coerces path variables like "{user_pk}" to "{user_id}".
     'SCHEMA_COERCE_PATH_PK_SUFFIX': False,
 
-    'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
-
     # Schema generation parameters to influence how components are constructed.
     # Some schema features might not translate well to your target.
     # Demultiplexing/modifying components might help alleviate those issues.
-    #
+    'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
     # Create separate components for PATCH endpoints (without required list)
     'COMPONENT_SPLIT_PATCH': True,
     # Split components into request and response parts where appropriate
@@ -51,7 +48,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SERVE_URLCONF': None,
     # complete public schema or a subset based on the requesting user
     'SERVE_PUBLIC': True,
-    # include schema enpoint into schema
+    # include schema endpoint into schema
     'SERVE_INCLUDE_SCHEMA': True,
     # list of authentication/permission classes for spectacular's views.
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
@@ -69,8 +66,15 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/oauth2/
     'SWAGGER_UI_OAUTH2_CONFIG': {},
 
+    # Dictionary of general configuration to pass to the Redoc.init({ ... })
+    # https://github.com/Redocly/redoc#redoc-options-object
+    # The settings are serialized with json.dumps(). If you need customized JS, use a
+    # string instead. The string must then contain valid JS and is passed unchanged.
+    'REDOC_UI_SETTINGS': {},
+
     # CDNs for swagger and redoc. You can change the version or even host your
-    # own depending on your requirements.
+    # own depending on your requirements. For self-hosting, have a look at
+    # the sidecar option in the README.
     'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest',
     'SWAGGER_UI_FAVICON_HREF': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/favicon-32x32.png',
     'REDOC_DIST': 'https://cdn.jsdelivr.net/npm/redoc@latest',
@@ -108,6 +112,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'ENUM_NAME_OVERRIDES': {},
     # Adds "blank" and "null" enum choices where appropriate. disable on client generation issues
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': True,
+    # Add/Append a list of (``choice value`` - choice name) to the enum description string.
+    'ENUM_GENERATE_CHOICE_DESCRIPTION': True,
 
     # function that returns a list of all classes that should be excluded from doc string extraction
     'GET_LIB_DOC_EXCLUDES': 'drf_spectacular.plumbing.get_lib_doc_excludes',
@@ -117,7 +123,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # interface: request = build_mock_request(method, path, view, original_request, **kwargs)
     'GET_MOCK_REQUEST': 'drf_spectacular.plumbing.build_mock_request',
 
-    # Camelize names like operationId and path parameter names
+    # Camelize names like "operationId" and path parameter names
+    # Camelization of the operation schema itself requires the addition of
+    # 'drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields'
+    # to POSTPROCESSING_HOOKS. Please note that the hook depends on
+    # ``djangorestframework_camel_case``, while CAMELIZE_NAMES itself does not.
     'CAMELIZE_NAMES': False,
 
     # Determines if and how free-form 'additionalProperties' should be emitted in the schema. Some
@@ -141,15 +151,22 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # list responses with ListSerializers/many=True irrespective of the status code.
     'ENABLE_LIST_MECHANICS_ON_NON_2XX': False,
 
-    # Controls which authentication methods are exposed in the schema. If not empty, will hide
+    # This setting allows you to deviate from the default manager by accessing a different model
+    # property. We use "objects" by default for compatibility reasons. Using "_default_manager"
+    # will likely fix most issues, though you are free to choose any name.
+    "DEFAULT_QUERY_MANAGER": 'objects',
+
+    # Controls which authentication methods are exposed in the schema. If not None, will hide
     # authentication classes that are not contained in the whitelist. Use full import paths
-    # like ['rest_framework.authentication.TokenAuthentication', ...]
-    'AUTHENTICATION_WHITELIST': [],
+    # like ['rest_framework.authentication.TokenAuthentication', ...].
+    # Empty list ([]) will hide all authentication methods. The default None will show all.
+    'AUTHENTICATION_WHITELIST': None,
     # Controls which parsers are exposed in the schema. Works analog to AUTHENTICATION_WHITELIST.
-    'PARSER_WHITELIST': [],
+    # List of allowed parsers or None to allow all.
+    'PARSER_WHITELIST': None,
     # Controls which renderers are exposed in the schema. Works analog to AUTHENTICATION_WHITELIST.
-    # rest_framework.renderers.BrowsableAPIRenderer is ignored by default if whitelist is empty
-    'RENDERER_WHITELIST': [],
+    # rest_framework.renderers.BrowsableAPIRenderer is ignored by default if whitelist is None
+    'RENDERER_WHITELIST': None,
 
     # Option for turning off error and warn messages
     'DISABLE_ERRORS_AND_WARNINGS': False,
@@ -158,7 +175,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'ENABLE_DJANGO_DEPLOY_CHECK': True,
 
     # General schema metadata. Refer to spec for valid inputs
-    # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#openapi-object
+    # https://spec.openapis.org/oas/v3.0.3#openapi-object
     'TITLE': '',
     'DESCRIPTION': '',
     'TOS': None,
@@ -188,7 +205,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'EXTENSIONS_ROOT': {},
 
     # Oauth2 related settings. used for example by django-oauth2-toolkit.
-    # https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#oauth-flows-object
+    # https://spec.openapis.org/oas/v3.0.3#oauthFlowsObject
     'OAUTH2_FLOWS': [],
     'OAUTH2_AUTHORIZATION_URL': None,
     'OAUTH2_TOKEN_URL': None,

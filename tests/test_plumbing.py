@@ -6,6 +6,11 @@ import typing
 from datetime import datetime
 from enum import Enum
 
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
+
 import pytest
 from django import __version__ as DJANGO_VERSION
 from django.conf.urls import include
@@ -13,14 +18,19 @@ from django.db import models
 from django.urls import re_path
 from rest_framework import generics, serializers
 
-from drf_spectacular.drainage import TypedDict
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     analyze_named_regex_pattern, build_basic_type, detype_pattern, follow_field_source,
-    force_instance, is_field, is_serializer, resolve_type_hint,
+    force_instance, get_list_serializer, is_field, is_serializer, resolve_type_hint,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
+
+
+def test_get_list_serializer_preserves_context():
+    serializer = serializers.Serializer(context={"foo": "bar"})
+    list_serializer = get_list_serializer(serializer)
+    assert list_serializer.context == {"foo": "bar"}
 
 
 def test_is_serializer():
@@ -220,6 +230,10 @@ if sys.version_info >= (3, 9):
         {'type': 'object', 'additionalProperties': {'type': 'integer'}}
     ))
 
+
+# typing.TypedDict for py==3.8 is missing the __required_keys__ feature.
+# below that we use typing_extensions.TypedDict, which does contain it.
+if sys.version_info >= (3, 9) or sys.version_info < (3, 8):
     class TD4Optional(TypedDict, total=False):
         a: str
 

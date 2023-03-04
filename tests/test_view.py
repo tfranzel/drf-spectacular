@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 import yaml
 from django import __version__ as DJANGO_VERSION
+from django.http import HttpResponseRedirect
 from django.urls import path
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -12,7 +13,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
 from drf_spectacular.views import (
-    SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerSplitView, SpectacularSwaggerView,
+    SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerOauthRedirectView,
+    SpectacularSwaggerSplitView, SpectacularSwaggerView,
 )
 
 
@@ -31,14 +33,24 @@ urlpatterns_v2 = [
     path('api/v2/pi/', pi),
     path('api/v2/pi-fast/', pi),
     path('api/v2/schema/swagger-ui/', SpectacularSwaggerView.as_view(), name='swagger'),
+    path(
+        "api/v1/schema/swagger-ui/oauth2-redirect.html",
+        SpectacularSwaggerOauthRedirectView.as_view(),
+        name="swagger-oauth-redirect"),
     path('api/v2/schema/swagger-ui-alt/', SpectacularSwaggerSplitView.as_view(), name='swagger-alt'),
     path('api/v2/schema/redoc/', SpectacularRedocView.as_view(), name='redoc'),
 ]
 urlpatterns_v2.append(
     path('api/v2/schema/', SpectacularAPIView.as_view(urlconf=urlpatterns_v2), name='schema'),
 )
+urlpatterns_str_import = [
+    path('api/schema-str1/', SpectacularAPIView.as_view(urlconf=['tests.test_view']), name='schema_str1'),
+    path('api/schema-str2/', SpectacularAPIView.as_view(urlconf='tests.test_view'), name='schema_str2'),
+    path('api/schema-err1/', SpectacularAPIView.as_view(urlconf=['tests.error']), name='schema_err1'),
+    path('api/schema-err2/', SpectacularAPIView.as_view(urlconf='tests.error'), name='schema_err2'),
+]
 
-urlpatterns = urlpatterns_v1 + urlpatterns_v2
+urlpatterns = urlpatterns_v1 + urlpatterns_v2 + urlpatterns_str_import
 
 
 @pytest.mark.urls(__name__)
@@ -143,3 +155,35 @@ def test_spectacular_ui_param_passthrough(no_warnings):
     response = APIClient().get('/api/v2/schema/swagger-ui/?foo=bar&lang=jp&version=v2')
     assert response.status_code == 200
     assert b'url: "/api/v2/schema/?lang\\u003Djp\\u0026version\\u003Dv2"' in response.content
+
+
+@pytest.mark.parametrize('url', ['/api/schema-str1/', '/api/schema-str2/'])
+@pytest.mark.urls(__name__)
+def test_spectacular_urlconf_module_list_import(no_warnings, url):
+    response = APIClient().get(url)
+    assert response.status_code == 200
+    assert b'/api/v1/pi/' in response.content
+    assert b'/api/v2/pi/' in response.content
+
+
+@pytest.mark.parametrize('url', ['/api/schema-err1/', '/api/schema-err2/'])
+@pytest.mark.urls(__name__)
+def test_spectacular_urlconf_module_list_import_error(no_warnings, url):
+    with pytest.raises(ModuleNotFoundError):
+        APIClient().get(url)
+
+
+@pytest.mark.parametrize('get_params', ['', 'code=foobar123&state=xyz&session_state=hello-world'])
+@pytest.mark.urls(__name__)
+def test_swagger_oauth_redirect_view(get_params):
+    # act
+    response = APIClient().get('/api/v1/schema/swagger-ui/oauth2-redirect.html?' + get_params)
+
+    # assert
+    assert response.status_code == 302
+    if isinstance(response, HttpResponseRedirect):
+        # older django versions test client directly returns the response instance
+        assert response.url == '/static/drf_spectacular_sidecar/swagger-ui-dist/oauth2-redirect.html?' + get_params
+    else:
+        assert response.headers['Location'] ==\
+               '/static/drf_spectacular_sidecar/swagger-ui-dist/oauth2-redirect.html?' + get_params

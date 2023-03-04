@@ -3,9 +3,10 @@ from django.db import models
 from drf_spectacular.drainage import add_trace_message, get_override, has_override, warn
 from drf_spectacular.extensions import OpenApiFilterExtension
 from drf_spectacular.plumbing import (
-    build_array_type, build_basic_type, build_parameter_type, follow_field_source, get_type_hints,
-    get_view_model, is_basic_type,
+    build_array_type, build_basic_type, build_choice_description_list, build_parameter_type,
+    follow_field_source, get_manager, get_type_hints, get_view_model, is_basic_type,
 )
+from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
 
@@ -52,12 +53,12 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         if not model:
             return []
 
-        filterset_class = self.target.get_filterset_class(auto_schema.view, model.objects.none())
+        filterset_class = self.target.get_filterset_class(auto_schema.view, get_manager(model).none())
         if not filterset_class:
             return []
 
         result = []
-        with add_trace_message(filterset_class.__name__):
+        with add_trace_message(filterset_class):
             for field_name, filter_field in filterset_class.base_filters.items():
                 result += self.resolve_filter_field(
                     auto_schema, model, filterset_class, field_name, filter_field
@@ -85,8 +86,10 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         filter_method = self._get_filter_method(filterset_class, filter_field)
         filter_method_hint = self._get_filter_method_hint(filter_method)
         filter_choices = self._get_explicit_filter_choices(filter_field)
+        schema_from_override = False
 
         if has_override(filter_field, 'field') or has_override(filter_method, 'field'):
+            schema_from_override = True
             annotation = (
                 get_override(filter_field, 'field') or get_override(filter_method, 'field')
             )
@@ -94,7 +97,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 schema = build_basic_type(annotation)
             else:
                 # allow injecting raw schema via @extend_schema_field decorator
-                schema = annotation
+                schema = annotation.copy()
         elif filter_method_hint is not _NoHint:
             if is_basic_type(filter_method_hint):
                 schema = build_basic_type(filter_method_hint)
@@ -117,7 +120,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 schema = build_basic_type(OpenApiTypes.NUMBER)  # TODO may be improved
             else:
                 schema = build_basic_type(OpenApiTypes.NUMBER)
-        elif isinstance(filter_field, filters.ChoiceFilter):
+        elif isinstance(filter_field, (filters.ChoiceFilter, filters.MultipleChoiceFilter)):
             try:
                 schema = self._get_schema_from_model_field(auto_schema, filter_field, model)
             except Exception:
@@ -148,16 +151,12 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         # enrich schema with additional info from filter_field
         enum = schema.pop('enum', None)
         # explicit filter choices may disable enum retrieved from model
-        if filter_choices is not None:
+        if not schema_from_override and filter_choices is not None:
             enum = filter_choices
-        if enum:
-            schema['enum'] = sorted(enum, key=str)
 
         description = schema.pop('description', None)
-        if filter_field.extra.get('help_text', None):
-            description = filter_field.extra['help_text']
-        elif filter_field.label is not None:
-            description = filter_field.label
+        if not schema_from_override:
+            description = self._get_field_description(filter_field, description)
 
         # parameter style variations based on filter base class
         if isinstance(filter_field, filters.BaseCSVFilter):
@@ -192,6 +191,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 location=OpenApiParameter.QUERY,
                 description=description,
                 schema=schema,
+                enum=enum,
                 explode=explode,
                 style=style
             )
@@ -234,7 +234,57 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         # potential side effects. Only after that fails, attempt to call
         # get_queryset() to check for potential query annotations.
         model_field = self._get_model_field(filter_field, model)
+
+        # this is a cross feature between rest-framework-gis and django-filter. Regular
+        # behavior needs to be sidestepped as the model information is lost down the line.
+        # TODO for now this will be just a string to cover WKT, WKB, and urlencoded GeoJSON
+        #   build_geo_schema(model_field) would yield the correct result
+        if self._is_gis(model_field):
+            return build_basic_type(OpenApiTypes.STR)
+
         if not isinstance(model_field, models.Field):
             qs = auto_schema.view.get_queryset()
             model_field = qs.query.annotations[filter_field.field_name].field
         return auto_schema._map_model_field(model_field, direction=None)
+
+    def _get_field_description(self, filter_field, description):
+        # Try to improve description beyond auto-generated model description
+        if filter_field.extra.get('help_text', None):
+            description = filter_field.extra['help_text']
+        elif filter_field.label is not None:
+            description = filter_field.label
+
+        choices = filter_field.extra.get('choices')
+        if choices and callable(choices):
+            # remove auto-generated enum list, since choices come from a callable
+            if '\n\n*' in (description or ''):
+                description, _, _ = description.partition('\n\n*')
+            return description
+
+        choice_description = ''
+        if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION and choices and not callable(choices):
+            choice_description = build_choice_description_list(choices)
+
+        if not choices:
+            return description
+
+        if description:
+            # replace or append model choice description
+            if '\n\n*' in description:
+                description, _, _ = description.partition('\n\n*')
+            return description + '\n\n' + choice_description
+        else:
+            return choice_description
+
+    @classmethod
+    def _is_gis(cls, field):
+        if not getattr(cls, '_has_gis', True):
+            return False
+        try:
+            from django.contrib.gis.db.models import GeometryField
+            from rest_framework_gis.filters import GeometryFilter
+
+            return isinstance(field, (GeometryField, GeometryFilter))
+        except: # noqa
+            cls._has_gis = False
+            return False

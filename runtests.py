@@ -8,7 +8,7 @@ import sys
 import pytest
 
 PYTEST_ARGS = {
-    'default': ['tests'],
+    'default': ['tests', '--allow-skip-extra-system-req'],
     'fast': ['tests', '-q'],
 }
 
