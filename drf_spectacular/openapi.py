@@ -964,10 +964,10 @@ class AutoSchema(ViewInspector):
                     serializers.ModelField,
                     serializers.SerializerMethodField,
                     serializers.PrimaryKeyRelatedField,
+                    serializers.SlugRelatedField,
                 ),
             ):
-                # Skip coercion for lack of a better solution. ModelField.to_representation()
-                # and SerializerMethodField.to_representation() are special in that they require
+                # Skip coercion for lack of a better solution. These are special in that they require
                 # a model instance or object (which we don't have) instead of a plain value.
                 default = field.default
             else:
