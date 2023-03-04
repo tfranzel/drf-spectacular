@@ -697,9 +697,16 @@ class AutoSchema(ViewInspector):
                 # be graceful and default to string.
                 model_field = follow_field_source(model, source, default=models.TextField())
 
+            # Special case: SlugRelatedField also allows to point to a callable @property.
+            if callable(model_field):
+                schema = self._map_response_type_hint(model_field)
+            elif isinstance(model_field, models.Field):
+                schema = self._map_model_field(model_field, direction)
+            else:
+                assert False, f'Field "{field.field_name}" must point to either a property or a model field.'
+
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
             # signals that attribute. however this does not apply in the context of relations.
-            schema = self._map_model_field(model_field, direction)
             schema.pop('readOnly', None)
             return append_meta(schema, meta)
 
@@ -716,7 +723,10 @@ class AutoSchema(ViewInspector):
             return append_meta(build_array_type(build_choice_field(field)), meta)
 
         if isinstance(field, serializers.ChoiceField):
-            return append_meta(build_choice_field(field), meta)
+            schema = build_choice_field(field)
+            if 'description' in meta:
+                meta['description'] = meta['description'] + '\n\n' + schema.pop('description')
+            return append_meta(schema, meta)
 
         if isinstance(field, serializers.ListField):
             if isinstance(field.child, _UnvalidatedField):
@@ -961,7 +971,11 @@ class AutoSchema(ViewInspector):
                 # a model instance or object (which we don't have) instead of a plain value.
                 default = field.default
             else:
-                default = field.to_representation(field.default)
+                try:
+                    # gracefully attempt to transform value or just use as plain on error
+                    default = field.to_representation(field.default)
+                except:  # noqa: E722
+                    default = field.default
             if isinstance(default, set):
                 default = list(default)
             meta['default'] = default
@@ -1109,7 +1123,7 @@ class AutoSchema(ViewInspector):
 
         # Either use whitelist or default back to old behavior by excluding BrowsableAPIRenderer
         def use_renderer(r):
-            if spectacular_settings.RENDERER_WHITELIST:
+            if spectacular_settings.RENDERER_WHITELIST is not None:
                 return whitelisted(r, spectacular_settings.RENDERER_WHITELIST)
             else:
                 return not isinstance(r, renderers.BrowsableAPIRenderer)
@@ -1181,9 +1195,19 @@ class AutoSchema(ViewInspector):
                 continue
             if direction == 'response' and example.request_only:
                 continue
-            if media_type and media_type != example.media_type:
+            # default to 'application/json' unless nested in OpenApiResponse, in which case inherit
+            if not example.media_type:
+                example_media_type = media_type if (example in extras) else 'application/json'
+            else:
+                example_media_type = example.media_type
+            if media_type and media_type != example_media_type:
                 continue
-            if status_code and status_code not in example.status_codes:
+            # default to [200, 201] unless nested in OpenApiResponse, in which case inherit
+            if not example.status_codes:
+                example_status_codes = (status_code,) if (example in extras) else ('200', '201')
+            else:
+                example_status_codes = tuple(map(str, example.status_codes))
+            if status_code and status_code not in example_status_codes:
                 continue
 
             if (

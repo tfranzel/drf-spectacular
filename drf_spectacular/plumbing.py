@@ -37,6 +37,7 @@ from rest_framework.compat import unicode_http_header
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
+from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from uritemplate import URITemplate
 
 from drf_spectacular.drainage import cache, error, warn
@@ -370,9 +371,9 @@ def build_parameter_type(
     if enum:
         # in case of array schema, enum makes little sense on the array itself
         if schema['schema'].get('type') == 'array':
-            schema['schema']['items']['enum'] = sorted(enum)
+            schema['schema']['items']['enum'] = sorted(enum, key=str)
         else:
-            schema['schema']['enum'] = sorted(enum)
+            schema['schema']['enum'] = sorted(enum, key=str)
     if pattern is not None:
         # in case of array schema, pattern only makes sense on the items
         if schema['schema'].get('type') == 'array':
@@ -422,7 +423,15 @@ def build_choice_field(field):
     # Ref: https://tools.ietf.org/html/draft-wright-json-schema-validation-00#section-5.21
     if type:
         schema['type'] = type
+
+    if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
+        schema['description'] = build_choice_description_list(field.choices.items())
+
     return schema
+
+
+def build_choice_description_list(choices) -> str:
+    return '\n'.join(f'* `{value}` - {label}' for value, label in choices)
 
 
 def build_bearer_security_scheme_object(header_name, token_prefix, bearer_format=None):
@@ -715,6 +724,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
     target_class: Union[None, str, Type[object]] = None
     match_subclasses = False
     priority = 0
+    optional = False
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -729,7 +739,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
             cls.target_class = import_string(cls.target_class)
         except ImportError:
             installed_apps = apps.app_configs.keys()
-            if any(cls.target_class.startswith(app + '.') for app in installed_apps):
+            if any(cls.target_class.startswith(app + '.') for app in installed_apps) and not cls.optional:
                 warn(
                     f'registered extensions {cls.__name__} for "{cls.target_class}" '
                     f'has an installed app but target class was not found.'
@@ -1224,7 +1234,7 @@ def resolve_type_hint(hint):
         else:
             properties = {k: build_basic_type(OpenApiTypes.ANY) for k in hint._fields}
         return build_object_type(properties=properties, required=properties.keys())
-    elif origin is list or hint is list:
+    elif origin is list or hint is list or hint is ReturnList:
         return build_array_type(
             resolve_type_hint(args[0]) if args else build_basic_type(OpenApiTypes.ANY)
         )
@@ -1234,7 +1244,7 @@ def resolve_type_hint(hint):
             max_length=len(args),
             min_length=len(args),
         )
-    elif origin is dict or origin is defaultdict or origin is OrderedDict:
+    elif origin is dict or origin is defaultdict or origin is OrderedDict or hint is ReturnDict:
         schema = build_basic_type(OpenApiTypes.OBJECT)
         if args and args[1] is not typing.Any:
             schema['additionalProperties'] = resolve_type_hint(args[1])
@@ -1273,8 +1283,8 @@ def resolve_type_hint(hint):
         raise UnableToProceedError()
 
 
-def whitelisted(obj: object, classes: List[Type[object]], exact=False):
-    if not classes:
+def whitelisted(obj: object, classes: Optional[List[Type[object]]], exact=False):
+    if classes is None:
         return True
     if exact:
         return obj.__class__ in classes

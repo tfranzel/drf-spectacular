@@ -343,3 +343,37 @@ def test_filters_on_retrieve_operations(no_warnings):
         'explode': False,
         'style': 'form'
     }
+
+
+@pytest.mark.contrib('django_filter')
+def test_filters_raw_schema_decoration_isolation(no_warnings):
+    from django_filters import FilterSet
+    from django_filters.rest_framework import DjangoFilterBackend
+
+    class SimpleFilterSet(FilterSet):
+        filter_field = NumberFilter(method='filter_method')
+
+        @extend_schema_field({'description': 'raw schema', 'type': 'integer'})
+        def filter_method(self, queryset, name, value):
+            pass  # pragma: no cover
+
+        class Meta:
+            model = Product
+            fields = []
+
+    class XViewset(viewsets.GenericViewSet):
+        queryset = Product.objects.all()
+        serializer_class = SimpleSerializer
+        filterset_class = SimpleFilterSet
+        filter_backends = [DjangoFilterBackend]
+
+        def list(self, request, *args, **kwargs):
+            pass  # pragma: no cover
+
+    expected = [
+        {'in': 'query', 'name': 'filter_field', 'schema': {'type': 'integer'}, 'description': 'raw schema'}
+    ]
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/']['get']['parameters'] == expected
+    schema = generate_schema('/x', XViewset)
+    assert schema['paths']['/x/']['get']['parameters'] == expected

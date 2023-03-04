@@ -2987,3 +2987,52 @@ def test_custom_default_manager(no_warnings):
     assert schema['paths']['/x/{related_field}/']['get']['parameters'][0] == {
         'in': 'path', 'name': 'related_field', 'schema': {'type': 'integer'}, 'required': True
     }
+
+
+def test_primary_key_related_field_default_value(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.PrimaryKeyRelatedField(
+            queryset=SimpleModel.objects.none(), many=True, default=[]
+        )
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'field': {
+            'type': 'array',
+            # this nested default is wrong but a consequence of DRF's init system
+            'items': {'type': 'integer', 'default': []},
+            'default': []
+        }
+    }
+
+
+def test_slug_related_field_to_model_property(no_warnings):
+    class M10(models.Model):
+        @property
+        def property_field(self) -> float:
+            return 42
+
+    class M11(models.Model):
+        field = models.ForeignKey(M10, on_delete=models.CASCADE)
+
+    class XSerializer(serializers.ModelSerializer):
+        # How the field is defined in a Serializer
+        field = serializers.SlugRelatedField(slug_field="property_field", read_only=True)
+
+        class Meta:
+            fields = '__all__'
+            model = M11
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = M11.objects.all()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'id': {'type': 'integer', 'readOnly': True},
+        'field': {'format': 'double', 'readOnly': True, 'type': 'number'}
+    }

@@ -112,6 +112,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'ENUM_NAME_OVERRIDES': {},
     # Adds "blank" and "null" enum choices where appropriate. disable on client generation issues
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': True,
+    # Add/Append a list of (``choice value`` - choice name) to the enum description string.
+    'ENUM_GENERATE_CHOICE_DESCRIPTION': True,
 
     # function that returns a list of all classes that should be excluded from doc string extraction
     'GET_LIB_DOC_EXCLUDES': 'drf_spectacular.plumbing.get_lib_doc_excludes',
@@ -154,15 +156,17 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # will likely fix most issues, though you are free to choose any name.
     "DEFAULT_QUERY_MANAGER": 'objects',
 
-    # Controls which authentication methods are exposed in the schema. If not empty, will hide
+    # Controls which authentication methods are exposed in the schema. If not None, will hide
     # authentication classes that are not contained in the whitelist. Use full import paths
-    # like ['rest_framework.authentication.TokenAuthentication', ...]
-    'AUTHENTICATION_WHITELIST': [],
+    # like ['rest_framework.authentication.TokenAuthentication', ...].
+    # Empty list ([]) will hide all authentication methods. The default None will show all.
+    'AUTHENTICATION_WHITELIST': None,
     # Controls which parsers are exposed in the schema. Works analog to AUTHENTICATION_WHITELIST.
-    'PARSER_WHITELIST': [],
+    # List of allowed parsers or None to allow all.
+    'PARSER_WHITELIST': None,
     # Controls which renderers are exposed in the schema. Works analog to AUTHENTICATION_WHITELIST.
-    # rest_framework.renderers.BrowsableAPIRenderer is ignored by default if whitelist is empty
-    'RENDERER_WHITELIST': [],
+    # rest_framework.renderers.BrowsableAPIRenderer is ignored by default if whitelist is None
+    'RENDERER_WHITELIST': None,
 
     # Option for turning off error and warn messages
     'DISABLE_ERRORS_AND_WARNINGS': False,

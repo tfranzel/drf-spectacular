@@ -64,11 +64,19 @@ class PolymorphicProxySerializer(Serializer):
     *drf-spectacular* processes the serializer. In those cases you can explicitly state
     the mapping with ``{'legal': LegalPersonSerializer, ...}``, but it is then your
     responsibility to have a valid mapping.
+
+    It is also permissible to provide a callable with no parameters for ``serializers``,
+    such as a lambda that will return an appropriate list or dict when evaluated.
     """
     def __init__(
             self,
             component_name: str,
-            serializers: Union[Sequence[_SerializerType], Dict[str, _SerializerType]],
+            serializers: Union[
+                Sequence[_SerializerType],
+                Dict[str, _SerializerType],
+                Callable[[], Sequence[_SerializerType]],
+                Callable[[], Dict[str, _SerializerType]]
+            ],
             resource_type_field_name: Optional[str],
             many: Optional[bool] = None,
     ):
@@ -87,6 +95,16 @@ class PolymorphicProxySerializer(Serializer):
             instance = super().__new__(cls, *args, **kwargs)
         instance._many = many
         return instance
+
+    @property
+    def serializers(self):
+        if callable(self._serializers):
+            self._serializers = self._serializers()
+        return self._serializers
+
+    @serializers.setter
+    def serializers(self, value):
+        self._serializers = value
 
     @property
     def data(self):
@@ -120,6 +138,11 @@ class OpenApiExample(OpenApiSchemaBase):
     The example will be attached to the operation object where appropriate,
     i.e. where the given ``media_type``, ``status_code`` and modifiers match.
     Example that do not match any scenario are ignored.
+
+    - media_type will default to 'application/json' unless implicitly specified
+      through :class:`.OpenApiResponse`
+    - status_codes will default to [200, 201] unless implicitly specified
+      through :class:`.OpenApiResponse`
     """
     def __init__(
             self,
@@ -131,7 +154,7 @@ class OpenApiExample(OpenApiSchemaBase):
             request_only: bool = False,
             response_only: bool = False,
             parameter_only: Optional[Tuple[str, _ParameterLocationType]] = None,
-            media_type: str = 'application/json',
+            media_type: Optional[str] = None,
             status_codes: Optional[Sequence[Union[str, int]]] = None,
     ):
         self.name = name
@@ -143,7 +166,7 @@ class OpenApiExample(OpenApiSchemaBase):
         self.response_only = response_only
         self.parameter_only = parameter_only
         self.media_type = media_type
-        self.status_codes = list(map(str, status_codes)) if status_codes else ['200', '201']
+        self.status_codes = status_codes
 
 
 class OpenApiParameter(OpenApiSchemaBase):

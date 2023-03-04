@@ -6,10 +6,11 @@ from rest_framework import __version__ as DRF_VERSION  # type: ignore[attr-defin
 from rest_framework import mixins, routers, serializers, viewsets
 
 from drf_spectacular.utils import extend_schema_serializer
-from tests import assert_schema, generate_schema
+from tests import assert_schema, generate_schema, is_gis_installed
 
 
 @pytest.mark.contrib('rest_framework_gis')
+@pytest.mark.system_requirement_fulfilled(is_gis_installed())
 @pytest.mark.skipif(DRF_VERSION < '3.12', reason='DRF pagination schema broken')
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {})
 def test_rest_framework_gis(no_warnings, clear_caches):
@@ -90,6 +91,7 @@ def test_rest_framework_gis(no_warnings, clear_caches):
 
 
 @pytest.mark.contrib('rest_framework_gis', 'django_filter')
+@pytest.mark.system_requirement_fulfilled(is_gis_installed())
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {})
 def test_geo_filter_set(no_warnings):
     from django.contrib.gis.db.models import PointField

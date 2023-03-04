@@ -93,8 +93,27 @@ with mock.patch('rest_framework.settings.api_settings.DEFAULT_SCHEMA_CLASS', Aut
         def partial_update(self, request, *args, **kwargs):
             return Response({})  # pragma: no cover
 
+    lambda_poly_proxy = PolymorphicProxySerializer(
+        component_name='MetaPerson',
+        serializers=lambda: [LegalPersonSerializer, NaturalPersonSerializer],
+        resource_type_field_name='type',
+    )
 
-@pytest.mark.parametrize('viewset', [ImplicitPersonViewSet, ExplicitPersonViewSet])
+    class LambdaPersonViewSet(viewsets.GenericViewSet):
+        @extend_schema(request=lambda_poly_proxy, responses=lambda_poly_proxy)
+        def create(self, request, *args, **kwargs):
+            return Response({})  # pragma: no cover
+
+        @extend_schema(
+            request=lambda_poly_proxy,
+            responses=lambda_poly_proxy,
+            parameters=[OpenApiParameter('id', int, OpenApiParameter.PATH)],
+        )
+        def partial_update(self, request, *args, **kwargs):
+            return Response({})  # pragma: no cover
+
+
+@pytest.mark.parametrize('viewset', [ImplicitPersonViewSet, ExplicitPersonViewSet, LambdaPersonViewSet])
 def test_polymorphic(no_warnings, viewset):
     assert_schema(
         generate_schema('persons', viewset),

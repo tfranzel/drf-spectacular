@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.utils.version import get_version_tuple
 from rest_framework import serializers
 
 from drf_spectacular.contrib.rest_framework_simplejwt import (
@@ -9,13 +10,33 @@ from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiViewEx
 from drf_spectacular.utils import extend_schema
 
 
-def get_token_serializer_class():
-    from dj_rest_auth.app_settings import JWTSerializer, TokenSerializer
+def get_dj_rest_auth_setting(class_name, setting_name):
+    from dj_rest_auth.__version__ import __version__
 
-    if getattr(settings, 'REST_USE_JWT', False):
-        return JWTSerializer
+    if get_version_tuple(__version__) < (3, 0, 0):
+        from dj_rest_auth import app_settings
+
+        return getattr(app_settings, class_name)
     else:
-        return TokenSerializer
+        from dj_rest_auth.app_settings import api_settings
+
+        return getattr(api_settings, setting_name)
+
+
+def get_token_serializer_class():
+    from dj_rest_auth.__version__ import __version__
+
+    if get_version_tuple(__version__) < (3, 0, 0):
+        use_jwt = getattr(settings, 'REST_USE_JWT', False)
+    else:
+        from dj_rest_auth.app_settings import api_settings
+
+        use_jwt = api_settings.USE_JWT
+
+    if use_jwt:
+        return get_dj_rest_auth_setting('JWTSerializer', 'JWT_SERIALIZER')
+    else:
+        return get_dj_rest_auth_setting('TokenSerializer', 'TOKEN_SERIALIZER')
 
 
 class RestAuthDetailSerializer(serializers.Serializer):
@@ -79,26 +100,27 @@ class RestAuthPasswordResetConfirmView(RestAuthDefaultResponseView):
 
 class RestAuthVerifyEmailView(RestAuthDefaultResponseView):
     target_class = 'dj_rest_auth.registration.views.VerifyEmailView'
+    optional = True
 
 
 class RestAuthResendEmailVerificationView(RestAuthDefaultResponseView):
     target_class = 'dj_rest_auth.registration.views.ResendEmailVerificationView'
+    optional = True
 
 
 class RestAuthJWTSerializer(OpenApiSerializerExtension):
     target_class = 'dj_rest_auth.serializers.JWTSerializer'
 
     def map_serializer(self, auto_schema, direction):
-        from dj_rest_auth.app_settings import UserDetailsSerializer
-
         class Fixed(self.target_class):
-            user = UserDetailsSerializer()
+            user = get_dj_rest_auth_setting('UserDetailsSerializer', 'USER_DETAILS_SERIALIZER')()
 
         return auto_schema._map_serializer(Fixed, direction)
 
 
 class CookieTokenRefreshSerializerExtension(TokenRefreshSerializerExtension):
     target_class = 'dj_rest_auth.jwt_auth.CookieTokenRefreshSerializer'
+    optional = True
 
     def get_name(self):
         return 'TokenRefresh'
@@ -106,6 +128,7 @@ class CookieTokenRefreshSerializerExtension(TokenRefreshSerializerExtension):
 
 class RestAuthRegisterView(OpenApiViewExtension):
     target_class = 'dj_rest_auth.registration.views.RegisterView'
+    optional = True
 
     def view_replacement(self):
         from allauth.account.app_settings import EMAIL_VERIFICATION, EmailVerificationMethod
@@ -125,6 +148,7 @@ class RestAuthRegisterView(OpenApiViewExtension):
 
 class SimpleJWTCookieScheme(SimpleJWTScheme):
     target_class = 'dj_rest_auth.jwt_auth.JWTCookieAuthentication'
+    optional = True
     name = ['jwtHeaderAuth', 'jwtCookieAuth']  # type: ignore
 
     def get_security_requirement(self, auto_schema):
