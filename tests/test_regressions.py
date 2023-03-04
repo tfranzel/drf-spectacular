@@ -3036,3 +3036,38 @@ def test_slug_related_field_to_model_property(no_warnings):
         'id': {'type': 'integer', 'readOnly': True},
         'field': {'format': 'double', 'readOnly': True, 'type': 'number'}
     }
+
+
+def test_serializer_foreign_key_default_value_handling(no_warnings):
+    class M10(models.Model):
+        field = models.CharField(unique=True)
+
+    class M11(models.Model):
+        field_related = models.ForeignKey(M10, on_delete=models.CASCADE, default=1)
+
+    class XSerializer(serializers.ModelSerializer):
+        field_related = serializers.PrimaryKeyRelatedField(
+            queryset=M11.objects.all(),
+            default=1,
+        )
+        field_related_slug = serializers.SlugRelatedField(
+            source='field_related',
+            slug_field='field',
+            queryset=M10.objects.all(),
+            default='foo',
+        )
+
+        class Meta:
+            fields = '__all__'
+            model = M11
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = M11.objects.none()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'id': {'type': 'integer', 'readOnly': True},
+        'field_related': {'type': 'integer', 'default': 1},
+        'field_related_slug': {'type': 'string', 'default': 'foo'},
+    }
