@@ -1,4 +1,5 @@
 import copy
+import functools
 import re
 import typing
 from collections import defaultdict
@@ -1099,13 +1100,21 @@ class AutoSchema(ViewInspector):
             return hint
 
         try:
-            return resolve_type_hint(hint)
+            schema = resolve_type_hint(hint)
         except UnableToProceedError:
             warn(
                 f'unable to resolve type hint for function "{method.__name__}". Consider '
                 f'using a type hint or @extend_schema_field. Defaulting to string.'
             )
             return build_basic_type(OpenApiTypes.STR)
+
+        description = get_doc(
+            method.func if isinstance(method, functools.partial) else method
+        )
+        if description:
+            schema['description'] = description
+
+        return schema
 
     def _get_paginator(self):
         pagination_class = getattr(self.view, 'pagination_class', None)
