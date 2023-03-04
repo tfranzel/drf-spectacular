@@ -1,6 +1,44 @@
 Changelog
 =========
 
+0.26.0 (2023-03-04)
+-------------------
+
+- honor djangorestframework_camel_case settings "ignore_keys" and "ignore_fields" `#945 <https://github.com/tfranzel/drf-spectacular/issues/945>`_
+- If available, use docstrings from properties for field descriptions (`#954 <https://github.com/tfranzel/drf-spectacular/issues/954>`_)
+- Don't let validators override values already set in the schema (`#911 <https://github.com/tfranzel/drf-spectacular/issues/911>`_) [StopMotionCuber]
+- add test and another case to `#901 <https://github.com/tfranzel/drf-spectacular/issues/901>`_
+- add enum key/value list to description string `#337 <https://github.com/tfranzel/drf-spectacular/issues/337>`_ `#403 <https://github.com/tfranzel/drf-spectacular/issues/403>`_ `#105 <https://github.com/tfranzel/drf-spectacular/issues/105>`_ `#563 <https://github.com/tfranzel/drf-spectacular/issues/563>`_
+- Add option to provide a callable for PolymorphicProxySerializer.serializers [Glenn Matthews]
+- consolidate sort fix for enum sorting
+- add testcase to `#950 <https://github.com/tfranzel/drf-spectacular/issues/950>`_. ensure raw schema dict remains unmodified
+- Don't edit the orignal django-filters schema. [Will Giddens]
+- Fix typos and grammer errors in FAQ doc page. [Foad Lind]
+- fix OpenApiResponse nested example defaults `#875 <https://github.com/tfranzel/drf-spectacular/issues/875>`_
+- mitigate ``runtests.py`` fail when GDAL library is not installed `#945 <https://github.com/tfranzel/drf-spectacular/issues/945>`_ `#821 <https://github.com/tfranzel/drf-spectacular/issues/821>`_ `#775 <https://github.com/tfranzel/drf-spectacular/issues/775>`_ `#777 <https://github.com/tfranzel/drf-spectacular/issues/777>`_
+- bugfix SlugRelatedField with a model property target `#943 <https://github.com/tfranzel/drf-spectacular/issues/943>`_
+- suppress erroneous warning for optional extensions `#940 <https://github.com/tfranzel/drf-spectacular/issues/940>`_
+- fix whitelist mechanics (enables deny all) `#923 <https://github.com/tfranzel/drf-spectacular/issues/923>`_
+- mitigate many=True with default array value `#936 <https://github.com/tfranzel/drf-spectacular/issues/936>`_
+- fix dj-rest-auth>=3.0.0 breaking changes `#937 <https://github.com/tfranzel/drf-spectacular/issues/937>`_
+- Update plumbing.py
+- add swagger UI template blocks for customization [Jan Lis]
+- Add support for drf ReturnList and ReturnDict hint [zengqiu]
+- add example/test for DynamicFieldsModelSerializer `#375 <https://github.com/tfranzel/drf-spectacular/issues/375>`_ `#912 <https://github.com/tfranzel/drf-spectacular/issues/912>`_
+- adapt test schema for dj-rest-auth 2.2.6
+- clarify docs for postproc hook mechanics `#908 <https://github.com/tfranzel/drf-spectacular/issues/908>`_
+- Add test for custom serializer field pagination `#904 <https://github.com/tfranzel/drf-spectacular/issues/904>`_
+- fix: let use a default value for foreignkey model field [Frederic de Zorzi]
+
+Breaking changes / important additions:
+
+- A lot of bug fixes and a few feature additions.
+- We now render a descriptive ``Enum`` key/value list into the description by default. Opt-out with new setting ``ENUM_GENERATE_CHOICE_DESCRIPTION``.
+- Beware that we now extract more docstrings. Check your schema diff on update whether you are now leaking unintended information.
+- The ``whitelist`` mechanics changed slightly on what is considered default behavior.
+- Fix a breaking change in ``dj-rest-auth>=3.0.0``
+- It should not be possible to run the tests without installing system libraries like GDAL for the contrib tests
+
 0.25.1 (2022-12-16)
 -------------------
 
