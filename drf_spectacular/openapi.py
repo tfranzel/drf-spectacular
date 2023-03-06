@@ -725,7 +725,7 @@ class AutoSchema(ViewInspector):
 
         if isinstance(field, serializers.ChoiceField):
             schema = build_choice_field(field)
-            if 'description' in meta:
+            if 'description' in meta and 'description' in schema:
                 meta['description'] = meta['description'] + '\n\n' + schema.pop('description')
             return append_meta(schema, meta)
 

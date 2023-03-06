@@ -3102,3 +3102,30 @@ def test_serializer_method_docstring_precedence(no_warnings):
         'field_method2': {'type': 'integer', 'description': 'help_text 2', 'readOnly': True},
         'field_method3': {'type': 'string', 'description': 'docstring 3', 'format': 'date-time', 'readOnly': True},
     }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION', False)
+def test_disable_enum_description_generation(no_warnings):
+    class XSerializer(serializers.Serializer):
+        foo = serializers.ChoiceField(choices=(('A', 'a'), ('B', 'b')))
+        bar = serializers.ChoiceField(
+            help_text='bar description',
+            choices=(('A', 'a'), ('B', 'b'), ('C', 'c'))
+        )
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    assert schema['components']['schemas'] == {
+        'BarEnum': {'enum': ['A', 'B', 'C'], 'type': 'string'},
+        'FooEnum': {'enum': ['A', 'B'], 'type': 'string'},
+        'X': {
+            'type': 'object',
+            'properties': {
+                'foo': {'$ref': '#/components/schemas/FooEnum'},
+                'bar': {'allOf': [{'$ref': '#/components/schemas/BarEnum'}], 'description': 'bar description'}
+            },
+            'required': ['bar', 'foo']
+        }
+    }
