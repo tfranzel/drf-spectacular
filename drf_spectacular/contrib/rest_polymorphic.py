@@ -1,5 +1,9 @@
 from drf_spectacular.extensions import OpenApiSerializerExtension
-from drf_spectacular.plumbing import warn
+from drf_spectacular.plumbing import (
+    ResolvedComponent, build_basic_type, build_object_type, is_patched_serializer, warn,
+)
+from drf_spectacular.settings import spectacular_settings
+from drf_spectacular.types import OpenApiTypes
 
 
 class PolymorphicSerializerExtension(OpenApiSerializerExtension):
@@ -17,7 +21,13 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
             component = auto_schema.resolve_serializer(sub_serializer, direction)
             if not component:
                 continue
-            sub_components.append((resource_type, component.ref))
+            typed_component = self.build_typed_component(
+                auto_schema=auto_schema,
+                component=component,
+                resource_type_field_name=serializer.resource_type_field_name,
+                patched=is_patched_serializer(sub_serializer, direction)
+            )
+            sub_components.append((resource_type, typed_component.ref))
 
             if not resource_type:
                 warn(
@@ -32,3 +42,28 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
                 'mapping': {resource_type: ref['$ref'] for resource_type, ref in sub_components},
             }
         }
+
+    def build_typed_component(self, auto_schema, component, resource_type_field_name, patched):
+        if spectacular_settings.COMPONENT_SPLIT_REQUEST and component.name.endswith('Request'):
+            typed_component_name = component.name[:-len('Request')] + 'TypedRequest'
+        else:
+            typed_component_name = f'{component.name}Typed'
+
+        component_typed = ResolvedComponent(
+            name=typed_component_name,
+            type=ResolvedComponent.SCHEMA,
+            object=component.object,
+            schema={
+                'allOf': [
+                    component.ref,
+                    build_object_type(
+                        properties={
+                            resource_type_field_name: build_basic_type(OpenApiTypes.STR)
+                        },
+                        required=None if patched else [resource_type_field_name]
+                    )
+                ]
+            }
+        )
+        auto_schema.registry.register_on_missing(component_typed)
+        return component_typed

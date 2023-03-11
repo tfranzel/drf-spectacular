@@ -178,6 +178,15 @@ components:
       - board
       - company_name
       - id
+    LegalPersonTyped:
+      allOf:
+      - $ref: '#/components/schemas/LegalPerson'
+      - type: object
+        properties:
+          resourcetype:
+            type: string
+        required:
+        - resourcetype
     NaturalPerson:
       type: object
       properties:
@@ -202,6 +211,15 @@ components:
       - id
       - last_name
       - supervisor_id
+    NaturalPersonTyped:
+      allOf:
+      - $ref: '#/components/schemas/NaturalPerson'
+      - type: object
+        properties:
+          resourcetype:
+            type: string
+        required:
+        - resourcetype
     NomadicPerson:
       type: object
       properties:
@@ -215,6 +233,15 @@ components:
       required:
       - address
       - id
+    NomadicPersonTyped:
+      allOf:
+      - $ref: '#/components/schemas/NomadicPerson'
+      - type: object
+        properties:
+          resourcetype:
+            type: string
+        required:
+        - resourcetype
     PatchedLegalPerson:
       type: object
       properties:
@@ -232,6 +259,13 @@ components:
           items:
             $ref: '#/components/schemas/Person'
           readOnly: true
+    PatchedLegalPersonTyped:
+      allOf:
+      - $ref: '#/components/schemas/PatchedLegalPerson'
+      - type: object
+        properties:
+          resourcetype:
+            type: string
     PatchedNaturalPerson:
       type: object
       properties:
@@ -250,6 +284,13 @@ components:
         supervisor_id:
           type: integer
           nullable: true
+    PatchedNaturalPersonTyped:
+      allOf:
+      - $ref: '#/components/schemas/PatchedNaturalPerson'
+      - type: object
+        properties:
+          resourcetype:
+            type: string
     PatchedNomadicPerson:
       type: object
       properties:
@@ -260,28 +301,35 @@ components:
           type: string
           readOnly: true
           maxLength: 30
+    PatchedNomadicPersonTyped:
+      allOf:
+      - $ref: '#/components/schemas/PatchedNomadicPerson'
+      - type: object
+        properties:
+          resourcetype:
+            type: string
     PatchedPerson:
       oneOf:
-      - $ref: '#/components/schemas/PatchedLegalPerson'
-      - $ref: '#/components/schemas/PatchedNaturalPerson'
-      - $ref: '#/components/schemas/PatchedNomadicPerson'
+      - $ref: '#/components/schemas/PatchedLegalPersonTyped'
+      - $ref: '#/components/schemas/PatchedNaturalPersonTyped'
+      - $ref: '#/components/schemas/PatchedNomadicPersonTyped'
       discriminator:
         propertyName: resourcetype
         mapping:
-          legal: '#/components/schemas/PatchedLegalPerson'
-          natural: '#/components/schemas/PatchedNaturalPerson'
-          nomadic: '#/components/schemas/PatchedNomadicPerson'
+          legal: '#/components/schemas/PatchedLegalPersonTyped'
+          natural: '#/components/schemas/PatchedNaturalPersonTyped'
+          nomadic: '#/components/schemas/PatchedNomadicPersonTyped'
     Person:
       oneOf:
-      - $ref: '#/components/schemas/LegalPerson'
-      - $ref: '#/components/schemas/NaturalPerson'
-      - $ref: '#/components/schemas/NomadicPerson'
+      - $ref: '#/components/schemas/LegalPersonTyped'
+      - $ref: '#/components/schemas/NaturalPersonTyped'
+      - $ref: '#/components/schemas/NomadicPersonTyped'
       discriminator:
         propertyName: resourcetype
         mapping:
-          legal: '#/components/schemas/LegalPerson'
-          natural: '#/components/schemas/NaturalPerson'
-          nomadic: '#/components/schemas/NomadicPerson'
+          legal: '#/components/schemas/LegalPersonTyped'
+          natural: '#/components/schemas/NaturalPersonTyped'
+          nomadic: '#/components/schemas/NomadicPersonTyped'
   securitySchemes:
     basicAuth:
       type: http

@@ -101,22 +101,22 @@ def test_rest_polymorphic_split_request_with_ro_serializer(no_warnings):
     assert 'NomadicPersonRequest' not in components  # All fields were read-only.
     assert 'PatchedNomadicPersonRequest' not in components  # All fields were read-only.
     assert components['Person']['oneOf'] == [
-        {'$ref': '#/components/schemas/LegalPerson'},
-        {'$ref': '#/components/schemas/NaturalPerson'},
-        {'$ref': '#/components/schemas/NomadicPerson'}
+        {'$ref': '#/components/schemas/LegalPersonTyped'},
+        {'$ref': '#/components/schemas/NaturalPersonTyped'},
+        {'$ref': '#/components/schemas/NomadicPersonTyped'}
     ]
     assert components['Person']['discriminator']['mapping'] == {
-        'legal': '#/components/schemas/LegalPerson',
-        'natural': '#/components/schemas/NaturalPerson',
-        'nomadic': '#/components/schemas/NomadicPerson'
+        'legal': '#/components/schemas/LegalPersonTyped',
+        'natural': '#/components/schemas/NaturalPersonTyped',
+        'nomadic': '#/components/schemas/NomadicPersonTyped'
     }
     assert components['PersonRequest']['oneOf'] == [
-        {'$ref': '#/components/schemas/LegalPersonRequest'},
-        {'$ref': '#/components/schemas/NaturalPersonRequest'},
+        {'$ref': '#/components/schemas/LegalPersonTypedRequest'},
+        {'$ref': '#/components/schemas/NaturalPersonTypedRequest'},
     ]
     assert components['PersonRequest']['discriminator']['mapping'] == {
-        'legal': '#/components/schemas/LegalPersonRequest',
-        'natural': '#/components/schemas/NaturalPersonRequest',
+        'legal': '#/components/schemas/LegalPersonTypedRequest',
+        'natural': '#/components/schemas/NaturalPersonTypedRequest',
     }
 
 
