@@ -180,13 +180,13 @@ components:
       - id
     LegalPersonTyped:
       allOf:
-      - $ref: '#/components/schemas/LegalPerson'
       - type: object
         properties:
           resourcetype:
             type: string
         required:
         - resourcetype
+      - $ref: '#/components/schemas/LegalPerson'
     NaturalPerson:
       type: object
       properties:
@@ -213,13 +213,13 @@ components:
       - supervisor_id
     NaturalPersonTyped:
       allOf:
-      - $ref: '#/components/schemas/NaturalPerson'
       - type: object
         properties:
           resourcetype:
             type: string
         required:
         - resourcetype
+      - $ref: '#/components/schemas/NaturalPerson'
     NomadicPerson:
       type: object
       properties:
@@ -235,13 +235,13 @@ components:
       - id
     NomadicPersonTyped:
       allOf:
-      - $ref: '#/components/schemas/NomadicPerson'
       - type: object
         properties:
           resourcetype:
             type: string
         required:
         - resourcetype
+      - $ref: '#/components/schemas/NomadicPerson'
     PatchedLegalPerson:
       type: object
       properties:
@@ -261,11 +261,11 @@ components:
           readOnly: true
     PatchedLegalPersonTyped:
       allOf:
-      - $ref: '#/components/schemas/PatchedLegalPerson'
       - type: object
         properties:
           resourcetype:
             type: string
+      - $ref: '#/components/schemas/PatchedLegalPerson'
     PatchedNaturalPerson:
       type: object
       properties:
@@ -286,11 +286,11 @@ components:
           nullable: true
     PatchedNaturalPersonTyped:
       allOf:
-      - $ref: '#/components/schemas/PatchedNaturalPerson'
       - type: object
         properties:
           resourcetype:
             type: string
+      - $ref: '#/components/schemas/PatchedNaturalPerson'
     PatchedNomadicPerson:
       type: object
       properties:
@@ -303,11 +303,11 @@ components:
           maxLength: 30
     PatchedNomadicPersonTyped:
       allOf:
-      - $ref: '#/components/schemas/PatchedNomadicPerson'
       - type: object
         properties:
           resourcetype:
             type: string
+      - $ref: '#/components/schemas/PatchedNomadicPerson'
     PatchedPerson:
       oneOf:
       - $ref: '#/components/schemas/PatchedLegalPersonTyped'

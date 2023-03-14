@@ -55,13 +55,13 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
             object=component.object,
             schema={
                 'allOf': [
-                    component.ref,
                     build_object_type(
                         properties={
                             resource_type_field_name: build_basic_type(OpenApiTypes.STR)
                         },
                         required=None if patched else [resource_type_field_name]
-                    )
+                    ),
+                    component.ref,
                 ]
             }
         )
