@@ -1,6 +1,20 @@
 Changelog
 =========
 
+0.26.1 (2023-03-18)
+-------------------
+
+- reorder typed polymorphic fields `#958 <https://github.com/tfranzel/drf-spectacular/issues/958>`_
+- Fix test warnings [Dmitry Gribanov]
+- Fix PolymorphicSerializer type field handling `#885 <https://github.com/tfranzel/drf-spectacular/issues/885>`_ `#958 <https://github.com/tfranzel/drf-spectacular/issues/958>`_
+- Add PresentablePrimarKeyRelatedField schema for drf-exrta-fields blueprint [Đào Minh Hạt]
+- bugfix KeyError for disabled ENUM_GENERATE_CHOICE_DESCRIPTION `#952 <https://github.com/tfranzel/drf-spectacular/issues/952>`_
+
+Breaking changes / important additions:
+
+- small bugfix release that addresses a issue when turning off choice description generation
+- improve/bugfix ``PolymorphicSerializer`` type field handling
+
 0.26.0 (2023-03-04)
 -------------------
 
