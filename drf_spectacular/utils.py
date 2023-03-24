@@ -244,6 +244,29 @@ class OpenApiResponse(OpenApiSchemaBase):
         self.examples = examples or []
 
 
+class OpenApiRequest(OpenApiSchemaBase):
+    """
+    Helper class to combine a request object (``Serializer``, ``OpenApiType``,
+    raw schema, etc.) together with an encoding object and/or examples.
+    Examples can alternatively be provided via :func:`@extend_schema <.extend_schema>`.
+
+    This class is especially helpful for customizing value encoding for
+    ``application/x-www-form-urlencoded`` and ``multipart/*``. The encoding parameter
+    takes a dictionary with field names as keys and encoding objects as values.
+    Refer to the `specification <https://swagger.io/specification/#encoding-object>`_
+    on how to build a valid encoding object.
+    """
+    def __init__(
+            self,
+            request: Any = None,
+            encoding: Optional[Dict[str, Dict[str, Any]]] = None,
+            examples: Optional[Sequence[OpenApiExample]] = None,
+    ):
+        self.request = request
+        self.encoding = encoding
+        self.examples = examples or []
+
+
 F = TypeVar('F', bound=Callable[..., Any])
 
 
@@ -328,7 +351,7 @@ def extend_schema(
         - basic types or instances of ``OpenApiTypes``
         - :class:`.PolymorphicProxySerializer` for signaling that the operation
           accepts a set of different types of objects.
-        - ``dict`` with media_type as keys and one of the above as values. Additionally in
+        - ``dict`` with media_type as keys and one of the above as values. Additionally, in
           this case, it is also possible to provide a raw schema dict as value.
     :param auth: replace discovered auth with explicit list of auth methods
     :param description: replaces discovered doc strings
