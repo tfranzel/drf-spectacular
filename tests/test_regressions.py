@@ -28,8 +28,8 @@ from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
 from drf_spectacular.settings import IMPORT_STRINGS, SPECTACULAR_DEFAULTS
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
-    OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_field,
-    extend_schema_serializer, extend_schema_view, inline_serializer,
+    OpenApiExample, OpenApiParameter, OpenApiRequest, OpenApiResponse, extend_schema,
+    extend_schema_field, extend_schema_serializer, extend_schema_view, inline_serializer,
 )
 from tests import generate_schema, get_request_schema, get_response_schema
 from tests.models import SimpleModel, SimpleSerializer
@@ -3127,5 +3127,35 @@ def test_disable_enum_description_generation(no_warnings):
                 'bar': {'allOf': [{'$ref': '#/components/schemas/BarEnum'}], 'description': 'bar description'}
             },
             'required': ['bar', 'foo']
+        }
+    }
+
+
+def test_openapi_request_wrapper(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.MultipleChoiceField(choices=[1, 2, 3, 4])
+
+    @extend_schema(
+        request={
+            'application/x-www-form-urlencoded': XSerializer,
+            'multipart/form-data': OpenApiRequest(
+                request=XSerializer,
+                encoding={"field": {"style": "form", "explode": True}},
+                examples=[OpenApiExample('Ex1', "field=1&field=3")]
+            )
+        },
+        responses=XSerializer
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['paths']['/x/']['post']['requestBody']['content'] == {
+        'application/x-www-form-urlencoded': {'schema': {'$ref': '#/components/schemas/X'}},
+        'multipart/form-data': {
+            'schema': {'$ref': '#/components/schemas/X'},
+            'examples': {'Ex1': {'value': 'field=1&field=3'}},
+            'encoding': {'field': {'style': 'form', 'explode': True}}
         }
     }

@@ -308,10 +308,12 @@ def build_object_type(
     return schema
 
 
-def build_media_type_object(schema, examples=None):
+def build_media_type_object(schema, examples=None, encoding=None):
     media_type_object = {'schema': schema}
     if examples:
         media_type_object['examples'] = examples
+    if encoding:
+        media_type_object['encoding'] = encoding
     return media_type_object
 
 

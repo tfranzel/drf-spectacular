@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
-    OpenApiParameter, PolymorphicProxySerializer, extend_schema, extend_schema_view,
+    OpenApiParameter, OpenApiRequest, PolymorphicProxySerializer, extend_schema, extend_schema_view,
     inline_serializer,
 )
 from tests import generate_schema
@@ -516,3 +516,25 @@ def test_primary_key_related_field_without_serializer_meta(capsys):
     generate_schema('/x/', view_function=view_func)
     stderr = capsys.readouterr().err
     assert 'Could not derive type for under-specified PrimaryKeyRelatedField "field"' in stderr
+
+
+def test_request_encoding_on_invalid_content_type(capsys):
+    class XSerializer(serializers.Serializer):
+        field = serializers.MultipleChoiceField(choices=[1, 2, 3, 4])
+
+    @extend_schema(
+        request={
+            'application/msgpack': OpenApiRequest(
+                request=XSerializer,
+                encoding={"field": {"style": "form", "explode": True}},
+            )
+        },
+        responses=XSerializer
+    )
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    generate_schema('/x/', view_function=view_func)
+    stderr = capsys.readouterr().err
+    assert 'Encodings object on media types other than' in stderr
