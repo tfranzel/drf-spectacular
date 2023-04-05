@@ -51,6 +51,7 @@ def test_rest_auth_token(no_warnings, settings):
 
 @pytest.mark.contrib('dj_rest_auth', 'rest_framework_simplejwt')
 @mock.patch('django.conf.settings.JWT_AUTH_COOKIE', 'jwt-session', create=True)
+@mock.patch('dj_rest_auth.app_settings.api_settings.JWT_AUTH_COOKIE', 'jwt-session', create=True)
 def test_rest_auth_simplejwt_cookie(no_warnings):
     from dj_rest_auth.jwt_auth import JWTCookieAuthentication
 

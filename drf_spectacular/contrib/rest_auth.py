@@ -155,7 +155,24 @@ class SimpleJWTCookieScheme(SimpleJWTScheme):
         return [{name: []} for name in self.name]
 
     def get_security_definition(self, auto_schema):
-        cookie_name = getattr(settings, 'JWT_AUTH_COOKIE', None)
+
+        from dj_rest_auth.app_settings import api_settings
+
+        try:
+            from dj_rest_auth.__version__ import __version__ as dj_rest_auth_version
+
+        except ModuleNotFoundError:
+            # dj_rest_auth version < 1.0.5 does not have __version__ file
+            # so by assigning a version number (i.e. 1.0.4 in this case)
+            # we can check if it is less than 3.0.0 later on in the code
+            dj_rest_auth_version = "1.0.4"  # 1.0.4 or less in reality
+
+        cookie_name = getattr(api_settings, 'JWT_AUTH_COOKIE', None)
+
+        # fallback for dj_rest_auth version < 3.0.0
+        if int(dj_rest_auth_version.split(".")[0]) < 3 and not cookie_name:
+            cookie_name = getattr(settings, 'JWT_AUTH_COOKIE', None)
+
         if not cookie_name:
             cookie_name = 'jwt-auth'
             warn(
