@@ -542,7 +542,14 @@ class AutoSchema(ViewInspector):
             return paginator.get_schema_operation_parameters(self.view)
 
     def _map_model_field(self, model_field, direction):
-        assert isinstance(model_field, models.Field)
+
+        # Special case: SlugRelatedField also allows to point to a callable @property.
+        if callable(model_field):
+            return self._map_response_type_hint(model_field)
+        if not isinstance(model_field, models.Field):
+            field_name = getattr(model_field, "name", model_field)
+            raise AssertionError(f'Field "{field_name}" must point to either a property or a model field.')
+
         # to get a fully initialized serializer field we use DRF's own init logic
         try:
             field_cls, field_kwargs = serializers.ModelSerializer().build_field(
@@ -698,13 +705,7 @@ class AutoSchema(ViewInspector):
                 # be graceful and default to string.
                 model_field = follow_field_source(model, source, default=models.TextField())
 
-            # Special case: SlugRelatedField also allows to point to a callable @property.
-            if callable(model_field):
-                schema = self._map_response_type_hint(model_field)
-            elif isinstance(model_field, models.Field):
-                schema = self._map_model_field(model_field, direction)
-            else:
-                assert False, f'Field "{field.field_name}" must point to either a property or a model field.'
+            schema = self._map_model_field(model_field, direction)
 
             # primary keys are usually non-editable (readOnly=True) and map_model_field correctly
             # signals that attribute. however this does not apply in the context of relations.
