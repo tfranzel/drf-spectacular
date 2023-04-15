@@ -54,13 +54,13 @@ For more information visit the `documentation <https://drf-spectacular.readthedo
 License
 -------
 
-Provided by `T. Franzel <https://github.com/tfranzel>`_, Cashlink Technologies GmbH. `Licensed under 3-Clause BSD <https://github.com/tfranzel/drf-spectacular/blob/master/LICENSE>`_.
+Provided by `T. Franzel <https://github.com/tfranzel>`_. `Licensed under 3-Clause BSD <https://github.com/tfranzel/drf-spectacular/blob/master/LICENSE>`_.
 
 Requirements
 ------------
 
 -  Python >= 3.6
--  Django (2.2, 3.2, 4.0, 4.1)
+-  Django (2.2, 3.2, 4.0, 4.1, 4.2)
 -  Django REST Framework (3.10.3, 3.11, 3.12, 3.13, 3.14)
 
 Installation
