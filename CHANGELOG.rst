@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.26.2 (2023-04-15)
+-------------------
+
+- fix jwt cookie name settings not being recognised (`#972 <https://github.com/tfranzel/drf-spectacular/issues/972>`_) [Nix Siow]
+- Add OpenApiRequest for encoding options `#714 <https://github.com/tfranzel/drf-spectacular/issues/714>`_ `#965 <https://github.com/tfranzel/drf-spectacular/issues/965>`_
+
+Breaking changes / important additions:
+
+- small bugfix release that also contains the new ``OpenApiRequest`` feature
+
 0.26.1 (2023-03-18)
 -------------------
 
