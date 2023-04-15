@@ -155,7 +155,7 @@ class SimpleJWTCookieScheme(SimpleJWTScheme):
         return [{name: []} for name in self.name]
 
     def get_security_definition(self, auto_schema):
-        cookie_name = getattr(settings, 'JWT_AUTH_COOKIE', None)
+        cookie_name = get_dj_rest_auth_setting('JWT_AUTH_COOKIE', 'JWT_AUTH_COOKIE')
         if not cookie_name:
             cookie_name = 'jwt-auth'
             warn(
