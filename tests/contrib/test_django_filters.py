@@ -377,3 +377,36 @@ def test_filters_raw_schema_decoration_isolation(no_warnings):
     assert schema['paths']['/x/']['get']['parameters'] == expected
     schema = generate_schema('/x', XViewset)
     assert schema['paths']['/x/']['get']['parameters'] == expected
+
+
+def test_filterset_enum_description_duplication():
+    class ThingType(models.TextChoices):
+        ONE = "one", "One"
+        TWO = "two", "Two"
+        THREE = "three", "Three"
+
+    class Thing(models.Model):
+        type = models.CharField(max_length=64, choices=ThingType.choices)
+
+    class ThingSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Thing
+            fields = ("type",)
+
+    class ThingFilterSet(FilterSet):
+        class Meta:
+            model = Thing
+            fields = ("type",)
+
+        type = ChoiceFilter(choices=ThingType.choices)
+
+    class XViewSet(viewsets.ModelViewSet):
+        queryset = Thing.objects.all()
+        serializer_class = ThingSerializer
+        filter_backends = [DjangoFilterBackend]
+        filterset_class = ThingFilterSet
+
+    schema = generate_schema('/x', XViewSet)
+    assert schema['paths']['/x/']['get']['parameters'][0]['description'] == (
+        '* `one` - One\n* `two` - Two\n* `three` - Three'
+    )

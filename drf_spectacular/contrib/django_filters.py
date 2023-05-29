@@ -259,6 +259,8 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             # remove auto-generated enum list, since choices come from a callable
             if '\n\n*' in (description or ''):
                 description, _, _ = description.partition('\n\n*')
+            elif (description or '').startswith('* `'):
+                description = ''
             return description
 
         choice_description = ''
@@ -268,13 +270,17 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         if not choices:
             return description
 
-        if description:
-            # replace or append model choice description
-            if '\n\n*' in description:
-                description, _, _ = description.partition('\n\n*')
-            return description + '\n\n' + choice_description
-        else:
+        if not description:
             return choice_description
+
+        if '\n\n*' in description:
+            description, _, _ = description.partition('\n\n*')
+            return description + '\n\n' + choice_description
+
+        if description.startswith('* `'):
+            return choice_description
+
+        return description + '\n\n' + choice_description
 
     @classmethod
     def _is_gis(cls, field):
