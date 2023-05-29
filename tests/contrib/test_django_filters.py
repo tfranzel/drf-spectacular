@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+from django import __version__ as DJANGO_VERSION
 from django.db import models
 from django.db.models import F
 from django.urls import include, path
@@ -379,7 +380,9 @@ def test_filters_raw_schema_decoration_isolation(no_warnings):
     assert schema['paths']['/x/']['get']['parameters'] == expected
 
 
-def test_filterset_enum_description_duplication():
+@pytest.mark.contrib('django_filter')
+@pytest.mark.skipif(DJANGO_VERSION < '3', reason='Not available before Django 3.0')
+def test_filterset_enum_description_duplication(no_warnings):
     class ThingType(models.TextChoices):
         ONE = "one", "One"
         TWO = "two", "Two"
