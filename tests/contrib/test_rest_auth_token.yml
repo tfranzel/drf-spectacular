@@ -396,15 +396,15 @@ components:
       type: object
       description: Serializer for JWT authentication.
       properties:
-        access_token:
+        access:
           type: string
-        refresh_token:
+        refresh:
           type: string
         user:
           $ref: '#/components/schemas/UserDetails'
       required:
-      - access_token
-      - refresh_token
+      - access
+      - refresh
       - user
     Login:
       type: object
