@@ -167,6 +167,10 @@ components:
           type: string
           format: uuid
           readOnly: true
+        field_read_only_model_property_model:
+          type: string
+          format: uuid
+          readOnly: true
         field_bool_override:
           type: boolean
           readOnly: true
@@ -346,6 +350,7 @@ components:
       - field_possmallint
       - field_read_only_model_function_basic
       - field_read_only_model_function_model
+      - field_read_only_model_property_model
       - field_read_only_nav_uuid
       - field_read_only_nav_uuid_3steps
       - field_regex

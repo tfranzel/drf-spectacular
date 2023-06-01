@@ -145,6 +145,10 @@ class AllFields(models.Model):
         return self.field_foreign
 
     @property
+    def model_property_model(self) -> Aux:
+        return self.field_foreign
+
+    @property
     def sub_object(self) -> SubObject:
         return SubObject(self)
 
@@ -219,6 +223,7 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     )
     field_read_only_model_function_basic = serializers.ReadOnlyField(source='model_function_basic')
     field_read_only_model_function_model = serializers.ReadOnlyField(source='model_function_model.id')
+    field_read_only_model_property_model = serializers.ReadOnlyField(source='model_property_model.id')
 
     # override default writable bool field with readonly
     field_bool_override = serializers.ReadOnlyField()
