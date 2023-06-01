@@ -30,6 +30,7 @@
   "field_read_only_nav_uuid_3steps": null,
   "field_read_only_model_function_basic": true,
   "field_read_only_model_function_model": "0ac6930d-87f4-40e8-8242-10a3ed31a335",
+  "field_read_only_model_property_model": "0ac6930d-87f4-40e8-8242-10a3ed31a335",
   "field_bool_override": true,
   "field_model_property_float": 1.337,
   "field_model_cached_property_float": 1.337,
