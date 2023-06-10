@@ -36,5 +36,10 @@ def camelize_serializer_fields(result, generator, request, public):
         if component_type == 'schemas':
             camelize_component(component.schema)
 
+    for url_schema in result["paths"].values():
+        for method_schema in url_schema.values():
+            for parameter in method_schema.get("parameters", []):
+                parameter["name"] = camelize_str(parameter["name"])
+
     # inplace modification of components also affect result dict, so regeneration is not necessary
     return result

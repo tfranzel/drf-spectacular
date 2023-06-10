@@ -14,7 +14,7 @@ else:
     from typing_extensions import TypedDict
 
 from drf_spectacular.contrib.djangorestframework_camel_case import camelize_serializer_fields
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from tests import assert_schema, generate_schema
 
 
@@ -46,6 +46,16 @@ class FakeSerializer(serializers.Serializer):
         pass  # pragma: no cover
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="field_one",
+            description="filter_field",
+            required=False,
+            type=str,
+        ),
+    ]
+)
 class FakeViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = FakeSerializer
 

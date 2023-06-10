@@ -6,6 +6,12 @@ paths:
   /a_b_c/:
     get:
       operationId: a_b_c_list
+      parameters:
+      - in: query
+        name: fieldOne
+        schema:
+          type: string
+        description: filter_field
       tags:
       - a_b_c
       security:
@@ -24,6 +30,12 @@ paths:
   /a_b_c/home/:
     get:
       operationId: a_b_c_home_retrieve
+      parameters:
+      - in: query
+        name: fieldOne
+        schema:
+          type: string
+        description: filter_field
       tags:
       - a_b_c
       security:
