@@ -42,6 +42,11 @@ def test_rest_framework_dataclasses(no_warnings):
             dataclass = Group
             ref_name = "CustomGroupNameFromRefName"
 
+    @extend_schema_serializer(component_name='CustomGroupNameFromSerializerDecoration')
+    class GroupSerializer3(DataclassSerializer[Group]):
+        class Meta:
+            dataclass = Group
+
     @extend_schema_serializer(component_name='CustomGroupNameFromDecoration')
     @dataclass
     class Group2:
@@ -69,11 +74,17 @@ def test_rest_framework_dataclasses(no_warnings):
     def custom_name_via_decoration(request):
         pass  # pragma: no cover
 
+    @extend_schema(responses=GroupSerializer3)
+    @api_view(['GET'])
+    def custom_name_via_serializer_decoration(request):
+        pass  # pragma: no cover
+
     urlpatterns = [
         path('named', named),
         path('anonymous', anonymous),
         path('custom_name_via_ref', custom_name_via_ref),
-        path('custom_name_via_decoration', custom_name_via_decoration)
+        path('custom_name_via_decoration', custom_name_via_decoration),
+        path('custom_name_via_serializer_decoration', custom_name_via_serializer_decoration)
     ]
     assert_schema(
         generate_schema(None, patterns=urlpatterns),

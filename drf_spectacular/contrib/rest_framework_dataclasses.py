@@ -10,6 +10,8 @@ class OpenApiDataclassSerializerExtensions(OpenApiSerializerExtension):
 
     def get_name(self):
         """Use the dataclass name in the schema, instead of the serializer prefix (which can be just Dataclass)."""
+        if has_override(self.target, 'component_name'):
+            return get_override(self.target, 'component_name')
         if getattr(getattr(self.target, 'Meta', None), 'ref_name', None) is not None:
             return self.target.Meta.ref_name
         if has_override(self.target.dataclass_definition.dataclass_type, 'component_name'):
