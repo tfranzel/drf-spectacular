@@ -764,7 +764,11 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
         if cls.target_class is None:
             return False  # app not installed
         elif cls.match_subclasses:
-            return issubclass(get_class(target), cls.target_class)  # type: ignore
+            # Targets may trigger customized check through __subclasscheck__. Attempt to be more robust
+            try:
+                return issubclass(get_class(target), cls.target_class)  # type: ignore
+            except TypeError:
+                return False
         else:
             return get_class(target) == cls.target_class
 
