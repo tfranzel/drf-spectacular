@@ -4,7 +4,8 @@ from drf_spectacular.drainage import add_trace_message, get_override, has_overri
 from drf_spectacular.extensions import OpenApiFilterExtension
 from drf_spectacular.plumbing import (
     build_array_type, build_basic_type, build_choice_description_list, build_parameter_type,
-    follow_field_source, get_manager, get_type_hints, get_view_model, is_basic_type,
+    follow_field_source, force_instance, get_manager, get_type_hints, get_view_model, is_basic_type,
+    is_field,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -95,9 +96,16 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             )
             if is_basic_type(annotation):
                 schema = build_basic_type(annotation)
-            else:
+            elif isinstance(annotation, dict):
                 # allow injecting raw schema via @extend_schema_field decorator
                 schema = annotation.copy()
+            elif is_field(annotation):
+                schema = auto_schema._map_serializer_field(force_instance(annotation), "request")
+            else:
+                warn(
+                    f"Unsupported annotation {annotation} on filter field {field_name}. defaulting to string."
+                )
+                schema = build_basic_type(OpenApiTypes.STR)
         elif filter_method_hint is not _NoHint:
             if is_basic_type(filter_method_hint):
                 schema = build_basic_type(filter_method_hint)

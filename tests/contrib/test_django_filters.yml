@@ -50,6 +50,11 @@ paths:
         explode: false
         style: form
       - in: query
+        name: decorated_serializer_field
+        schema:
+          type: string
+          format: uuid
+      - in: query
         name: email
         schema:
           type: string

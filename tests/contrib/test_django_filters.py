@@ -157,6 +157,12 @@ class ProductFilter(FilterSet):
     def filter_method_decorated(self, queryset, name, value):
         return queryset.filter(id=int(value))  # pragma: no cover
 
+    decorated_serializer_field = CharFilter(method='filter_method_decorated2')
+
+    @extend_schema_field(serializers.UUIDField)
+    def filter_method_decorated2(self, queryset, name, value):
+        return queryset.filter(id=int(value))  # pragma: no cover
+
 
 @extend_schema(
     examples=[
