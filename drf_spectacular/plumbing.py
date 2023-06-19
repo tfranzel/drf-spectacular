@@ -146,8 +146,8 @@ def is_basic_type(obj, allow_none=True):
 def is_patched_serializer(serializer, direction):
     return bool(
         spectacular_settings.COMPONENT_SPLIT_PATCH
-        and serializer.partial
-        and not serializer.read_only
+        and getattr(serializer, 'partial', None)
+        and not getattr(serializer, 'read_only', None)
         and not (spectacular_settings.COMPONENT_SPLIT_REQUEST and direction == 'response')
     )
 
