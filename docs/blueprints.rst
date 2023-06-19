@@ -147,3 +147,12 @@ django-parler-rest
 translation package `django-parler <https://github.com/django-parler/django-parler>`_.
 
 .. literalinclude:: blueprints/django_parler_rest.py
+
+
+Pydantic
+--------
+
+Preliminary support for `Pydantic <https://github.com/pydantic/pydantic>`_  models. This may or may not
+end up in the main package. Catches decorated Pydantic classes and integrates their schema.
+
+.. literalinclude:: blueprints/pydantic.py
