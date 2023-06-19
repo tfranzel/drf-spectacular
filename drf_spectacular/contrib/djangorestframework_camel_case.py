@@ -1,8 +1,11 @@
 import re
 from typing import Optional
 
+from django.utils.module_loading import import_string
+
 
 def camelize_serializer_fields(result, generator, request, public):
+    from django.conf import settings
     from djangorestframework_camel_case.settings import api_settings
     from djangorestframework_camel_case.util import camelize_re, underscore_to_camel
 
@@ -10,6 +13,19 @@ def camelize_serializer_fields(result, generator, request, public):
     ignore_fields = api_settings.JSON_UNDERSCOREIZE.get("ignore_fields") or ()
     # ignore certain field names while camelizing
     ignore_keys = api_settings.JSON_UNDERSCOREIZE.get("ignore_keys") or ()
+
+    def has_middleware_installed():
+        try:
+            from djangorestframework_camel_case.middleware import CamelCaseMiddleWare
+        except ImportError:
+            return False
+
+        for middleware in [import_string(m) for m in settings.MIDDLEWARE]:
+            try:
+                if issubclass(CamelCaseMiddleWare, middleware):
+                    return True
+            except TypeError:
+                pass
 
     def camelize_str(key: str) -> str:
         new_key = re.sub(camelize_re, underscore_to_camel, key) if "_" in key else key
@@ -35,6 +51,12 @@ def camelize_serializer_fields(result, generator, request, public):
     for (_, component_type), component in generator.registry._components.items():
         if component_type == 'schemas':
             camelize_component(component.schema)
+
+    if has_middleware_installed():
+        for url_schema in result["paths"].values():
+            for method_schema in url_schema.values():
+                for parameter in method_schema.get("parameters", []):
+                    parameter["name"] = camelize_str(parameter["name"])
 
     # inplace modification of components also affect result dict, so regeneration is not necessary
     return result
