@@ -14,7 +14,7 @@ else:
     from typing_extensions import TypedDict
 
 from drf_spectacular.contrib.djangorestframework_camel_case import camelize_serializer_fields
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from tests import assert_schema, generate_schema
 
 
@@ -49,8 +49,8 @@ class FakeSerializer(serializers.Serializer):
 @extend_schema(
     parameters=[
         OpenApiParameter(
-            name="field_one",
-            description="filter_field",
+            name="field_parameter",
+            description="filter_parameter",
             required=False,
             type=str,
         ),
@@ -78,8 +78,34 @@ class FakeViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     }
 )
 @pytest.mark.contrib('djangorestframework_camel_case')
-def test_camelize_serializer_fields():
+def test_camelize_serializer_fields(no_warnings):
     assert_schema(
         generate_schema('a_b_c', FakeViewset),
         'tests/contrib/test_djangorestframework_camel_case.yml'
+    )
+
+
+@mock.patch(
+    'django.conf.settings.MIDDLEWARE',
+    ['djangorestframework_camel_case.middleware.CamelCaseMiddleWare'],
+    create=True
+)
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.POSTPROCESSING_HOOKS',
+    [camelize_serializer_fields]
+)
+@mock.patch(
+    'djangorestframework_camel_case.settings.api_settings.JSON_UNDERSCOREIZE',
+    {
+        'no_underscore_before_number': False,
+        'ignore_fields': ('field_nested_ignored',),
+        'ignore_keys': ('field_ignored',),
+    }
+)
+@pytest.mark.contrib('djangorestframework_camel_case')
+def test_camelize_middleware(no_warnings):
+    assert_schema(
+        generate_schema('a_b_c', FakeViewset),
+        'tests/contrib/test_djangorestframework_camel_case.yml',
+        reverse_transforms=[lambda x: x.replace("field_parameter", "fieldParameter")]
     )

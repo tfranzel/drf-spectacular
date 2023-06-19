@@ -8,10 +8,10 @@ paths:
       operationId: a_b_c_list
       parameters:
       - in: query
-        name: fieldOne
+        name: field_parameter
         schema:
           type: string
-        description: filter_field
+        description: filter_parameter
       tags:
       - a_b_c
       security:
@@ -32,10 +32,10 @@ paths:
       operationId: a_b_c_home_retrieve
       parameters:
       - in: query
-        name: fieldOne
+        name: field_parameter
         schema:
           type: string
-        description: filter_field
+        description: filter_parameter
       tags:
       - a_b_c
       security:
