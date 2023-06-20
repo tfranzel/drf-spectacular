@@ -370,3 +370,31 @@ def test_polymorphic_manual_many(no_warnings):
             {'type': 'array', 'items': {'$ref': '#/components/schemas/NaturalPerson'}}
         ]
     }
+
+
+def test_polymorphic_implicit_many_through_list_method_decoration(no_warnings):
+    @extend_schema(responses=PolymorphicProxySerializer(**PROXY_SERIALIZER_PARAMS))
+    class XViewSet(viewsets.ReadOnlyModelViewSet):
+        queryset = LegalPerson2.objects.none()
+        serializer_class = LegalPersonSerializer
+
+    schema = generate_schema('/x', XViewSet)
+
+    assert get_response_schema(schema['paths']['/x/']['get']) == {
+        'items': {'$ref': '#/components/schemas/MetaPerson'}, 'type': 'array'
+    }
+    assert get_response_schema(schema['paths']['/x/{id}/']['get']) == {
+        '$ref': '#/components/schemas/MetaPerson'
+    }
+    assert schema['components']['schemas']['MetaPerson'] == {
+        'discriminator': {
+            'mapping': {
+                'legal': '#/components/schemas/LegalPerson',
+                'natural': '#/components/schemas/NaturalPerson'
+            },
+            'propertyName': 'type'
+        },
+        'oneOf': [
+            {'$ref': '#/components/schemas/LegalPerson'}, {'$ref': '#/components/schemas/NaturalPerson'}
+        ]
+    }

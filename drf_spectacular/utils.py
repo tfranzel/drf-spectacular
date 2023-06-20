@@ -79,17 +79,28 @@ class PolymorphicProxySerializer(Serializer):
             ],
             resource_type_field_name: Optional[str],
             many: Optional[bool] = None,
+            **kwargs
     ):
         self.component_name = component_name
         self.serializers = serializers
         self.resource_type_field_name = resource_type_field_name
         if self._many is False:  # type: ignore[attr-defined]
             set_override(self, 'many', False)
-        super().__init__()
+        # retain kwargs in context for potential anonymous re-init with many=True
+        kwargs.setdefault('context', {}).update({
+            'component_name': component_name,
+            'serializers': serializers,
+            'resource_type_field_name': resource_type_field_name
+        })
+        super().__init__(**kwargs)
 
     def __new__(cls, *args, **kwargs):
         many = kwargs.pop('many', None)
         if many is True:
+            context = kwargs.get('context', {})
+            for arg in ['component_name', 'serializers', 'resource_type_field_name']:
+                if arg in context:
+                    kwargs[arg] = context.pop(arg)  # re-apply retained args
             instance = cls.many_init(*args, **kwargs)
         else:
             instance = super().__new__(cls, *args, **kwargs)
