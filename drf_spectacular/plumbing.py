@@ -101,11 +101,11 @@ def force_instance(serializer_or_field):
         return serializer_or_field
 
 
-def is_serializer(obj) -> bool:
+def is_serializer(obj, strict=False) -> bool:
     from drf_spectacular.serializers import OpenApiSerializerExtension
     return (
         isinstance(force_instance(obj), serializers.BaseSerializer)
-        or bool(OpenApiSerializerExtension.get_match(obj))
+        or (bool(OpenApiSerializerExtension.get_match(obj)) and not strict)
     )
 
 
@@ -119,7 +119,7 @@ def get_list_serializer(obj):
 
 def is_list_serializer_customized(obj) -> bool:
     return (
-        is_serializer(obj)
+        is_serializer(obj, strict=True)
         and get_class(get_list_serializer(obj)).to_representation  # type: ignore
         is not serializers.ListSerializer.to_representation
     )
