@@ -2,6 +2,8 @@ import inspect
 import sys
 from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar, Union
 
+from django.utils.functional import Promise
+
 # direct import due to https://github.com/microsoft/pyright/issues/3025
 if sys.version_info >= (3, 8):
     from typing import Final, Literal
@@ -20,6 +22,7 @@ from drf_spectacular.types import OpenApiTypes, _KnownPythonTypes
 _SerializerType = Union[Serializer, Type[Serializer]]
 _FieldType = Union[Field, Type[Field]]
 _ParameterLocationType = Literal['query', 'path', 'header', 'cookie']
+_StrOrPromise = Union[str, Promise]
 Direction = Literal['request', 'response']
 
 
@@ -160,8 +163,8 @@ class OpenApiExample(OpenApiSchemaBase):
             name: str,
             value: Any = None,
             external_value: str = '',
-            summary: str = '',
-            description: str = '',
+            summary: _StrOrPromise = '',
+            description: _StrOrPromise = '',
             request_only: bool = False,
             response_only: bool = False,
             parameter_only: Optional[Tuple[str, _ParameterLocationType]] = None,
@@ -202,7 +205,7 @@ class OpenApiParameter(OpenApiSchemaBase):
             type: Union[_SerializerType, _KnownPythonTypes, OpenApiTypes, dict] = str,
             location: _ParameterLocationType = QUERY,
             required: bool = False,
-            description: str = '',
+            description: _StrOrPromise = '',
             enum: Optional[Sequence[Any]] = None,
             pattern: Optional[str] = None,
             deprecated: bool = False,
@@ -247,7 +250,7 @@ class OpenApiResponse(OpenApiSchemaBase):
     def __init__(
             self,
             response: Any = None,
-            description: str = '',
+            description: _StrOrPromise = '',
             examples: Optional[Sequence[OpenApiExample]] = None
     ):
         self.response = response
@@ -302,7 +305,7 @@ class OpenApiCallback(OpenApiSchemaBase):
     """
     def __init__(
             self,
-            name: str,
+            name: _StrOrPromise,
             path: str,
             decorator: Union[Callable[[F], F], Dict[str, Callable[[F], F]], Dict[str, Any]],
     ):
@@ -317,8 +320,8 @@ def extend_schema(
         request: Any = empty,
         responses: Any = empty,
         auth: Optional[Sequence[str]] = None,
-        description: Optional[str] = None,
-        summary: Optional[str] = None,
+        description: Optional[_StrOrPromise] = None,
+        summary: Optional[_StrOrPromise] = None,
         deprecated: Optional[bool] = None,
         tags: Optional[Sequence[str]] = None,
         filters: Optional[bool] = None,
