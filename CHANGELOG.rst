@@ -23,7 +23,7 @@ Breaking changes / important additions:
 
 - no major changes but a multiude of small improvements.
 - we are now a lot more tolerant when it comes to writing extensions for non-standard classes (e.g. Pydantic).
-- there should be no unexpected schema changes except for when ``djangorestframework_camel_case ``'s Middleware is used.
+- there should be no unexpected schema changes except for when ``djangorestframework_camel_case``'s Middleware is used.
 
 0.26.2 (2023-04-15)
 -------------------
