@@ -1,6 +1,30 @@
 Changelog
 =========
 
+0.26.3 (2023-06-22)
+-------------------
+
+- allow implicit list expansion of PolymorphicProxySerializer `#995 <https://github.com/tfranzel/drf-spectacular/issues/995>`_
+- selectively distinguish real serializers from mocked ones `#1006 <https://github.com/tfranzel/drf-spectacular/issues/1006>`_
+- fix functionality gap for decoration of django-filter fields `#1007 <https://github.com/tfranzel/drf-spectacular/issues/1007>`_
+- add pydantic blueprint
+- robustify subclass check in extensions `#1006 <https://github.com/tfranzel/drf-spectacular/issues/1006>`_
+- Prevent exception for non-serializer classes targeted by SerializerExtensions `#1006 <https://github.com/tfranzel/drf-spectacular/issues/1006>`_
+- add middleware support for djangorestframework_camel_case
+- close functionality gap in drf dataclasses naming `#1004 <https://github.com/tfranzel/drf-spectacular/issues/1004>`_
+- fix: Camelize query parameters [v.kovalchuk]
+- docs(examples): Fix wrong bool value in example [schew2381]
+- bugfix test `#991 <https://github.com/tfranzel/drf-spectacular/issues/991>`_
+- bugfix duplicate enum list for django-filter `#991 <https://github.com/tfranzel/drf-spectacular/issues/991>`_
+- dj-rest-auth test changes 3.x -> 4.x
+- Add blocks to redoc template `#978 <https://github.com/tfranzel/drf-spectacular/issues/978>`_
+
+Breaking changes / important additions:
+
+- no major changes but a multiude of small improvements.
+- we are now a lot more tolerant when it comes to writing extensions for non-standard classes (e.g. Pydantic).
+- there should be no unexpected schema changes except for when ``djangorestframework_camel_case ``'s Middleware is used.
+
 0.26.2 (2023-04-15)
 -------------------
 
