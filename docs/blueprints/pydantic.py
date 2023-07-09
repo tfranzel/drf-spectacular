@@ -1,7 +1,7 @@
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.plumbing import ResolvedComponent
 
-from pydantic import model_schema
+from pydantic.schema import model_schema
 
 
 class PydanticExtension(OpenApiSerializerExtension):
