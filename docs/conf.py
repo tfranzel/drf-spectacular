@@ -69,6 +69,7 @@ nitpick_ignore_regex = [
     ('py:class', r'(?:APIView|AutoSchema|OpenApiFilterExtension)'),
     # Unresolvable type hinting references to packages without intersphinx support.
     ('py:class', r'rest_framework\..+'),
+    ('py:class', r'django\.utils\.functional\.Promise'),
     # Internal undocumented objects.
     ('py:class', r'drf_spectacular\.generators\..+'),
     ('py:class', r'drf_spectacular\.plumbing\..+'),
