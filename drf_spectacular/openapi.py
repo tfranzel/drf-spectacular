@@ -1517,6 +1517,9 @@ class AutoSchema(ViewInspector):
 
         return result
 
+    def get_serializer_name(self, serializer, direction):
+        return serializer.__class__.__name__
+
     def _get_serializer_name(self, serializer, direction, bypass_extensions=False):
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
         if serializer_extension and not bypass_extensions:
@@ -1538,7 +1541,7 @@ class AutoSchema(ViewInspector):
         elif is_list_serializer(serializer):
             return self._get_serializer_name(serializer.child, direction)
         else:
-            name = serializer.__class__.__name__
+            name = self.get_serializer_name(serializer, direction)
 
         if name.endswith('Serializer'):
             name = name[:-10]
