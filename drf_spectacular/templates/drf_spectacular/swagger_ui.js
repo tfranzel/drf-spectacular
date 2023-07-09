@@ -85,6 +85,9 @@ const injectAuthCredentials = (request) => {
     } else if (authDef.schema.type === "apiKey" && authDef.schema.in === "header") {
       request.headers[authDef.schema.name] = authDef.value;
       return;
+    } else if (authDef.schema.type === "oauth2" && authDef.token.token_type === "Bearer") {
+      request.headers["Authorization"] = `Bearer ${authDef.token.access_token}`;
+      return;
     }
   }
 };
