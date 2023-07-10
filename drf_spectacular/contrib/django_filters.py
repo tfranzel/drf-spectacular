@@ -48,6 +48,7 @@ class DjangoFilterExtension(OpenApiFilterExtension):
 
     """
     target_class = 'django_filters.rest_framework.DjangoFilterBackend'
+    match_subclasses = True
 
     def get_schema_operation_parameters(self, auto_schema, *args, **kwargs):
         model = get_view_model(auto_schema.view)
