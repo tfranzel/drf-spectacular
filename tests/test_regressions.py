@@ -3159,3 +3159,27 @@ def test_openapi_request_wrapper(no_warnings):
             'encoding': {'field': {'style': 'form', 'explode': True}}
         }
     }
+
+
+def test_exclude_then_include_subclassed_view(no_warnings):
+    @extend_schema(exclude=True)
+    class X1ViewSet(viewsets.ReadOnlyModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+
+    @extend_schema(exclude=False)
+    class X2ViewSet(X1ViewSet):
+        pass
+
+    class X3ViewSet(X2ViewSet):
+        pass
+
+    router = routers.SimpleRouter()
+    router.register('x1', X1ViewSet)
+    router.register('x2', X2ViewSet)
+    router.register('x3', X3ViewSet)
+
+    schema = generate_schema(None, patterns=router.urls)
+    assert '/x1/' not in schema['paths']
+    assert '/x2/' in schema['paths']
+    assert '/x3/' in schema['paths']

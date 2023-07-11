@@ -325,7 +325,7 @@ def extend_schema(
         deprecated: Optional[bool] = None,
         tags: Optional[Sequence[str]] = None,
         filters: Optional[bool] = None,
-        exclude: bool = False,
+        exclude: Optional[bool] = None,
         operation: Optional[Dict] = None,
         methods: Optional[Sequence[str]] = None,
         versions: Optional[Sequence[str]] = None,
@@ -417,11 +417,14 @@ def extend_schema(
             def get_operation(self, path, path_regex, path_prefix, method, registry):
                 self.method = method.upper()
 
-                if exclude and is_in_scope(self):
-                    return None
                 if operation is not None and is_in_scope(self):
                     return operation
                 return super().get_operation(path, path_regex, path_prefix, method, registry)
+
+            def is_excluded(self):
+                if exclude is not None and is_in_scope(self):
+                    return exclude
+                return super().is_excluded()
 
             def get_operation_id(self):
                 if operation_id and is_in_scope(self):

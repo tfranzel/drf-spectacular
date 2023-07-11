@@ -58,6 +58,9 @@ class AutoSchema(ViewInspector):
         self.path_prefix = path_prefix
         self.method = method.upper()
 
+        if self.is_excluded():
+            return None
+
         operation = {'operationId': self.get_operation_id()}
 
         description = self.get_description()
@@ -103,6 +106,10 @@ class AutoSchema(ViewInspector):
             operation['callbacks'] = callbacks
 
         return operation
+
+    def is_excluded(self):
+        """ override this for custom behaviour """
+        return False
 
     def _is_list_view(self, serializer=None):
         """
