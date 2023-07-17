@@ -155,4 +155,10 @@ Pydantic
 Preliminary support for `Pydantic <https://github.com/pydantic/pydantic>`_  models. This may or may not
 end up in the main package. Catches decorated Pydantic classes and integrates their schema.
 
+Pydantic 1:
+
 .. literalinclude:: blueprints/pydantic.py
+
+Pydantic 2:
+
+.. literalinclude:: blueprints/pydantic2.py
