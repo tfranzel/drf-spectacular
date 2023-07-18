@@ -14,10 +14,10 @@ class PydanticExtension(OpenApiSerializerExtension):
     def map_serializer(self, auto_schema, direction):
 
         # let pydantic generate a JSON schema
-        schema = model_json_schema(self.target, ref_template="#/components/schemas")
+        schema = model_json_schema(self.target, ref_template="#/components/schemas/{model}")
 
         # pull out potential sub-schemas and put them into component section
-        for sub_name, sub_schema in schema.pop("definitions", {}).items():
+        for sub_name, sub_schema in schema.pop("$defs", {}).items():
             component = ResolvedComponent(
                 name=sub_name,
                 type=ResolvedComponent.SCHEMA,
