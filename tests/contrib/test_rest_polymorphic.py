@@ -113,10 +113,17 @@ def test_rest_polymorphic_split_request_with_ro_serializer(no_warnings):
     assert components['PersonRequest']['oneOf'] == [
         {'$ref': '#/components/schemas/LegalPersonTypedRequest'},
         {'$ref': '#/components/schemas/NaturalPersonTypedRequest'},
+        {'$ref': '#/components/schemas/NomadicPersonTypedRequest'},
     ]
     assert components['PersonRequest']['discriminator']['mapping'] == {
         'legal': '#/components/schemas/LegalPersonTypedRequest',
         'natural': '#/components/schemas/NaturalPersonTypedRequest',
+        'nomadic': '#/components/schemas/NomadicPersonTypedRequest',
+    }
+    assert components['NomadicPersonTypedRequest'] == {
+        'properties': {'resourcetype': {'type': 'string'}},
+        'required': ['resourcetype'],
+        'type': 'object',
     }
 
 
