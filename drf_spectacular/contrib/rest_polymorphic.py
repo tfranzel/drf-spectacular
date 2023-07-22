@@ -20,7 +20,12 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
             resource_type = serializer.to_resource_type(sub_model)
             component = auto_schema.resolve_serializer(sub_serializer, direction)
             if not component:
-                continue
+                # rebuild a virtual schema-less component to model empty serializers
+                component = ResolvedComponent(
+                    name=auto_schema._get_serializer_name(sub_serializer, direction),
+                    type=ResolvedComponent.SCHEMA,
+                    object='virtual'
+                )
             typed_component = self.build_typed_component(
                 auto_schema=auto_schema,
                 component=component,
@@ -49,21 +54,21 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
         else:
             typed_component_name = f'{component.name}Typed'
 
+        resource_type_schema = build_object_type(
+            properties={resource_type_field_name: build_basic_type(OpenApiTypes.STR)},
+            required=None if patched else [resource_type_field_name]
+        )
+        # if sub-serializer has an empty schema, only expose the resource_type field part
+        if component.schema:
+            schema = {'allOf': [resource_type_schema, component.ref]}
+        else:
+            schema = resource_type_schema
+
         component_typed = ResolvedComponent(
             name=typed_component_name,
             type=ResolvedComponent.SCHEMA,
             object=component.object,
-            schema={
-                'allOf': [
-                    build_object_type(
-                        properties={
-                            resource_type_field_name: build_basic_type(OpenApiTypes.STR)
-                        },
-                        required=None if patched else [resource_type_field_name]
-                    ),
-                    component.ref,
-                ]
-            }
+            schema=schema,
         )
         auto_schema.registry.register_on_missing(component_typed)
         return component_typed
