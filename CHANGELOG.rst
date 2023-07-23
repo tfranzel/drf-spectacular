@@ -1,6 +1,23 @@
 Changelog
 =========
 
+0.26.4 (2023-07-23)
+-------------------
+
+- fix django-polymorphic empty serializer case `#1029 <https://github.com/tfranzel/drf-spectacular/issues/1029>`_ `#542 <https://github.com/tfranzel/drf-spectacular/issues/542>`_
+- Add a blueprint for pydantic 2 [Carmen Alvarez]
+- bugfix exclude behavior on subclassing `#1025 <https://github.com/tfranzel/drf-spectacular/issues/1025>`_
+- relax django-filter subclassing restriction `#1022 <https://github.com/tfranzel/drf-spectacular/issues/1022>`_
+- factor out serializer name estimation for easier modification `#976 <https://github.com/tfranzel/drf-spectacular/issues/976>`_
+- Fixing Pydantic Extension (`#1021 <https://github.com/tfranzel/drf-spectacular/issues/1021>`_) [sydney-runkle]
+- add Authorization header for oauth2 Bearer token [Danial]
+- allow already supported lazy string in types `#982 <https://github.com/tfranzel/drf-spectacular/issues/982>`_
+
+Breaking changes / important additions:
+
+- some minor bugfixes as well as improvements to ``django-filter`` and ``django-polymorphic``.
+- it is now significantly easier to adapt serializer naming via ``AutoSchema`` subclassing.
+
 0.26.3 (2023-06-22)
 -------------------
 
