@@ -39,6 +39,11 @@ if spectacular_settings.SERVE_AUTHENTICATION is not None:
 else:
     AUTHENTICATION_CLASSES = api_settings.DEFAULT_AUTHENTICATION_CLASSES
 
+if spectacular_settings.SERVE_THROTTLE is not None:
+    THROTTLE_CLASSES = spectacular_settings.SERVE_THROTTLE
+else:
+    THROTTLE_CLASSES = api_settings.DEFAULT_THROTTLE_CLASSES
+
 
 class SpectacularAPIView(APIView):
     __doc__ = _("""
@@ -52,6 +57,8 @@ class SpectacularAPIView(APIView):
     ]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
     authentication_classes = AUTHENTICATION_CLASSES
+    throttle_classes = THROTTLE_CLASSES
+    throttle_scope = spectacular_settings.SERVE_THROTTLE_SCOPE
     generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
     serve_public = spectacular_settings.SERVE_PUBLIC
     urlconf = spectacular_settings.SERVE_URLCONF
@@ -122,6 +129,8 @@ class SpectacularSwaggerView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
     authentication_classes = AUTHENTICATION_CLASSES
+    throttle_classes = THROTTLE_CLASSES
+    throttle_scope = spectacular_settings.SERVE_THROTTLE_SCOPE
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/swagger_ui.html'
@@ -231,6 +240,8 @@ class SpectacularRedocView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
     authentication_classes = AUTHENTICATION_CLASSES
+    throttle_classes = THROTTLE_CLASSES
+    throttle_scope = spectacular_settings.SERVE_THROTTLE_SCOPE
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/redoc.html'

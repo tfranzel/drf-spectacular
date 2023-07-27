@@ -6,13 +6,15 @@ from rest_framework.views import APIView
 from drf_spectacular.plumbing import get_relative_url, set_query_parameters
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.utils import extend_schema
-from drf_spectacular.views import AUTHENTICATION_CLASSES
+from drf_spectacular.views import AUTHENTICATION_CLASSES, THROTTLE_CLASSES
 
 
 class SpectacularElementsView(APIView):
      renderer_classes = [TemplateHTMLRenderer]
      permission_classes = spectacular_settings.SERVE_PERMISSIONS
      authentication_classes = AUTHENTICATION_CLASSES
+     throttle_classes = THROTTLE_CLASSES
+     throttle_scope = spectacular_settings.SERVE_THROTTLE_SCOPE
      url_name = 'schema'
      url = None
      template_name = 'elements.html'

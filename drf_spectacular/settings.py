@@ -54,6 +54,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
     # None will default to DRF's AUTHENTICATION_CLASSES
     'SERVE_AUTHENTICATION': None,
+    # None will default to DRF's THROTTLE_CLASSES
+    'SERVE_THROTTLE': None,
+    # can be used to define a unique throttle key for ScopedRateThrottle for spectacular's views.
+    'SERVE_THROTTLE_SCOPE': 'schema',
 
     # Dictionary of general configuration to pass to the SwaggerUI({ ... })
     # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
@@ -217,6 +221,7 @@ IMPORT_STRINGS = [
     'DEFAULT_GENERATOR_CLASS',
     'SERVE_AUTHENTICATION',
     'SERVE_PERMISSIONS',
+    'SERVE_THROTTLE',
     'POSTPROCESSING_HOOKS',
     'PREPROCESSING_HOOKS',
     'GET_LIB_DOC_EXCLUDES',
