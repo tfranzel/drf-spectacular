@@ -274,7 +274,7 @@ class AutoSchema(ViewInspector):
         else:
             return list(parameters.values())
 
-    def get_description(self):
+    def get_description(self) -> str:  # type: ignore[override]
         """ override this for custom behaviour """
         action_or_method = getattr(self.view, getattr(self.view, 'action', self.method.lower()), None)
         view_doc = get_doc(self.view.__class__)

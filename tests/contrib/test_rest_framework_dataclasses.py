@@ -11,7 +11,7 @@ from tests import assert_schema, generate_schema
 
 @pytest.mark.contrib('rest_framework_dataclasses')
 @pytest.mark.skipif(sys.version_info < (3, 7), reason='dataclass required by package')
-def test_rest_framework_dataclasses(no_warnings):
+def test_rest_framework_dataclasses(no_warnings: object) -> None:
     from dataclasses import dataclass
 
     from rest_framework_dataclasses.serializers import DataclassSerializer

@@ -214,7 +214,7 @@ def test_unable_to_derive_function_type_warning(capsys):
     assert '[XAPIView > XSerializer]: unable to resolve type hint for function "get_y"' in stderr
 
 
-def test_unable_to_traverse_union_type_hint(capsys):
+def test_unable_to_traverse_union_type_hint(capsys: pytest.CaptureFixture) -> None:
     class Foo:
         foo_value: int = 1
 

@@ -1307,7 +1307,7 @@ def build_mocked_view(method: str, path: str, extend_schema_decorator, registry)
 
     # emulate what Generator would do to setup schema generation.
     view_callable = TmpView.as_view()
-    view = view_callable.cls()  # type: ignore
+    view: views.ApiView = view_callable.cls()  # type: ignore
     view.request = spectacular_settings.GET_MOCK_REQUEST(
         method.upper(), path, view, None
     )
