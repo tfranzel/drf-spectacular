@@ -34,6 +34,7 @@ from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, fields, mixins, serializers, versioning
 from rest_framework.compat import unicode_http_header
+from rest_framework.fields import empty
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
 from rest_framework.utils.mediatypes import _MediaType
@@ -322,7 +323,7 @@ def build_examples_list(examples):
     for example in examples:
         normalized_name = inflection.camelize(example.name.replace(' ', '_'))
         sub_schema = {}
-        if example.value:
+        if example.value is not empty:
             sub_schema['value'] = example.value
         if example.external_value:
             sub_schema['externalValue'] = example.external_value

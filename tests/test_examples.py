@@ -271,3 +271,31 @@ def test_inherited_status_code_from_response_container(no_warnings):
         'schema': {'$ref': '#/components/schemas/Simple'},
         'examples': {'AnExample': {'value': {'id': 3}, 'summary': 'an example'}}
     }
+
+
+def test_examples_with_falsy_values(no_warnings):
+    @extend_schema(
+        responses=OpenApiResponse(
+            description='something',
+            response=OpenApiTypes.JSON_PTR,
+            examples=[
+                OpenApiExample('one', value=1),
+                OpenApiExample('empty-list', value=[]),
+                OpenApiExample('false', value=False),
+                OpenApiExample('zero', value=0),
+                OpenApiExample('empty'),
+            ],
+        ),
+    )
+    class XListView(generics.ListAPIView):
+        model = SimpleModel
+        serializer_class = SimpleSerializer
+
+    schema = generate_schema('/x/', view=XListView)
+    assert schema['paths']['/x/']['get']['responses']['200']['content']['application/json']['examples'] == {
+        'One': {'summary': 'one', 'value': 1},
+        'Empty-list': {'summary': 'empty-list', 'value': []},
+        'False': {'summary': 'false', 'value': False},
+        'Zero': {'summary': 'zero', 'value': 0},
+        'Empty': {'summary': 'empty'},
+    }

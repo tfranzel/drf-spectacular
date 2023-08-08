@@ -161,7 +161,7 @@ class OpenApiExample(OpenApiSchemaBase):
     def __init__(
             self,
             name: str,
-            value: Any = None,
+            value: Any = empty,
             external_value: str = '',
             summary: _StrOrPromise = '',
             description: _StrOrPromise = '',
