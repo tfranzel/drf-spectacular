@@ -299,3 +299,24 @@ def test_examples_with_falsy_values(no_warnings):
         'Zero': {'summary': 'zero', 'value': 0},
         'Empty': {'summary': 'empty'},
     }
+
+
+@pytest.mark.skipif(DRF_VERSION < '3.12', reason='DRF pagination schema broken')
+def test_plain_pagination_example(no_warnings):
+
+    class PlainPagination(pagination.LimitOffsetPagination):
+        """ return a (unpaginated) basic list, while other might happen in the headers """
+        def get_paginated_response_schema(self, schema):
+            return schema
+
+    class PaginatedExamplesViewSet(ExampleTestWithExtendedViewSet):
+        pagination_class = PlainPagination
+
+    schema = generate_schema('e', PaginatedExamplesViewSet)
+    operation = schema['paths']['/e/']['get']
+    assert operation['responses']['200']['content']['application/json']['examples'] == {
+        'SerializerCExampleRO': {
+            'value': [{'field': 111}],
+            'summary': 'Serializer C Example RO'
+        }
+    }

@@ -1328,6 +1328,10 @@ def build_listed_example_value(value: Any, paginator, direction):
 
     sentinel = object()
     schema = paginator.get_paginated_response_schema(sentinel)
+
+    if schema is sentinel:
+        return [value]
+
     try:
         return {
             field_name: [value] if field_schema is sentinel else field_schema['example']
