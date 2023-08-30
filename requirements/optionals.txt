@@ -1,4 +1,4 @@
-django-allauth
+django-allauth<0.55.0  # breaking change breaking dj-rest-auth
 drf-jwt>=0.13.0
 dj-rest-auth>=1.0.0
 djangorestframework-simplejwt>=4.4.0
