@@ -3015,7 +3015,7 @@ def test_slug_related_field_to_model_property(no_warnings):
     class M10(models.Model):
         @property
         def property_field(self) -> float:
-            return 42
+            return 42  # pragma: no cover
 
     class M11(models.Model):
         field = models.ForeignKey(M10, on_delete=models.CASCADE)
@@ -3194,7 +3194,7 @@ def test_disable_viewset_list_handling_as_one_off(no_warnings):
 
         @extend_schema(responses=forced_singular_serializer(SimpleSerializer))
         def list(self):
-            pass
+            pass  # pragma: no cover
 
     class X2ViewSet(viewsets.ReadOnlyModelViewSet):
         serializer_class = SimpleSerializer
