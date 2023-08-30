@@ -1,7 +1,7 @@
 from django.utils.module_loading import import_string
 
 
-def lazy_serializer(path):
+def lazy_serializer(path: str):
     """ simulate initiated object but actually load class and init on first usage """
 
     class LazySerializer:
@@ -28,3 +28,15 @@ def lazy_serializer(path):
             return self.__getattr__('__repr__')()
 
     return LazySerializer
+
+
+def forced_singular_serializer(serializer_class):
+    from drf_spectacular.drainage import set_override
+    from drf_spectacular.utils import extend_schema_serializer
+
+    patched_serializer_class = type(serializer_class.__name__, (serializer_class,), {})
+
+    extend_schema_serializer(many=False)(patched_serializer_class)
+    set_override(patched_serializer_class, 'suppress_collision_warning', True)
+
+    return patched_serializer_class

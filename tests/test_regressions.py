@@ -22,6 +22,7 @@ from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 
 from drf_spectacular.extensions import OpenApiSerializerExtension
+from drf_spectacular.helpers import forced_singular_serializer
 from drf_spectacular.hooks import preprocess_exclude_path_format
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.renderers import OpenApiJsonRenderer, OpenApiYamlRenderer
@@ -3014,7 +3015,7 @@ def test_slug_related_field_to_model_property(no_warnings):
     class M10(models.Model):
         @property
         def property_field(self) -> float:
-            return 42
+            return 42  # pragma: no cover
 
     class M11(models.Model):
         field = models.ForeignKey(M10, on_delete=models.CASCADE)
@@ -3183,3 +3184,31 @@ def test_exclude_then_include_subclassed_view(no_warnings):
     assert '/x1/' not in schema['paths']
     assert '/x2/' in schema['paths']
     assert '/x3/' in schema['paths']
+
+
+def test_disable_viewset_list_handling_as_one_off(no_warnings):
+
+    class X1ViewSet(viewsets.ReadOnlyModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+
+        @extend_schema(responses=forced_singular_serializer(SimpleSerializer))
+        def list(self):
+            pass  # pragma: no cover
+
+    class X2ViewSet(viewsets.ReadOnlyModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+
+    schema1 = generate_schema('/x', X1ViewSet)
+    schema2 = generate_schema('/x', X2ViewSet)
+
+    # both list and retrieve are single-object
+    schema_list = get_response_schema(schema1['paths']['/x/']['get'])
+    schema_retrieve = get_response_schema(schema1['paths']['/x/{id}/']['get'])
+    assert schema_list == schema_retrieve == {'$ref': '#/components/schemas/Simple'}
+    # this patch does not bleed into other usages of the same serializer class
+    assert get_response_schema(schema2['paths']['/x/']['get']) == {
+        'type': 'array',
+        'items': {'$ref': '#/components/schemas/Simple'}
+    }

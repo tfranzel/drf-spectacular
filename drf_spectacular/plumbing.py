@@ -41,7 +41,7 @@ from rest_framework.utils.mediatypes import _MediaType
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from uritemplate import URITemplate
 
-from drf_spectacular.drainage import cache, error, warn
+from drf_spectacular.drainage import cache, error, get_override, warn
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import (
     DJANGO_PATH_CONVERTER_MAPPING, OPENAPI_TYPE_MAPPING, PYTHON_TYPE_MAPPING, OpenApiTypes,
@@ -688,7 +688,11 @@ class ComponentRegistry:
         query_class = query_obj if inspect.isclass(query_obj) else query_obj.__class__
         registry_class = query_obj if inspect.isclass(registry_obj) else registry_obj.__class__
 
-        if query_class != registry_class:
+        suppress_collision_warning = (
+            get_override(registry_class, 'suppress_collision_warning', False)
+            or get_override(query_class, 'suppress_collision_warning', False)
+        )
+        if query_class != registry_class and not suppress_collision_warning:
             warn(
                 f'Encountered 2 components with identical names "{component.name}" and '
                 f'different classes {query_class} and {registry_class}. This will very '
