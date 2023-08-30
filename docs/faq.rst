@@ -414,3 +414,28 @@ response is a binary blob without further details on its structure.
                     "Content-Disposition": "attachment; filename=out.bin",
                 },
             )
+
+My ``ViewSet`` ``list`` does not return a list, but a single object.
+--------------------------------------------------------------------
+
+Generally, it is bad practice to use a ``ViewSet.list`` method to return single object,
+because DRF specifically does a list conversion in the background for this method and only
+this method. Using ``ApiView`` or ``GenericAPIView`` for this use-case would be cleaner.
+
+However, if you insist on this behavior, you can circumvent the list detection by
+creating a one-off copy of your serializer and marking it as forced non-list.
+It is important to create a **copy** as
+:py:func:`@extend_schema_serializer <drf_spectacular.utils.extend_schema_serializer>`
+modifies the given serializer.
+
+.. code-block:: python
+
+    from drf_spectacular.helpers import forced_singular_serializer
+
+    class YourViewSet(viewsets.ModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+
+        @extend_schema(responses=forced_singular_serializer(SimpleSerializer))
+        def list(self):
+            pass
