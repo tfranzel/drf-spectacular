@@ -27,7 +27,7 @@ class SpectacularElementsView(APIView):
                 'title': self.title,
                 'js_dist': 'https://unpkg.com/@stoplight/elements/web-components.min.js',
                 'css_dist': 'https://unpkg.com/@stoplight/elements/styles.min.css',
-                'schema_url': self._get_schema_url(request),
+                'schema_url': schema_url,
             },
             template_name=self.template_name
         )
