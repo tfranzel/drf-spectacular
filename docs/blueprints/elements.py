@@ -27,7 +27,15 @@ class SpectacularElementsView(APIView):
                 'title': self.title,
                 'js_dist': 'https://unpkg.com/@stoplight/elements/web-components.min.js',
                 'css_dist': 'https://unpkg.com/@stoplight/elements/styles.min.css',
-                'schema_url': schema_url,
+                'schema_url': self._get_schema_url(request),
             },
             template_name=self.template_name
+        )
+
+    def _get_schema_url(self, request):
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
+        return set_query_parameters(
+            url=schema_url,
+            lang=request.GET.get('lang'),
+            version=request.GET.get('version')
         )
