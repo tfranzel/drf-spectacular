@@ -20,13 +20,19 @@ class SpectacularRapiDocView(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
-        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
-        schema_url = set_query_parameters(schema_url, lang=request.GET.get('lang'))
         return Response(
             data={
                 'title': self.title,
                 'dist': 'https://cdn.jsdelivr.net/npm/rapidoc@latest',
-                'schema_url': schema_url,
+                'schema_url': self._get_schema_url(request),
             },
             template_name=self.template_name,
+        )
+
+    def _get_schema_url(self, request):
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
+        return set_query_parameters(
+            url=schema_url,
+            lang=request.GET.get('lang'),
+            version=request.GET.get('version')
         )
