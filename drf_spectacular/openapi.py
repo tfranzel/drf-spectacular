@@ -130,7 +130,7 @@ class AutoSchema(ViewInspector):
         if is_basic_type(serializer):
             return False
         if hasattr(self.view, 'action'):
-            return "list" in self.view.action
+            return bool(re.search(r"(?:\b|_)list(?:\b|_)", self.view.action))
         # list responses are "usually" only returned by GET
         if self.method != 'GET':
             return False
