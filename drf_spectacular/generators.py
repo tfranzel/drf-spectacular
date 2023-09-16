@@ -75,7 +75,19 @@ class EndpointEnumerator(BaseEndpointEnumerator):
         return api_endpoints
 
     def get_allowed_methods(self, callback):
-        methods = super().get_allowed_methods(callback)
+        if hasattr(callback, 'actions'):
+            actions = set(callback.actions)
+            http_method_names = set(callback.cls.http_method_names)
+            methods = [method.upper() for method in actions & http_method_names]
+        else:
+            # pass to constructor allowed method names to get valid ones
+            kwargs = {}
+            http_method_names = callback.initkwargs.get('http_method_names', [])
+            if http_method_names:
+                kwargs['http_method_names'] = http_method_names
+
+            methods = callback.cls(**kwargs).allowed_methods
+
         return [
             method for method in methods
             if method not in ('OPTIONS', 'HEAD', 'TRACE', 'CONNECT')
