@@ -83,7 +83,7 @@ what version you want to generate.
 
     ./manage.py spectacular --api-version 'YOUR_VERSION'
 
-This will contain unversioned endpoints together with the endpoints for the the specified version.
+This will contain unversioned endpoints together with the endpoints for the specified version.
 
 For the schema views you can either set a versioning class (implicit versioning via the request) or
 explicitly override the version with ``SpectacularAPIView.as_view(api_version='YOUR_VERSION')``.

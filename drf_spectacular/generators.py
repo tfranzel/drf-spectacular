@@ -48,7 +48,7 @@ class EndpointEnumerator(BaseEndpointEnumerator):
     def _get_api_endpoints(self, patterns, prefix):
         """
         Return a list of all available API endpoints by inspecting the URL conf.
-        Only modification the the DRF version is passing through the path_regex.
+        Only modification the DRF version is passing through the path_regex.
         """
         if patterns is None:
             patterns = self.patterns
