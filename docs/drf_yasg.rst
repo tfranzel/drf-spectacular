@@ -153,7 +153,7 @@ provides the :py:class:`~drf_spectacular.types.OpenApiTypes` enum:
 Parameter Location
 ------------------
 
-``drf_yasg.openapi.IN_*`` constants are roughtly equivalent to constants defined on the
+``drf_yasg.openapi.IN_*`` constants are roughly equivalent to constants defined on the
 :py:class:`~drf_spectacular.utils.OpenApiParameter` class:
 
 - :py:data:`~drf_yasg.openapi.IN_PATH` is called :py:attr:`~drf_spectacular.utils.OpenApiParameter.PATH`

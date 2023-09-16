@@ -261,7 +261,7 @@ the sky is the limit.
 More customization
 ^^^^^^^^^^^^^^^^^^
 
-Still not satisifed? You want more! We still got you covered.
+Still not satisfied? You want more! We still got you covered.
 Visit `customization <https://drf-spectacular.readthedocs.io/en/latest/customization.html>`_ for more information.
 
 

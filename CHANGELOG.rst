@@ -77,8 +77,8 @@ Breaking changes / important additions:
 - Add option to provide a callable for PolymorphicProxySerializer.serializers [Glenn Matthews]
 - consolidate sort fix for enum sorting
 - add testcase to `#950 <https://github.com/tfranzel/drf-spectacular/issues/950>`_. ensure raw schema dict remains unmodified
-- Don't edit the orignal django-filters schema. [Will Giddens]
-- Fix typos and grammer errors in FAQ doc page. [Foad Lind]
+- Don't edit the original django-filters schema. [Will Giddens]
+- Fix typos and grammar errors in FAQ doc page. [Foad Lind]
 - fix OpenApiResponse nested example defaults `#875 <https://github.com/tfranzel/drf-spectacular/issues/875>`_
 - mitigate ``runtests.py`` fail when GDAL library is not installed `#945 <https://github.com/tfranzel/drf-spectacular/issues/945>`_ `#821 <https://github.com/tfranzel/drf-spectacular/issues/821>`_ `#775 <https://github.com/tfranzel/drf-spectacular/issues/775>`_ `#777 <https://github.com/tfranzel/drf-spectacular/issues/777>`_
 - bugfix SlugRelatedField with a model property target `#943 <https://github.com/tfranzel/drf-spectacular/issues/943>`_
@@ -141,7 +141,7 @@ Breaking changes / important additions:
 - Fixed minor typos [Conrad]
 - Removing blank and null keys when generating the overridden choices hash to match the hash generation logic in the enum post processor hook [Trent Holliday]
 - fix test fixture overlap `#826 <https://github.com/tfranzel/drf-spectacular/issues/826>`_
-- specifiy min patch release for DRF (fixes `#812 <https://github.com/tfranzel/drf-spectacular/issues/812>`_)
+- specify min patch release for DRF (fixes `#812 <https://github.com/tfranzel/drf-spectacular/issues/812>`_)
 - Preserve context in ``get_list_serializer``. [Brady Dean]
 - Allow field extensions to return None from map_serializer_field [Andrew Backer]
 
@@ -278,7 +278,7 @@ Breaking changes / important additions:
 - fix url escaping bug introduced in `#556 <https://github.com/tfranzel/drf-spectacular/issues/556>`_ (`#650 <https://github.com/tfranzel/drf-spectacular/issues/650>`_)
 - pass through version from UI to schema endpoint `#650 <https://github.com/tfranzel/drf-spectacular/issues/650>`_
 - factor out schema_url generation `#650 <https://github.com/tfranzel/drf-spectacular/issues/650>`_
-- relax AcceptHeaderVersioning contraint for modification `#650 <https://github.com/tfranzel/drf-spectacular/issues/650>`_
+- relax AcceptHeaderVersioning constraint for modification `#650 <https://github.com/tfranzel/drf-spectacular/issues/650>`_
 - Enable the use of lists in extend_schema_view() [François Travais]
 
 Breaking changes / important additions:
@@ -345,7 +345,7 @@ Breaking changes / important additions:
 
 - Fixed two more decorator isolation issues.
 - Added Swagger UI plugin to handle reloading the schema on authentication changes (``'SERVE_PUBLIC': False``).
-- Added ``minLength`` where a blank value is not allowed. Apart the the dedicated setting, it is implicitly enabled by ``COMPONENT_SPLIT_REQUEST``.
+- Added ``minLength`` where a blank value is not allowed. Apart the dedicated setting, it is implicitly enabled by ``COMPONENT_SPLIT_REQUEST``.
 - Several other small fixes and additional settings for corner cases. This is mainly a y-steam release due to the potential impact
   on the Swagger UI and ``minLength`` changes.
 
@@ -407,7 +407,7 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - Added vendor specification extensions
-- Completetly overhauled validator logic and bugfixes
+- Completely overhauled validator logic and bugfixes
 - Offline UI assets with optional *drf-spectacular-sidecar* package
 - several internal logic improvements and stricter assumptions
 
@@ -423,7 +423,7 @@ Breaking changes / important additions:
 - remove mapping for re.Pattern (no 3.6 and mypy issues) `#526 <https://github.com/tfranzel/drf-spectacular/issues/526>`_
 - Add missing types defined in specification. [Nick Pope]
 - Add type mappings for IP4, IP6, TIME & DURATION. [Nick Pope]
-- add support for custom converters and coverter override `#502 <https://github.com/tfranzel/drf-spectacular/issues/502>`_
+- add support for custom converters and converter override `#502 <https://github.com/tfranzel/drf-spectacular/issues/502>`_
 - cache static loading function calls
 - prevent settings loading in types, lazy load in plumbing instead
 - lazy settings loading in drainage
@@ -595,7 +595,7 @@ Breaking changes / important additions:
 Breaking changes / important additions:
 
 - Revamped handling of mocked requests. Now ``GET_MOCK_REQUEST`` is always called, not just for offline schema generation.
-  In case there is a real request available, we carry over headers and authetication. If you use your own implementation,
+  In case there is a real request available, we carry over headers and authentication. If you use your own implementation,
   you may want to inspect the new default implementation.
 - NamespaceVersioning: switched path variable substitution from regex to custom state machine due to parethesis counting issue.
 - Improved implicit support for `drf-nested-routers <https://github.com/alanjds/drf-nested-routers>`_
@@ -621,7 +621,7 @@ Breaking changes / important additions:
 - Fixed traversing of 'Optional' type annotations [Luke Plant]
 - prevent pagination on error responses. `#277 <https://github.com/tfranzel/drf-spectacular/issues/277>`_
 - fix SCHEMA_PATH_PREFIX_TRIM ^/ pitfall & remove unused old URL mounting
-- slighly improve `#332 <https://github.com/tfranzel/drf-spectacular/issues/332>`_ for django-filter range filters
+- slightly improve `#332 <https://github.com/tfranzel/drf-spectacular/issues/332>`_ for django-filter range filters
 - introduce non-redundant title field. `#191 <https://github.com/tfranzel/drf-spectacular/issues/191>`_ `#286 <https://github.com/tfranzel/drf-spectacular/issues/286>`_
 - improve schema version string handling including variations `#303 <https://github.com/tfranzel/drf-spectacular/issues/303>`_
 - bugfix ENUM_NAME_OVERRIDES for categorized choices `#339 <https://github.com/tfranzel/drf-spectacular/issues/339>`_
@@ -677,7 +677,7 @@ Breaking changes / important additions:
 - Added response headers feature
 - Extended ``@extend_schema(request=X)``, where ``X`` may now also be a ``Dict[content_type, serializer_etc]``
 - Updated Swagger UI version
-- Fixed several model traveral issues that may lead to PK changes in the schema
+- Fixed several model traversal issues that may lead to PK changes in the schema
 - Added *drf-yasg*'s ``swagger_fake_view``
 
 0.13.2 (2021-02-11)
@@ -717,7 +717,7 @@ Breaking changes / important additions:
 - add setting for additionalProperties handling `#238 <https://github.com/tfranzel/drf-spectacular/issues/238>`_
 - bugfix path param extraction for PrimaryKeyRelatedField `#258 <https://github.com/tfranzel/drf-spectacular/issues/258>`_
 - use injected django-filter help_text `#234 <https://github.com/tfranzel/drf-spectacular/issues/234>`_
-- robustify normalization of tyes `#257 <https://github.com/tfranzel/drf-spectacular/issues/257>`_
+- robustify normalization of types `#257 <https://github.com/tfranzel/drf-spectacular/issues/257>`_
 - bugfix PATCH split serializer disparity `#249 <https://github.com/tfranzel/drf-spectacular/issues/249>`_
 - django-filter description bugfix `#234 <https://github.com/tfranzel/drf-spectacular/issues/234>`_
 - bugfix unsupported http verbs `#244 <https://github.com/tfranzel/drf-spectacular/issues/244>`_
@@ -804,7 +804,7 @@ Breaking changes:
 - instance check with ViewSetMixin instead of GenericViewSet [SoungRyoul Kim]
 - support swagger-ui-settings [SoungRyoul Kim]
 - Change Settings variable, allow override of default swagger settings and remove unnecessary line [Nix]
-- Fix whitspace issues in code [Nix]
+- Fix whitespace issues in code [Nix]
 - Allow Swagger-UI configuration through settings Closes `#162 <https://github.com/tfranzel/drf-spectacular/issues/162>`_ [Nix]
 - extend django_filters test case `#155 <https://github.com/tfranzel/drf-spectacular/issues/155>`_
 - add enum postprocessing handling of blank and null `#135 <https://github.com/tfranzel/drf-spectacular/issues/135>`_
@@ -985,7 +985,7 @@ Breaking changes:
 
 Breaking changes:
 
-- Schemas are funtionally identical, but component sorting changed slightly.
+- Schemas are functionally identical, but component sorting changed slightly.
 - All ``read_only`` fields are required by default
 - ``SerializerFieldExtension`` gained direction parameter
 
@@ -1086,7 +1086,7 @@ Breaking changes:
 0.8.8 (2020-03-21)
 ------------------
 - Documentation. 
-- Schema serving with ``SpectacularAPIView``  (configureable)
+- Schema serving with ``SpectacularAPIView``  (configurable)
 - Add generator stats and ``--fail-on-warn`` command option. 
 - Schema validation with ``--validation`` against OpenAPI JSON specification
 - Added various settings.

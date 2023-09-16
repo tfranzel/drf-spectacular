@@ -24,7 +24,7 @@ from tests import assert_equal, assert_schema, build_absolute_file_path
 if sys.version_info >= (3, 8):
     functools_cached_property = functools.cached_property
 else:
-    # We re-use Django's cached_property when it's not avaiable to
+    # We re-use Django's cached_property when it's not available to
     # keep tests unified across Python versions.
     functools_cached_property = cached_property
 
