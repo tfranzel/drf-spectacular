@@ -37,6 +37,7 @@ from rest_framework.compat import unicode_http_header
 from rest_framework.fields import empty
 from rest_framework.settings import api_settings
 from rest_framework.test import APIRequestFactory
+from rest_framework.utils.encoders import JSONEncoder
 from rest_framework.utils.mediatypes import _MediaType
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from uritemplate import URITemplate
@@ -839,7 +840,7 @@ def load_enum_name_overrides():
 
 
 def list_hash(lst):
-    return hashlib.sha256(json.dumps(list(lst), sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json.dumps(list(lst), sort_keys=True, cls=JSONEncoder).encode()).hexdigest()
 
 
 def anchor_pattern(pattern: str) -> str:

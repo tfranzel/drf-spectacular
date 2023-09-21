@@ -314,3 +314,29 @@ def test_textchoice_annotation(no_warnings):
         'items': {'$ref': '#/components/schemas/QualityLevelsEnum'},
         'readOnly': True
     }
+
+
+def test_uuid_choices(no_warnings):
+
+    import uuid
+
+    class XSerializer(serializers.Serializer):
+        foo = serializers.ChoiceField(
+            choices=[
+                (uuid.UUID('93d7527f-de3c-4a76-9cc2-5578675630d4'), 'baz'),
+                (uuid.UUID('47a4b873-409e-4e43-81d5-fafc3faeb849'), 'bar')
+            ]
+        )
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XAPIView)
+
+    assert 'FooEnum' in schema['components']['schemas']
+    assert schema['components']['schemas']['FooEnum']['enum'] == [
+        uuid.UUID('93d7527f-de3c-4a76-9cc2-5578675630d4'),
+        uuid.UUID('47a4b873-409e-4e43-81d5-fafc3faeb849')
+    ]
