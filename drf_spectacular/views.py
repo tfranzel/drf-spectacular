@@ -122,7 +122,6 @@ class SpectacularSwaggerView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
     authentication_classes = AUTHENTICATION_CLASSES
-    versioning_class = None
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/swagger_ui.html'
@@ -232,7 +231,6 @@ class SpectacularRedocView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
     authentication_classes = AUTHENTICATION_CLASSES
-    versioning_class = None
     url_name = 'schema'
     url = None
     template_name = 'drf_spectacular/redoc.html'
