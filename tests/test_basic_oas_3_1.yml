@@ -1,0 +1,270 @@
+openapi: 3.1.0
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /albums/:
+    get:
+      operationId: albums_list
+      tags:
+      - albums
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Album'
+          description: ''
+    post:
+      operationId: albums_create
+      description: |-
+        Special documentation about creating albums
+
+        There is even more info here
+      tags:
+      - albums
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Album'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Album'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Album'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+          description: ''
+  /albums/{id}/:
+    get:
+      operationId: albums_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this album.
+        required: true
+      tags:
+      - albums
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+          description: ''
+    put:
+      operationId: albums_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this album.
+        required: true
+      tags:
+      - albums
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Album'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Album'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Album'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+          description: ''
+    patch:
+      operationId: albums_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this album.
+        required: true
+      tags:
+      - albums
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAlbum'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAlbum'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAlbum'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+          description: ''
+    delete:
+      operationId: albums_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this album.
+        required: true
+      tags:
+      - albums
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /albums/{id}/like/:
+    post:
+      operationId: albums_like_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this album.
+        required: true
+      tags:
+      - albums
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Album:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        songs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+          readOnly: true
+        single:
+          allOf:
+          - $ref: '#/components/schemas/Song'
+          readOnly: true
+        title:
+          type: string
+          maxLength: 100
+        genre:
+          $ref: '#/components/schemas/GenreEnum'
+        year:
+          type: integer
+        released:
+          type: boolean
+      required:
+      - genre
+      - id
+      - released
+      - single
+      - songs
+      - title
+      - year
+    GenreEnum:
+      enum:
+      - POP
+      - ROCK
+      type: string
+      description: |-
+        * `POP` - Pop
+        * `ROCK` - Rock
+    PatchedAlbum:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        songs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+          readOnly: true
+        single:
+          allOf:
+          - $ref: '#/components/schemas/Song'
+          readOnly: true
+        title:
+          type: string
+          maxLength: 100
+        genre:
+          $ref: '#/components/schemas/GenreEnum'
+        year:
+          type: integer
+        released:
+          type: boolean
+    Song:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 100
+        length:
+          type: integer
+        top10:
+          type:
+          - boolean
+          - 'null'
+          readOnly: true
+      required:
+      - id
+      - length
+      - title
+      - top10
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

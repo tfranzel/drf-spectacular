@@ -1,0 +1,407 @@
+openapi: 3.1.0
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /allfields/:
+    get:
+      operationId: allfields_list
+      tags:
+      - allfields
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AllFields'
+          description: ''
+  /allfields/{id}/:
+    get:
+      operationId: allfields_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this all fields.
+        required: true
+      tags:
+      - allfields
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllFields'
+          description: ''
+  /aux/:
+    get:
+      operationId: aux_list
+      tags:
+      - aux
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Aux'
+          description: ''
+  /aux/{id}/:
+    get:
+      operationId: aux_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this aux.
+        required: true
+      tags:
+      - aux
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Aux'
+          description: ''
+components:
+  schemas:
+    AllFields:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        field_decimal_uncoerced:
+          type: number
+          format: double
+          exclusiveMaximum: 1000
+          exclusiveMinimum: -1000
+        field_method_float:
+          type: number
+          format: double
+          readOnly: true
+        field_method_object:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        field_regex:
+          type: string
+          title: A regex field
+          pattern: ^[a-zA-z0-9]{10}\-[a-z]
+        field_list:
+          type: array
+          items:
+            type: number
+            format: double
+          maxItems: 100
+          minItems: 3
+        field_list_serializer:
+          type: array
+          items:
+            $ref: '#/components/schemas/Aux'
+        field_related_slug:
+          type: string
+          format: uri
+          description: URL identifier for Aux
+          readOnly: true
+        field_related_slug_queryset:
+          type: string
+          format: uri
+          description: URL identifier for Aux
+        field_related_slug_many:
+          type: array
+          items:
+            type: string
+            format: uri
+            description: URL identifier for Aux
+          readOnly: true
+        field_related_string:
+          type: string
+          readOnly: true
+        field_related_hyperlink:
+          type: string
+          format: uri
+          readOnly: true
+        field_identity_hyperlink:
+          type: string
+          format: uri
+          readOnly: true
+        field_read_only_nav_uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        field_read_only_nav_uuid_3steps:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        field_read_only_model_function_basic:
+          type: boolean
+          readOnly: true
+        field_read_only_model_function_model:
+          type: string
+          format: uuid
+          readOnly: true
+        field_read_only_model_property_model:
+          type: string
+          format: uuid
+          readOnly: true
+        field_bool_override:
+          type: boolean
+          readOnly: true
+        field_model_property_float:
+          type: number
+          format: double
+          readOnly: true
+        field_model_cached_property_float:
+          type: number
+          format: double
+          readOnly: true
+        field_model_py_cached_property_float:
+          type: number
+          format: double
+          readOnly: true
+        field_dict_int:
+          type: object
+          additionalProperties:
+            type: integer
+        field_json: {}
+        field_sub_object_calculated:
+          type: integer
+          description: My calculated property
+          readOnly: true
+        field_sub_object_nested_calculated:
+          type: integer
+          description: My calculated property
+          readOnly: true
+        field_sub_object_model_int:
+          type: integer
+          readOnly: true
+        field_sub_object_cached_calculated:
+          type: integer
+          description: My calculated property
+          readOnly: true
+        field_sub_object_cached_nested_calculated:
+          type: integer
+          description: My calculated property
+          readOnly: true
+        field_sub_object_cached_model_int:
+          type: integer
+          readOnly: true
+        field_sub_object_py_cached_calculated:
+          type: integer
+          description: My calculated property
+          readOnly: true
+        field_sub_object_py_cached_nested_calculated:
+          type: integer
+          description: My calculated property
+          readOnly: true
+        field_sub_object_py_cached_model_int:
+          type: integer
+          readOnly: true
+        field_optional_sub_object_calculated:
+          type:
+          - integer
+          - 'null'
+          description: My calculated property
+          readOnly: true
+        field_sub_object_optional_int:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+        field_int:
+          type: integer
+        field_float:
+          type: number
+          format: double
+        field_bool:
+          type: boolean
+        field_char:
+          type: string
+          maxLength: 100
+        field_text:
+          type: string
+          title: A text field
+        field_slug:
+          type: string
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        field_email:
+          type: string
+          format: email
+          maxLength: 254
+        field_uuid:
+          type: string
+          format: uuid
+        field_url:
+          type: string
+          format: uri
+          maxLength: 200
+        field_ip_generic:
+          type: string
+        field_decimal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+        field_file:
+          type: string
+          format: uri
+        field_img:
+          type: string
+          format: uri
+        field_date:
+          type: string
+          format: date
+        field_datetime:
+          type: string
+          format: date-time
+        field_bigint:
+          type: integer
+        field_smallint:
+          type: integer
+        field_posint:
+          type: integer
+        field_possmallint:
+          type: integer
+        field_nullbool:
+          type:
+          - boolean
+          - 'null'
+        field_time:
+          type: string
+          format: time
+        field_duration:
+          type: string
+        field_binary:
+          type: string
+          format: byte
+          readOnly: true
+        field_foreign:
+          type: string
+          format: uuid
+          description: main aux object
+        field_o2o:
+          type: string
+          format: uuid
+          description: bound aux object
+        field_m2m:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: set of related aux objects
+      required:
+      - field_bigint
+      - field_binary
+      - field_bool
+      - field_bool_override
+      - field_char
+      - field_date
+      - field_datetime
+      - field_decimal
+      - field_decimal_uncoerced
+      - field_dict_int
+      - field_duration
+      - field_email
+      - field_file
+      - field_float
+      - field_foreign
+      - field_identity_hyperlink
+      - field_img
+      - field_int
+      - field_ip_generic
+      - field_json
+      - field_list
+      - field_list_serializer
+      - field_m2m
+      - field_method_float
+      - field_method_object
+      - field_model_cached_property_float
+      - field_model_property_float
+      - field_model_py_cached_property_float
+      - field_o2o
+      - field_optional_sub_object_calculated
+      - field_posint
+      - field_possmallint
+      - field_read_only_model_function_basic
+      - field_read_only_model_function_model
+      - field_read_only_model_property_model
+      - field_read_only_nav_uuid
+      - field_read_only_nav_uuid_3steps
+      - field_regex
+      - field_related_hyperlink
+      - field_related_slug
+      - field_related_slug_many
+      - field_related_slug_queryset
+      - field_related_string
+      - field_slug
+      - field_smallint
+      - field_sub_object_cached_calculated
+      - field_sub_object_cached_model_int
+      - field_sub_object_cached_nested_calculated
+      - field_sub_object_calculated
+      - field_sub_object_model_int
+      - field_sub_object_nested_calculated
+      - field_sub_object_optional_int
+      - field_sub_object_py_cached_calculated
+      - field_sub_object_py_cached_model_int
+      - field_sub_object_py_cached_nested_calculated
+      - field_text
+      - field_time
+      - field_url
+      - field_uuid
+      - id
+    Aux:
+      type: object
+      description: description for aux object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        url:
+          type: string
+          format: uri
+          description: URL identifier for Aux
+          maxLength: 200
+        field_foreign:
+          type:
+          - string
+          - 'null'
+          format: uuid
+      required:
+      - id
+      - url
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
