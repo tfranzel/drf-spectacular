@@ -1,6 +1,24 @@
 Changelog
 =========
 
+0.26.5 (2023-09-23)
+-------------------
+
+- update FAQ entry on extension loading
+- Fix (`#1079 <https://github.com/tfranzel/drf-spectacular/issues/1079>`_) crash when generating schema for field with UUID choices. [Pedro Borges]
+- chore: fix typos [Heinz-Alexander Fuetterer]
+- Use schema_url in SpectacularElementsView (`#1067 <https://github.com/tfranzel/drf-spectacular/issues/1067>`_) [q0w]
+- add helper to disable viewset list detection `#1064 <https://github.com/tfranzel/drf-spectacular/issues/1064>`_
+- pin django-allauth test dep due to breaking change with dj-rest-auth
+- fix example building for pagination with basic list `#1055 <https://github.com/tfranzel/drf-spectacular/issues/1055>`_
+- Fix discarded falsy examples values `#1049 <https://github.com/tfranzel/drf-spectacular/issues/1049>`_
+
+Breaking changes / important additions:
+
+- Added helper function ``forced_singular_serializer`` to disable a list detection on a endpoint, that has been quite difficult to properly
+  undo previously. This closes the functional gap for ``@extend_schema_serializer(many=False)`` in single-use (non-envelope) situations.
+- Several small bugfixes
+
 0.26.4 (2023-07-23)
 -------------------
 
