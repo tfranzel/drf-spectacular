@@ -21,7 +21,8 @@ from rest_framework import generics, serializers
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     analyze_named_regex_pattern, build_basic_type, detype_pattern, follow_field_source,
-    force_instance, get_list_serializer, is_field, is_serializer, resolve_type_hint, build_choice_field,
+    force_instance, get_list_serializer, is_field, is_serializer, resolve_type_hint,
+    build_choice_field,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
