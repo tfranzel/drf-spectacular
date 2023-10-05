@@ -6,6 +6,8 @@ import typing
 from datetime import datetime
 from enum import Enum
 
+from rest_framework.fields import ChoiceField
+
 if sys.version_info >= (3, 8):
     from typing import TypedDict
 else:
@@ -21,7 +23,7 @@ from rest_framework import generics, serializers
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     analyze_named_regex_pattern, build_basic_type, detype_pattern, follow_field_source,
-    force_instance, get_list_serializer, is_field, is_serializer, resolve_type_hint,
+    force_instance, get_list_serializer, is_field, is_serializer, resolve_type_hint, build_choice_field,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
@@ -358,3 +360,21 @@ def test_analyze_named_regex_pattern(no_warnings, pattern, output):
 def test_unknown_basic_type(capsys):
     build_basic_type(object)
     assert 'could not resolve type for "<class \'object\'>' in capsys.readouterr().err
+
+
+def test_choicefield_choices_enum():
+    schema = build_choice_field(ChoiceField(['bluepill', 'redpill']))
+    assert schema['enum'] == ['bluepill', 'redpill']
+    assert schema['type'] == 'string'
+
+    schema = build_choice_field(
+        ChoiceField(['bluepill', 'redpill'], allow_null=True, allow_blank=True)
+    )
+    assert schema['enum'] == ['bluepill', 'redpill', '', None]
+    assert schema['type'] == 'string'
+
+    schema = build_choice_field(
+        ChoiceField(['bluepill', 'redpill', '', None], allow_null=True, allow_blank=True)
+    )
+    assert schema['enum'] == ['bluepill', 'redpill', '', None]
+    assert 'type' not in schema
