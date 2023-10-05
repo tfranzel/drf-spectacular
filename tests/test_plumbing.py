@@ -6,8 +6,6 @@ import typing
 from datetime import datetime
 from enum import Enum
 
-from rest_framework.fields import ChoiceField
-
 if sys.version_info >= (3, 8):
     from typing import TypedDict
 else:
@@ -363,18 +361,18 @@ def test_unknown_basic_type(capsys):
 
 
 def test_choicefield_choices_enum():
-    schema = build_choice_field(ChoiceField(['bluepill', 'redpill']))
+    schema = build_choice_field(serializers.ChoiceField(['bluepill', 'redpill']))
     assert schema['enum'] == ['bluepill', 'redpill']
     assert schema['type'] == 'string'
 
-    schema = build_choice_field(
-        ChoiceField(['bluepill', 'redpill'], allow_null=True, allow_blank=True)
-    )
+    schema = build_choice_field(serializers.ChoiceField(
+        ['bluepill', 'redpill'], allow_null=True, allow_blank=True
+    ))
     assert schema['enum'] == ['bluepill', 'redpill', '', None]
     assert schema['type'] == 'string'
 
-    schema = build_choice_field(
-        ChoiceField(['bluepill', 'redpill', '', None], allow_null=True, allow_blank=True)
-    )
+    schema = build_choice_field(serializers.ChoiceField(
+        choices=['bluepill', 'redpill', '', None], allow_null=True, allow_blank=True
+    ))
     assert schema['enum'] == ['bluepill', 'redpill', '', None]
     assert 'type' not in schema
