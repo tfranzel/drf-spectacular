@@ -5,7 +5,7 @@ from django import __version__ as DJANGO_VERSION
 from django.db import models
 from django.db.models import F
 from django.urls import include, path
-from rest_framework import routers, serializers, viewsets
+from rest_framework import generics, routers, serializers, viewsets
 from rest_framework.test import APIClient
 
 from drf_spectacular.types import OpenApiTypes
@@ -419,3 +419,20 @@ def test_filterset_enum_description_duplication(no_warnings):
     assert schema['paths']['/x/']['get']['parameters'][0]['description'] == (
         '* `one` - One\n* `two` - Two\n* `three` - Three'
     )
+
+
+@pytest.mark.contrib('django_filter')
+def test_filter_on_listapiview(no_warnings):
+    class XListView(generics.ListAPIView):
+        queryset = Product.objects.all()
+        serializer_class = ProductSerializer
+        filter_backends = (DjangoFilterBackend,)
+        filterset_class = ProductFilter
+
+        def get_queryset(self):
+            return Product.objects.all().annotate(
+                price_vat=F('price') * 1.19
+            )
+
+    schema = generate_schema('/x/', view=XListView)
+    assert len(schema['paths']['/x/']['get']['parameters']) > 1
