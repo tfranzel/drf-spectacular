@@ -410,9 +410,9 @@ def build_choice_field(field):
     else:
         type = None
 
-    if field.allow_blank:
+    if field.allow_blank and '' not in choices:
         choices.append('')
-    if field.allow_null:
+    if field.allow_null and None not in choices:
         choices.append(None)
 
     schema = {
