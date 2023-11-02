@@ -2266,6 +2266,20 @@ def test_authentication_whitelist(no_warnings):
     assert schema['paths']['/x/']['get']['security'] == [{'tokenAuth': []}, {}]
 
 
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.AUTHENTICATION_WHITELIST', []
+)
+def test_authentication_empty_whitelist(no_warnings):
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+        authentication_classes = [BasicAuthentication, TokenAuthentication]
+
+    schema = generate_schema('/x', XViewset)
+    assert 'securitySchemes' not in schema['components']
+    assert schema['paths']['/x/']['get']['security'] == [{}]
+
+
 def test_request_response_raw_schema_annotation(no_warnings):
     @extend_schema(
         request={'application/pdf': {'type': 'string', 'format': 'binary'}},
