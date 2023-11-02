@@ -190,9 +190,7 @@ components:
           type: object
           additionalProperties:
             type: integer
-        field_json:
-          type: object
-          additionalProperties: {}
+        field_json: {}
         field_sub_object_calculated:
           type: integer
           description: My calculated property

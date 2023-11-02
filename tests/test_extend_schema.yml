@@ -320,9 +320,7 @@ components:
           type: string
         field_b:
           type: integer
-        field_c:
-          type: object
-          additionalProperties: {}
+        field_c: {}
       required:
       - field_a
       - field_b
