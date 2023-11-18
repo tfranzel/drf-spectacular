@@ -1,5 +1,6 @@
 import copy
 import functools
+import itertools
 import re
 import typing
 from collections import defaultdict
@@ -1252,42 +1253,40 @@ class AutoSchema(ViewInspector):
             return None
 
         request_serializer = self.get_request_serializer()
+        request_body_required = True
+        content = []
 
+        # either implicit media-types via available parsers or manual list via decoration
         if isinstance(request_serializer, dict):
-            content = []
-            request_body_required = True
-            for media_type, serializer in request_serializer.items():
-                if isinstance(serializer, OpenApiRequest):
-                    serializer, examples, encoding = (
-                        serializer.request, serializer.examples, serializer.encoding
-                    )
-                else:
-                    encoding, examples = None, None
+            media_types_iter = request_serializer.items()
+        else:
+            media_types_iter = zip(self.map_parsers(), itertools.repeat(request_serializer))
 
-                if (
-                    encoding
-                    and media_type != "application/x-www-form-urlencoded"
-                    and not media_type.startswith('multipart')
-                ):
-                    warn(
-                        'Encodings object on media types other than "application/x-www-form-urlencoded" '
-                        'or "multipart/*" have undefined behavior.'
-                    )
+        for media_type, serializer in media_types_iter:
+            if isinstance(serializer, OpenApiRequest):
+                serializer, examples, encoding = serializer.request, serializer.examples, serializer.encoding
+            else:
+                encoding, examples = None, None
 
-                schema, partial_request_body_required = self._get_request_for_media_type(serializer, direction)
-                examples = self._get_examples(serializer, direction, media_type, None, examples)
-                if schema is None:
-                    continue
+            if (
+                encoding
+                and media_type != "application/x-www-form-urlencoded"
+                and not media_type.startswith('multipart')
+            ):
+                warn(
+                    'Encodings object on media types other than "application/x-www-form-urlencoded" '
+                    'or "multipart/*" have undefined behavior.'
+                )
+
+            examples = self._get_examples(serializer, direction, media_type, None, examples)
+            schema, partial_request_body_required = self._get_request_for_media_type(serializer, direction)
+
+            if schema is not None:
                 content.append((media_type, schema, examples, encoding))
                 request_body_required &= partial_request_body_required
-        else:
-            schema, request_body_required = self._get_request_for_media_type(request_serializer, direction)
-            if schema is None:
-                return None
-            content = [
-                (media_type, schema, self._get_examples(request_serializer, direction, media_type), None)
-                for media_type in self.map_parsers()
-            ]
+
+        if not content:
+            return None
 
         request_body = {
             'content': {
