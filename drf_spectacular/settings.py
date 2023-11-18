@@ -83,7 +83,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'APPEND_PATHS': {},
     'APPEND_COMPONENTS': {},
 
-    # DISCOURAGED - please don't use this anymore as it has tricky implications that
+    # STRONGLY DISCOURAGED (with the exception for the djangorestframework-api-key library)
+    # please don't use this anymore as it has tricky implications that
     # are hard to get right. For authentication, OpenApiAuthenticationExtension are
     # strongly preferred because they are more robust and easy to write.
     # However if used, the list of methods is appended to every endpoint in the schema!

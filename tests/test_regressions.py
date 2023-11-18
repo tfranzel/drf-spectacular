@@ -3226,3 +3226,16 @@ def test_disable_viewset_list_handling_as_one_off(no_warnings):
         'type': 'array',
         'items': {'$ref': '#/components/schemas/Simple'}
     }
+
+
+def test_openapirequest_used_without_media_type_dict(no_warnings):
+    @extend_schema(request=OpenApiRequest(SimpleSerializer), responses=None)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+
+    assert get_request_schema(schema['paths']['/x/']['post']) == {
+        '$ref': '#/components/schemas/Simple'
+    }
