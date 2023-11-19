@@ -10,4 +10,5 @@ __all__ = [
     'django_filters',
     'rest_framework_recursive',
     'rest_framework_gis',
+    'pydantic',
 ]
