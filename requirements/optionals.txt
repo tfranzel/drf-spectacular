@@ -2,6 +2,7 @@ django-allauth<0.55.0  # breaking change breaking dj-rest-auth
 drf-jwt>=0.13.0
 dj-rest-auth>=1.0.0
 djangorestframework-simplejwt>=4.4.0
+setuptools
 django-polymorphic>=2.1
 django-rest-polymorphic>=0.1.8
 django-oauth-toolkit>=1.2.0
