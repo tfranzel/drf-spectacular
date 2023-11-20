@@ -1,0 +1,79 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /x:
+    post:
+      operationId: x_create
+      tags:
+      - x
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/A'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/A'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/A'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B'
+          description: ''
+components:
+  schemas:
+    A:
+      properties:
+        id:
+          title: Id
+          type: integer
+        b:
+          $ref: '#/components/schemas/B'
+      required:
+      - id
+      - b
+      title: A
+      type: object
+    B:
+      properties:
+        id:
+          title: Id
+          type: integer
+        c:
+          items:
+            $ref: '#/components/schemas/C'
+          title: C
+          type: array
+      required:
+      - id
+      - c
+      title: B
+      type: object
+    C:
+      properties:
+        id:
+          title: Id
+          type: integer
+      required:
+      - id
+      title: C
+      type: object
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
