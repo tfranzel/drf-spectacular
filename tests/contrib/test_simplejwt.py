@@ -15,6 +15,7 @@ try:
     )
 except ImportError:
     JWTAuthentication = None
+    JWTTokenUserAuthentication = None
 
 
 class XSerializer(serializers.Serializer):
