@@ -32,6 +32,11 @@ def pytest_configure(config):
     if is_gis_installed():
         contrib_apps.append('rest_framework_gis')
 
+    contrib_middleware = []
+
+    if module_available('allauth.account.middleware'):
+        contrib_middleware.append('allauth.account.middleware.AccountMiddleware')
+
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     settings.configure(
@@ -70,7 +75,7 @@ def pytest_configure(config):
             'django.middleware.common.CommonMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
             'django.middleware.locale.LocaleMiddleware',
-            'allauth.account.middleware.AccountMiddleware',
+            *contrib_middleware,
         ),
         INSTALLED_APPS=(
             'django.contrib.auth',
