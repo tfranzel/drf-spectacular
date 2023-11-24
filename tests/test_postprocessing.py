@@ -4,14 +4,16 @@ from unittest import mock
 
 import pytest
 from django import __version__ as DJANGO_VERSION
+from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, mixins, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 
 try:
-    from django.db.models.enums import TextChoices
+    from django.db.models.enums import IntegerChoices, TextChoices
 except ImportError:
     TextChoices = object  # type: ignore  # django < 3.0 handling
+    IntegerChoices = object  # type: ignore  # django < 3.0 handling
 
 from drf_spectacular.plumbing import list_hash, load_enum_name_overrides
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -244,35 +246,39 @@ def test_enum_resolvable_collision_with_patched_and_request_splits():
 
 
 def test_enum_override_variations(no_warnings):
-    enum_override_variations = ['language_list', 'LanguageEnum', 'LanguageStrEnum']
+    enum_override_variations = [
+        ('language_list', [('en', 'en')]),
+        ('LanguageEnum', [('en', 'EN')]),
+        ('LanguageStrEnum', [('en', 'EN')]),
+    ]
     if DJANGO_VERSION > '3':
-        enum_override_variations += ['LanguageChoices', 'LanguageChoices.choices']
+        enum_override_variations += [
+            ('LanguageChoices', [('en', 'En')]),
+            ('LanguageChoices.choices', [('en', 'En')])
+        ]
 
-    for variation in enum_override_variations:
+    for variation, expected_hashed_keys in enum_override_variations:
         with mock.patch(
             'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
             {'LanguageEnum': f'tests.test_postprocessing.{variation}'}
         ):
             load_enum_name_overrides.cache_clear()
-            assert list_hash(['en']) in load_enum_name_overrides()
+            assert list_hash(expected_hashed_keys) in load_enum_name_overrides()
 
 
 def test_enum_override_variations_with_blank_and_null(no_warnings):
     enum_override_variations = [
-        'blank_null_language_list',
-        'BlankNullLanguageEnum',
-        ('BlankNullLanguageStrEnum', ['en', 'None'])
+        ('blank_null_language_list', [('en', 'en')]),
+        ('BlankNullLanguageEnum', [('en', 'EN')]),
+        ('BlankNullLanguageStrEnum', [('en', 'EN'), ('None', 'NULL')])
     ]
     if DJANGO_VERSION > '3':
         enum_override_variations += [
-            ('BlankNullLanguageChoices', ['en', 'None']),
-            ('BlankNullLanguageChoices.choices', ['en', 'None'])
+            ('BlankNullLanguageChoices', [('en', 'En'), ('None', 'Null')]),
+            ('BlankNullLanguageChoices.choices', [('en', 'En'), ('None', 'Null')])
         ]
 
-    for variation in enum_override_variations:
-        expected_hashed_keys = ['en']
-        if isinstance(variation, (list, tuple, )):
-            variation, expected_hashed_keys = variation
+    for variation, expected_hashed_keys in enum_override_variations:
         with mock.patch(
             'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
             {'LanguageEnum': f'tests.test_postprocessing.{variation}'}
@@ -340,3 +346,43 @@ def test_uuid_choices(no_warnings):
         uuid.UUID('93d7527f-de3c-4a76-9cc2-5578675630d4'),
         uuid.UUID('47a4b873-409e-4e43-81d5-fafc3faeb849')
     ]
+
+
+@pytest.mark.skipif(DJANGO_VERSION < '3', reason='Not available before Django 3.0')
+def test_equal_choices_different_semantics(no_warnings):
+
+    class Health(IntegerChoices):
+        OK = 0
+        FAIL = 1
+
+    class Status(IntegerChoices):
+        GREEN = 0
+        RED = 1
+
+    class Test(IntegerChoices):
+        A = 0, _("test group A")
+        B = 1, _("test group B")
+
+    class XSerializer(serializers.Serializer):
+        some_health = serializers.ChoiceField(choices=Health.choices)
+        some_status = serializers.ChoiceField(choices=Status.choices)
+        some_test = serializers.ChoiceField(choices=Test.choices)
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    # This should not generate a warning even though the enum list is identical
+    # in both Enums. We now also differentiate the Enums by their labels.
+    schema = generate_schema('x', view=XAPIView)
+
+    assert schema['components']['schemas']['SomeHealthEnum'] == {
+        'enum': [0, 1], 'type': 'integer', 'description': '* `0` - Ok\n* `1` - Fail'
+    }
+    assert schema['components']['schemas']['SomeStatusEnum'] == {
+        'enum': [0, 1], 'type': 'integer', 'description': '* `0` - Green\n* `1` - Red'
+    }
+    assert schema['components']['schemas']['SomeTestEnum'] == {
+        'enum': [0, 1], 'type': 'integer', 'description': '* `0` - test group A\n* `1` - test group B',
+    }
