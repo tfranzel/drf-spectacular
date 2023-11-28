@@ -22,7 +22,7 @@ from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     analyze_named_regex_pattern, build_basic_type, build_choice_field, detype_pattern,
     follow_field_source, force_instance, get_list_serializer, is_field, is_serializer,
-    resolve_type_hint,
+    resolve_type_hint, safe_ref,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
@@ -377,3 +377,19 @@ def test_choicefield_choices_enum():
     ))
     assert schema['enum'] == ['bluepill', 'redpill', '', None]
     assert 'type' not in schema
+
+
+def test_safe_ref():
+    schema = build_basic_type(str)
+    schema['$ref'] = '#/components/schemas/Foo'
+
+    schema = safe_ref(schema)
+    assert schema == {
+        'allOf': [{'$ref': '#/components/schemas/Foo'}],
+        'type': 'string'
+    }
+
+    del schema['type']
+    schema = safe_ref(schema)
+    assert schema == {'$ref': '#/components/schemas/Foo'}
+    assert safe_ref(schema) == safe_ref(schema)

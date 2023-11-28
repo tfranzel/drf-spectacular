@@ -431,6 +431,8 @@ def build_choice_field(field):
     if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
         schema['description'] = build_choice_description_list(field.choices.items())
 
+    schema['x-spec-enum-id'] = list_hash([(k, v) for k, v in field.choices.items() if k not in ('', None)])
+
     return schema
 
 
@@ -499,10 +501,12 @@ def build_root_object(paths, components, version):
 def safe_ref(schema):
     """
     ensure that $ref has its own context and does not remove potential sibling
-    entries when $ref is substituted.
+    entries when $ref is substituted. also remove useless singular "allOf" .
     """
     if '$ref' in schema and len(schema) > 1:
         return {'allOf': [{'$ref': schema.pop('$ref')}], **schema}
+    if 'allOf' in schema and len(schema) == 1 and len(schema['allOf']) == 1:
+        return schema['allOf'][0]
     return schema
 
 
@@ -815,11 +819,12 @@ def load_enum_name_overrides():
         if inspect.isclass(choices) and issubclass(choices, Choices):
             choices = choices.choices
         if inspect.isclass(choices) and issubclass(choices, Enum):
-            choices = [c.value for c in choices]
+            choices = [(c.value, c.name) for c in choices]
         normalized_choices = []
         for choice in choices:
             # Allow None values in the simple values list case
             if isinstance(choice, str) or choice is None:
+                # TODO warning
                 normalized_choices.append((choice, choice))  # simple choice list
             elif isinstance(choice[1], (list, tuple)):
                 normalized_choices.extend(choice[1])  # categorized nested choices
@@ -828,7 +833,9 @@ def load_enum_name_overrides():
 
         # Get all of choice values that should be used in the hash, blank and None values get excluded
         # in the post-processing hook for enum overrides, so we do the same here to ensure the hashes match
-        hashable_values = [value for value, _ in normalized_choices if value not in ['', None]]
+        hashable_values = [
+            (value, label) for value, label in normalized_choices if value not in ['', None]
+        ]
         overrides[list_hash(hashable_values)] = name
 
     if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
@@ -840,7 +847,7 @@ def load_enum_name_overrides():
 
 
 def list_hash(lst):
-    return hashlib.sha256(json.dumps(list(lst), sort_keys=True, cls=JSONEncoder).encode()).hexdigest()
+    return hashlib.sha256(json.dumps(list(lst), sort_keys=True, cls=JSONEncoder).encode()).hexdigest()[:16]
 
 
 def anchor_pattern(pattern: str) -> str:
