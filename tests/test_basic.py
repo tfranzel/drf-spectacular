@@ -1,5 +1,6 @@
 import uuid
 from typing import Optional
+from unittest import mock
 
 from django.db import models
 from rest_framework import serializers, viewsets
@@ -78,4 +79,12 @@ def test_basic(no_warnings):
     assert_schema(
         generate_schema('albums', AlbumModelViewset),
         'tests/test_basic.yml'
+    )
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_basic_oas_3_1(no_warnings):
+    assert_schema(
+        generate_schema('albums', AlbumModelViewset),
+        'tests/test_basic_oas_3_1.yml'
     )

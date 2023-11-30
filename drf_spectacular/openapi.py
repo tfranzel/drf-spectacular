@@ -957,6 +957,7 @@ class AutoSchema(ViewInspector):
         if field.write_only:
             meta['writeOnly'] = True
         if field.allow_null:
+            # this will be converted later in case of OAS 3.1
             meta['nullable'] = True
         if isinstance(field, serializers.CharField) and not field.allow_blank:
             # blank check only applies to inbound requests

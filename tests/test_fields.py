@@ -6,6 +6,7 @@ import uuid
 from datetime import timedelta
 from decimal import Decimal
 from typing import Optional
+from unittest import mock
 
 import pytest
 from django import __version__ as DJANGO_VERSION
@@ -299,6 +300,15 @@ def test_fields(no_warnings):
     assert_schema(
         SchemaGenerator().get_schema(request=None, public=True),
         'tests/test_fields.yml'
+    )
+
+
+@pytest.mark.urls(__name__)
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_fields_oas_3_1(no_warnings):
+    assert_schema(
+        SchemaGenerator().get_schema(request=None, public=True),
+        'tests/test_fields_oas_3_1.yml',
     )
 
 

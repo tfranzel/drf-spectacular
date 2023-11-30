@@ -144,7 +144,14 @@ def postprocess_schema_enums(result, generator, **kwargs):
                 if '' in prop_enum_original_list:
                     components.append(create_enum_component('BlankEnum', schema={'enum': ['']}))
                 if None in prop_enum_original_list:
-                    components.append(create_enum_component('NullEnum', schema={'enum': [None]}))
+                    if spectacular_settings.OAS_VERSION.startswith('3.1'):
+                        components.append(create_enum_component('NullEnum', schema={'type': 'null'}))
+                    else:
+                        components.append(create_enum_component('NullEnum', schema={'enum': [None]}))
+
+            # undo OAS 3.1 type list NULL construction as we cover this in a separate component already
+            if spectacular_settings.OAS_VERSION.startswith('3.1') and isinstance(enum_schema['type'], list):
+                enum_schema['type'] = [t for t in enum_schema['type'] if t != 'null'][0]
 
             if len(components) == 1:
                 prop_schema.update(components[0].ref)
