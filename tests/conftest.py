@@ -70,6 +70,7 @@ def pytest_configure(config):
             'django.middleware.common.CommonMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
             'django.middleware.locale.LocaleMiddleware',
+            'allauth.account.middleware.AccountMiddleware',
         ),
         INSTALLED_APPS=(
             'django.contrib.auth',
