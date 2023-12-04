@@ -1,7 +1,7 @@
 import json
 from collections import namedtuple
 from importlib import import_module
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from django.conf import settings
 from django.templatetags.static import static
@@ -55,7 +55,7 @@ class SpectacularAPIView(APIView):
     generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
     serve_public = spectacular_settings.SERVE_PUBLIC
     urlconf = spectacular_settings.SERVE_URLCONF
-    api_version = None
+    api_version: Union[str, None] = None
     custom_settings = None
     patterns = None
 
