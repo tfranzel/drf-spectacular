@@ -1,8 +1,10 @@
 import os
+import re
 from importlib import import_module
 
 import django
 import pytest
+from django import __version__ as DJANGO_VERSION
 from django.core import management
 
 from tests import is_gis_installed
@@ -191,3 +193,19 @@ def module_available(module_str):
         return False
     else:
         return True
+
+
+@pytest.fixture()
+def django_transforms():
+    def integer_field_sqlite(s):
+        return re.sub(
+            r' *maximum: 9223372036854775807\n *minimum: (-9223372036854775808|0)\n *format: int64\n',
+            '',
+            s,
+            flags=re.M
+        )
+
+    if DJANGO_VERSION >= '5':
+        return [integer_field_sqlite]
+    else:
+        return []

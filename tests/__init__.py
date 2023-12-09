@@ -113,3 +113,15 @@ def is_gis_installed():
         return False
     else:
         return True
+
+
+def strip_int64_details(schema):
+    """ remove new min/max/format for django 5 with sqlite db for comparison’s sake """
+
+    if schema.get('format') == 'int64' and 'minimum' in schema and 'maximum' in schema:
+        return {
+            k: v for k, v in schema.items()
+            if k not in ('format', 'minimum', 'maximum')
+        }
+    else:
+        return schema

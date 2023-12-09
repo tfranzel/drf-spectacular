@@ -75,16 +75,18 @@ class AlbumModelViewset(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)  # pragma: no cover
 
 
-def test_basic(no_warnings):
+def test_basic(no_warnings, django_transforms):
     assert_schema(
         generate_schema('albums', AlbumModelViewset),
-        'tests/test_basic.yml'
+        'tests/test_basic.yml',
+        transforms=django_transforms,
     )
 
 
 @mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
-def test_basic_oas_3_1(no_warnings):
+def test_basic_oas_3_1(no_warnings, django_transforms):
     assert_schema(
         generate_schema('albums', AlbumModelViewset),
-        'tests/test_basic_oas_3_1.yml'
+        'tests/test_basic_oas_3_1.yml',
+        transforms=django_transforms,
     )

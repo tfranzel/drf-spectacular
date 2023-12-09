@@ -13,7 +13,7 @@ from tests import assert_schema, generate_schema, is_gis_installed
 @pytest.mark.system_requirement_fulfilled(is_gis_installed())
 @pytest.mark.skipif(DRF_VERSION < '3.12', reason='DRF pagination schema broken')
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {})
-def test_rest_framework_gis(no_warnings, clear_caches):
+def test_rest_framework_gis(no_warnings, clear_caches, django_transforms):
     from django.contrib.gis.db.models import (
         GeometryCollectionField, GeometryField, LineStringField, MultiLineStringField,
         MultiPointField, MultiPolygonField, PointField, PolygonField,
@@ -86,7 +86,8 @@ def test_rest_framework_gis(no_warnings, clear_caches):
 
     assert_schema(
         generate_schema(None, patterns=router.urls),
-        'tests/contrib/test_rest_framework_gis.yml'
+        'tests/contrib/test_rest_framework_gis.yml',
+        transforms=django_transforms,
     )
 
 
