@@ -1344,11 +1344,12 @@ def build_mocked_view(method: str, path: str, extend_schema_decorator, registry)
     )
     view.kwargs = {}
     # prepare AutoSchema with "init" values as if get_operation() was called
-    view.schema.registry = registry
-    view.schema.path = path
-    view.schema.path_regex = path
-    view.schema.path_prefix = ''
-    view.schema.method = method.upper()
+    schema: Any = view.schema
+    schema.registry = registry
+    schema.path = path
+    schema.path_regex = path
+    schema.path_prefix = ''
+    schema.method = method.upper()
     return view
 
 
