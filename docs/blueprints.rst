@@ -152,13 +152,12 @@ translation package `django-parler <https://github.com/django-parler/django-parl
 Pydantic
 --------
 
-Preliminary support for `Pydantic <https://github.com/pydantic/pydantic>`_  models. This may or may not
-end up in the main package. Catches decorated Pydantic classes and integrates their schema.
+Preliminary support for `Pydantic <https://github.com/pydantic/pydantic>`_  models.
+Catches decorated Pydantic classes and integrates their schema.
+
+Pydantic 2 is now officially supported without any manual steps.
 
 Pydantic 1:
 
 .. literalinclude:: blueprints/pydantic.py
 
-Pydantic 2:
-
-.. literalinclude:: blueprints/pydantic2.py

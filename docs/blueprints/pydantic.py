@@ -7,6 +7,7 @@ from pydantic.schema import model_schema
 class PydanticExtension(OpenApiSerializerExtension):
     target_class = "pydantic.BaseModel"
     match_subclasses = True
+    priority = 1
 
     def get_name(self, auto_schema, direction):
         return self.target.__name__

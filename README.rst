@@ -4,7 +4,7 @@ drf-spectacular
 
 |build-status| |codecov| |docs| |pypi-version| |pypi-dl|
 
-Sane and flexible `OpenAPI 3.0`_ schema generation for `Django REST framework`_.
+Sane and flexible `OpenAPI`_ (`3.0.3`_ & `3.1`_) schema generation for `Django REST framework`_.
 
 This project has 3 goals:
     1. Extract as much schema information from DRF as possible.
@@ -35,6 +35,7 @@ Features
     - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)
     - Optional input/output serializer component split
     - Callback operations
+    - OpenAPI 3.1 support (via setting ``OAS_VERSION``)
     - Included support for:
         - `django-polymorphic <https://github.com/django-polymorphic/django-polymorphic>`_ / `django-rest-polymorphic <https://github.com/apirobot/django-rest-polymorphic>`_
         - `SimpleJWT <https://github.com/jazzband/djangorestframework-simplejwt>`_
@@ -290,7 +291,9 @@ globally, and then simply run:
     $ tox
 
 .. _Django REST framework: https://www.django-rest-framework.org/
-.. _OpenAPI 3.0: https://spec.openapis.org/oas/v3.0.3
+.. _OpenAPI: https://swagger.io/
+.. _3.0.3: https://spec.openapis.org/oas/v3.0.3
+.. _3.1: https://spec.openapis.org/oas/v3.1.0
 .. _tox: https://tox.wiki/
 .. _drf-spectacular-sidecar: https://github.com/tfranzel/drf-spectacular-sidecar
 
