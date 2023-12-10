@@ -126,7 +126,7 @@ def test_view_extension(no_warnings):
 
 
 @api_view()
-def x_view_function():
+def x_view_function(request):
     """ underspecified library view """
     return Response(1.234)  # pragma: no cover
 

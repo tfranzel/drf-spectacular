@@ -32,7 +32,7 @@ from drf_spectacular.utils import (
     OpenApiExample, OpenApiParameter, OpenApiRequest, OpenApiResponse, extend_schema,
     extend_schema_field, extend_schema_serializer, extend_schema_view, inline_serializer,
 )
-from tests import generate_schema, get_request_schema, get_response_schema
+from tests import generate_schema, get_request_schema, get_response_schema, strip_int64_details
 from tests.models import SimpleModel, SimpleSerializer
 
 
@@ -2026,7 +2026,7 @@ def test_nested_router_urls(no_warnings):
     assert operation['parameters'][0]['name'] == 'client_pk'
     assert operation['parameters'][0]['schema'] == {'format': 'uuid', 'type': 'string'}
     assert operation['parameters'][2]['name'] == 'maildrop_pk'
-    assert operation['parameters'][2]['schema'] == {'type': 'integer'}
+    assert operation['parameters'][2]['schema']['type'] == 'integer'
 
 
 @pytest.mark.parametrize('value', [
@@ -2322,10 +2322,10 @@ def test_serializer_modelfield_and_methodfield_with_default_value(no_warnings):
         queryset = M8Model.objects.all()
 
     schema = generate_schema('x', XViewset)
-    assert schema['components']['schemas']['X']['properties']['field'] == {
+    assert strip_int64_details(schema['components']['schemas']['X']['properties']['field']) == {
         'type': 'integer', 'default': 3
     }
-    assert schema['components']['schemas']['X']['properties']['field_smf'] == {
+    assert strip_int64_details(schema['components']['schemas']['X']['properties']['field_smf']) == {
         'type': 'integer', 'readOnly': True, 'default': 4
     }
 

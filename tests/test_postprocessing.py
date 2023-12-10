@@ -72,11 +72,13 @@ class BlankNullLanguageStrEnum(str, Enum):
     NULL = None
 
 
-class BlankNullLanguageChoices(TextChoices):
-    EN = 'en'
-    BLANK = ''
-    # These will still be included since the values get cast to strings so 'None' != None
-    NULL = None
+if '3' < DJANGO_VERSION < '5':
+    # Django 5 added a sanity check that prohibits None
+    class BlankNullLanguageChoices(TextChoices):
+        EN = 'en'
+        BLANK = ''
+        # These will still be included since the values get cast to strings so 'None' != None
+        NULL = None
 
 
 class ASerializer(serializers.Serializer):
@@ -272,7 +274,8 @@ def test_enum_override_variations_with_blank_and_null(no_warnings):
         ('BlankNullLanguageEnum', [('en', 'EN')]),
         ('BlankNullLanguageStrEnum', [('en', 'EN'), ('None', 'NULL')])
     ]
-    if DJANGO_VERSION > '3':
+    if '3' < DJANGO_VERSION < '5':
+        # Django 5 added a sanity check that prohibits None
         enum_override_variations += [
             ('BlankNullLanguageChoices', [('en', 'En'), ('None', 'Null')]),
             ('BlankNullLanguageChoices.choices', [('en', 'En'), ('None', 'Null')])

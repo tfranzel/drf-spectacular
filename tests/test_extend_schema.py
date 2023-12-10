@@ -58,7 +58,7 @@ class QuerySerializer(serializers.Serializer):
     )
     order_by = serializers.MultipleChoiceField(
         choices=['a', 'b', 'c'],
-        default=['a'],
+        default=['a'],  # type: ignore
     )
     tag = serializers.CharField(required=False)
 

@@ -46,7 +46,7 @@ class SpectacularAPIView(APIView):
 
     - YAML: application/vnd.oai.openapi
     - JSON: application/vnd.oai.openapi+json
-    """)
+    """)  # type: ignore
     renderer_classes = [
         OpenApiYamlRenderer, OpenApiYamlRenderer2, OpenApiJsonRenderer, OpenApiJsonRenderer2
     ]

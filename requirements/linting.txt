@@ -1,0 +1,9 @@
+pytest  # required for mypy to succeed
+flake8
+isort==5.12.0  # 5.13 somehow breaks django-stubs plugin
+mypy==1.7.1
+django-stubs==4.2.3
+djangorestframework-stubs==3.14.2
+
+Django==4.2.7
+djangorestframework==3.14.0

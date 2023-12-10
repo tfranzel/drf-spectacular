@@ -32,7 +32,7 @@ class XSerializer(serializers.ModelSerializer):
 class XViewset(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     __doc__ = _("""
         More lengthy explanation of the view
-    """)
+    """)  # type: ignore
 
     serializer_class = XSerializer
     queryset = I18nModel.objects.none()

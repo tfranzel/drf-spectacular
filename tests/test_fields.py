@@ -296,19 +296,21 @@ urlpatterns = router.urls
 
 
 @pytest.mark.urls(__name__)
-def test_fields(no_warnings):
+def test_fields(no_warnings, django_transforms):
     assert_schema(
         SchemaGenerator().get_schema(request=None, public=True),
-        'tests/test_fields.yml'
+        'tests/test_fields.yml',
+        transforms=django_transforms,
     )
 
 
 @pytest.mark.urls(__name__)
 @mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
-def test_fields_oas_3_1(no_warnings):
+def test_fields_oas_3_1(no_warnings, django_transforms):
     assert_schema(
         SchemaGenerator().get_schema(request=None, public=True),
         'tests/test_fields_oas_3_1.yml',
+        transforms=django_transforms,
     )
 
 
@@ -370,5 +372,8 @@ def test_model_setup_is_valid():
         expected['field_file'] = f'http://testserver/allfields/1/{m.field_file.name}'
     else:
         expected['field_file'] = f'http://testserver/{m.field_file.name}'
+
+    if DJANGO_VERSION >= '5':
+        expected['field_datetime'] = '2021-09-09T10:15:26.049862-05:00'
 
     assert_equal(json.loads(response.content), expected)
