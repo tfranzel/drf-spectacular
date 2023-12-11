@@ -82,9 +82,8 @@ class EndpointEnumerator(BaseEndpointEnumerator):
         else:
             # pass to constructor allowed method names to get valid ones
             kwargs = {}
-            http_method_names = callback.initkwargs.get('http_method_names', [])
-            if http_method_names:
-                kwargs['http_method_names'] = http_method_names
+            if 'http_method_names' in callback.initkwargs:
+                kwargs['http_method_names'] = callback.initkwargs['http_method_names']
 
             methods = callback.cls(**kwargs).allowed_methods
 
