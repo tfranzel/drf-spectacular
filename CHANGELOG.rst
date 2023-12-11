@@ -1,6 +1,33 @@
 Changelog
 =========
 
+0.27.0 (2023-12-12)
+-------------------
+
+- improve mypy typing `#600 <https://github.com/tfranzel/drf-spectacular/issues/600>`_
+- add django 5 to test suite and adapt to changes `#1126 <https://github.com/tfranzel/drf-spectacular/issues/1126>`_
+- Use correctly allowed http methods for schema generation [Jekel]
+- OAS 3.1
+- Fix Enum collision with same choices & varying labels `#790 <https://github.com/tfranzel/drf-spectacular/issues/790>`_ `#1104 <https://github.com/tfranzel/drf-spectacular/issues/1104>`_
+- Undo adding middleware [Jelmer Draaijer]
+- Set JWTTokenUserAuthentication to None when missing [Jelmer Draaijer]
+- Add setuptools required for packaging [Jelmer Draaijer]
+- Add allauth.account.middleware.AccountMiddleware to middleware [Jelmer Draaijer]
+- Add Python 3.12 to test matrix and add classifiers [Jelmer Draaijer]
+- Add official support for pydantic decoration.
+- bugfix ignored OpenApiRequest case `#1106 <https://github.com/tfranzel/drf-spectacular/issues/1106>`_
+- JSONField may also be a non-object/primitive `#1095 <https://github.com/tfranzel/drf-spectacular/issues/1095>`_
+- add test for empty whitelist (no auth) `#1094 <https://github.com/tfranzel/drf-spectacular/issues/1094>`_
+- Avoid ChoiceField duplicate enum values for allow_null, allow_blank (`#1085 <https://github.com/tfranzel/drf-spectacular/issues/1085>`_) [Marti Raudsepp]
+- add test for django-filter and ListAPIView `#1086 <https://github.com/tfranzel/drf-spectacular/issues/1086>`_
+- Fix the blueprint for pydantic version 2 [Carmen Alvarez]
+
+Breaking changes / important additions:
+
+- Biggest release in quite some time that contains a bunch of long running PR that finally found their way into master.
+- We now officially support OpenAPI 3.1 and Pydantic 2
+- Quite a few bug fixes (thanks to all contributors) and improved typing
+
 0.26.5 (2023-09-23)
 -------------------
 
