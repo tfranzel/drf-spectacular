@@ -1,7 +1,7 @@
 import json
 from collections import namedtuple
 from importlib import import_module
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, Type
 
 from django.conf import settings
 from django.templatetags.static import static
@@ -14,6 +14,7 @@ from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
+from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.plumbing import get_relative_url, set_query_parameters
 from drf_spectacular.renderers import (
     OpenApiJsonRenderer, OpenApiJsonRenderer2, OpenApiYamlRenderer, OpenApiYamlRenderer2,
@@ -52,12 +53,12 @@ class SpectacularAPIView(APIView):
     ]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
     authentication_classes = AUTHENTICATION_CLASSES
-    generator_class = spectacular_settings.DEFAULT_GENERATOR_CLASS
-    serve_public = spectacular_settings.SERVE_PUBLIC
-    urlconf = spectacular_settings.SERVE_URLCONF
-    api_version = None
-    custom_settings = None
-    patterns = None
+    generator_class: Type[SchemaGenerator] = spectacular_settings.DEFAULT_GENERATOR_CLASS
+    serve_public: bool = spectacular_settings.SERVE_PUBLIC
+    urlconf: Optional[str] = spectacular_settings.SERVE_URLCONF
+    api_version: Optional[str] = None
+    custom_settings: Optional[Dict[str, Any]] = None
+    patterns: Optional[List[Any]] = None
 
     @extend_schema(**SCHEMA_KWARGS)
     def get(self, request, *args, **kwargs):
@@ -122,11 +123,11 @@ class SpectacularSwaggerView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
     authentication_classes = AUTHENTICATION_CLASSES
-    url_name = 'schema'
-    url = None
-    template_name = 'drf_spectacular/swagger_ui.html'
-    template_name_js = 'drf_spectacular/swagger_ui.js'
-    title = spectacular_settings.TITLE
+    url_name: str = 'schema'
+    url: Optional[str] = None
+    template_name: str = 'drf_spectacular/swagger_ui.html'
+    template_name_js: str = 'drf_spectacular/swagger_ui.js'
+    title: str = spectacular_settings.TITLE
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
@@ -192,7 +193,7 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
     Alternate Swagger UI implementation that separates the html request from the
     javascript request to cater to web servers with stricter CSP policies.
     """
-    url_self = None
+    url_self: Optional[str] = None
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
@@ -231,10 +232,10 @@ class SpectacularRedocView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     permission_classes = spectacular_settings.SERVE_PERMISSIONS
     authentication_classes = AUTHENTICATION_CLASSES
-    url_name = 'schema'
-    url = None
-    template_name = 'drf_spectacular/redoc.html'
-    title = spectacular_settings.TITLE
+    url_name: str = 'schema'
+    url: Optional[str] = None
+    template_name: str = 'drf_spectacular/redoc.html'
+    title: Optional[str] = spectacular_settings.TITLE
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):

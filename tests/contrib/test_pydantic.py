@@ -14,7 +14,7 @@ except ImportError:
     class BaseModel:  # type: ignore
         pass
 
-    def dataclass(f):  # type: ignore
+    def dataclass(f):
         return f
 
 

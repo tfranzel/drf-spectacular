@@ -34,7 +34,7 @@ def test_sidecar_shortcut_urls_are_resolved(no_warnings):
 def test_sidecar_package_urls_matching(no_warnings):
     # poor man's test to make sure the sidecar package contents match with what
     # collectstatic is going to compile. cannot be tested directly.
-    import drf_spectacular_sidecar  # type: ignore[import]
+    import drf_spectacular_sidecar  # type: ignore[import-not-found]
     module_root = os.path.dirname(inspect.getfile(drf_spectacular_sidecar))
     bundle_path = os.path.join(module_root, BUNDLE_URL)
     assert os.path.isfile(bundle_path)

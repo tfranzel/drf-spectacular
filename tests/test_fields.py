@@ -93,7 +93,7 @@ class AllFields(models.Model):
     if DJANGO_VERSION > '3.1':
         field_nullbool = models.BooleanField(null=True)
     else:
-        field_nullbool = models.NullBooleanField()  # type: ignore
+        field_nullbool = models.NullBooleanField()
     field_time = models.TimeField()
     field_duration = models.DurationField()
     field_binary = models.BinaryField()
@@ -202,7 +202,7 @@ class AllFieldsSerializer(serializers.ModelSerializer):
     )  # type: ignore
     field_related_slug_queryset = serializers.SlugRelatedField(
         source='field_foreign', slug_field='url', queryset=Aux.objects.all()
-    )  # type: ignore
+    )
     field_related_slug_many = serializers.SlugRelatedField(
         many=True, read_only=True, source='field_m2m', slug_field='url',
     )  # type: ignore

@@ -3,17 +3,19 @@ import re
 
 from django.urls import URLPattern, URLResolver
 from rest_framework import views, viewsets
-from rest_framework.schemas.generators import BaseSchemaGenerator  # type: ignore
+from rest_framework.schemas.generators import BaseSchemaGenerator
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 from rest_framework.settings import api_settings
 
-from drf_spectacular.drainage import add_trace_message, get_override, reset_generator_stats
+from drf_spectacular.drainage import (
+    add_trace_message, error, get_override, reset_generator_stats, warn,
+)
 from drf_spectacular.extensions import OpenApiViewExtension
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
-    ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, error,
-    get_class, is_versioning_supported, modify_for_versioning, normalize_result_object,
-    operation_matches_version, sanitize_result_object, warn,
+    ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, get_class,
+    is_versioning_supported, modify_for_versioning, normalize_result_object,
+    operation_matches_version, sanitize_result_object,
 )
 from drf_spectacular.settings import spectacular_settings
 

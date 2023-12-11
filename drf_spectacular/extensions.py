@@ -10,6 +10,9 @@ if TYPE_CHECKING:
     from drf_spectacular.openapi import AutoSchema
 
 
+_SchemaType = Dict[str, Any]
+
+
 class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthenticationExtension']):
     """
     Extension for specifying authentication schemes.
@@ -29,7 +32,7 @@ class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthentic
     ``get_security_definition()`` is expected to return a valid `OpenAPI security scheme object
     <https://spec.openapis.org/oas/v3.0.3#securitySchemeObject>`_
     """
-    _registry: List['OpenApiAuthenticationExtension'] = []
+    _registry: List[Type['OpenApiAuthenticationExtension']] = []
 
     name: Union[str, List[str]]
 
@@ -43,7 +46,7 @@ class OpenApiAuthenticationExtension(OpenApiGeneratorExtension['OpenApiAuthentic
             return {name: [] for name in self.name}
 
     @abstractmethod
-    def get_security_definition(self, auto_schema: 'AutoSchema') -> Union[dict, List[dict]]:
+    def get_security_definition(self, auto_schema: 'AutoSchema') -> Union[_SchemaType, List[_SchemaType]]:
         pass  # pragma: no cover
 
 
@@ -59,13 +62,13 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
     ``map_serializer()`` is expected to return a valid `OpenAPI schema object
     <https://spec.openapis.org/oas/v3.0.3#schemaObject>`_.
     """
-    _registry: List['OpenApiSerializerExtension'] = []
+    _registry: List[Type['OpenApiSerializerExtension']] = []
 
     def get_name(self, auto_schema: 'AutoSchema', direction: Direction) -> Optional[str]:
         """ return str for overriding default name extraction """
         return None
 
-    def map_serializer(self, auto_schema: 'AutoSchema', direction: Direction):
+    def map_serializer(self, auto_schema: 'AutoSchema', direction: Direction) -> _SchemaType:
         """ override for customized serializer mapping """
         return auto_schema._map_serializer(self.target_class, direction, bypass_extensions=True)
 
@@ -82,14 +85,14 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
     ``map_serializer_field()`` is expected to return a valid `OpenAPI schema object
     <https://spec.openapis.org/oas/v3.0.3#schemaObject>`_.
     """
-    _registry: List['OpenApiSerializerFieldExtension'] = []
+    _registry: List[Type['OpenApiSerializerFieldExtension']] = []
 
     def get_name(self) -> Optional[str]:
         """ return str for breaking out field schema into separate named component """
         return None
 
     @abstractmethod
-    def map_serializer_field(self, auto_schema: 'AutoSchema', direction: Direction):
+    def map_serializer_field(self, auto_schema: 'AutoSchema', direction: Direction) -> _SchemaType:
         """ override for customized serializer field mapping """
         pass  # pragma: no cover
 
@@ -102,7 +105,7 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
     ``ViewSet`` et al.). The discovered original view instance can be accessed with
     ``self.target`` and be subclassed if desired.
     """
-    _registry: List['OpenApiViewExtension'] = []
+    _registry: List[Type['OpenApiViewExtension']] = []
 
     @classmethod
     def _load_class(cls):
@@ -129,8 +132,8 @@ class OpenApiFilterExtension(OpenApiGeneratorExtension['OpenApiFilterExtension']
     Using ``drf_spectacular.plumbing.build_parameter_type`` is recommended to generate
     the appropriate raw dict objects.
     """
-    _registry: List['OpenApiFilterExtension'] = []
+    _registry: List[Type['OpenApiFilterExtension']] = []
 
     @abstractmethod
-    def get_schema_operation_parameters(self, auto_schema: 'AutoSchema', *args, **kwargs) -> List[dict]:
+    def get_schema_operation_parameters(self, auto_schema: 'AutoSchema', *args, **kwargs) -> List[_SchemaType]:
         pass  # pragma: no cover
