@@ -956,6 +956,27 @@ def test_schema_contains_only_urlpatterns_first_match(no_warnings):
     assert '#/components/schemas/X' in get_response_schema(operation)['$ref']
 
 
+def test_schema_contains_only_allowed_methods(no_warnings):
+    class XSerializer(serializers.Serializer):
+        integer = serializers.IntegerField()
+
+    class X(models.Model):
+        integer = models.IntegerField()
+
+    class XAPIView(generics.ListCreateAPIView):
+        model = X
+        serializer_class = XSerializer
+
+    urlpatterns = [
+        path('api/x/', XAPIView.as_view()),
+        path('api/x1/', XAPIView.as_view(http_method_names=['post'])),
+    ]
+    schema = generate_schema(None, patterns=urlpatterns)
+    assert sorted(schema['paths']['/api/x/'].keys()) == sorted(['get', 'post'])
+    assert list(schema['paths']['/api/x1/'].keys()) == ['post']
+    assert 'X' in schema['components']['schemas']
+
+
 def test_auto_schema_and_extend_parameters(no_warnings):
     class CustomAutoSchema(AutoSchema):
         def get_override_parameters(self):
