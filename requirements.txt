@@ -1,5 +1,6 @@
 -r requirements/base.txt
 -r requirements/testing.txt
+-r requirements/linting.txt
 -r requirements/optionals.txt
 -r requirements/packaging.txt
 -r requirements/docs.txt
