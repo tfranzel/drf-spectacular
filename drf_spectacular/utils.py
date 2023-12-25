@@ -316,6 +316,16 @@ class OpenApiCallback(OpenApiSchemaBase):
         self.decorator = decorator
 
 
+class OpenApiWebhook(OpenApiSchemaBase):
+    def __init__(
+            self,
+            name: _StrOrPromise,
+            decorator: Union[Callable[[F], F], Dict[str, Callable[[F], F]], Dict[str, Any]],
+    ):
+        self.name = name
+        self.decorator = decorator
+
+
 def extend_schema(
         operation_id: Optional[str] = None,
         parameters: Optional[Sequence[Union[OpenApiParameter, _SerializerType]]] = None,

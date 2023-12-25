@@ -477,7 +477,7 @@ def build_bearer_security_scheme_object(header_name, token_prefix, bearer_format
         }
 
 
-def build_root_object(paths, components, version) -> _SchemaType:
+def build_root_object(paths, components, webhooks, version) -> _SchemaType:
     settings = spectacular_settings
     if settings.VERSION and version:
         version = f'{settings.VERSION} ({version})'
@@ -508,6 +508,8 @@ def build_root_object(paths, components, version) -> _SchemaType:
         root['tags'] = settings.TAGS
     if settings.EXTERNAL_DOCS:
         root['externalDocs'] = settings.EXTERNAL_DOCS
+    if webhooks:
+        root['webhooks'] = webhooks
     return root
 
 

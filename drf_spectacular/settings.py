@@ -199,6 +199,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SERVERS': [],
     # Tags defined in the global scope
     'TAGS': [],
+    # Optional: List of OpenAPI 3.1 webhooks.
+    'WEBHOOKS': None,
     # Optional: MUST contain 'url', may contain "description"
     'EXTERNAL_DOCS': {},
 

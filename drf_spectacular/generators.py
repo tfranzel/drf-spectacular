@@ -11,7 +11,7 @@ from drf_spectacular.drainage import (
     add_trace_message, error, get_override, reset_generator_stats, warn,
 )
 from drf_spectacular.extensions import OpenApiViewExtension
-from drf_spectacular.openapi import AutoSchema
+from drf_spectacular.openapi import AutoSchema, process_webhooks
 from drf_spectacular.plumbing import (
     ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, get_class,
     is_versioning_supported, modify_for_versioning, normalize_result_object,
@@ -102,6 +102,7 @@ class SchemaGenerator(BaseSchemaGenerator):
         self.registry = ComponentRegistry()
         self.api_version = kwargs.pop('api_version', None)
         self.inspector = None
+        self.webhooks = kwargs.pop('webhooks', None)
         super().__init__(*args, **kwargs)
 
     def coerce_path(self, path, method, view):
@@ -182,6 +183,11 @@ class SchemaGenerator(BaseSchemaGenerator):
         if self.endpoints is None:
             self.inspector = self.endpoint_inspector_cls(self.patterns, self.urlconf)
             self.endpoints = self.inspector.get_api_endpoints()
+
+    def _initialise_webhooks(self):
+        if self.webhooks is None:
+            if spectacular_settings.OAS_VERSION.startswith('3.1'):
+                self.webhooks = spectacular_settings.WEBHOOKS
 
     def _get_paths_and_endpoints(self):
         """
@@ -274,12 +280,17 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         return result
 
+    def get_webhooks(self):
+        self._initialise_webhooks()
+        return self.webhooks or []
+
     def get_schema(self, request=None, public=False):
         """ Generate a OpenAPI schema. """
         reset_generator_stats()
         result = build_root_object(
             paths=self.parse(request, public),
             components=self.registry.build(spectacular_settings.APPEND_COMPONENTS),
+            webhooks=process_webhooks(self.get_webhooks(), self.registry),
             version=self.api_version or getattr(request, 'version', None),
         )
         for hook in spectacular_settings.POSTPROCESSING_HOOKS:
