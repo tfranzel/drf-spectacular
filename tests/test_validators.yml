@@ -126,6 +126,18 @@ components:
           minimum: -100
           exclusiveMaximum: true
           exclusiveMinimum: true
+        decimal_validator_decimal:
+          type: number
+          format: double
+          maximum: 100
+          minimum: 0.0000000001
+          exclusiveMaximum: true
+        decimal_min_value_decimal:
+          type: number
+          format: double
+          maximum: 1000
+          minimum: 0.000000000000000000000001
+          exclusiveMaximum: true
         list_max_length:
           type: array
           items: {}
@@ -183,6 +195,8 @@ components:
       - decimal_decimal
       - decimal_max_value
       - decimal_min_value
+      - decimal_min_value_decimal
+      - decimal_validator_decimal
       - dict_max_length
       - dict_min_length
       - file_extension

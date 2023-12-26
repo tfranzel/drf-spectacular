@@ -1,5 +1,6 @@
 import sys
 from datetime import timedelta
+from decimal import Decimal
 from unittest import mock
 
 import pytest
@@ -52,6 +53,16 @@ def test_validators():
             max_digits=4,
             decimal_places=1,
             validators=[validators.DecimalValidator(max_digits=4, decimal_places=2)],
+        )
+        decimal_validator_decimal = serializers.DecimalField(
+            max_digits=9,
+            decimal_places=7,
+            validators=[validators.MinValueValidator(Decimal("0.0000000001"))]
+        )
+        decimal_min_value_decimal = serializers.DecimalField(
+            decimal_places=2,
+            max_digits=5,
+            min_value=Decimal('0.000000000000000000000001'),
         )
 
         # The following only apply for `array` type:
