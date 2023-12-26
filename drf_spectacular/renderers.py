@@ -30,7 +30,7 @@ class OpenApiYamlRenderer(BaseRenderer):
 
         def decimal_representer(dumper, data):
             # prevent emitting "!! float" tags on fractionless decimals
-            value = str(data)
+            value = f'{data:f}'
             if '.' in value:
                 return dumper.represent_scalar('tag:yaml.org,2002:float', value)
             else:
