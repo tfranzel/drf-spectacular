@@ -3262,6 +3262,7 @@ def test_openapirequest_used_without_media_type_dict(no_warnings):
     }
 
 
+@pytest.mark.skipif(DJANGO_VERSION < '3.0', reason='generic JSONField not available')
 @mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
 def test_basic_oas_3_1_nullable_cases(no_warnings, django_transforms):
     class M14(models.Model):
