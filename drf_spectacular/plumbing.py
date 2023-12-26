@@ -535,6 +535,8 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
                 schema = {'oneOf': [schema, {'type': 'null'}]}
             elif len(schema) == 1 and 'oneOf' in schema:
                 schema['oneOf'].append({'type': 'null'})
+            elif not schema and not meta:
+                schema = {'oneOf': [{}, {'type': 'null'}]}
             else:
                 assert False, 'Invalid nullable case'  # pragma: no cover
 

@@ -3260,3 +3260,38 @@ def test_openapirequest_used_without_media_type_dict(no_warnings):
     assert get_request_schema(schema['paths']['/x/']['post']) == {
         '$ref': '#/components/schemas/Simple'
     }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_basic_oas_3_1_nullable_cases(no_warnings, django_transforms):
+    class M14(models.Model):
+        field_json = models.JSONField(null=True)  # case 1
+
+    class XSerializer(serializers.ModelSerializer):
+
+        field_method_hint = serializers.SerializerMethodField()
+
+        def get_field_method_hint(self, obj) -> typing.Union[int, str, None]:  # case 2
+            pass  # pragma: no cover
+
+        class Meta:
+            fields = '__all__'
+            model = M14
+
+    class XViewset(viewsets.ReadOnlyModelViewSet):
+        serializer_class = XSerializer
+        queryset = M14.objects.none()
+
+    schema = generate_schema('m2', XViewset)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'id': {'readOnly': True, 'type': 'integer'},
+        'field_json': {'oneOf': [{}, {'type': 'null'}]},
+        'field_method_hint': {
+            'oneOf': [
+                {'type': 'integer'},
+                {'type': 'string'},
+                {'type': 'null'}
+            ],
+            'readOnly': True
+        },
+    }
