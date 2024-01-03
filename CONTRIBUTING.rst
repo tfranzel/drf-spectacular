@@ -63,6 +63,3 @@ With that out of the way, we hope to hear from you soon.
 .. _blueprints: https://drf-spectacular.readthedocs.io/en/latest/blueprints.html
 .. _early feedback: https://github.com/tfranzel/drf-spectacular/issues
 .. _test_regressions.py: https://github.com/tfranzel/drf-spectacular/blob/master/tests/test_regressions.py
-
-
-
