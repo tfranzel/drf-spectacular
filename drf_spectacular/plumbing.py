@@ -680,8 +680,18 @@ def alpha_operation_sorter(endpoint):
 
 
 class ResolvedComponent:
+    # OpenAPI 3.0.3
     SCHEMA = 'schemas'
+    RESPONSE = 'responses'
+    PARAMETER = 'parameters'
+    EXAMPLE = 'examples'
+    REQUEST_BODY = 'requestBodies'
+    HEADER = 'headers'
     SECURITY_SCHEMA = 'securitySchemes'
+    LINK = 'links'
+    CALLBACK = 'callbacks'
+    # OpenAPI 3.1.0+
+    PATH_ITEM = 'pathItems'
 
     def __init__(self, name, type, schema=None, object=None):
         self.name = name
