@@ -389,3 +389,22 @@ def test_equal_choices_different_semantics(no_warnings):
     assert schema['components']['schemas']['SomeTestEnum'] == {
         'enum': [0, 1], 'type': 'integer', 'description': '* `0` - test group A\n* `1` - test group B',
     }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
+    'VoteChoices': 'tests.test_postprocessing.vote_choices'
+})
+def test_enum_suffix(no_warnings, clear_caches):
+    """Test that enums generated have the suffix from the settings."""
+    # check variations of suffix
+    enum_suffix_variations = ['Type', 'Enum', 'Testing', '']
+    for variation in enum_suffix_variations:
+        with mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_SUFFIX', variation):
+            schema = generate_schema('a', AViewset)
+
+            assert f'Null{variation}' in schema['components']['schemas']
+            assert f'Blank{variation}' in schema['components']['schemas']
+            assert f'Language{variation}' in schema['components']['schemas']
+            # vote choices is overridden, so should not have the suffix added
+            assert f'Vote{variation}' not in schema['components']['schemas']
+            assert 'VoteChoices' in schema['components']['schemas']
