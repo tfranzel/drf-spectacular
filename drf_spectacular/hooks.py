@@ -74,6 +74,9 @@ def postprocess_schema_enums(result, generator, **kwargs):
             prop_hash_mapping[prop_name].add(prop_enum_cleaned_hash)
             hash_name_mapping[prop_enum_cleaned_hash].add((component_name, prop_name))
 
+    # get the suffix to be used for enums from settings
+    enum_suffix = spectacular_settings.ENUM_SUFFIX
+
     # traverse all enum properties and generate a name for the choice set. naming collisions
     # are resolved and a warning is emitted. giving a choice set multiple names is technically
     # correct but potentially unwanted. also emit a warning there to make the user aware.
@@ -84,13 +87,13 @@ def postprocess_schema_enums(result, generator, **kwargs):
                 enum_name = overrides[prop_hash]
             elif len(prop_hash_set) == 1:
                 # prop_name has been used exclusively for one choice set (best case)
-                enum_name = f'{camelize(prop_name)}Enum'
+                enum_name = f'{camelize(prop_name)}{enum_suffix}'
             elif len(hash_name_mapping[prop_hash]) == 1:
                 # prop_name has multiple choice sets, but each one limited to one component only
                 component_name, _ = next(iter(hash_name_mapping[prop_hash]))
-                enum_name = f'{camelize(component_name)}{camelize(prop_name)}Enum'
+                enum_name = f'{camelize(component_name)}{camelize(prop_name)}{enum_suffix}'
             else:
-                enum_name = f'{camelize(prop_name)}{prop_hash[:3].capitalize()}Enum'
+                enum_name = f'{camelize(prop_name)}{prop_hash[:3].capitalize()}{enum_suffix}'
                 warn(
                     f'enum naming encountered a non-optimally resolvable collision for fields '
                     f'named "{prop_name}". The same name has been used for multiple choice sets '
@@ -143,12 +146,12 @@ def postprocess_schema_enums(result, generator, **kwargs):
             ]
             if spectacular_settings.ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE:
                 if '' in prop_enum_original_list:
-                    components.append(create_enum_component('BlankEnum', schema={'enum': ['']}))
+                    components.append(create_enum_component(f'Blank{enum_suffix}', schema={'enum': ['']}))
                 if None in prop_enum_original_list:
                     if spectacular_settings.OAS_VERSION.startswith('3.1'):
-                        components.append(create_enum_component('NullEnum', schema={'type': 'null'}))
+                        components.append(create_enum_component(f'Null{enum_suffix}', schema={'type': 'null'}))
                     else:
-                        components.append(create_enum_component('NullEnum', schema={'enum': [None]}))
+                        components.append(create_enum_component(f'Null{enum_suffix}', schema={'enum': [None]}))
 
             # undo OAS 3.1 type list NULL construction as we cover this in a separate component already
             if spectacular_settings.OAS_VERSION.startswith('3.1') and isinstance(enum_schema['type'], list):
