@@ -3267,6 +3267,7 @@ def test_openapirequest_used_without_media_type_dict(no_warnings):
 def test_basic_oas_3_1_nullable_cases(no_warnings, django_transforms):
     class M14(models.Model):
         field_json = models.JSONField(null=True)  # case 1
+        field_json2 = models.JSONField(null=True, help_text="field_json desc")  # case 3
 
     class XSerializer(serializers.ModelSerializer):
 
@@ -3287,6 +3288,7 @@ def test_basic_oas_3_1_nullable_cases(no_warnings, django_transforms):
     assert schema['components']['schemas']['X']['properties'] == {
         'id': {'readOnly': True, 'type': 'integer'},
         'field_json': {'oneOf': [{}, {'type': 'null'}]},
+        'field_json2': {'oneOf': [{}, {'type': 'null'}], 'description': 'field_json desc'},
         'field_method_hint': {
             'oneOf': [
                 {'type': 'integer'},
