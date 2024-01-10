@@ -2,6 +2,7 @@ import os
 import re
 
 from django.urls import URLPattern, URLResolver
+from django.utils.module_loading import import_string
 from rest_framework import views, viewsets
 from rest_framework.schemas.generators import BaseSchemaGenerator
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
@@ -185,9 +186,12 @@ class SchemaGenerator(BaseSchemaGenerator):
             self.endpoints = self.inspector.get_api_endpoints()
 
     def _initialise_webhooks(self):
-        if self.webhooks is None:
-            if spectacular_settings.OAS_VERSION.startswith('3.1'):
-                self.webhooks = spectacular_settings.WEBHOOKS
+        if self.webhooks:
+            return
+        if not spectacular_settings.OAS_VERSION.startswith('3.1'):
+            return
+        webhooks = spectacular_settings.WEBHOOKS or []
+        self.webhooks = [import_string(s) for s in webhooks]
 
     def _get_paths_and_endpoints(self):
         """
