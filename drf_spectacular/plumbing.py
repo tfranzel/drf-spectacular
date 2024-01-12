@@ -1408,16 +1408,13 @@ def build_serializer_context(view) -> typing.Dict[str, Any]:
         return {'request': view.request}
 
 
-def process_webhooks(webhooks: Union[List[OpenApiWebhook], None], registry: ComponentRegistry) -> _SchemaType:
+def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry) -> _SchemaType:
     """
     Creates a mocked view for every webhook. The given extend_schema decorator then
     specifies the expectations on the receiving end of the callback. Effectively
     simulates a sub-schema from the opposing perspective via a virtual view definition.
     """
     result = {}
-
-    if webhooks is None:
-        return result
 
     for webhook in webhooks:
         if isinstance(webhook.decorator, dict):
