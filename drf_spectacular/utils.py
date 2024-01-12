@@ -317,6 +317,23 @@ class OpenApiCallback(OpenApiSchemaBase):
 
 
 class OpenApiWebhook(OpenApiSchemaBase):
+    """
+    Helper class to document webhook definitions. A webhook specifies a possible out-of-band
+    request initiated by the API provider and the expected responses from the consumer.
+
+    Please note that this particular :func:`@extend_schema <.extend_schema>` instance operates
+    from the perspective of the webhook origin, which means that ``request`` specifies the
+    outgoing request.
+
+    For convenience sake, we assume the API provider sends a POST request with a body of type
+    ``application/json`` and the receiver responds with ``200`` if the event was successfully
+    received.
+
+    :param name: Name under which this webhook is listed in the schema.
+    :param decorator: :func:`@extend_schema <.extend_schema>` decorator that specifies the receiving
+        endpoint. In this special context the allowed parameters are ``requests``, ``responses``,
+        ``summary``, ``description``, ``deprecated``.
+    """
     def __init__(
             self,
             name: _StrOrPromise,

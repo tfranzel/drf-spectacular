@@ -20,7 +20,7 @@ subscription_event = OpenApiWebhook(
     name='SubscriptionEvent',
     decorator=extend_schema(
         summary="some summary",
-        description='pushes events to callbackUrl as "application/x-www-form-urlencoded"',
+        description='pushes events to a webhook url as "application/x-www-form-urlencoded"',
         request={
             'application/x-www-form-urlencoded': EventSerializer,
         },

@@ -23,7 +23,7 @@ components:
 webhooks:
   SubscriptionEvent:
     post:
-      description: pushes events to callbackUrl as "application/x-www-form-urlencoded"
+      description: pushes events to a webhook url as "application/x-www-form-urlencoded"
       summary: some summary
       requestBody:
         content:
