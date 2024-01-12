@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.utils import OpenApiResponse, OpenApiWebhook, extend_schema
-from tests import assert_schema, generate_schema
+from tests import assert_schema
 
 
 class EventSerializer(serializers.Serializer):
@@ -32,17 +32,9 @@ subscription_event = OpenApiWebhook(
 )
 
 
-@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
-def test_webhooks(no_warnings):
-    assert_schema(
-        generate_schema(None, patterns=[], webhooks=[subscription_event]),
-        'tests/test_webhooks.yml'
-    )
-
-
 @pytest.mark.urls(__name__)
 @mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
-@mock.patch('drf_spectacular.settings.spectacular_settings.WEBHOOKS', ["tests.test_webhooks.subscription_event"])
+@mock.patch('drf_spectacular.settings.spectacular_settings.WEBHOOKS', [subscription_event])
 def test_webhooks_settings(no_warnings):
     assert_schema(
         SchemaGenerator().get_schema(request=None, public=True),

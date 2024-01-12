@@ -61,7 +61,7 @@ def assert_equal(actual, expected):
     assert actual == expected and not diff, diff
 
 
-def generate_schema(route, viewset=None, view=None, view_function=None, patterns=None, webhooks=None):
+def generate_schema(route, viewset=None, view=None, view_function=None, patterns=None):
     from django.urls import path
     from rest_framework import routers
     from rest_framework.viewsets import ViewSetMixin
@@ -80,7 +80,7 @@ def generate_schema(route, viewset=None, view=None, view_function=None, patterns
     else:
         assert route is None and isinstance(patterns, list)
 
-    generator = SchemaGenerator(patterns=patterns, webhooks=webhooks)
+    generator = SchemaGenerator(patterns=patterns)
     schema = generator.get_schema(request=None, public=True)
     validate_schema(schema)  # make sure generated schemas are always valid
     return schema
