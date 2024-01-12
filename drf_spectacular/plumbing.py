@@ -57,8 +57,8 @@ from drf_spectacular.types import (
     _KnownPythonTypes,
 )
 from drf_spectacular.utils import (
-    OpenApiExample, OpenApiParameter, _FieldType, _ListSerializerType, _ParameterLocationType,
-    _SchemaType, _SerializerType,
+    OpenApiExample, OpenApiParameter, OpenApiWebhook, _FieldType, _ListSerializerType,
+    _ParameterLocationType, _SchemaType, _SerializerType,
 )
 
 try:
@@ -1406,3 +1406,62 @@ def build_serializer_context(view) -> typing.Dict[str, Any]:
         return view.get_serializer_context()
     except:  # noqa
         return {'request': view.request}
+
+
+def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry) -> _SchemaType:
+    """
+    Creates a mocked view for every webhook. The given extend_schema decorator then
+    specifies the expectations on the receiving end of the callback. Effectively
+    simulates a sub-schema from the opposing perspective via a virtual view definition.
+    """
+    result = {}
+
+    for webhook in webhooks:
+        if isinstance(webhook.decorator, dict):
+            methods = webhook.decorator
+        else:
+            methods = {'post': webhook.decorator}
+
+        path_items = {}
+
+        for method, decorator in methods.items():
+            # a dict indicates a raw schema; use directly
+            if isinstance(decorator, dict):
+                path_items[method.lower()] = decorator
+                continue
+
+            mocked_view = build_mocked_view(
+                method=method,
+                path="/",
+                extend_schema_decorator=decorator,
+                registry=registry,
+            )
+            operation = {}
+
+            description = mocked_view.schema.get_description()
+            if description:
+                operation['description'] = description
+
+            summary = mocked_view.schema.get_summary()
+            if summary:
+                operation['summary'] = summary
+
+            request_body = mocked_view.schema._get_request_body('response')
+            if request_body:
+                operation['requestBody'] = request_body
+
+            deprecated = mocked_view.schema.is_deprecated()
+            if deprecated:
+                operation['deprecated'] = deprecated
+
+            operation['responses'] = mocked_view.schema._get_response_bodies('request')
+
+            extensions = mocked_view.schema.get_extensions()
+            if extensions:
+                operation.update(sanitize_specification_extensions(extensions))
+
+            path_items[method.lower()] = operation
+
+        result[webhook.name] = path_items
+
+    return result
