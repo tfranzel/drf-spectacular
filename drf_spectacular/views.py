@@ -146,6 +146,9 @@ class SpectacularSwaggerView(APIView):
                 'schema_auth_names': self._dump(self._get_schema_auth_names()),
             },
             template_name=self.template_name,
+            headers={
+                "Cross-Origin-Opener-Policy": "unsafe-none",
+            }
         )
 
     def _dump(self, data):
