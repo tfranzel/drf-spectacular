@@ -1,4 +1,5 @@
 import collections
+import copy
 import functools
 import hashlib
 import inspect
@@ -525,6 +526,9 @@ def safe_ref(schema: _SchemaType) -> _SchemaType:
 
 def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
     if spectacular_settings.OAS_VERSION.startswith('3.1'):
+        schema = copy.deepcopy(schema)
+        meta = copy.deepcopy(meta)
+
         schema_nullable = meta.pop('nullable', None)
         meta_nullable = schema.pop('nullable', None)
 
