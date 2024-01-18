@@ -15,7 +15,7 @@ from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     ComponentRegistry, alpha_operation_sorter, build_root_object, camelize_operation, get_class,
     is_versioning_supported, modify_for_versioning, normalize_result_object,
-    operation_matches_version, sanitize_result_object,
+    operation_matches_version, process_webhooks, sanitize_result_object,
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -280,6 +280,7 @@ class SchemaGenerator(BaseSchemaGenerator):
         result = build_root_object(
             paths=self.parse(request, public),
             components=self.registry.build(spectacular_settings.APPEND_COMPONENTS),
+            webhooks=process_webhooks(spectacular_settings.WEBHOOKS, self.registry),
             version=self.api_version or getattr(request, 'version', None),
         )
         for hook in spectacular_settings.POSTPROCESSING_HOOKS:

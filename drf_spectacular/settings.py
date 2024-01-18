@@ -202,6 +202,9 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SERVERS': [],
     # Tags defined in the global scope
     'TAGS': [],
+    # Optional: List of OpenAPI 3.1 webhooks. Each entry should be an import path to an
+    # OpenApiWebhook instance.
+    'WEBHOOKS': [],
     # Optional: MUST contain 'url', may contain "description"
     'EXTERNAL_DOCS': {},
 
@@ -235,6 +238,7 @@ IMPORT_STRINGS = [
     'AUTHENTICATION_WHITELIST',
     'RENDERER_WHITELIST',
     'PARSER_WHITELIST',
+    'WEBHOOKS',
 ]
 
 
