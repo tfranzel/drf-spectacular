@@ -1,6 +1,23 @@
 Changelog
 =========
 
+0.27.1 (2024-01-18)
+-------------------
+
+- differentiate test cases for 3.1 null cases `#1139 <https://github.com/tfranzel/drf-spectacular/issues/1139>`_
+- add enum suffix setting [Jonny Beaumont]
+- Fix handling of metadata when using OAS 3.1 [Viicos]
+- Provide all fixed field names for the components object [Sergei Maertens]
+- coerse Decimal to float format explicitly `#1134 <https://github.com/tfranzel/drf-spectacular/issues/1134>`_
+- bugfix test `#1133 <https://github.com/tfranzel/drf-spectacular/issues/1133>`_
+- add OAS 3.1 null translation case `#1133 <https://github.com/tfranzel/drf-spectacular/issues/1133>`_
+- Add OpenAPI 3.1 webhook support [Federico Bond]
+- add OAS 3.1 null case
+
+Breaking changes / important additions:
+
+- Fixed some OAS 3.1 corner cases and added support for ``Webhooks`` (3.1) in addition to existing ``Callbacks``
+
 0.27.0 (2023-12-12)
 -------------------
 
