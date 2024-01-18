@@ -1408,7 +1408,7 @@ def build_serializer_context(view) -> typing.Dict[str, Any]:
         return {'request': view.request}
 
 
-def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry) -> _SchemaType:
+def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry):
     """
     Creates a mocked view for every webhook. The given extend_schema decorator then
     specifies the expectations on the receiving end of the callback. Effectively
