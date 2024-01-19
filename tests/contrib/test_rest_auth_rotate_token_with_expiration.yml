@@ -262,7 +262,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/TokenRefresh'
-        required: true
       responses:
         '200':
           content:
@@ -533,6 +532,7 @@ components:
           readOnly: true
         refresh:
           type: string
+          description: WIll override cookie.
         access_expiration:
           type: string
           format: date-time
@@ -544,7 +544,6 @@ components:
       required:
       - access
       - access_expiration
-      - refresh
       - refresh_expiration
     TokenVerify:
       type: object

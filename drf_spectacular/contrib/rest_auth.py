@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from django.utils.version import get_version_tuple
 from rest_framework import serializers
 
@@ -157,14 +158,14 @@ class CookieTokenRefreshSerializerExtension(TokenRefreshSerializerExtension):
         if jwt_settings.ROTATE_REFRESH_TOKENS:
             class Fixed(serializers.Serializer):
                 access = serializers.CharField(read_only=True)
-                refresh = serializers.CharField()
+                refresh = serializers.CharField(required=False, help_text=_('WIll override cookie.'))
                 access_expiration = serializers.DateTimeField(read_only=True)
                 refresh_expiration = serializers.DateTimeField(read_only=True)
         else:
             class Fixed(serializers.Serializer):
                 access = serializers.CharField(read_only=True)
                 access_expiration = serializers.DateTimeField(read_only=True)
-                refresh = serializers.CharField(write_only=True)
+                refresh = serializers.CharField(write_only=True, required=False, help_text=_('WIll override cookie.'))
 
         return auto_schema._map_serializer(Fixed, direction)
 
