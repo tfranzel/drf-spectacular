@@ -131,6 +131,9 @@ class RestAuthJWTSerializer(OpenApiSerializerExtension):
 class RestAuthJWTSerializerWithExpiration(RestAuthJWTSerializer):
     target_class = 'dj_rest_auth.serializers.JWTSerializerWithExpiration'
 
+    def get_name(self):
+        return 'JWTWithExpiration'
+
 
 class CookieTokenRefreshSerializerExtension(TokenRefreshSerializerExtension):
     target_class = 'dj_rest_auth.jwt_auth.CookieTokenRefreshSerializer'
