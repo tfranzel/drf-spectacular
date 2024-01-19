@@ -28,13 +28,18 @@ def get_token_serializer_class():
 
     if get_version_tuple(__version__) < (3, 0, 0):
         use_jwt = getattr(settings, 'REST_USE_JWT', False)
+        jwt_return_expiration = False
     else:
         from dj_rest_auth.app_settings import api_settings
 
         use_jwt = api_settings.USE_JWT
+        jwt_return_expiration = api_settings.JWT_AUTH_RETURN_EXPIRATION
 
     if use_jwt:
-        return get_dj_rest_auth_setting('JWTSerializer', 'JWT_SERIALIZER')
+        if jwt_return_expiration:
+            return get_dj_rest_auth_setting('JWTSerializer', 'JWT_SERIALIZER_WITH_EXPIRATION')
+        else:
+            return get_dj_rest_auth_setting('JWTSerializer', 'JWT_SERIALIZER')
     else:
         return get_dj_rest_auth_setting('TokenSerializer', 'TOKEN_SERIALIZER')
 
