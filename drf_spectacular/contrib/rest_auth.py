@@ -128,6 +128,10 @@ class RestAuthJWTSerializer(OpenApiSerializerExtension):
         return auto_schema._map_serializer(Fixed, direction)
 
 
+class RestAuthJWTSerializerWithExpiration(RestAuthJWTSerializer):
+    target_class = 'dj_rest_auth.serializers.JWTSerializerWithExpiration'
+
+
 class CookieTokenRefreshSerializerExtension(TokenRefreshSerializerExtension):
     target_class = 'dj_rest_auth.jwt_auth.CookieTokenRefreshSerializer'
     optional = True
