@@ -10,17 +10,22 @@ from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiViewEx
 from drf_spectacular.utils import extend_schema
 
 
-def get_dj_rest_auth_setting(class_name, setting_name):
+def get_dj_rest_auth_setting(class_name, setting_name, default=None):
     from dj_rest_auth.__version__ import __version__
 
-    if get_version_tuple(__version__) < (3, 0, 0):
-        from dj_rest_auth import app_settings
+    try:
+        if get_version_tuple(__version__) < (3, 0, 0):
+            from dj_rest_auth import app_settings
 
-        return getattr(app_settings, class_name)
-    else:
-        from dj_rest_auth.app_settings import api_settings
+            return getattr(app_settings, class_name)
+        else:
+            from dj_rest_auth.app_settings import api_settings
 
-        return getattr(api_settings, setting_name)
+            return getattr(api_settings, setting_name)
+    except AttributeError:
+        if default is not None:
+            return default
+        raise
 
 
 def get_token_serializer_class():
@@ -129,6 +134,32 @@ class CookieTokenRefreshSerializerExtension(TokenRefreshSerializerExtension):
 
     def get_name(self):
         return 'TokenRefresh'
+
+    def map_serializer(self, auto_schema, direction):
+        jwt_auth_return_expiration = get_dj_rest_auth_setting(
+            'JWT_AUTH_RETURN_EXPIRATION',
+            'JWT_AUTH_RETURN_EXPIRATION',
+            False
+        )
+
+        if not jwt_auth_return_expiration:
+            return super().map_serializer(auto_schema, direction)
+
+        from rest_framework_simplejwt.settings import api_settings as jwt_settings
+
+        if jwt_settings.ROTATE_REFRESH_TOKENS:
+            class Fixed(serializers.Serializer):
+                access = serializers.CharField(read_only=True)
+                refresh = serializers.CharField()
+                access_expiration = serializers.DateTimeField(read_only=True)
+                refresh_expiration = serializers.DateTimeField(read_only=True)
+        else:
+            class Fixed(serializers.Serializer):
+                access = serializers.CharField(read_only=True)
+                access_expiration = serializers.DateTimeField(read_only=True)
+                refresh = serializers.CharField(write_only=True)
+
+        return auto_schema._map_serializer(Fixed, direction)
 
 
 class RestAuthRegisterView(OpenApiViewExtension):
