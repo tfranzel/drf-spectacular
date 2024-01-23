@@ -72,7 +72,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'SWAGGER_UI_OAUTH2_CONFIG': {},
 
     # Dictionary of general configuration to pass to the Redoc.init({ ... })
-    # https://github.com/Redocly/redoc#redoc-options-object
+    # https://redocly.com/docs/redoc/config/#functional-settings
     # The settings are serialized with json.dumps(). If you need customized JS, use a
     # string instead. The string must then contain valid JS and is passed unchanged.
     'REDOC_UI_SETTINGS': {},
