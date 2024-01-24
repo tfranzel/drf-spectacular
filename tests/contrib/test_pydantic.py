@@ -1,4 +1,5 @@
 import sys
+from decimal import Decimal
 from typing import List
 
 import pytest
@@ -31,6 +32,7 @@ class B(BaseModel):
 class A(BaseModel):
     id: int
     b: B
+    d: Decimal
 
 
 @pytest.mark.contrib('pydantic')

@@ -34,7 +34,7 @@ class PydanticExtension(OpenApiSerializerExtension):
             warn("Only pydantic >= 2 is supported. defaulting to generic object.")
             return build_basic_type(OpenApiTypes.OBJECT)
 
-        schema = model_json_schema(self.target, ref_template="#/components/schemas/{model}")
+        schema = model_json_schema(self.target, ref_template="#/components/schemas/{model}", mode="serialization")
 
         # pull out potential sub-schemas and put them into component section
         for sub_name, sub_schema in schema.pop("$defs", {}).items():
