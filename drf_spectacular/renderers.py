@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from datetime import time, timedelta
 from decimal import Decimal
 from uuid import UUID
@@ -52,6 +53,10 @@ class OpenApiYamlRenderer(BaseRenderer):
         def safestring_representer(dumper, data):
             return dumper.represent_str(data)
         Dumper.add_representer(SafeString, safestring_representer)
+
+        def ordereddict_representer(dumper, data):
+            return dumper.represent_dict(dict(data))
+        Dumper.add_representer(OrderedDict, ordereddict_representer)
 
         return yaml.dump(
             data,
