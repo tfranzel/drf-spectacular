@@ -12,7 +12,7 @@ class OpenApiYamlRenderer(BaseRenderer):
     media_type = 'application/vnd.oai.openapi'
     format = 'yaml'
 
-    def render(self, data, media_type=None, renderer_context=None):
+    def render(self, data, accepted_media_type=None, renderer_context=None):
         # disable yaml advanced feature 'alias' for clean, portable, and readable output
         class Dumper(yaml.SafeDumper):
             def ignore_aliases(self, data):
