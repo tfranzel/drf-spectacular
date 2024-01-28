@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from datetime import time, timedelta
 from decimal import Decimal
 from uuid import UUID
@@ -12,7 +13,7 @@ class OpenApiYamlRenderer(BaseRenderer):
     media_type = 'application/vnd.oai.openapi'
     format = 'yaml'
 
-    def render(self, data, media_type=None, renderer_context=None):
+    def render(self, data, accepted_media_type=None, renderer_context=None):
         # disable yaml advanced feature 'alias' for clean, portable, and readable output
         class Dumper(yaml.SafeDumper):
             def ignore_aliases(self, data):
@@ -52,6 +53,10 @@ class OpenApiYamlRenderer(BaseRenderer):
         def safestring_representer(dumper, data):
             return dumper.represent_str(data)
         Dumper.add_representer(SafeString, safestring_representer)
+
+        def ordereddict_representer(dumper, data):
+            return dumper.represent_dict(dict(data))
+        Dumper.add_representer(OrderedDict, ordereddict_representer)
 
         return yaml.dump(
             data,

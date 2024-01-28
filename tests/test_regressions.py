@@ -1,3 +1,4 @@
+import collections
 import datetime
 import re
 import typing
@@ -2057,7 +2058,8 @@ def test_nested_router_urls(no_warnings):
     datetime.timedelta(days=1),
     uuid.uuid4(),
     Decimal(),
-    b'deadbeef'
+    b'deadbeef',
+    collections.OrderedDict([('a', 1), ('b', 2)]),
 ])
 def test_yaml_encoder_parity(no_warnings, value):
     # make sure our YAML renderer does not choke on objects that are fine with
