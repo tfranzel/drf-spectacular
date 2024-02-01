@@ -1,0 +1,38 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /x/:
+    get:
+      operationId: x_list
+      tags:
+      - x
+      security:
+      - knoxApiToken: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/X'
+          description: ''
+components:
+  schemas:
+    X:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+      required:
+      - uuid
+  securitySchemes:
+    knoxApiToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
