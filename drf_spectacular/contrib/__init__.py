@@ -11,4 +11,5 @@ __all__ = [
     'rest_framework_recursive',
     'rest_framework_gis',
     'pydantic',
+    'knox_auth_token',
 ]
