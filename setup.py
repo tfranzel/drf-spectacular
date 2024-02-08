@@ -71,7 +71,7 @@ setup(
     author_email=author_email,
     packages=[p for p in find_namespace_packages(exclude=('tests*',)) if p.startswith(package)],
     include_package_data=True,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     install_requires=requirements,
     extras_require={
         "offline": ["drf-spectacular-sidecar"],
