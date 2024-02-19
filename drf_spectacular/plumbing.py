@@ -1458,6 +1458,10 @@ def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry
             if summary:
                 operation['summary'] = summary
 
+            tags = mocked_view.schema.get_tags()
+            if tags:
+                operation['tags'] = tags
+
             request_body = mocked_view.schema._get_request_body('response')
             if request_body:
                 operation['requestBody'] = request_body

@@ -25,6 +25,8 @@ webhooks:
     post:
       description: pushes events to a webhook url as "application/x-www-form-urlencoded"
       summary: some summary
+      tags:
+      - webhooks
       requestBody:
         content:
           application/x-www-form-urlencoded:
