@@ -1,6 +1,7 @@
 import collections
 import datetime
 import re
+import sys
 import typing
 import uuid
 from decimal import Decimal
@@ -3300,3 +3301,30 @@ def test_basic_oas_3_1_nullable_cases(no_warnings, django_transforms):
             'readOnly': True
         },
     }
+
+
+def test_extend_schema_higher_order_types(no_warnings):
+    cases = [
+        (typing.List[int], {'items': {'type': 'integer'}, 'type': 'array'}),
+        (typing.Dict[str, int], {'type': 'object', 'additionalProperties': {'type': 'integer'}}),
+        (typing.Union[int, float], {'oneOf': [{'type': 'integer'}, {'format': 'double', 'type': 'number'}]}),
+        (typing.Set[int], {'items': {'type': 'integer'}, 'type': 'array'}),
+        (typing.Optional[int], {'type': 'integer', 'nullable': True}),
+    ]
+    if sys.version_info >= (3, 10):
+        cases.extend([
+            (list[int], {'items': {'type': 'integer'}, 'type': 'array'}),
+            (dict[str, int], {'type': 'object', 'additionalProperties': {'type': 'integer'}}),
+            (int | float, {'oneOf': [{'type': 'integer'}, {'format': 'double', 'type': 'number'}]}),
+        ])
+
+    for t, ref_schema in cases:
+        @extend_schema(request=t, responses=t)
+        @api_view(['POST'])
+        def view_func(request, format=None):
+            pass  # pragma: no cover
+
+        schema = generate_schema('x', view_function=view_func)
+
+        assert get_response_schema(schema['paths']['/x']['post']) == ref_schema
+        assert get_request_schema(schema['paths']['/x']['post']) == ref_schema
