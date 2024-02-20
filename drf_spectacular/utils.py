@@ -644,6 +644,8 @@ def extend_schema_view(**kwargs) -> Callable[[F], F]:
     This decorator also takes care of safely attaching annotations to derived view methods,
     preventing leakage into unrelated views.
 
+    This decorator also supports custom DRF ``@action`` with the method name as the key.
+
     :param kwargs: method names as argument names and :func:`@extend_schema <.extend_schema>`
       calls as values
     """

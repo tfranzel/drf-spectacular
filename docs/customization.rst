@@ -74,6 +74,18 @@ discovered in the introspection.
         class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             ...
 
+  This also supports annotating extra user-defined DRF ``@action``\s
+
+  .. code-block:: python
+
+        @extend_schema_view(
+            notes=extend_schema(description='text')
+        )
+        class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+            @action(detail=False)
+            def notes(self, request):
+                ...
+
 .. note:: You may also use :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` on views
   to attach annotations to all methods in that view (e.g. tags). Method annotations will take precedence
   over view annotation.
