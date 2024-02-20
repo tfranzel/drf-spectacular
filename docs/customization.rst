@@ -74,7 +74,7 @@ discovered in the introspection.
         class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             ...
 
-  This also supports annotating extra user-defined DRF ``@actions``
+  This also supports annotating extra user-defined DRF ``@action``s
 
   .. code-block:: python
 
