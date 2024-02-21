@@ -98,6 +98,10 @@ else:
 T = TypeVar('T')
 
 
+class _Sentinel:
+    pass
+
+
 class UnableToProceedError(Exception):
     pass
 
@@ -1285,6 +1289,15 @@ def _resolve_typeddict(hint):
         required=required,
         description=get_doc(hint),
     )
+
+
+def is_higher_order_type_hint(hint) -> bool:
+    return isinstance(hint, (
+        getattr(types, 'GenericAlias', _Sentinel),
+        getattr(types, 'UnionType', _Sentinel),
+        getattr(typing, '_GenericAlias', _Sentinel),
+        getattr(typing, '_UnionGenericAlias', _Sentinel),
+    ))
 
 
 def resolve_type_hint(hint):

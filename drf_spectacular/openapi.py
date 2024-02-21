@@ -35,10 +35,11 @@ from drf_spectacular.plumbing import (
     build_mocked_view, build_object_type, build_parameter_type, build_serializer_context,
     filter_supported_arguments, follow_field_source, follow_model_field_lookup, force_instance,
     get_doc, get_list_serializer, get_manager, get_type_hints, get_view_model, is_basic_serializer,
-    is_basic_type, is_field, is_list_serializer, is_list_serializer_customized,
-    is_patched_serializer, is_serializer, is_trivial_string_variation,
-    modify_media_types_for_versioning, resolve_django_path_parameter, resolve_regex_path_parameter,
-    resolve_type_hint, safe_ref, sanitize_specification_extensions, whitelisted,
+    is_basic_type, is_field, is_higher_order_type_hint, is_list_serializer,
+    is_list_serializer_customized, is_patched_serializer, is_serializer,
+    is_trivial_string_variation, modify_media_types_for_versioning, resolve_django_path_parameter,
+    resolve_regex_path_parameter, resolve_type_hint, safe_ref, sanitize_specification_extensions,
+    whitelisted,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -1338,6 +1339,9 @@ class AutoSchema(ViewInspector):
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
             request_body_required = False
+        elif is_higher_order_type_hint(serializer):
+            schema = resolve_type_hint(serializer)
+            request_body_required = False
         elif isinstance(serializer, dict):
             # bypass processing and use given schema directly
             schema = serializer
@@ -1358,6 +1362,7 @@ class AutoSchema(ViewInspector):
         if (
             is_serializer(response_serializers)
             or is_basic_type(response_serializers)
+            or is_higher_order_type_hint(response_serializers)
             or isinstance(response_serializers, OpenApiResponse)
         ):
             if self.method == 'DELETE':
@@ -1426,6 +1431,8 @@ class AutoSchema(ViewInspector):
             schema = component.ref
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
+        elif is_higher_order_type_hint(serializer):
+            schema = resolve_type_hint(serializer)
         elif isinstance(serializer, dict):
             # bypass processing and use given schema directly
             schema = serializer
