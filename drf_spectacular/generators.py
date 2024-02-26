@@ -79,7 +79,11 @@ class EndpointEnumerator(BaseEndpointEnumerator):
     def get_allowed_methods(self, callback):
         if hasattr(callback, 'actions'):
             actions = set(callback.actions)
-            http_method_names = set(callback.cls.http_method_names)
+            if 'http_method_names' in callback.initkwargs:
+                http_method_names = set(callback.initkwargs['http_method_names'])
+            else:
+                http_method_names = set(callback.cls.http_method_names)
+
             methods = [method.upper() for method in actions & http_method_names]
         else:
             # pass to constructor allowed method names to get valid ones

@@ -3328,3 +3328,23 @@ def test_extend_schema_higher_order_types(no_warnings):
 
         assert get_response_schema(schema['paths']['/x']['post']) == ref_schema
         assert get_request_schema(schema['paths']['/x']['post']) == ref_schema
+
+
+def test_customized_http_method_names(no_warnings):
+    class XViewSet(viewsets.ModelViewSet):
+        http_method_names = ['get', 'options', 'head']
+
+        serializer_class = SimpleSerializer
+        queryset = SimpleModel.objects.none()
+
+        @action(
+            detail=True,
+            methods=['post'],
+            http_method_names=['post'],
+        )
+        def favorite(self, request, pk=None):
+            pass  # pragma: no cover
+
+    schema = generate_schema('m', XViewSet)
+
+    assert list(schema['paths'].keys()) == ['/m/', '/m/{id}/', '/m/{id}/favorite/']
