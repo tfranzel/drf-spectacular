@@ -10,6 +10,11 @@ const reloadSchemaOnAuthChange = () => {
     statePlugins: {
       auth: {
         wrapActions: {
+          authorizeOauth2:(ori) => (...args) => {
+            schemaAuthFailed = false;
+            setTimeout(() => ui.specActions.download());
+            return ori(...args);
+          },
           authorize: (ori) => (...args) => {
             schemaAuthFailed = false;
             setTimeout(() => ui.specActions.download());
