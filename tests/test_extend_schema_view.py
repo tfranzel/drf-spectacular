@@ -85,8 +85,8 @@ class ZViewSet(XViewSet):
 
 router = routers.SimpleRouter()
 router.register('x', XViewSet)
-router.register('y', YViewSet)
-router.register('z', ZViewSet)
+router.register('y', YViewSet, basename='alt1')
+router.register('z', ZViewSet, basename='alt2')
 urlpatterns = router.urls
 
 

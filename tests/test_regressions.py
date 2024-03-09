@@ -1546,10 +1546,10 @@ def test_path_parameter_with_relationships(no_warnings):
 
     router = routers.SimpleRouter()
     router.register('child_by_id', XViewset1)
-    router.register('child_by_parent_id', XViewset2)
-    router.register('child_by_parent_id_alt', XViewset3)
-    router.register('grand_child_by_grand_parent_id', XViewset4)
-    router.register('grand_child_by_grand_parent_id_alt', XViewset5)
+    router.register('child_by_parent_id', XViewset2, basename='alt1')
+    router.register('child_by_parent_id_alt', XViewset3, basename='alt2')
+    router.register('grand_child_by_grand_parent_id', XViewset4, basename='alt3')
+    router.register('grand_child_by_grand_parent_id_alt', XViewset5, basename='alt4')
 
     schema = generate_schema(None, patterns=router.urls)
 
@@ -1615,7 +1615,7 @@ def test_path_parameter_with_lookup_field(no_warnings):
 
     router = routers.SimpleRouter()
     router.register('journal', JournalEntryViewset)
-    router.register('journal_alt', JournalEntryAltViewset)
+    router.register('journal_alt', JournalEntryAltViewset, basename='alt')
 
     schema = generate_schema(None, patterns=router.urls)
 
@@ -2650,7 +2650,7 @@ def test_extend_schema_view_isolation(no_warnings):
 
     router = routers.SimpleRouter()
     router.register('api/mammals', MammalViewSet)
-    router.register('api/insects', InsectViewSet)
+    router.register('api/insects', InsectViewSet, basename='alt')
 
     schema = generate_schema(None, patterns=router.urls)
     assert schema['paths']['/api/mammals/notes/']['get']['summary'] == 'List mammals.'
@@ -2678,8 +2678,8 @@ def test_extend_schema_view_layering(no_warnings):
 
     router = routers.SimpleRouter()
     router.register('x', XViewSet)
-    router.register('y', YViewSet)
-    router.register('z', ZViewSet)
+    router.register('y', YViewSet, basename='alt1')
+    router.register('z', ZViewSet, basename='alt2')
     schema = generate_schema(None, patterns=router.urls)
     resp = {
         c: get_response_schema(schema['paths'][f'/{c.lower()}/{{id}}/']['get'])
@@ -2707,7 +2707,7 @@ def test_extend_schema_view_extend_schema_crosstalk(no_warnings):
 
     router = routers.SimpleRouter()
     router.register('x', XViewSet)
-    router.register('y', YViewSet)
+    router.register('y', YViewSet, basename='alt')
     schema = generate_schema(None, patterns=router.urls)
     op = {
         c: schema['paths'][f'/{c.lower()}/{{id}}/']['get'] for c in ['X', 'Y']
@@ -3215,8 +3215,8 @@ def test_exclude_then_include_subclassed_view(no_warnings):
 
     router = routers.SimpleRouter()
     router.register('x1', X1ViewSet)
-    router.register('x2', X2ViewSet)
-    router.register('x3', X3ViewSet)
+    router.register('x2', X2ViewSet, basename='alt1')
+    router.register('x3', X3ViewSet, basename='alt2')
 
     schema = generate_schema(None, patterns=router.urls)
     assert '/x1/' not in schema['paths']
