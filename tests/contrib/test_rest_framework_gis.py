@@ -1,3 +1,4 @@
+import re
 from unittest import mock
 
 import pytest
@@ -87,7 +88,10 @@ def test_rest_framework_gis(no_warnings, clear_caches, django_transforms):
     assert_schema(
         generate_schema(None, patterns=router.urls),
         'tests/contrib/test_rest_framework_gis.yml',
-        transforms=django_transforms,
+        transforms=[
+            *django_transforms,
+            lambda x: re.sub(r'\s+required:\n\s+- count\n\s+- results', '', x, flags=re.M)
+        ],
     )
 
 

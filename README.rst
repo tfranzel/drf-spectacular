@@ -63,7 +63,7 @@ Requirements
 
 -  Python >= 3.7
 -  Django (2.2, 3.2, 4.0, 4.1, 4.2, 5.0)
--  Django REST Framework (3.10.3, 3.11, 3.12, 3.13, 3.14)
+-  Django REST Framework (3.10.3, 3.11, 3.12, 3.13, 3.14, 3.15)
 
 Installation
 ------------
