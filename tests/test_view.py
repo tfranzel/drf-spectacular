@@ -151,6 +151,13 @@ def test_spectacular_ui_with_raw_settings(no_warnings):
 
 
 @pytest.mark.urls(__name__)
+def test_spectacular_ui_coop():
+    response = APIClient().get('/api/v2/schema/swagger-ui/')
+    assert response.status_code == 200
+    assert response["Cross-Origin-Opener-Policy"] == "unsafe-none"
+
+
+@pytest.mark.urls(__name__)
 def test_spectacular_ui_param_passthrough(no_warnings):
     response = APIClient().get('/api/v2/schema/swagger-ui/?foo=bar&lang=jp&version=v2')
     assert response.status_code == 200
