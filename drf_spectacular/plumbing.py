@@ -1307,9 +1307,6 @@ def is_higher_order_type_hint(hint) -> bool:
 
 def resolve_type_hint(hint):
     """ resolve return value type hints to schema """
-    if isinstance(hint, TYPE_ALIAS_TYPES):
-        hint = hint.__value__
-    
     origin, args = _get_type_hint_origin(hint)
 
     if origin is None and is_basic_type(hint, allow_none=False):
@@ -1355,6 +1352,8 @@ def resolve_type_hint(hint):
         return schema
     elif isinstance(hint, TYPED_DICT_META_TYPES):
         return _resolve_typeddict(hint)
+    elif isinstance(hint, TYPE_ALIAS_TYPES):
+        return resolve_type_hint(hint.__value__)
     elif origin in UNION_TYPES:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
