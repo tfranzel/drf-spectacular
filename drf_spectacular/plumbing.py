@@ -75,12 +75,17 @@ else:
 
 LITERAL_TYPES: Tuple[Any, ...] = ()
 TYPED_DICT_META_TYPES: Tuple[Any, ...] = ()
+TYPE_ALIAS_TYPES: Tuple[Any, ...] = ()
 
 if sys.version_info >= (3, 8):
     from typing import Literal as _PyLiteral
     from typing import _TypedDictMeta as _PyTypedDictMeta  # type: ignore[attr-defined]
     LITERAL_TYPES += (_PyLiteral,)
     TYPED_DICT_META_TYPES += (_PyTypedDictMeta,)
+
+if sys.version_info >= (3, 12):
+    from typing import TypeAliasType
+    TYPE_ALIAS_TYPES += (TypeAliasType,)
 
 try:
     from typing_extensions import Literal as _PxLiteral
@@ -1302,6 +1307,9 @@ def is_higher_order_type_hint(hint) -> bool:
 
 def resolve_type_hint(hint):
     """ resolve return value type hints to schema """
+    if isinstance(hint, TYPE_ALIAS_TYPES):
+        hint = hint.__value__
+    
     origin, args = _get_type_hint_origin(hint)
 
     if origin is None and is_basic_type(hint, allow_none=False):
