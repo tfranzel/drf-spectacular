@@ -75,12 +75,17 @@ else:
 
 LITERAL_TYPES: Tuple[Any, ...] = ()
 TYPED_DICT_META_TYPES: Tuple[Any, ...] = ()
+TYPE_ALIAS_TYPES: Tuple[Any, ...] = ()
 
 if sys.version_info >= (3, 8):
     from typing import Literal as _PyLiteral
     from typing import _TypedDictMeta as _PyTypedDictMeta  # type: ignore[attr-defined]
     LITERAL_TYPES += (_PyLiteral,)
     TYPED_DICT_META_TYPES += (_PyTypedDictMeta,)
+
+if sys.version_info >= (3, 12):
+    from typing import TypeAliasType
+    TYPE_ALIAS_TYPES += (TypeAliasType,)
 
 try:
     from typing_extensions import Literal as _PxLiteral
@@ -1347,6 +1352,8 @@ def resolve_type_hint(hint):
         return schema
     elif isinstance(hint, TYPED_DICT_META_TYPES):
         return _resolve_typeddict(hint)
+    elif isinstance(hint, TYPE_ALIAS_TYPES):
+        return resolve_type_hint(hint.__value__)
     elif origin in UNION_TYPES:
         type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
         if len(type_args) > 1:
