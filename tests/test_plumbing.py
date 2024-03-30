@@ -322,16 +322,16 @@ if sys.version_info >= (3, 10):
     ])
 
 if sys.version_info >= (3, 12):
-    type MyAlias = typing.Literal['x', 'y']
-    type MyAliasNested = MyAlias | list[int | str]
+    exec("type MyAlias = typing.Literal['x', 'y']")
+    exec("type MyAliasNested = MyAlias | list[int | str]")
 
     TYPE_HINT_TEST_PARAMS.extend([
         (
-            MyAlias,
+            MyAlias,  # noqa: F821
             {'enum': ['x', 'y'], 'type': 'string'}
         ),
         (
-            MyAliasNested,
+            MyAliasNested,  # noqa: F821
             {
                 'oneOf': [
                     {'enum': ['x', 'y'], 'type': 'string'},
@@ -340,6 +340,7 @@ if sys.version_info >= (3, 12):
             }
         )
     ])
+
 
 @pytest.mark.parametrize(['type_hint', 'ref_schema'], TYPE_HINT_TEST_PARAMS)
 def test_type_hint_extraction(no_warnings, type_hint, ref_schema):
