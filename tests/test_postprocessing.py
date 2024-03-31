@@ -15,7 +15,7 @@ except ImportError:
     TextChoices = object  # type: ignore  # django < 3.0 handling
     IntegerChoices = object  # type: ignore  # django < 3.0 handling
 
-from drf_spectacular.plumbing import list_hash, load_enum_name_overrides
+from drf_spectacular.plumbing import _load_enum_name_overrides, list_hash, load_enum_name_overrides
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from tests import assert_schema, generate_schema
 
@@ -264,7 +264,7 @@ def test_enum_override_variations(no_warnings):
             'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
             {'LanguageEnum': f'tests.test_postprocessing.{variation}'}
         ):
-            load_enum_name_overrides.cache_clear()
+            _load_enum_name_overrides.cache_clear()
             assert list_hash(expected_hashed_keys) in load_enum_name_overrides()
 
 
@@ -286,7 +286,7 @@ def test_enum_override_variations_with_blank_and_null(no_warnings):
             'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
             {'LanguageEnum': f'tests.test_postprocessing.{variation}'}
         ):
-            load_enum_name_overrides.cache_clear()
+            _load_enum_name_overrides.cache_clear()
             # Should match after None and blank strings are removed
             assert list_hash(expected_hashed_keys) in load_enum_name_overrides()
 

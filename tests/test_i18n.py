@@ -14,9 +14,15 @@ from drf_spectacular.validation import validate_schema
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from tests import assert_schema, generate_schema
 
+TRANSPORT_CHOICES = (
+    ('car', _('Car')),
+    ('bicycle', _('Bicycle')),
+)
+
 
 class I18nModel(models.Model):
     field_str = models.TextField()
+    field_choice = models.CharField(max_length=10, choices=TRANSPORT_CHOICES)
 
     class Meta:
         verbose_name = _("Internationalization")
@@ -90,3 +96,15 @@ def test_i18n_schema(no_warnings, url, header, translated):
 def test_i18n_schema_ui(no_warnings):
     response = APIClient().get('/api/schema/swagger-ui/?lang=de')
     assert b'/api/schema/?lang\\u003Dde' in response.content
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
+    'SpecialLanguageEnum': TRANSPORT_CHOICES
+})
+@pytest.mark.urls(__name__)
+def test_lazily_translated_enum_overrides(no_warnings, clear_caches):
+    schema_de = yaml.load(APIClient().get('/api/schema/?lang=de').content, Loader=yaml.SafeLoader)
+    schema_en = yaml.load(APIClient().get('/api/schema/').content, Loader=yaml.SafeLoader)
+
+    assert 'SpecialLanguageEnum' in schema_de['components']['schemas']
+    assert 'SpecialLanguageEnum' in schema_en['components']['schemas']

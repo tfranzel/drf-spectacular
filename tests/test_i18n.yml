@@ -123,6 +123,14 @@ paths:
           description: ''
 components:
   schemas:
+    FieldChoiceEnum:
+      enum:
+      - car
+      - bicycle
+      type: string
+      description: |-
+        * `car` - Auto
+        * `bicycle` - Fahrrad
     X:
       type: object
       properties:
@@ -131,7 +139,10 @@ components:
           readOnly: true
         field_str:
           type: string
+        field_choice:
+          $ref: '#/components/schemas/FieldChoiceEnum'
       required:
+      - field_choice
       - field_str
       - id
   securitySchemes:
