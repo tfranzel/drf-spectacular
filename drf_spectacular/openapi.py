@@ -628,6 +628,8 @@ class AutoSchema(ViewInspector):
                 schema = build_basic_type(override)
                 if schema is None:
                     return None
+            elif is_higher_order_type_hint(override):
+                schema = resolve_type_hint(override)
             elif isinstance(override, dict):
                 schema = override
             else:
