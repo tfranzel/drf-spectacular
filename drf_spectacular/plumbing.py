@@ -21,7 +21,6 @@ if sys.version_info >= (3, 10):
 else:
     from typing_extensions import TypeGuard  # noqa: F401
 
-
 import inflection
 import uritemplate
 from django.apps import apps
@@ -1366,7 +1365,7 @@ def resolve_type_hint(hint):
     elif origin is collections.abc.Iterable:
         return build_array_type(resolve_type_hint(args[0]))
     else:
-        raise UnableToProceedError()
+        raise UnableToProceedError(hint)
 
 
 def whitelisted(obj: object, classes: Optional[List[Type[object]]], exact=False) -> bool:

@@ -571,7 +571,7 @@ def extend_schema(
 
 
 def extend_schema_field(
-        field: Union[_SerializerType, _FieldType, OpenApiTypes, _SchemaType],
+        field: Union[_SerializerType, _FieldType, OpenApiTypes, _SchemaType, _KnownPythonTypes],
         component_name: Optional[str] = None
 ) -> Callable[[F], F]:
     """

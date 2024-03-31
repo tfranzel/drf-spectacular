@@ -3348,3 +3348,40 @@ def test_customized_http_method_names(no_warnings):
     schema = generate_schema('m', XViewSet)
 
     assert list(schema['paths'].keys()) == ['/m/', '/m/{id}/', '/m/{id}/favorite/']
+
+
+def test_extend_schema_field_with_types(no_warnings):
+    @extend_schema_field(int)
+    class CustomField(serializers.CharField):
+        pass  # pragma: no cover
+
+    @extend_schema_field(typing.List[int])  # this is the new case
+    class CustomField2(serializers.CharField):
+        pass  # pragma: no cover
+
+    class XSerializer(serializers.Serializer):
+        foo = serializers.SerializerMethodField()
+        bar = serializers.SerializerMethodField()
+        baz = CustomField()
+        qux = CustomField2()
+
+        @extend_schema_field(int)
+        def get_foo(self, field, extra_param):
+            return 'foo'  # pragma: no cover
+
+        @extend_schema_field(typing.List[int])
+        def get_bar(self, field, extra_param):
+            return 1  # pragma: no cover
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties'] == {
+        'foo': {'readOnly': True, 'type': 'integer'},
+        'bar': {'items': {'type': 'integer'}, 'readOnly': True, 'type': 'array'},
+        'baz': {'type': 'integer'},
+        'qux': {'items': {'type': 'integer'}, 'type': 'array'}
+    }
