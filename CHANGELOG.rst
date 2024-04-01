@@ -1,6 +1,30 @@
 Changelog
 =========
 
+0.27.2 (2024-04-01)
+-------------------
+
+- fix non-translated enum override hash `#1198 <https://github.com/tfranzel/drf-spectacular/issues/1198>`_
+- higher order hints for @extend_schema_field (case 2) `#1174 <https://github.com/tfranzel/drf-spectacular/issues/1174>`_ `#1212 <https://github.com/tfranzel/drf-spectacular/issues/1212>`_
+- Add support for TypeAliasType (`#1214 <https://github.com/tfranzel/drf-spectacular/issues/1214>`_) [igorgaming]
+- DRF 3.15 counteract new assertion for tests
+- Add a specific Action Wrapper for OAuth Authorization requests `#1190 <https://github.com/tfranzel/drf-spectacular/issues/1190>`_ [Bram Esposito]
+- Update SWAGGER_UI_DIST settings.rst [Alfie Day]
+- fix custom http_method_names for actions `#1184 <https://github.com/tfranzel/drf-spectacular/issues/1184>`_
+- Add support for direct usage of higher order hints `#1174 <https://github.com/tfranzel/drf-spectacular/issues/1174>`_
+- Document `extend_schema_view` support for `@action` (`#1178 <https://github.com/tfranzel/drf-spectacular/issues/1178>`_) [johnthagen]
+- remove official 3.6 support due to upstream breakage.
+- Add auth extension for django-rest-knox [Callum Gare]
+- fix yaml encoder for OrderedDict objects `#1158 <https://github.com/tfranzel/drf-spectacular/issues/1158>`_
+- fix linter warning `#1158 <https://github.com/tfranzel/drf-spectacular/issues/1158>`_
+- Update link to redoc settings [Andrey Otto]
+- Add tags support to OpenApiWebhook [Federico Bond]
+- set Cross-Origin-Opener-Policy on Swagger-UI view [ftsell]
+
+Breaking changes / important additions:
+
+- Some bugfixes and some functionality gaps closed.
+
 0.27.1 (2024-01-18)
 -------------------
 
