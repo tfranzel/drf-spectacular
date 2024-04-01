@@ -179,11 +179,11 @@ def clear_generator_settings():
 
 @pytest.fixture()
 def clear_caches():
-    from drf_spectacular.plumbing import get_openapi_type_mapping, load_enum_name_overrides
-    load_enum_name_overrides.cache_clear()
+    from drf_spectacular.plumbing import _load_enum_name_overrides, get_openapi_type_mapping
+    _load_enum_name_overrides.cache_clear()
     get_openapi_type_mapping.cache_clear()
     yield
-    load_enum_name_overrides.cache_clear()
+    _load_enum_name_overrides.cache_clear()
     get_openapi_type_mapping.cache_clear()
 
 

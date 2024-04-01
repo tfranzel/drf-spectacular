@@ -40,3 +40,9 @@ msgstr "Internätiönalisierung"
 
 msgid "Internationalizations"
 msgstr "Internätiönalisierungen"
+
+msgid "Car"
+msgstr "Auto"
+
+msgid "Bicycle"
+msgstr "Fahrrad"

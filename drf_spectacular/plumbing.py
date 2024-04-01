@@ -38,6 +38,7 @@ from django.urls.resolvers import (  # type: ignore[attr-defined]
 )
 from django.utils.functional import Promise, cached_property
 from django.utils.module_loading import import_string
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, fields, mixins, serializers, versioning
 from rest_framework.compat import unicode_http_header
@@ -859,8 +860,12 @@ def deep_import_string(string: str) -> Any:
         pass
 
 
-@cache
 def load_enum_name_overrides():
+    return _load_enum_name_overrides(get_language())
+
+
+@functools.lru_cache()
+def _load_enum_name_overrides(language: str):
     overrides = {}
     for name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items():
         if isinstance(choices, str):
