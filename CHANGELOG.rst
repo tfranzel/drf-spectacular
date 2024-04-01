@@ -12,7 +12,7 @@ Changelog
 - Update SWAGGER_UI_DIST settings.rst [Alfie Day]
 - fix custom http_method_names for actions `#1184 <https://github.com/tfranzel/drf-spectacular/issues/1184>`_
 - Add support for direct usage of higher order hints `#1174 <https://github.com/tfranzel/drf-spectacular/issues/1174>`_
-- Document `extend_schema_view` support for `@action` (`#1178 <https://github.com/tfranzel/drf-spectacular/issues/1178>`_) [johnthagen]
+- Document ``extend_schema_view`` support for ``@action`` (`#1178 <https://github.com/tfranzel/drf-spectacular/issues/1178>`_) [johnthagen]
 - remove official 3.6 support due to upstream breakage.
 - Add auth extension for django-rest-knox [Callum Gare]
 - fix yaml encoder for OrderedDict objects `#1158 <https://github.com/tfranzel/drf-spectacular/issues/1158>`_
