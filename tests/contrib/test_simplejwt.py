@@ -33,6 +33,7 @@ class X2Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     authentication_classes = [JWTTokenUserAuthentication]
     required_scopes = ['x:read', 'x:write']
 
+
 class X3Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = XSerializer
     authentication_classes = [JWTStatelessUserAuthentication]
