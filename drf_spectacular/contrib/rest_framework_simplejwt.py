@@ -81,3 +81,7 @@ class SimpleJWTScheme(OpenApiAuthenticationExtension):
 
 class SimpleJWTTokenUserScheme(SimpleJWTScheme):
     target_class = 'rest_framework_simplejwt.authentication.JWTTokenUserAuthentication'
+
+
+class SimpleJWTStatelessUserScheme(SimpleJWTScheme):
+    target_class = "rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication"
