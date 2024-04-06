@@ -8,7 +8,7 @@ from tests import assert_schema, generate_schema
 
 try:
     from rest_framework_simplejwt.authentication import (
-        JWTAuthentication, JWTTokenUserAuthentication, JWTStatelessUserAuthentication
+        JWTAuthentication, JWTStatelessUserAuthentication, JWTTokenUserAuthentication
     )
     from rest_framework_simplejwt.views import (
         TokenObtainPairView, TokenObtainSlidingView, TokenRefreshView, TokenVerifyView,
