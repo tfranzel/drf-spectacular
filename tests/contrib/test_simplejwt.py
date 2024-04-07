@@ -8,7 +8,7 @@ from tests import assert_schema, generate_schema
 
 try:
     from rest_framework_simplejwt.authentication import (
-        JWTAuthentication, JWTTokenUserAuthentication,
+        JWTAuthentication, JWTStatelessUserAuthentication, JWTTokenUserAuthentication,
     )
     from rest_framework_simplejwt.views import (
         TokenObtainPairView, TokenObtainSlidingView, TokenRefreshView, TokenVerifyView,
@@ -34,8 +34,14 @@ class X2Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     required_scopes = ['x:read', 'x:write']
 
 
+class X3Viewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = XSerializer
+    authentication_classes = [JWTStatelessUserAuthentication]
+    required_scopes = ['x:read', 'x:write']
+
+
 @pytest.mark.contrib('rest_framework_simplejwt')
-@pytest.mark.parametrize('view', [XViewset, X2Viewset])
+@pytest.mark.parametrize('view', [XViewset, X2Viewset, X3Viewset])
 def test_simplejwt(no_warnings, view):
     router = routers.SimpleRouter()
     router.register('x', view, basename="x")
