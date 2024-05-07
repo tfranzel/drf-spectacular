@@ -3385,3 +3385,28 @@ def test_extend_schema_field_with_types(no_warnings):
         'baz': {'type': 'integer'},
         'qux': {'items': {'type': 'integer'}, 'type': 'array'}
     }
+
+
+def test_model_choice_display_method_on_readonly(no_warnings):
+    class M15(models.Model):
+        SHIRT_SIZES = {"S": "Small", "M": "Medium", "L": "Large"}
+
+        name = models.CharField(max_length=60)
+        shirt_size = models.CharField(max_length=1, choices=SHIRT_SIZES)
+
+    class XSerializer(serializers.ModelSerializer):
+        field_name = serializers.ReadOnlyField(source='name')
+        field_shirts = serializers.ReadOnlyField(source='get_shirt_size_display')
+
+        class Meta:
+            model = M15
+            fields = '__all__'
+
+    class XViewset(viewsets.ModelViewSet):
+        queryset = M15.objects.all()
+        serializer_class = XSerializer
+
+    schema = generate_schema('x', XViewset)
+    assert schema['components']['schemas']['X']["properties"]["field_shirts"] == {
+        "readOnly": True, 'type': 'string'
+    }
