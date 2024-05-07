@@ -893,7 +893,14 @@ class AutoSchema(ViewInspector):
                 return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
             target = follow_field_source(model, source)
-            if callable(target):
+            if (
+                hasattr(target, "_partialmethod")
+                and target._partialmethod.func.__name__ == '_get_FIELD_display'
+            ):
+                # the only way to detect an uninitialized partial method
+                # this is a convenience method for model choice fields and is mostly a string
+                schema = build_basic_type(str)
+            elif callable(target):
                 schema = self._map_response_type_hint(target)
             elif isinstance(target, models.Field):
                 schema = self._map_model_field(target, direction)
