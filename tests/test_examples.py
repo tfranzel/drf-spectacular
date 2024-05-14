@@ -184,6 +184,62 @@ def test_example_pagination(no_warnings):
     }
 
 
+@pytest.mark.skipif(DRF_VERSION < '3.12', reason='DRF pagination schema broken')
+def test_example_nested_pagination(no_warnings):
+    class NestedPagination(pagination.LimitOffsetPagination):
+        def get_paginated_response_schema(self, schema):
+            return {
+                'type': 'object',
+                'required': ['pagination', 'results'],
+                'properties': {
+                    'pagination': {
+                        'type': 'object',
+                        'required': ['next', 'previous'],
+                        'properties': {
+                            'count': {
+                                'type': 'integer',
+                                'example': 123,
+                            },
+                            'next': {
+                                'type': 'string',
+                                'nullable': True,
+                                'format': 'uri',
+                                'example': 'http://api.example.org/accounts/?{offset_prm}=400&{limit_prm}=100'.format(
+                                    offset_prm=self.offset_query_param, limit_prm=self.limit_query_param),
+                            },
+                            'previous': {
+                                'type': 'string',
+                                'nullable': True,
+                                'format': 'uri',
+                                'example': 'http://api.example.org/accounts/?{offset_prm}=200&{limit_prm}=100'.format(
+                                    offset_prm=self.offset_query_param, limit_prm=self.limit_query_param),
+                            },
+                        }
+                    },
+                    'results': schema,
+                },
+            }
+
+    class PaginatedExamplesViewSet(ExampleTestWithExtendedViewSet):
+        pagination_class = NestedPagination
+
+    schema = generate_schema('e', PaginatedExamplesViewSet)
+    operation = schema['paths']['/e/']['get']
+    assert operation['responses']['200']['content']['application/json']['examples'] == {
+        'SerializerCExampleRO': {
+            'value': {
+                'pagination': {
+                    'count': 123,
+                    'next': 'http://api.example.org/accounts/?offset=400&limit=100',
+                    'previous': 'http://api.example.org/accounts/?offset=200&limit=100',
+                },
+                'results': [{'field': 111}],
+            },
+            'summary': 'Serializer C Example RO'
+        }
+    }
+
+
 def test_example_request_response_listed_examples(no_warnings):
     @extend_schema(
         request=ASerializer(many=True),
@@ -306,6 +362,7 @@ def test_plain_pagination_example(no_warnings):
 
     class PlainPagination(pagination.LimitOffsetPagination):
         """ return a (unpaginated) basic list, while other might happen in the headers """
+
         def get_paginated_response_schema(self, schema):
             return schema
 
