@@ -1416,11 +1416,19 @@ def build_listed_example_value(value: Any, paginator, direction):
     if schema is sentinel:
         return [value]
 
+    def drilldown_schema_example(schema, sentinel):
+        # Recursively travel schema properties to build example.
+        if schema is sentinel:
+            return [value]
+        if 'properties' in schema.keys():
+            return {
+                field_name: drilldown_schema_example(field_schema, sentinel)
+                for field_name, field_schema in schema['properties'].items()
+            }
+        return schema['example']
+
     try:
-        return {
-            field_name: [value] if field_schema is sentinel else field_schema['example']
-            for field_name, field_schema in schema['properties'].items()
-        }
+        return drilldown_schema_example(schema, sentinel)
     except (AttributeError, KeyError):
         warn(
             f"OpenApiExample could not be paginated because {paginator.__class__} either "
