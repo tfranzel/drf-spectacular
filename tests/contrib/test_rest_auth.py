@@ -49,6 +49,49 @@ def test_rest_auth_token(no_warnings, settings):
     )
 
 
+@pytest.mark.contrib('dj_rest_auth', 'allauth', 'rest_framework_simplejwt')
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX', '')
+@mock.patch('dj_rest_auth.app_settings.api_settings.USE_JWT', True)
+@mock.patch('dj_rest_auth.app_settings.api_settings.JWT_AUTH_RETURN_EXPIRATION', True, create=True)
+def test_rest_auth_token_with_expiration(no_warnings, settings):
+    import dj_rest_auth.urls
+    reload(dj_rest_auth.urls)
+
+    urlpatterns = [
+        # path('rest-auth/', include(urlpatterns)),
+        path('rest-auth/', include('dj_rest_auth.urls')),
+        path('rest-auth/registration/', include('dj_rest_auth.registration.urls')),
+    ]
+
+    schema = generate_schema(None, patterns=urlpatterns)
+
+    assert_schema(
+        schema, 'tests/contrib/test_rest_auth_token_with_expiration.yml', transforms=transforms
+    )
+
+
+@pytest.mark.contrib('dj_rest_auth', 'allauth', 'rest_framework_simplejwt')
+@mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX', '')
+@mock.patch('dj_rest_auth.app_settings.api_settings.USE_JWT', True)
+@mock.patch('dj_rest_auth.app_settings.api_settings.JWT_AUTH_RETURN_EXPIRATION', True, create=True)
+@mock.patch('rest_framework_simplejwt.settings.api_settings.ROTATE_REFRESH_TOKENS', True, create=True)
+def test_rest_auth_rotate_token_with_expiration(no_warnings, settings):
+    import dj_rest_auth.urls
+    reload(dj_rest_auth.urls)
+
+    urlpatterns = [
+        # path('rest-auth/', include(urlpatterns)),
+        path('rest-auth/', include('dj_rest_auth.urls')),
+        path('rest-auth/registration/', include('dj_rest_auth.registration.urls')),
+    ]
+
+    schema = generate_schema(None, patterns=urlpatterns)
+
+    assert_schema(
+        schema, 'tests/contrib/test_rest_auth_rotate_token_with_expiration.yml', transforms=transforms
+    )
+
+
 @pytest.mark.contrib('dj_rest_auth', 'rest_framework_simplejwt')
 @mock.patch('django.conf.settings.JWT_AUTH_COOKIE', 'jwt-session', create=True)
 @mock.patch('dj_rest_auth.app_settings.api_settings.JWT_AUTH_COOKIE', 'jwt-session', create=True)
