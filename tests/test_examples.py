@@ -303,11 +303,11 @@ def test_example_request_response_listed_examples(no_warnings):
     operation = schema['paths']['/e']['post']
     assert operation['requestBody']['content']['application/json'] == {
         'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/A'}},
-        'examples': {'Ex': {'value': [{'id': '2345'},{'id': '2345'}]}}
+        'examples': {'Ex': {'value': [{'id': '2345'}, {'id': '2345'}]}}
     }
     assert operation['responses']['201']['content']['application/json'] == {
         'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/A'}},
-        'examples': {'Ex': {'value': [{'id': '2345'},{'id': '2345'}]}}
+        'examples': {'Ex': {'value': [{'id': '2345'}, {'id': '2345'}]}}
     }
 
 
