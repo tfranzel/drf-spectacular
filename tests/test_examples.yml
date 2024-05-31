@@ -40,6 +40,11 @@ paths:
                   value:
                   - field: 111
                   summary: Serializer C Example RO
+                SerializerCExampleList:
+                  value:
+                  - field: 333
+                  - field: 444
+                  summary: Serializer C Example List
           description: ''
     post:
       operationId: schema_create

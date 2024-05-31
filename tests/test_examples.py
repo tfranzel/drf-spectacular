@@ -56,6 +56,11 @@ class BSerializer(serializers.Serializer):
             value={"field": 222},
             request_only=True,
         ),
+        OpenApiExample(
+            'Serializer C Example List',
+            value=[{"field": 333}, {"field": 444}],
+            response_only=True,
+        ),
     ]
 )
 class CSerializer(serializers.Serializer):
@@ -180,7 +185,16 @@ def test_example_pagination(no_warnings):
                 'results': [{'field': 111}],
             },
             'summary': 'Serializer C Example RO'
-        }
+        },
+        'SerializerCExampleList': {
+            'value': {
+                'count': 123,
+                'next': 'http://api.example.org/accounts/?offset=400&limit=100',
+                'previous': 'http://api.example.org/accounts/?offset=200&limit=100',
+                'results': [{'field': 333}, {'field': 444}],
+            },
+            'summary': 'Serializer C Example List'
+        },
     }
 
 
@@ -236,11 +250,22 @@ def test_example_nested_pagination(no_warnings):
                 'results': [{'field': 111}],
             },
             'summary': 'Serializer C Example RO'
-        }
+        },
+        'SerializerCExampleList': {
+            'value': {
+                'pagination': {
+                    'count': 123,
+                    'next': 'http://api.example.org/accounts/?offset=400&limit=100',
+                    'previous': 'http://api.example.org/accounts/?offset=200&limit=100',
+                },
+                'results': [{'field': 333}, {'field': 444}],
+            },
+            'summary': 'Serializer C Example List'
+        },
     }
 
 
-def test_example_request_response_listed_examples(no_warnings):
+def test_example_request_response_singular_examples(no_warnings):
     @extend_schema(
         request=ASerializer(many=True),
         responses=ASerializer(many=True),
@@ -260,6 +285,29 @@ def test_example_request_response_listed_examples(no_warnings):
     assert operation['responses']['201']['content']['application/json'] == {
         'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/A'}},
         'examples': {'Ex': {'value': [{'id': '1234'}]}}
+    }
+
+
+def test_example_request_response_listed_examples(no_warnings):
+    @extend_schema(
+        request=ASerializer(many=True),
+        responses=ASerializer(many=True),
+        examples=[
+            OpenApiExample('Ex', [{'id': '2345'}, {'id': '2345'}])
+        ]
+    )
+    class XView(generics.CreateAPIView):
+        pass
+
+    schema = generate_schema('e', view=XView)
+    operation = schema['paths']['/e']['post']
+    assert operation['requestBody']['content']['application/json'] == {
+        'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/A'}},
+        'examples': {'Ex': {'value': [{'id': '2345'},{'id': '2345'}]}}
+    }
+    assert operation['responses']['201']['content']['application/json'] == {
+        'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/A'}},
+        'examples': {'Ex': {'value': [{'id': '2345'},{'id': '2345'}]}}
     }
 
 
@@ -375,5 +423,9 @@ def test_plain_pagination_example(no_warnings):
         'SerializerCExampleRO': {
             'value': [{'field': 111}],
             'summary': 'Serializer C Example RO'
+        },
+        'SerializerCExampleList': {
+            'value': [{'field': 333}, {'field': 444}],
+            'summary': 'Serializer C Example List'
         }
     }

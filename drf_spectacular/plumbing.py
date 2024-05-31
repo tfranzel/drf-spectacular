@@ -1408,18 +1408,18 @@ def build_mocked_view(method: str, path: str, extend_schema_decorator, registry)
 
 def build_listed_example_value(value: Any, paginator, direction):
     if not paginator or direction == 'request':
-        return [value]
+        return value if type(value) is list else [value]
 
     sentinel = object()
     schema = paginator.get_paginated_response_schema(sentinel)
 
     if schema is sentinel:
-        return [value]
+        return value if type(value) is list else [value]
 
     def drilldown_schema_example(schema, sentinel):
         # Recursively travel schema properties to build example.
         if schema is sentinel:
-            return [value]
+            return value if type(value) is list else [value]
         if 'properties' in schema.keys():
             return {
                 field_name: drilldown_schema_example(field_schema, sentinel)
