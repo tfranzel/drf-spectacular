@@ -217,7 +217,7 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'EXTENSIONS_ROOT': {},
 
     # Oauth2 related settings. used for example by django-oauth2-toolkit.
-    # https://spec.openapis.org/oas/v3.0.3#oauthFlowsObject
+    # https://spec.openapis.org/oas/v3.0.3#oauth-flows-object
     'OAUTH2_FLOWS': [],
     'OAUTH2_AUTHORIZATION_URL': None,
     'OAUTH2_TOKEN_URL': None,
