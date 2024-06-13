@@ -98,7 +98,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Postprocessing functions that run at the end of schema generation.
     # must satisfy interface result = hook(generator, request, public, result)
     'POSTPROCESSING_HOOKS': [
-        'drf_spectacular.hooks.postprocess_schema_enums'
+        'drf_spectacular.hooks.postprocess_schema_enums',
+        'drf_spectacular.hooks.postprocess_sanitize_operation_id_uniqueness',
     ],
 
     # Preprocessing functions that run before schema generation.

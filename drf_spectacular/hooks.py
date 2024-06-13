@@ -6,7 +6,7 @@ from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import warn
 from drf_spectacular.plumbing import (
-    ResolvedComponent, list_hash, load_enum_name_overrides, safe_ref,
+    ResolvedComponent, list_hash, load_enum_name_overrides, safe_ref, sanitize_result_object,
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -195,6 +195,10 @@ def postprocess_schema_enum_id_removal(result, generator, **kwargs):
     clean(result)
 
     return result
+
+
+def postprocess_sanitize_operation_id_uniqueness(result, **kwargs):
+    return sanitize_result_object(result)
 
 
 def preprocess_exclude_path_format(endpoints, **kwargs):

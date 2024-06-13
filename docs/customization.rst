@@ -281,6 +281,7 @@ the choice ``Enum`` are consolidated into component objects. You can register ho
 
 .. note:: Please note that setting ``POSTPROCESSING_HOOKS`` will override the default. If you intend to
    keep the ``Enum`` hook, be sure to add ``'drf_spectacular.hooks.postprocess_schema_enums'`` back into the list.
+   The same applies to the ``Operation ID`` hook with ``'drf_spectacular.hooks.postprocess_sanitize_operation_id_uniqueness'``.
 
 Step 7: Preprocessing hooks
 ---------------------------
