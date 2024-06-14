@@ -142,6 +142,7 @@ class SpectacularSwaggerView(APIView):
                 'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
                 'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
                 'template_name_js': self.template_name_js,
+                'script_url': None,
                 'csrf_header_name': self._get_csrf_header_name(),
                 'schema_auth_names': self._dump(self._get_schema_auth_names()),
             },
