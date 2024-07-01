@@ -40,9 +40,13 @@ components:
           type: integer
         b:
           $ref: '#/components/schemas/B'
+        d:
+          title: D
+          type: string
       required:
       - id
       - b
+      - d
       title: A
       type: object
     B:
