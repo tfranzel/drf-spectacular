@@ -306,6 +306,9 @@ additional hooks with the ``PREPROCESSING_HOOKS`` setting.
   :py:func:`drf_spectacular.hooks.preprocess_exclude_path_format <drf_spectacular.hooks.preprocess_exclude_path_format>`
   hook. You can simply enable this hook by adding the import path string to the ``PREPROCESSING_HOOKS``.
 
+.. note:: For excluding some operations from the schema, you can use the :py:func:`drf_spectacular.hooks.exclude_non_public_endpoints` hook.
+  This hook will exclude all operations that are not marked as public by the :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` decorator.
+
 Congratulations
 ---------------
 

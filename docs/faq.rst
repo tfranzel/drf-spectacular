@@ -349,6 +349,14 @@ not allowed. ``SpectacularAPIView`` has dedicated arguments for overriding these
         ), name='schema-custom'),
     ]
 
+How can I hide certain operations from the public and only show them to staff users
+-----------------------------------------------------------------------------------
+
+If you have a concrete list urls then the way to go is to define a route and pass ``urlconf`` to the ```SpectacularAPIView``` view.
+
+Otherwise you can add ``drf_spectacular.hooks.postprocess_exclude_non_public_endpoints`` to the ``POSTPROCESSING_HOOKS`` setting then add ``Public`` tag to the operations you want to be public, 
+other operations will be considered private and will be accessible only by staff users.
+
 How to correctly annotate function-based views that use ``@api_view()``
 -----------------------------------------------------------------------
 

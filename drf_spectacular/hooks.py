@@ -1,5 +1,6 @@
 import re
 from collections import defaultdict
+import copy
 
 from inflection import camelize
 from rest_framework.settings import api_settings
@@ -208,3 +209,24 @@ def preprocess_exclude_path_format(endpoints, **kwargs):
         for path, path_regex, method, callback in endpoints
         if not (path.endswith(format_path) or path.endswith(format_path + '/'))
     ]
+
+
+def postprocess_exclude_non_public_endpoints(result, generator, request, public):
+    """
+    Excludes non-public endpoints from the schema if the requesting user is not a staff.
+
+    Public endpoints are those tagged with "Public".
+    """
+    result_filtered = copy.deepcopy(result)
+    for path, schema in result["paths"].items():
+        for method, operation in schema.items():
+            if not getattr(request, "user", None):
+                continue
+            is_public = "Public" in operation.get("tags", [])
+            if not is_public and not request.user.is_staff:
+                del result_filtered["paths"][path][method]
+                continue
+            if is_public:
+                tags_exclude_public = [tag for tag in operation["tags"] if tag != "Public"]
+                result_filtered["paths"][path][method]["tags"] = tags_exclude_public
+    return result_filtered
