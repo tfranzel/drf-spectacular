@@ -22,7 +22,7 @@ def camelize_serializer_fields(result, generator, request, public):
 
         for middleware in [import_string(m) for m in settings.MIDDLEWARE]:
             try:
-                if issubclass(CamelCaseMiddleWare, middleware):
+                if issubclass(middleware, CamelCaseMiddleWare):
                     return True
             except TypeError:
                 pass
