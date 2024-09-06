@@ -460,7 +460,12 @@ class AutoSchema(ViewInspector):
         if re.search(r'<drf_format_suffix\w*:\w+>', self.path_regex):
             tokenized_path.append('formatted')
 
-        return '_'.join(tokenized_path + [action])
+        if spectacular_settings.OPERATION_ID_METHOD_POSITION == 'PRE':
+            return '_'.join([action] + tokenized_path)
+        elif spectacular_settings.OPERATION_ID_METHOD_POSITION == 'POST':
+            return '_'.join(tokenized_path + [action])
+        else:
+            assert False, 'Invalid value for OPERATION_ID_METHOD_POSITION. Allowed: PRE, POST'
 
     def is_deprecated(self) -> bool:
         """ override this for custom behaviour """

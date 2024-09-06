@@ -139,6 +139,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # ``djangorestframework_camel_case``, while CAMELIZE_NAMES itself does not.
     'CAMELIZE_NAMES': False,
 
+    # Changes the location of the action/method on the generated OperationId. For example,
+    # "POST": "group_person_list", "group_person_create"
+    # "PRE":  "list_group_person", "create_group_person"
+    'OPERATION_ID_METHOD_POSITION': 'POST',
+
     # Determines if and how free-form 'additionalProperties' should be emitted in the schema. Some
     # code generator targets are sensitive to this. None disables generic 'additionalProperties'.
     # allowed values are 'dict', 'bool', None
