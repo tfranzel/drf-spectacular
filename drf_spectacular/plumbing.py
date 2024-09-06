@@ -723,6 +723,17 @@ class ResolvedComponent:
         return {'$ref': f'#/components/{self.type}/{self.name}'}
 
 
+class ComponentIdentity:
+    """ A container class to make object/component comparison explicit """
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __eq__(self, other):
+        if isinstance(other, ComponentIdentity):
+            return self.obj == other.obj
+        return self.obj == other
+
+
 class ComponentRegistry:
     def __init__(self) -> None:
         self._components: Dict[Tuple[str, str], ResolvedComponent] = {}
@@ -746,17 +757,25 @@ class ComponentRegistry:
 
         query_obj = component.object
         registry_obj = self._components[component.key].object
-        query_class = query_obj if inspect.isclass(query_obj) else query_obj.__class__
-        registry_class = query_obj if inspect.isclass(registry_obj) else registry_obj.__class__
+
+        if isinstance(query_obj, ComponentIdentity) or inspect.isclass(query_obj):
+            query_id = query_obj
+        else:
+            query_id = query_obj.__class__
+
+        if isinstance(registry_obj, ComponentIdentity) or inspect.isclass(registry_obj):
+            registry_id = registry_obj
+        else:
+            registry_id = registry_obj.__class__
 
         suppress_collision_warning = (
-            get_override(registry_class, 'suppress_collision_warning', False)
-            or get_override(query_class, 'suppress_collision_warning', False)
+            get_override(registry_id, 'suppress_collision_warning', False)
+            or get_override(query_id, 'suppress_collision_warning', False)
         )
-        if query_class != registry_class and not suppress_collision_warning:
+        if query_id != registry_id and not suppress_collision_warning:
             warn(
                 f'Encountered 2 components with identical names "{component.name}" and '
-                f'different classes {query_class} and {registry_class}. This will very '
+                f'different identities {query_id} and {registry_id}. This will very '
                 f'likely result in an incorrect schema. Try renaming one.'
             )
         return True

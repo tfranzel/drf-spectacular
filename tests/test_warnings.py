@@ -49,7 +49,7 @@ def test_serializer_name_reuse(capsys):
     generate_schema(None, patterns=router.urls)
 
     stderr = capsys.readouterr().err
-    assert 'Encountered 2 components with identical names "X" and different classes' in stderr
+    assert 'Encountered 2 components with identical names "X" and different identities' in stderr
 
 
 def test_owned_serializer_naming_override_with_ref_name_collision(warnings):

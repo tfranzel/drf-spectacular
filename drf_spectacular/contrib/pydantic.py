@@ -23,6 +23,7 @@ class PydanticExtension(OpenApiSerializerExtension):
         # of the entry model, we simply use the class name as string for object. This hack may
         # create false positive warnings, so turn it off. However, this may suppress correct
         # warnings involving the entry class.
+        # TODO suppression may be migrated to new ComponentIdentity system
         set_override(self.target, 'suppress_collision_warning', True)
         return self.target.__name__
 

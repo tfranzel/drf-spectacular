@@ -90,3 +90,49 @@ def test_rest_framework_dataclasses(no_warnings):
         generate_schema(None, patterns=urlpatterns),
         'tests/contrib/test_rest_framework_dataclasses.yml'
     )
+
+
+@pytest.mark.contrib('rest_framework_dataclasses')
+@pytest.mark.skipif(sys.version_info < (3, 7), reason='dataclass required by package')
+def test_rest_framework_dataclasses_class_reuse(no_warnings):
+    from dataclasses import dataclass
+
+    from rest_framework_dataclasses.serializers import DataclassSerializer
+
+    @dataclass
+    class Person:
+        name: str
+        age: int
+
+    @dataclass
+    class Party:
+        person: Person
+        num_persons: int
+
+    class PartySerializer(DataclassSerializer[Party]):
+        class Meta:
+            dataclass = Party
+
+    class PersonSerializer(DataclassSerializer[Person]):
+        class Meta:
+            dataclass = Person
+
+    @extend_schema(responses=PartySerializer)
+    @api_view()
+    def party(request):
+        pass  # pragma: no cover
+
+    @extend_schema(responses=PersonSerializer)
+    @api_view()
+    def person(request):
+        pass  # pragma: no cover
+
+    urlpatterns = [
+        path('party', person),
+        path('person', party),
+    ]
+
+    schema = generate_schema(None, patterns=urlpatterns)
+    # just existence is enough to check since its about no_warnings
+    assert 'Person' in schema['components']['schemas']
+    assert 'Party' in schema['components']['schemas']
