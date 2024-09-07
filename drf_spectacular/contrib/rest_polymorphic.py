@@ -1,7 +1,8 @@
 from drf_spectacular.drainage import warn
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.plumbing import (
-    ResolvedComponent, build_basic_type, build_object_type, is_patched_serializer,
+    ComponentIdentity, ResolvedComponent, build_basic_type, build_object_type,
+    is_patched_serializer,
 )
 from drf_spectacular.settings import spectacular_settings
 from drf_spectacular.types import OpenApiTypes
@@ -25,7 +26,7 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
                 component = ResolvedComponent(
                     name=auto_schema._get_serializer_name(sub_serializer, direction),
                     type=ResolvedComponent.SCHEMA,
-                    object='virtual'
+                    object=ComponentIdentity('virtual')
                 )
             typed_component = self.build_typed_component(
                 auto_schema=auto_schema,

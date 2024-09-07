@@ -1483,12 +1483,13 @@ class AutoSchema(ViewInspector):
                 and is_serializer(serializer)
                 and (not is_list_serializer(serializer) or is_serializer(serializer.child))
             ):
-                paginated_name = self.get_paginated_name(self._get_serializer_name(serializer, "response"))
                 component = ResolvedComponent(
-                    name=paginated_name,
+                    name=self.get_paginated_name(self._get_serializer_name(serializer, 'response')),
                     type=ResolvedComponent.SCHEMA,
                     schema=paginator.get_paginated_response_schema(schema),
-                    object=serializer.child if is_list_serializer(serializer) else serializer,
+                    object=self.get_serializer_identity(
+                        serializer.child if is_list_serializer(serializer) else serializer, 'response'
+                    )
                 )
                 self.registry.register_on_missing(component)
                 schema = component.ref
@@ -1561,7 +1562,17 @@ class AutoSchema(ViewInspector):
 
         return result
 
+    def get_serializer_identity(self, serializer, direction: Direction) -> Any:
+        serializer_extension = OpenApiSerializerExtension.get_match(serializer)
+        if serializer_extension:
+            identity = serializer_extension.get_identity(self, direction)
+            if identity is not None:
+                return identity
+
+        return serializer
+
     def get_serializer_name(self, serializer: serializers.Serializer, direction: Direction) -> str:
+        """ override this for custom behaviour """
         return serializer.__class__.__name__
 
     def _get_serializer_name(self, serializer, direction, bypass_extensions=False) -> str:
@@ -1617,7 +1628,7 @@ class AutoSchema(ViewInspector):
             component = ResolvedComponent(
                 name=self._get_serializer_name(serializer, direction, bypass_extensions),
                 type=ResolvedComponent.SCHEMA,
-                object=serializer,
+                object=self.get_serializer_identity(serializer, direction),
             )
             if component in self.registry:
                 return self.registry[component]  # return component with schema

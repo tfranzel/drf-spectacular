@@ -1,6 +1,8 @@
+from typing import Any
+
 from drf_spectacular.drainage import get_override, has_override
 from drf_spectacular.extensions import OpenApiSerializerExtension
-from drf_spectacular.plumbing import get_doc
+from drf_spectacular.plumbing import ComponentIdentity, get_doc
 from drf_spectacular.utils import Direction
 
 
@@ -17,6 +19,9 @@ class OpenApiDataclassSerializerExtensions(OpenApiSerializerExtension):
         if has_override(self.target.dataclass_definition.dataclass_type, 'component_name'):
             return get_override(self.target.dataclass_definition.dataclass_type, 'component_name')
         return self.target.dataclass_definition.dataclass_type.__name__
+
+    def get_identity(self, auto_schema, direction: Direction) -> Any:
+        return ComponentIdentity(self.target.dataclass_definition.dataclass_type)
 
     def strip_library_doc(self, schema):
         """Strip the DataclassSerializer library documentation from the schema."""

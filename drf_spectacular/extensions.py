@@ -68,6 +68,10 @@ class OpenApiSerializerExtension(OpenApiGeneratorExtension['OpenApiSerializerExt
         """ return str for overriding default name extraction """
         return None
 
+    def get_identity(self, auto_schema: 'AutoSchema', direction: Direction) -> Any:
+        """ return anything to compare instances of target. Target will be used by default. """
+        return None
+
     def map_serializer(self, auto_schema: 'AutoSchema', direction: Direction) -> _SchemaType:
         """ override for customized serializer mapping """
         return auto_schema._map_serializer(self.target_class, direction, bypass_extensions=True)
