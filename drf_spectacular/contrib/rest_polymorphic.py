@@ -42,8 +42,13 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
                     f'this might lead to code generation issues.'
                 )
 
+        one_of_list = []
+        for _, ref in sub_components:
+            if ref not in one_of_list:
+                one_of_list.append(ref)
+
         return {
-            'oneOf': [ref for _, ref in sub_components],
+            'oneOf': one_of_list,
             'discriminator': {
                 'propertyName': serializer.resource_type_field_name,
                 'mapping': {resource_type: ref['$ref'] for resource_type, ref in sub_components},
