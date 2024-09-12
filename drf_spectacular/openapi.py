@@ -57,6 +57,13 @@ class AutoSchema(ViewInspector):
         'patch': 'partial_update',
         'delete': 'destroy',
     }
+    async_method_mapping = {
+        'get': 'aretrieve',
+        'post': 'acreate',
+        'put': 'aupdate',
+        'patch': 'partial_aupdate',
+        'delete': 'adestroy',
+    }
 
     def get_operation(
             self,
