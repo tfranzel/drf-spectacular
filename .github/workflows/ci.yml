@@ -42,9 +42,10 @@ jobs:
         run: pip install tox
       - name: Run Tox
         run: tox --skip-missing-interpreters=false -e ${{ matrix.setup.toxenv }}
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           name: ${{ matrix.setup.toxenv }}
+          token: ${{ secrets.CODECOV_TOKEN }}
   passed-tests:
     name: Required tests passed
     needs: [ tests ]
