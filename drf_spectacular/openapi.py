@@ -57,6 +57,13 @@ class AutoSchema(ViewInspector):
         'patch': 'partial_update',
         'delete': 'destroy',
     }
+    async_method_mapping = {
+        'get': 'aretrieve',
+        'post': 'acreate',
+        'put': 'aupdate',
+        'patch': 'partial_aupdate',
+        'delete': 'adestroy',
+    }
 
     def get_operation(
             self,
@@ -144,7 +151,7 @@ class AutoSchema(ViewInspector):
         if is_basic_type(serializer):
             return False
         if hasattr(self.view, 'action'):
-            return self.view.action == 'list'
+            return self.view.action in ('list', 'alist')
         # list responses are "usually" only returned by GET
         if self.method != 'GET':
             return False
