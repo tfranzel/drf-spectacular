@@ -180,11 +180,11 @@ def set_override(obj: Any, prop: str, value: Any) -> Any:
 def get_view_method_names(view, schema=None) -> List[str]:
     schema = schema or view.schema
     return [
-        item for item in dir(view) if callable(getattr(view, item)) and (
+        item for item in dir(view) if callable(getattr(view, item, None)) and (
             item in view.http_method_names
             or item in schema.method_mapping.values()
             or item == 'list'
-            or hasattr(getattr(view, item), 'mapping')
+            or hasattr(getattr(view, item, None), 'mapping')
         )
     ]
 
