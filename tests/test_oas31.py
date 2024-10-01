@@ -1,10 +1,11 @@
 from unittest import mock
 
-from rest_framework import serializers
+from rest_framework import serializers, viewsets
 from rest_framework.views import APIView
 
 from drf_spectacular.utils import extend_schema
 from tests import generate_schema
+from tests.models import SimpleModel
 
 
 @mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
@@ -66,5 +67,25 @@ def test_nullable_enum_resolution(no_warnings):
             }
         },
         'required': ['foo'],
+        'type': 'object'
+    }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_validator_addition_for_oas31(no_warnings):
+
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField(allow_blank=True, allow_null=True, max_length=40, required=False)
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.none()
+
+    schema = generate_schema('x', XViewset)
+
+    assert schema['components']['schemas']['X'] == {
+        'properties': {
+            'field': {'maxLength': 40, 'type': ['string', 'null']}
+        },
         'type': 'object'
     }
