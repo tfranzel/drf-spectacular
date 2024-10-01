@@ -1069,6 +1069,10 @@ class AutoSchema(ViewInspector):
     def _insert_field_validators(self, field, schema):
         schema_type = schema.get('type')
 
+        # OAS 3.1 special case - extract the main type
+        if isinstance(schema_type, list):
+            schema_type = [t for t in schema_type if t != 'null'][0]
+
         def update_constraint(schema, key, function, value, *, exclusive=False):
             if callable(value):
                 value = value()
