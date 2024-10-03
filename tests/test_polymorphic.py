@@ -1,3 +1,4 @@
+from random import choice
 from unittest import mock
 
 import pytest
@@ -321,6 +322,45 @@ def test_polymorphic_split_request_with_ro_serializer(no_warnings, explicit):
     ]
     assert components['MetaPersonRequest']['discriminator']['mapping'] == {
         'natural': '#/components/schemas/NaturalPersonRequest',
+    }
+
+
+def test_polymorphic_with_default_serializer(no_warnings):
+    class DefaultPersonSerializer(serializers.ModelSerializer):
+        type = serializers.SerializerMethodField()
+
+        class Meta:
+            model = NaturalPerson2
+            fields = ('id', 'type')
+
+        def get_type(self, obj) -> str:
+            return choice(['basic', 'simple'])
+
+    class XViewSet(viewsets.GenericViewSet):
+        @extend_schema(
+            responses=PolymorphicProxySerializer(
+                component_name='MetaPerson',
+                serializers={
+                    'natural': NaturalPersonSerializer,
+                    'basic': DefaultPersonSerializer,
+                    'simple': DefaultPersonSerializer,
+                },
+                resource_type_field_name='type',
+            )
+        )
+        def list(self, request, *args, **kwargs):
+            return Response({})  # pragma: no cover
+
+    schema = generate_schema('x', XViewSet)
+    components = schema['components']['schemas']
+    assert components['MetaPerson']['oneOf'] == [
+        {'$ref': '#/components/schemas/NaturalPerson'},
+        {'$ref': '#/components/schemas/DefaultPerson'}
+    ]
+    assert components['MetaPerson']['discriminator']['mapping'] == {
+        'natural': '#/components/schemas/NaturalPerson',
+        'basic': '#/components/schemas/DefaultPerson',
+        'simple': '#/components/schemas/DefaultPerson'
     }
 
 

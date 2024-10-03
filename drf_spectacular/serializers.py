@@ -20,8 +20,12 @@ class PolymorphicProxySerializerExtension(OpenApiSerializerExtension):
         if not self._has_discriminator():
             return {'oneOf': [schema for _, schema in sub_components]}
         else:
+            one_of_list = []
+            for _, schema in sub_components:
+                if schema not in one_of_list:
+                    one_of_list.append(schema)
             return {
-                'oneOf': [schema for _, schema in sub_components],
+                'oneOf': one_of_list,
                 'discriminator': {
                     'propertyName': self.target.resource_type_field_name,
                     'mapping': {resource_type: schema['$ref'] for resource_type, schema in sub_components}
