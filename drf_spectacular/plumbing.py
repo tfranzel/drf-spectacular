@@ -1,5 +1,4 @@
 import collections
-import copy
 import functools
 import hashlib
 import inspect
@@ -534,7 +533,10 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
 
         if schema_nullable or meta_nullable:
             if 'type' in schema:
-                schema['type'] = [schema['type'], 'null']
+                if isinstance(schema['type'], str):
+                    schema['type'] = [schema['type'], 'null']
+                else:
+                    schema['type'] = [*schema['type'], 'null']
             elif '$ref' in schema:
                 schema = {'oneOf': [schema, {'type': 'null'}]}
             elif len(schema) == 1 and 'oneOf' in schema:

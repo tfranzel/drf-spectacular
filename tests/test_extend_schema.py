@@ -257,6 +257,29 @@ def test_extend_schema_field_with_dict_oas_3_1(no_warnings):
     }
 
 
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_extend_schema_field_with_schema_as_oas_3_1(no_warnings):
+    @extend_schema_field({'type': ['string', 'integer']})
+    class CustomField(serializers.CharField):
+        pass
+
+    class XSerializer(serializers.Serializer):
+        field1 = CustomField(read_only=True, allow_null=True)
+        field2 = CustomField(read_only=True, allow_null=True)
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['POST'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+
+    assert schema['components']['schemas']['X']['properties'] == {
+        'field1': {'readOnly': True, 'type': ['string', 'integer', 'null']},
+        'field2': {'readOnly': True, 'type': ['string', 'integer', 'null']},
+    }
+
+
 def test_layered_extend_schema_on_view_and_method_with_meta(no_warnings):
     class XSerializer(serializers.Serializer):
         field = serializers.IntegerField()
