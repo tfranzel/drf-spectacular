@@ -248,10 +248,13 @@ def test_extend_schema_field_with_dict_oas_3_1(no_warnings):
     def view_func(request, format=None):
         pass  # pragma: no cover
 
-    assert_schema(
-        generate_schema('x', view_function=view_func),
-        'tests/test_extend_schema_field_with_dict_oas_3_1.yml'
-    )
+    schema = generate_schema('x', view_function=view_func)
+
+    assert schema['components']['schemas']['X']['properties'] == {
+        'field1': {'readOnly': True, 'type': ['string', 'null']},
+        'field2': {'readOnly': True, 'type': ['string', 'null']},
+        'field3': {'readOnly': True, 'type': ['string', 'null']}
+    }
 
 
 def test_layered_extend_schema_on_view_and_method_with_meta(no_warnings):
