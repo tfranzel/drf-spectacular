@@ -536,12 +536,18 @@ def safe_ref(schema: _SchemaType) -> _SchemaType:
 
 def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
     if spectacular_settings.OAS_VERSION.startswith('3.1'):
+        schema = schema.copy()
+        meta = meta.copy()
+
         schema_nullable = meta.pop('nullable', None)
         meta_nullable = schema.pop('nullable', None)
 
         if schema_nullable or meta_nullable:
             if 'type' in schema:
-                schema['type'] = [schema['type'], 'null']
+                if isinstance(schema['type'], str):
+                    schema['type'] = [schema['type'], 'null']
+                else:
+                    schema['type'] = [*schema['type'], 'null']
             elif '$ref' in schema:
                 schema = {'oneOf': [schema, {'type': 'null'}]}
             elif len(schema) == 1 and 'oneOf' in schema:
