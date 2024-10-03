@@ -420,8 +420,13 @@ def build_parameter_type(
 def build_choice_field(field) -> _SchemaType:
     choices = list(OrderedDict.fromkeys(field.choices))  # preserve order and remove duplicates
 
-    if all(isinstance(choice, bool) for choice in choices):
-        type: Optional[str] = 'boolean'
+    if field.allow_blank and '' not in choices:
+        choices.append('')
+
+    if not choices:
+        type = None
+    elif all(isinstance(choice, bool) for choice in choices):
+        type = 'boolean'
     elif all(isinstance(choice, int) for choice in choices):
         type = 'integer'
     elif all(isinstance(choice, (int, float, Decimal)) for choice in choices):  # `number` includes `integer`
@@ -432,8 +437,6 @@ def build_choice_field(field) -> _SchemaType:
     else:
         type = None
 
-    if field.allow_blank and '' not in choices:
-        choices.append('')
     if field.allow_null and None not in choices:
         choices.append(None)
 
