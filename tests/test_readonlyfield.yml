@@ -19,7 +19,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Song'
+                  $ref: '#/components/schemas/Employee'
           description: ''
     post:
       operationId: songs_create
@@ -29,13 +29,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Song'
+              $ref: '#/components/schemas/Employee'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Song'
+              $ref: '#/components/schemas/Employee'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Song'
+              $ref: '#/components/schemas/Employee'
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -45,7 +45,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Song'
+                $ref: '#/components/schemas/Employee'
           description: ''
   /songs/{id}/:
     get:
@@ -56,7 +56,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: A UUID string identifying this song.
+        description: A UUID string identifying this employee.
         required: true
       tags:
       - songs
@@ -69,7 +69,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Song'
+                $ref: '#/components/schemas/Employee'
           description: ''
     put:
       operationId: songs_update
@@ -79,7 +79,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: A UUID string identifying this song.
+        description: A UUID string identifying this employee.
         required: true
       tags:
       - songs
@@ -87,13 +87,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Song'
+              $ref: '#/components/schemas/Employee'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Song'
+              $ref: '#/components/schemas/Employee'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Song'
+              $ref: '#/components/schemas/Employee'
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -103,7 +103,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Song'
+                $ref: '#/components/schemas/Employee'
           description: ''
     patch:
       operationId: songs_partial_update
@@ -113,7 +113,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: A UUID string identifying this song.
+        description: A UUID string identifying this employee.
         required: true
       tags:
       - songs
@@ -121,13 +121,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedSong'
+              $ref: '#/components/schemas/PatchedEmployee'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedSong'
+              $ref: '#/components/schemas/PatchedEmployee'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedSong'
+              $ref: '#/components/schemas/PatchedEmployee'
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -137,7 +137,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Song'
+                $ref: '#/components/schemas/Employee'
           description: ''
     delete:
       operationId: songs_destroy
@@ -147,7 +147,7 @@ paths:
         schema:
           type: string
           format: uuid
-        description: A UUID string identifying this song.
+        description: A UUID string identifying this employee.
         required: true
       tags:
       - songs
@@ -160,33 +160,33 @@ paths:
           description: No response body
 components:
   schemas:
-    PatchedSong:
+    Employee:
       type: object
       properties:
         id:
           type: string
           format: uuid
           readOnly: true
-        album_id:
-          type: string
-          format: uuid
-          readOnly: true
-          nullable: true
-    Song:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        album_id:
+        cubicle_id:
           type: string
           format: uuid
           readOnly: true
           nullable: true
       required:
+      - cubicle_id
       - id
-      - album_id
+    PatchedEmployee:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        cubicle_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
   securitySchemes:
     basicAuth:
       type: http

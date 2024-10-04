@@ -6,32 +6,32 @@ from rest_framework import serializers, viewsets
 from tests import assert_schema, generate_schema
 
 
-class Album(models.Model):
+class Cubicle(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
 
-class Song(models.Model):
+class Employee(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    album = models.ForeignKey(Album, on_delete=models.CASCADE, null=True)
+    cubicle = models.ForeignKey(Cubicle, on_delete=models.CASCADE, null=True)
 
 
-class SongSerializer(serializers.ModelSerializer):
+class EmployeeSerializer(serializers.ModelSerializer):
 
-    album_id = serializers.ReadOnlyField(source='album.id')
+    cubicle_id = serializers.ReadOnlyField(source='cubicle.id')
 
     class Meta:
-        fields = ['id', 'album_id']
-        model = Song
+        fields = ['id', 'cubicle_id']
+        model = Employee
 
 
-class SongModelViewset(viewsets.ModelViewSet):
-    serializer_class = SongSerializer
-    queryset = Song.objects.none()
+class EmployeeModelViewset(viewsets.ModelViewSet):
+    serializer_class = EmployeeSerializer
+    queryset = Employee.objects.none()
 
 
 def test_readonlyfield(no_warnings, django_transforms):
     assert_schema(
-        generate_schema('songs', SongModelViewset),
+        generate_schema('songs', EmployeeModelViewset),
         'tests/test_readonlyfield.yml',
         transforms=django_transforms,
     )
