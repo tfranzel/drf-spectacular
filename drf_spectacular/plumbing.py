@@ -1,4 +1,5 @@
 import collections
+import copy
 import functools
 import hashlib
 import inspect
@@ -566,7 +567,7 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
     return safe_ref({**schema, **meta})
 
 
-def _follow_field_source(model, path: List[str]):
+def _follow_field_source(model, path: List[str], null: bool = False):
     """
         navigate through root model via given navigation path. supports forward/reverse relations.
     """
@@ -598,6 +599,8 @@ def _follow_field_source(model, path: List[str]):
                 # not via the related_name (default: X_set) but the model name.
                 return field.target_field
             else:
+                field = copy.copy(field)
+                field.null = null
                 return field
     else:
         if (
@@ -616,10 +619,11 @@ def _follow_field_source(model, path: List[str]):
                     f'on model {model}. Please add a type hint on the model\'s property/function '
                     f'to enable traversal of the source path "{".".join(path)}".'
                 )
-            return _follow_field_source(target_model, path[1:])
+            return _follow_field_source(target_model, path[1:], null)
         else:
-            target_model = model._meta.get_field(path[0]).related_model
-            return _follow_field_source(target_model, path[1:])
+            field = model._meta.get_field(path[0])
+            target_model = field.related_model
+            return _follow_field_source(target_model, path[1:], null=(null or field.null))
 
 
 def _follow_return_type(a_callable):
