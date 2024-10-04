@@ -1,0 +1,197 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /songs/:
+    get:
+      operationId: songs_list
+      tags:
+      - songs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+          description: ''
+    post:
+      operationId: songs_create
+      tags:
+      - songs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Song'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Song'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Song'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+          description: ''
+  /songs/{id}/:
+    get:
+      operationId: songs_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this song.
+        required: true
+      tags:
+      - songs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+          description: ''
+    put:
+      operationId: songs_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this song.
+        required: true
+      tags:
+      - songs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Song'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Song'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Song'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+          description: ''
+    patch:
+      operationId: songs_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this song.
+        required: true
+      tags:
+      - songs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSong'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSong'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSong'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+          description: ''
+    delete:
+      operationId: songs_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this song.
+        required: true
+      tags:
+      - songs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    PatchedSong:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        album_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+    Song:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        album_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+      required:
+      - id
+      - album_id
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
