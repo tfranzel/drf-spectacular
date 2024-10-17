@@ -1280,7 +1280,7 @@ def build_mock_request(method, path, view, original_request, **kwargs):
 
 def set_query_parameters(url, **kwargs) -> str:
     """ deconstruct url, safely attach query parameters in kwargs, and serialize again """
-    url = str(url) # Force evaluation of reverse_lazy urls
+    url = str(url)  # Force evaluation of reverse_lazy urls
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
     query = urllib.parse.parse_qs(query)
     query.update({k: v for k, v in kwargs.items() if v is not None})
