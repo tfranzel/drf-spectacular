@@ -2420,12 +2420,12 @@ class PathParameterLookupModel(models.Model):
     # untyped -> get from model
     (path, '/{id}/', '<pk>/', ['integer']),
     # non-default pattern -> use
-    (re_path, '/{id}/', r'(?P<pk>[a-z]{2}(-[a-z]{2})?)/', ['string']),
+    (re_path, '/{id}/', r'(?P<pk>[a-z]{2}(-[a-z]{2})?)/', ['integer']),
     # default pattern -> get from model
     (re_path, '/{id}/', r'(?P<pk>[^/.]+)/$', ['integer']),
     # same mechanics for non-pk field discovery from model
-    (re_path, '/{field}/t/{id}/', r'^(?P<field>[^/.]+)/t/(?P<pk>[a-z]+)/', ['integer', 'string']),
-    (re_path, '/{field}/t/{id}/', r'^(?P<field>[A-Z\(\)]+)/t/(?P<pk>[^/.]+)/', ['string', 'integer']),
+    (re_path, '/{field}/t/{id}/', r'^(?P<field>[^/.]+)/t/(?P<pk>[a-z]+)/', ['integer', 'integer']),
+    (re_path, '/{field}/t/{id}/', r'^(?P<field>[A-Z\(\)]+)/t/(?P<pk>[^/.]+)/', ['integer', 'integer']),
 ])
 def test_path_parameter_priority_matching(no_warnings, path_func, path_str, pattern, parameter_types):
     class LookupSerializer(serializers.ModelSerializer):
