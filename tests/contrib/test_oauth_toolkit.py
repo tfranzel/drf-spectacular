@@ -133,3 +133,43 @@ def test_oauth2_toolkit_scopes_backend(no_warnings):
     assert 'implicit' in oauth2['flows']
     flow = oauth2['flows']['implicit']
     assert 'test_backend_scope' in flow['scopes']
+
+
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.OAUTH2_SCOPES',
+    {"read": "Read scope", "burn": "Burn scope"},
+)
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.OAUTH2_FLOWS',
+    ['implicit']
+)
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.OAUTH2_REFRESH_URL',
+    'http://127.0.0.1:8000/o/refresh'
+)
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.OAUTH2_AUTHORIZATION_URL',
+    'http://127.0.0.1:8000/o/authorize'
+)
+@mock.patch(
+    'oauth2_provider.settings.oauth2_settings.SCOPES',
+    {"read": "Reading scope", "write": "Writing scope", "extra_scope": "Extra Scope"},
+)
+@mock.patch(
+    'oauth2_provider.settings.oauth2_settings.DEFAULT_SCOPES',
+    ["read", "write"]
+)
+@pytest.mark.contrib('oauth2_provider')
+def test_oauth2_toolkit_custom_scopes(no_warnings):
+    router = routers.SimpleRouter()
+    router.register('TokenHasReadWriteScope', TokenHasReadWriteScopeViewset, basename="x1")
+
+    urlpatterns = [
+        *router.urls,
+        path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    ]
+    schema = generate_schema(None, patterns=urlpatterns)
+
+    assert schema['components']['securitySchemes']['oauth2']['flows']['implicit']['scopes'] == {
+        'burn': 'Burn scope', 'read': 'Read scope'
+    }
