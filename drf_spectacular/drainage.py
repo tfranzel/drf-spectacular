@@ -184,10 +184,10 @@ def get_view_method_names(view, schema=None) -> List[str]:
             item in view.http_method_names
             or (
                 item in schema.async_method_mapping.values()
-                if view.view_is_async
+                if getattr(view, "view_is_async", False)
                 else item in schema.method_mapping.values()
             )
-            or item == ('alist' if view.view_is_async else 'list')
+            or item == ('alist' if getattr(view, "view_is_async", False) else 'list')
             or hasattr(getattr(view, item, None), 'mapping')
         )
     ]
