@@ -167,10 +167,10 @@ TYPE_HINT_TEST_PARAMS = [
         {'oneOf': [{'type': 'string'}, {'type': 'integer'}], 'nullable': True}
     ), (
         LanguageEnum,
-        {'enum': ['en', 'de'], 'type': 'string'}
+        {'enum': ['en', 'de'], 'x-enumNames': ['EN', 'DE'], 'type': 'string'}
     ), (
         InvalidLanguageEnum,
-        {'enum': ['en', 'de']}
+        {'enum': ['en', 'de'], 'x-enumNames': ['EN', 'DE']}
     ), (
         NamedTupleB,
         {
@@ -191,7 +191,7 @@ if DJANGO_VERSION > '3':
 
     TYPE_HINT_TEST_PARAMS.append((
         LanguageChoices,
-        {'enum': ['en', 'de'], 'type': 'string'}
+        {'enum': ['en', 'de'], 'x-enumNames': ['EN', 'DE'], 'type': 'string'}
     ))
 
 if sys.version_info >= (3, 7):

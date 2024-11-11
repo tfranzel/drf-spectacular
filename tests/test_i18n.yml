@@ -128,6 +128,9 @@ components:
       - car
       - bicycle
       type: string
+      x-enumNames:
+      - Auto
+      - Fahrrad
       description: |-
         * `car` - Auto
         * `bicycle` - Fahrrad

@@ -3157,8 +3157,8 @@ def test_disable_enum_description_generation(no_warnings):
 
     schema = generate_schema('/x', view=XView)
     assert schema['components']['schemas'] == {
-        'BarEnum': {'enum': ['A', 'B', 'C'], 'type': 'string'},
-        'FooEnum': {'enum': ['A', 'B'], 'type': 'string'},
+        'BarEnum': {'enum': ['A', 'B', 'C'], 'x-enumNames': ['a', 'b', 'c'], 'type': 'string'},
+        'FooEnum': {'enum': ['A', 'B'], 'x-enumNames': ['a', 'b'], 'type': 'string'},
         'X': {
             'type': 'object',
             'properties': {

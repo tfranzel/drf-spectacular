@@ -130,8 +130,10 @@ def postprocess_schema_enums(result, generator, **kwargs):
             enum_name = enum_name_mapping.get(prop_hash) or enum_name_mapping[prop_hash, prop_name]
 
             # split property into remaining property and enum component parts
-            enum_schema = {k: v for k, v in prop_schema.items() if k in ['type', 'enum']}
-            prop_schema = {k: v for k, v in prop_schema.items() if k not in ['type', 'enum', 'x-spec-enum-id']}
+            enum_schema = {k: v for k, v in prop_schema.items() if k in ['type', 'enum', 'x-enumNames']}
+            prop_schema = {
+                k: v for k, v in prop_schema.items() if k not in ['type', 'enum', 'x-spec-enum-id', 'x-enumNames']
+            }
 
             # separate actual description from name-value tuples
             if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:

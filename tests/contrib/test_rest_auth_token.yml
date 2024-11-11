@@ -163,6 +163,10 @@ paths:
   /rest-auth/registration/:
     post:
       operationId: rest_auth_registration_create
+      description: |-
+        Registers a new user.
+
+        Accepts the following POST parameters: username, email, password1, password2.
       tags:
       - rest-auth
       requestBody:
@@ -191,6 +195,10 @@ paths:
   /rest-auth/registration/resend-email/:
     post:
       operationId: rest_auth_registration_resend_email_create
+      description: |-
+        Resends another email to an unverified email.
+
+        Accepts the following POST parameter: email.
       tags:
       - rest-auth
       requestBody:
@@ -218,6 +226,10 @@ paths:
   /rest-auth/registration/verify-email/:
     post:
       operationId: rest_auth_registration_verify_email_create
+      description: |-
+        Verifies the email associated with the provided key.
+
+        Accepts the following POST parameter: key.
       tags:
       - rest-auth
       requestBody:

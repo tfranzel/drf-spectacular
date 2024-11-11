@@ -70,6 +70,11 @@ components:
       - ru
       - cn
       type: string
+      x-enumNames:
+      - en
+      - es
+      - ru
+      - cn
       description: |-
         * `en` - en
         * `es` - es
@@ -84,6 +89,10 @@ components:
       - 0
       - -1
       type: integer
+      x-enumNames:
+      - Positive
+      - Neutral
+      - Negative
       description: |-
         * `1` - Positive
         * `0` - Neutral

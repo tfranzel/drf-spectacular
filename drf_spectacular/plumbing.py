@@ -414,7 +414,16 @@ def build_parameter_type(
         schema['examples'] = examples
     if extensions:
         schema.update(sanitize_specification_extensions(extensions))
+
+    # enum was overridden, remove x-enumNames
+    if not enum and 'schema' in schema and 'x-enumNames' in schema['schema']:
+        del schema['schema']['x-enumNames']
+
     return schema
+
+
+def sanitize_choices_x_enum_name(name) -> str:
+    return re.sub(r"[^A-Za-z0-9\_]+", "_", re.sub(r"^(\d+)", r"_\g<1>", str(name)))
 
 
 def build_choice_field(field) -> _SchemaType:
@@ -453,6 +462,7 @@ def build_choice_field(field) -> _SchemaType:
     if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
         schema['description'] = build_choice_description_list(field.choices.items())
 
+    schema['x-enumNames'] = [sanitize_choices_x_enum_name(value) for value in field.choices.values()]
     schema['x-spec-enum-id'] = list_hash([(k, v) for k, v in field.choices.items() if k not in ('', None)])
 
     return schema
@@ -1374,7 +1384,10 @@ def resolve_type_hint(hint):
             schema.update(build_basic_type(type(args[0])))
         return schema
     elif inspect.isclass(hint) and issubclass(hint, Enum):
-        schema = {'enum': [item.value for item in hint]}
+        schema = {
+            'enum': [item.value for item in hint],
+            'x-enumNames': [item.name for item in hint],
+        }
         mixin_base_types = [t for t in hint.__mro__ if is_basic_type(t)]
         if mixin_base_types:
             schema.update(build_basic_type(mixin_base_types[0]))

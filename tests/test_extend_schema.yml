@@ -273,6 +273,10 @@ paths:
               * `a` - a
               * `b` - b
               * `c` - c
+            x-enumNames:
+            - a
+            - b
+            - c
           default:
           - a
       - in: query
@@ -369,6 +373,9 @@ components:
       - a
       - b
       type: string
+      x-enumNames:
+      - a
+      - b
       description: |-
         * `a` - a
         * `b` - b
@@ -403,6 +410,10 @@ components:
       - b
       - c
       type: string
+      x-enumNames:
+      - a
+      - b
+      - c
       description: |-
         * `a` - a
         * `b` - b

@@ -55,6 +55,7 @@ def test_nullable_enum_resolution(no_warnings):
     assert schema['components']['schemas']['FooEnum'] == {
         'description': '* `A` - A\n* `B` - B',
         'enum': ['A', 'B'],
+        'x-enumNames': ['A', 'B'],
         'type': 'string',
     }
     assert schema['components']['schemas']['X'] == {

@@ -212,6 +212,9 @@ components:
       - POP
       - ROCK
       type: string
+      x-enumNames:
+      - Pop
+      - Rock
       description: |-
         * `POP` - Pop
         * `ROCK` - Rock

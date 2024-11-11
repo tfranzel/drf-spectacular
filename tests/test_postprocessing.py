@@ -381,13 +381,22 @@ def test_equal_choices_different_semantics(no_warnings):
     schema = generate_schema('x', view=XAPIView)
 
     assert schema['components']['schemas']['SomeHealthEnum'] == {
-        'enum': [0, 1], 'type': 'integer', 'description': '* `0` - Ok\n* `1` - Fail'
+        'enum': [0, 1],
+        'x-enumNames': ['Ok', 'Fail'],
+        'type': 'integer',
+        'description': '* `0` - Ok\n* `1` - Fail',
     }
     assert schema['components']['schemas']['SomeStatusEnum'] == {
-        'enum': [0, 1], 'type': 'integer', 'description': '* `0` - Green\n* `1` - Red'
+        'enum': [0, 1],
+        'x-enumNames': ['Green', 'Red'],
+        'type': 'integer',
+        'description': '* `0` - Green\n* `1` - Red',
     }
     assert schema['components']['schemas']['SomeTestEnum'] == {
-        'enum': [0, 1], 'type': 'integer', 'description': '* `0` - test group A\n* `1` - test group B',
+        'enum': [0, 1],
+        'x-enumNames': ['test_group_A', 'test_group_B'],
+        'type': 'integer',
+        'description': '* `0` - test group A\n* `1` - test group B',
     }
 
 
