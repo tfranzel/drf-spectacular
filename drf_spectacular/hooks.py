@@ -208,3 +208,22 @@ def preprocess_exclude_path_format(endpoints, **kwargs):
         for path, path_regex, method, callback in endpoints
         if not (path.endswith(format_path) or path.endswith(format_path + '/'))
     ]
+
+
+def preprocess_exclude_paths_startswith(endpoints, **kwargs):
+    """
+        preprocessing hook that excludes enpoints starting with 
+        values in PATHS_STARTSWITH_TO_EXCLUDE spectacular_settings.
+    """
+
+    def check_startswith(path):
+        for to_exclude in spectacular_settings.PATHS_STARTSWITH_TO_EXCLUDE :
+            if path.startswith(to_exclude) or path.startswith('/' + to_exclude):
+                return True
+        return False
+    
+    return [
+        (path, path_regex, method, callback)
+        for path, path_regex, method, callback in endpoints
+        if not check_startswith(path)
+    ]

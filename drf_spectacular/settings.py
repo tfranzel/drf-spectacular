@@ -213,6 +213,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # Optional: MUST contain 'url', may contain "description"
     'EXTERNAL_DOCS': {},
 
+    # Optional: List of starting with paths for excluding endpoints 
+    # using drf_spectacular.hooks.preprocess_exclude_paths_startswith
+    'PATHS_STARTSWITH_TO_EXCLUDE': [],
+
     # Arbitrary specification extensions attached to the schema's info object.
     # https://swagger.io/specification/#specification-extensions
     'EXTENSIONS_INFO': {},
