@@ -221,14 +221,18 @@ class AutoSchema(ViewInspector):
                 parameter = force_instance(parameter)
                 mapped = self._map_serializer(parameter, 'request')
                 for property_name, property_schema in mapped['properties'].items():
-                    field = parameter.fields.get(property_name)
+                    try:
+                        # be graceful when serializer might be non-DRF (via extension).
+                        field = parameter.fields.get(property_name)
+                    except Exception:
+                        field = None
                     result[property_name, OpenApiParameter.QUERY] = build_parameter_type(
                         name=property_name,
                         schema=property_schema,
                         description=property_schema.pop('description', None),
                         location=OpenApiParameter.QUERY,
                         allow_blank=getattr(field, 'allow_blank', True),
-                        required=field.required,
+                        required=bool(property_name in mapped.get('required', [])),
                     )
             else:
                 warn(f'could not resolve parameter annotation {parameter}. Skipping.')
