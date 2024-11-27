@@ -699,7 +699,10 @@ class AutoSchema(ViewInspector):
             # read_only fields do not have a Manager by design. go around and get field
             # from parent. also avoid calling Manager. __bool__ as it might be customized
             # to hit the database.
-            if getattr(field, 'queryset', None) is not None:
+            if not is_slug and getattr(field, 'pk_field') is not None:
+                schema = self._map_serializer_field(field.pk_field, direction)
+                return append_meta(schema, meta)
+            elif getattr(field, 'queryset', None) is not None:
                 if is_slug:
                     model = field.queryset.model
                     source = [field.slug_field]
@@ -718,7 +721,7 @@ class AutoSchema(ViewInspector):
                         f'Could not derive type for under-specified {field.__class__.__name__} '
                         f'"{field.field_name}". The serializer has no associated model (Meta class) '
                         f'and this particular field has no type without a model association. Consider '
-                        f'changing the field or adding a Meta class. defaulting to string.'
+                        f'changing the field or adding a Meta class. Defaulting to string.'
                     )
                     return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 

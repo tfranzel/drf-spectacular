@@ -3444,3 +3444,20 @@ def test_self_referential_serializer_method_field(no_warnings):
             'readOnly': True
         }
     }
+
+
+def test_primary_key_related_field_with_custom_pk_field(no_warnings):
+    class XSerializer(serializers.Serializer):
+        field = serializers.PrimaryKeyRelatedField(
+            read_only=True,
+            pk_field=serializers.IntegerField(),
+        )
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+
+    schema = generate_schema('/x', XViewset)
+    assert schema['components']['schemas']['X']['properties']['field'] == {
+        'readOnly': True, 'type': 'integer'
+    }
