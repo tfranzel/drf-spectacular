@@ -37,8 +37,11 @@ class DjangoOAuthToolkitScheme(OpenApiAuthenticationExtension):
                 flows[flow_type]['tokenUrl'] = spectacular_settings.OAUTH2_TOKEN_URL
             if spectacular_settings.OAUTH2_REFRESH_URL:
                 flows[flow_type]['refreshUrl'] = spectacular_settings.OAUTH2_REFRESH_URL
-            scope_backend = get_scopes_backend()
-            flows[flow_type]['scopes'] = scope_backend.get_all_scopes()
+            if spectacular_settings.OAUTH2_SCOPES:
+                flows[flow_type]['scopes'] = spectacular_settings.OAUTH2_SCOPES
+            else:
+                scope_backend = get_scopes_backend()
+                flows[flow_type]['scopes'] = scope_backend.get_all_scopes()
 
         return {
             'type': 'oauth2',

@@ -11,7 +11,9 @@ from tests.models import SimpleModel, SimpleSerializer
 
 transforms = [
     # User model first_name differences
-    lambda x: re.sub(r'(first_name:\n *type: string\n *maxLength:) 30', r'\g<1> 150', x, re.M),
+    lambda x: re.sub(r'(first_name:\n *type: string\n *maxLength:) 30', r'\g<1> 150', x),
+    # Ignore descriptions as it varies too much between versions
+    lambda x: re.sub(r'description: \|-\n[\S\s\r\n]+?tags:', r'tags:', x),
 ]
 
 
