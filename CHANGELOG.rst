@@ -1,6 +1,38 @@
 Changelog
 =========
 
+0.28.0 (2024-11-30)
+-------------------
+
+- Fix lazy_reverse bug in views (`#1339 <https://github.com/tfranzel/drf-spectacular/issues/1339>`_)
+- Extend query params explosion of non-DRF serializer `#1315 <https://github.com/tfranzel/drf-spectacular/issues/1315>`_
+- consider pk_field on PrimaryKeyRelatedField when set `#1335 <https://github.com/tfranzel/drf-spectacular/issues/1335>`_
+- fix unused OAuth2 scopes override `#1319 <https://github.com/tfranzel/drf-spectacular/issues/1319>`_
+- bugfix @extend_schema_field raw schema already in OAS3.1
+- some minors (resolves `#1147 <https://github.com/tfranzel/drf-spectacular/issues/1147>`_)
+- fix OAS3.1 validator omission `#1302 <https://github.com/tfranzel/drf-spectacular/issues/1302>`_
+- guard against broken __dir__ impl `#1296 <https://github.com/tfranzel/drf-spectacular/issues/1296>`_
+- Add Django 5.1 as classifier [jelmert]
+- No extra items in the oneOf list [Vladimir]
+- parametrize component registry identity `#1288 <https://github.com/tfranzel/drf-spectacular/issues/1288>`_
+- make operation_id action position configurable `#1264 <https://github.com/tfranzel/drf-spectacular/issues/1264>`_
+- Fix for incorrect ``issubclass()`` check. [Mike Moore]
+- Correct the documentation of how to import extension snippets [Alan Crosswell]
+- Update OpenAPI docs links [Nils Van Zuijlen]
+- mitigate false positive in Django Debug Toolbar `#1159 <https://github.com/tfranzel/drf-spectacular/issues/1159>`_
+- Additional testcase [Marti Raudsepp]
+- Fix ChoiceField schema type with empty ``choices=[]`` [Marti Raudsepp]
+- handle examples with nested properties pagination [François Rejeté]
+- add choice field display method handling `#1228 <https://github.com/tfranzel/drf-spectacular/issues/1228>`_
+- Add support for stateless user authentication in SimpleJWT (`#1221 <https://github.com/tfranzel/drf-spectacular/issues/1221>`_) [Willem Meints]
+- fix: set pydantic json mode to serialization [Eric Butler]
+- fix: extend_schema_field with dict param and oas 3.1 [Eric Butler]
+
+Breaking changes / important additions:
+
+- Y-stream release due to the amount of small but important changes.
+- Pydantic users might see a slightly different schema due to the change in serialization method.
+
 0.27.2 (2024-04-01)
 -------------------
 
