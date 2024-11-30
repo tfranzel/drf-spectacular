@@ -398,6 +398,30 @@ def test_choicefield_choices_enum():
     assert schema['enum'] == ['bluepill', 'redpill', '', None]
     assert 'type' not in schema
 
+    schema = build_choice_field(serializers.ChoiceField(
+        choices=[1, 2], allow_blank=True
+    ))
+    assert schema['enum'] == [1, 2, '']
+    assert 'type' not in schema
+
+
+def test_choicefield_empty_choices():
+    schema = build_choice_field(serializers.ChoiceField(choices=[]))
+    assert schema['enum'] == []
+    assert 'type' not in schema
+
+    schema = build_choice_field(serializers.ChoiceField(choices=[], allow_null=True))
+    assert schema['enum'] == [None]
+    assert 'type' not in schema
+
+    schema = build_choice_field(serializers.ChoiceField(choices=[], allow_blank=True))
+    assert schema['enum'] == ['']
+    assert schema['type'] == 'string'
+
+    schema = build_choice_field(serializers.ChoiceField(choices=[], allow_blank=True, allow_null=True))
+    assert schema['enum'] == ['', None]
+    assert schema['type'] == 'string'
+
 
 def test_safe_ref():
     schema = build_basic_type(str)
