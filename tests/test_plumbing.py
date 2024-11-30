@@ -16,13 +16,14 @@ from django import __version__ as DJANGO_VERSION
 from django.conf.urls import include
 from django.db import models
 from django.urls import re_path
+from django.utils.functional import lazystr
 from rest_framework import generics, serializers
 
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     analyze_named_regex_pattern, build_basic_type, build_choice_field, detype_pattern,
-    follow_field_source, force_instance, get_list_serializer, is_field, is_serializer,
-    resolve_type_hint, safe_ref,
+    follow_field_source, force_instance, get_list_serializer, get_relative_url, is_field,
+    is_serializer, resolve_type_hint, safe_ref, set_query_parameters,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
@@ -413,3 +414,13 @@ def test_safe_ref():
     schema = safe_ref(schema)
     assert schema == {'$ref': '#/components/schemas/Foo'}
     assert safe_ref(schema) == safe_ref(schema)
+
+
+def test_url_tooling_with_lazy_url():
+    some_url = "http://api.example.org/accounts/"
+
+    assert get_relative_url(some_url) == "/accounts/"
+    assert set_query_parameters(some_url, foo=123) == some_url + "?foo=123"
+
+    assert get_relative_url(lazystr(some_url)) == "/accounts/"
+    assert set_query_parameters(lazystr(some_url), foo=123) == some_url + "?foo=123"

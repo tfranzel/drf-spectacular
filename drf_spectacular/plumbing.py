@@ -1289,6 +1289,7 @@ def set_query_parameters(url, **kwargs) -> str:
 
 
 def get_relative_url(url: str) -> str:
+    url = str(url)  # Force evaluation of reverse_lazy urls
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
     return urllib.parse.urlunparse(('', '', path, params, query, fragment))
 
