@@ -183,12 +183,13 @@ class DjangoFilterExtension(OpenApiFilterExtension):
                 suffixes = filter_field.field_class.widget.suffixes
             except AttributeError:
                 suffixes = ['min', 'max']
-            # just in case widget family might be changed
-            if suffixed:=getattr(filter_field.field_class.widget(), "suffixed", None):
+            # just in case widget family might be changed we check for method existence
+            suffixed = getattr(filter_field.field_class.widget(), "suffixed", None)
+            if suffixed and callable(suffixed):
                 field_names = [
                     suffixed(field_name, suffix) for suffix in suffixes
                 ]
-            else: # keep default if no `suffixed` method exists on widget
+            else:  # keep default if no `suffixed` method exists on widget
                 field_names = [
                     f'{field_name}_{suffix}' if suffix else field_name for suffix in suffixes
                 ]
