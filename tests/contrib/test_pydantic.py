@@ -9,13 +9,16 @@ from drf_spectacular.utils import extend_schema
 from tests import assert_schema, generate_schema
 
 try:
-    from pydantic import BaseModel
+    from pydantic import BaseModel, computed_field
     from pydantic.dataclasses import dataclass
 except ImportError:
     class BaseModel:  # type: ignore
         pass
 
     def dataclass(f):
+        return f
+
+    def computed_field(f):
         return f
 
 
@@ -33,6 +36,11 @@ class A(BaseModel):
     id: int
     b: B
     d: Decimal
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def x(self) -> int:
+        return 42
 
 
 @pytest.mark.contrib('pydantic')

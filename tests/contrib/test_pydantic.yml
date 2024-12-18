@@ -43,10 +43,15 @@ components:
         d:
           title: D
           type: string
+        x:
+          readOnly: true
+          title: X
+          type: integer
       required:
       - id
       - b
       - d
+      - x
       title: A
       type: object
     B:
