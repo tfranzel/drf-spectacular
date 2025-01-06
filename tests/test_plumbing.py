@@ -5,6 +5,7 @@ import sys
 import typing
 from datetime import datetime
 from enum import Enum
+from unittest import mock
 
 if sys.version_info >= (3, 8):
     from typing import TypedDict
@@ -422,6 +423,18 @@ def test_choicefield_empty_choices():
     schema = build_choice_field(serializers.ChoiceField(choices=[], allow_blank=True, allow_null=True))
     assert schema['enum'] == ['', None]
     assert schema['type'] == 'string'
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_GENERATE_X_ENUM_DESCRIPTIONS', True)
+def test_choicefield_x_enumdescriptions():
+    schema = build_choice_field(serializers.ChoiceField(
+        [('bluepill', 'Blue Pill'), ('redpill', 'Red Pill')],
+        allow_null=True, allow_blank=True
+    ))
+    assert schema['x-enumDescriptions'] == {
+        'bluepill': 'Blue Pill',
+        'redpill': 'Red Pill',
+    }
 
 
 def test_safe_ref():
