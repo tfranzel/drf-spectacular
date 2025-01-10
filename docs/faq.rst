@@ -19,7 +19,7 @@ Take a look inside your browser console and confirm that you have ``Content Secu
 By default, ``django-csp`` usually breaks our UIs for 2 reasons: external assets and inline scripts.
 
 Using the `sidecar <https://github.com/tfranzel/drf-spectacular#self-contained-ui-installation>`_
-will mitigate the remote asset loading violation by serving the asset from your ``self``. Alternatively,
+will mitigate the remote asset loading violation by serving the asset from yourself. Alternatively,
 you can also adapt ``CSP_DEFAULT_SRC`` to allow for those CDN assets instead.
 
 Solution for Swagger UI:
