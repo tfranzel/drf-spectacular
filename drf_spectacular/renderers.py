@@ -4,6 +4,12 @@ from decimal import Decimal
 from uuid import UUID
 
 import yaml
+
+try
+    from yaml import CSafeDumper as SafeDumper
+except ImportError:
+    from yaml import SafeDumper
+
 from django.utils.safestring import SafeString
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.renderers import BaseRenderer, JSONRenderer
@@ -15,7 +21,7 @@ class OpenApiYamlRenderer(BaseRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         # disable yaml advanced feature 'alias' for clean, portable, and readable output
-        class Dumper(yaml.SafeDumper):
+        class Dumper(SafeDumper):
             def ignore_aliases(self, data):
                 return True
 
@@ -51,7 +57,9 @@ class OpenApiYamlRenderer(BaseRenderer):
         Dumper.add_representer(UUID, uuid_representer)
 
         def safestring_representer(dumper, data):
-            return dumper.represent_str(data)
+            # CSafeDumper needs actually a str instance, not a SafeString one.
+            # str(SafeString()) still returns SafeString.
+            return dumper.represent_str(super(SafeString, data).__str__())
         Dumper.add_representer(SafeString, safestring_representer)
 
         def ordereddict_representer(dumper, data):
