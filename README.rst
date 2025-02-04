@@ -24,7 +24,7 @@ Features
         - ... and more customization options
     - Authentication support (DRF natives included, easily extendable)
     - Custom serializer class support (easily extendable)
-    - ``SerializerMethodField()`` type via type hinting or ``@extend_schema_field``
+    - `SerializerMethodField() <https://drf-spectacular.readthedocs.io/en/latest/customization.html#step-3-extend-schema-field-and-type-hints>`_ type via type hinting or ``@extend_schema_field``
     - i18n support
     - Tags extraction
     - Request/response/parameter examples
