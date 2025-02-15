@@ -236,6 +236,8 @@ def get_doc(obj) -> str:
         # also clean up trailing whitespace for each line
         return '\n'.join(line.rstrip() for line in doc.rstrip().split('\n'))
 
+    if obj is None:
+        return ''
     if not inspect.isclass(obj):
         return post_cleanup(inspect.getdoc(obj) or '')
 

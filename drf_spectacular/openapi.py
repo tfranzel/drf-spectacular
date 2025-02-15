@@ -912,6 +912,12 @@ class AutoSchema(ViewInspector):
                 # the only way to detect an uninitialized partial method
                 # this is a convenience method for model choice fields and is mostly a string
                 schema = build_basic_type(str)
+            elif (
+                hasattr(target, "__partialmethod__")
+                and target.__partialmethod__.func.__name__ == '_get_FIELD_display'
+            ):
+                # same as above but specifically for python >= 3.13
+                schema = build_basic_type(str)
             elif callable(target):
                 schema = self._map_response_type_hint(target)
             elif isinstance(target, models.Field):
