@@ -465,9 +465,7 @@ If you need to define a recursive ``Serializer`` field, by default this runs int
 issues because the ``Serializer`` class has not been constructed by the time it needs to be
 referenced by ``@extend_schema_field``.
 
-To work around this, use
-:py:func:`lazy_serializer <drf_spectacular.helpers.lazy_serializer>` to lazily load the
-``Serializer``.
+To work around this, use ``lazy_serializer`` to lazily load the ``Serializer``.
 
 .. code-block:: python
 
