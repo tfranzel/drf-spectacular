@@ -457,3 +457,26 @@ modifies the given serializer.
         @extend_schema(responses=forced_singular_serializer(SimpleSerializer))
         def list(self):
             pass
+
+How to define a recursive ``Serializer`` field
+----------------------------------------------
+
+If you need to define a recursive ``Serializer`` field, by default this runs into cyclic definition
+issues because the ``Serializer`` class has not been constructed by the time it needs to be
+referenced by ``@extend_schema_field``.
+
+To work around this, use
+:py:func:`lazy_serializer <drf_spectacular.helpers.lazy_serializer>` to lazily load the
+``Serializer``.
+
+.. code-block:: python
+
+    from drf_spectacular.helpers import lazy_serializer
+
+    @extend_schema_field(lazy_serializer("app.serializers.BoxSerializer")(many=True))
+    class BoxSerializer(ModelSerializer):
+        nested_boxes = SerializerMethodField()
+
+        def get_nested_boxes(self, instance: Box):
+            nested_boxes = instance.nested_boxes.all()
+            return BoxSerializer(nested_boxes, many=True).data
