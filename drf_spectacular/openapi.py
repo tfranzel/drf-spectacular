@@ -168,7 +168,7 @@ class AutoSchema(ViewInspector):
     def _is_create_operation(self) -> bool:
         if self.method != 'POST':
             return False
-        if getattr(self.view, 'action', None) == 'create':
+        if getattr(self.view, 'action', None) in ('create', 'acreate'):
             return True
         if isinstance(self.view, (ListCreateAPIView, CreateAPIView)):
             return True
