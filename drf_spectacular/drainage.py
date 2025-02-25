@@ -179,15 +179,12 @@ def set_override(obj: Any, prop: str, value: Any) -> Any:
 
 def get_view_method_names(view, schema=None) -> List[str]:
     schema = schema or view.schema
+    view_is_async = getattr(view, "view_is_async", False)
     return [
         item for item in dir(view) if callable(getattr(view, item, None)) and (
             item in view.http_method_names
-            or (
-                item in schema.async_method_mapping.values()
-                if getattr(view, "view_is_async", False)
-                else item in schema.method_mapping.values()
-            )
-            or item == ('alist' if getattr(view, "view_is_async", False) else 'list')
+            or item in (schema.async_method_mapping if view_is_async else schema.method_mapping).values()
+            or item == ('alist' if view_is_async else 'list')
             or hasattr(getattr(view, item, None), 'mapping')
         )
     ]
