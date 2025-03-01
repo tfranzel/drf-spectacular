@@ -471,10 +471,10 @@ To work around this, use ``lazy_serializer`` to lazily load the ``Serializer``.
 
     from drf_spectacular.helpers import lazy_serializer
 
-    @extend_schema_field(lazy_serializer("app.serializers.BoxSerializer")(many=True))
     class BoxSerializer(ModelSerializer):
         nested_boxes = SerializerMethodField()
 
+        @extend_schema_field(lazy_serializer("app.serializers.BoxSerializer")(many=True))
         def get_nested_boxes(self, instance: Box):
             nested_boxes = instance.nested_boxes.all()
             return BoxSerializer(nested_boxes, many=True).data
