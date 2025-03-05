@@ -119,8 +119,14 @@ class InvalidLanguageEnum(Enum):
     DE = 'de'
 
 
-TD1 = TypedDict('TD1', {"foo": int, "bar": typing.List[str]})
-TD2 = TypedDict('TD2', {"foo": str, "bar": typing.Dict[str, int]})
+class TD1(TypedDict):
+    foo: int
+    bar: typing.List[str]
+
+
+class TD2(TypedDict):
+    foo: str
+    bar: typing.Dict[str, int]
 
 
 TYPE_HINT_TEST_PARAMS = [
