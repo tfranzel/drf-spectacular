@@ -13,9 +13,8 @@ else:
 
 import pytest
 from django import __version__ as DJANGO_VERSION
-from django.conf.urls import include
 from django.db import models
-from django.urls import re_path
+from django.urls import include, path
 from django.utils.functional import lazystr
 from rest_framework import generics, serializers
 
@@ -95,7 +94,7 @@ def test_follow_field_source_forward_reverse(no_warnings):
 
 def test_detype_patterns_with_module_includes(no_warnings):
     detype_pattern(
-        pattern=re_path(r'^', include('tests.test_fields'))
+        pattern=path('', include('tests.test_fields'))
     )
 
 
@@ -119,8 +118,14 @@ class InvalidLanguageEnum(Enum):
     DE = 'de'
 
 
-TD1 = TypedDict('TD1', {"foo": int, "bar": typing.List[str]})
-TD2 = TypedDict('TD2', {"foo": str, "bar": typing.Dict[str, int]})
+class TD1(TypedDict):
+    foo: int
+    bar: typing.List[str]
+
+
+class TD2(TypedDict):
+    foo: str
+    bar: typing.Dict[str, int]
 
 
 TYPE_HINT_TEST_PARAMS = [
@@ -195,14 +200,13 @@ if DJANGO_VERSION > '3':
         {'enum': ['en', 'de'], 'type': 'string'}
     ))
 
-if sys.version_info >= (3, 7):
-    TYPE_HINT_TEST_PARAMS.append((
-        typing.Iterable[NamedTupleA],
-        {
-            'type': 'array',
-            'items': {'type': 'object', 'properties': {'a': {}, 'b': {}}, 'required': ['a', 'b']}
-        }
-    ))
+TYPE_HINT_TEST_PARAMS.append((
+    typing.Iterable[NamedTupleA],
+    {
+        'type': 'array',
+        'items': {'type': 'object', 'properties': {'a': {}, 'b': {}}, 'required': ['a', 'b']}
+    }
+))
 
 if sys.version_info >= (3, 8):
     # Literal only works for python >= 3.8 despite typing_extensions, because it

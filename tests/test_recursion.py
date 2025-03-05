@@ -28,7 +28,7 @@ class TreeNodeSerializer(serializers.ModelSerializer):
         model = TreeNode
 
     def get_fields(self):
-        fields = super(TreeNodeSerializer, self).get_fields()
+        fields = super().get_fields()
         fields['children'] = TreeNodeSerializer(many=True)
         return fields
 
