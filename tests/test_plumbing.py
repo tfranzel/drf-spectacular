@@ -201,14 +201,13 @@ if DJANGO_VERSION > '3':
         {'enum': ['en', 'de'], 'type': 'string'}
     ))
 
-if sys.version_info >= (3, 7):
-    TYPE_HINT_TEST_PARAMS.append((
-        typing.Iterable[NamedTupleA],
-        {
-            'type': 'array',
-            'items': {'type': 'object', 'properties': {'a': {}, 'b': {}}, 'required': ['a', 'b']}
-        }
-    ))
+TYPE_HINT_TEST_PARAMS.append((
+    typing.Iterable[NamedTupleA],
+    {
+        'type': 'array',
+        'items': {'type': 'object', 'properties': {'a': {}, 'b': {}}, 'required': ['a', 'b']}
+    }
+))
 
 if sys.version_info >= (3, 8):
     # Literal only works for python >= 3.8 despite typing_extensions, because it
