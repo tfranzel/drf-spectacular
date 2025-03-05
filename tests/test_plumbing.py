@@ -13,9 +13,8 @@ else:
 
 import pytest
 from django import __version__ as DJANGO_VERSION
-from django.conf.urls import include
 from django.db import models
-from django.urls import re_path
+from django.urls import include, path
 from django.utils.functional import lazystr
 from rest_framework import generics, serializers
 
@@ -95,7 +94,7 @@ def test_follow_field_source_forward_reverse(no_warnings):
 
 def test_detype_patterns_with_module_includes(no_warnings):
     detype_pattern(
-        pattern=re_path(r'^', include('tests.test_fields'))
+        pattern=path('', include('tests.test_fields'))
     )
 
 

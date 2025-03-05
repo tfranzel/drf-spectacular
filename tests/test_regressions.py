@@ -241,8 +241,8 @@ def test_free_form_responses(no_warnings):
             pass  # pragma: no cover
 
     generate_schema(None, patterns=[
-        re_path(r'^x$', XAPIView.as_view(), name='x'),
-        re_path(r'^y$', YAPIView.as_view(), name='y'),
+        path('x', XAPIView.as_view(), name='x'),
+        path('y', YAPIView.as_view(), name='y'),
     ])
 
 
@@ -260,7 +260,7 @@ def test_append_extra_components(no_warnings):
             pass  # pragma: no cover
 
     schema = generate_schema(None, patterns=[
-        re_path(r'^x$', XAPIView.as_view(), name='x'),
+        path('x', XAPIView.as_view(), name='x'),
     ])
     assert len(schema['components']['schemas']) == 2
 

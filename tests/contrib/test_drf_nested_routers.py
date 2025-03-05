@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 from django.db import models
-from django.urls import include, re_path
+from django.urls import include, path
 from rest_framework import serializers, viewsets
 from rest_framework.routers import SimpleRouter
 
@@ -41,8 +41,8 @@ def _generate_nested_routers_schema(root_viewset, child_viewset):
     root_router.register(r'child', child_viewset, basename='child')
 
     urlpatterns = [
-        re_path(r'^', include(router.urls)),
-        re_path(r'^', include(root_router.urls)),
+        path('', include(router.urls)),
+        path('', include(root_router.urls)),
     ]
     return generate_schema(None, patterns=urlpatterns)
 

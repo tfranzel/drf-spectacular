@@ -4,9 +4,8 @@ from unittest import mock
 
 import pytest
 import yaml
-from django.conf.urls import include
 from django.db import models
-from django.urls import path, re_path
+from django.urls import include, path, re_path
 from rest_framework import generics, mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient, APIRequestFactory
 from rest_framework.versioning import AcceptHeaderVersioning, NamespaceVersioning, URLPathVersioning
