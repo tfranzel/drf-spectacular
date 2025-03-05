@@ -52,7 +52,7 @@ linkcheck_allowed_redirects = {
     r"^https://tox\.wiki/$": r"https://tox\.wiki/en/latest/$",
     r"^https://drf-spectacular\.readthedocs\.io/$": r"https://drf-spectacular\.readthedocs\.io/en/latest/$",
     r"^https://docs\.djangoproject\.com/en/stable/": r"^https://docs\.djangoproject\.com/en/\d+\.\d+/",
-    r"^https://github\.com/tfranzel/drf-spectacular/issues/\d+": "https://github\.com/tfranzel/drf-spectacular/pull/\d+",
+    r"^https://github\.com/tfranzel/drf-spectacular/issues/\d+": r"https://github\.com/tfranzel/drf-spectacular/pull/\d+",
 }
 
 linkcheck_ignore = [
