@@ -1,4 +1,5 @@
-django-allauth<0.55.0  # breaking change breaking dj-rest-auth
+django-allauth>=0.56.0; python_version >= '3.7'
+django-allauth<0.55.0; python_version < '3.7'
 drf-jwt>=0.13.0
 dj-rest-auth>=1.0.0
 djangorestframework-simplejwt>=4.4.0
