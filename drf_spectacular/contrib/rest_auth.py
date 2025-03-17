@@ -74,12 +74,26 @@ class RestAuthLogoutView(OpenApiViewExtension):
         else:
             get_schema_params = {'exclude': True}
 
+        if (
+            getattr(settings, 'SIMPLE_JWT', {}).get('BLACKLIST_AFTER_ROTATION', False)
+            and 'rest_framework_simplejwt.token_blacklist' in settings.INSTALLED_APPS
+        ):
+
+            class LogoutSerializer(serializers.Serializer):
+                refresh = serializers.CharField(required=True, allow_blank=False)
+
+            post_request_class = LogoutSerializer
+        else:
+            post_request_class = None
+
         class Fixed(self.target_class):
             @extend_schema(**get_schema_params)
             def get(self, request, *args, **kwargs):
                 pass  # pragma: no cover
 
-            @extend_schema(request=None, responses=RestAuthDetailSerializer)
+            @extend_schema(
+                request=post_request_class, responses=RestAuthDetailSerializer
+            )
             def post(self, request, *args, **kwargs):
                 pass  # pragma: no cover
 
