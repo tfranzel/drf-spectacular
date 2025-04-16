@@ -150,6 +150,17 @@ The blueprint works for the Azure AD configuration guide (see: https://django-au
 .. literalinclude:: blueprints/django_auth_adfs.py
 
 
+django-allauth
+----------------
+
+`django-allauth <https://docs.allauth.org>`_ is an integrated set of Django applications addressing
+authentication, registration, account management as well as 3rd party (social) account authentication.
+The blueprint works for the drf configuration guide
+(see: https://docs.allauth.org/en/latest/headless/integrations.html#django-rest-framework).
+
+.. literalinclude:: blueprints/django_allauth.py
+
+
 django-parler-rest
 ------------------
 
