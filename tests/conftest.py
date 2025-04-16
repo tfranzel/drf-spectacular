@@ -22,6 +22,7 @@ def pytest_configure(config):
         'dj_rest_auth.registration',
         'allauth',
         'allauth.account',
+        'allauth.socialaccount',
         'oauth2_provider',
         'django_filters',
         'knox',
@@ -30,6 +31,10 @@ def pytest_configure(config):
         # 'polymorphic',
         # 'rest_framework_jwt',
     ]
+    try:
+        from allauth import __version__ as allauth_version
+    except ImportError:
+        allauth_version = ""
 
     # only load GIS if library is installed. This is required for the GIS test to work
     if is_gis_installed():
@@ -71,6 +76,7 @@ def pytest_configure(config):
         MIDDLEWARE=(
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.middleware.common.CommonMiddleware',
+            *(['allauth.account.middleware.AccountMiddleware'] if allauth_version > "0.60.0" else []),
             'django.contrib.auth.middleware.AuthenticationMiddleware',
             'django.middleware.locale.LocaleMiddleware',
         ),

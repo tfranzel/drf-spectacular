@@ -1,5 +1,6 @@
 __all__ = [
     'django_oauth_toolkit',
+    'django_allauth',
     'djangorestframework_camel_case',
     'rest_auth',
     'rest_framework',
