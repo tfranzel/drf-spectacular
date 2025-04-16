@@ -118,6 +118,13 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
         if hasattr(cls.target_class, 'cls'):
             cls.target_class = cls.target_class.cls
 
+    @classmethod
+    def get_match(cls, target) -> 'Optional[OpenApiViewExtension]':
+        for extension in sorted(cls._registry, key=lambda e: e.priority, reverse=True):
+            if extension._matches(target.cls):
+                return extension(target)
+        return None
+
     @abstractmethod
     def view_replacement(self) -> 'Type[APIView]':
         pass  # pragma: no cover
