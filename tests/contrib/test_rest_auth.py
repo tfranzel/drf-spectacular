@@ -9,6 +9,13 @@ from rest_framework import viewsets
 from tests import assert_schema, generate_schema
 from tests.models import SimpleModel, SimpleSerializer
 
+try:
+    from allauth import __version__ as allauth_version
+    from dj_rest_auth.__version__ import __version__ as dj_rest_auth_version
+except ImportError:
+    dj_rest_auth_version = ""
+    allauth_version = ""
+
 transforms = [
     # User model first_name differences
     lambda x: re.sub(r'(first_name:\n *type: string\n *maxLength:) 30', r'\g<1> 150', x),
@@ -17,6 +24,7 @@ transforms = [
 ]
 
 
+@pytest.mark.skipif(dj_rest_auth_version < "5" and allauth_version >= "0.55.0", reason='')
 @pytest.mark.contrib('dj_rest_auth', 'allauth')
 @mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX', '')
 def test_rest_auth(no_warnings):
@@ -30,6 +38,7 @@ def test_rest_auth(no_warnings):
     )
 
 
+@pytest.mark.skipif(dj_rest_auth_version < "5" and allauth_version >= "0.55.0", reason='')
 @pytest.mark.contrib('dj_rest_auth', 'allauth', 'rest_framework_simplejwt')
 @mock.patch('drf_spectacular.settings.spectacular_settings.SCHEMA_PATH_PREFIX', '')
 @mock.patch('dj_rest_auth.app_settings.api_settings.USE_JWT', True)
