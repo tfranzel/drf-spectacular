@@ -107,7 +107,8 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
 
     ``view_replacement()`` is expected to return a subclass of ``APIView`` (which includes
     ``ViewSet`` et al.). The discovered original view instance can be accessed with
-    ``self.target`` and be subclassed if desired.
+    ``self.target``, while the original view class can be accessed with ``self.target.cls`` 
+    and can be subclassed if desired.
     """
     _registry: List[Type['OpenApiViewExtension']] = []
 
