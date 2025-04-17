@@ -106,11 +106,15 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
     Extension for replacing discovered views with a more schema-appropriate/annotated version.
 
     ``view_replacement()`` is expected to return a subclass of ``APIView`` (which includes
-    ``ViewSet`` et al.). The discovered original view instance can be accessed with
-    ``self.target``, while the original view class can be accessed with ``self.target.cls`` 
-    and can be subclassed if desired.
+    ``ViewSet`` et al.). The discovered original view callback can be accessed with
+    ``self.target_callback``, while the discovered original view class can be accessed
+     with ``self.target`` and can be subclassed if desired.
     """
     _registry: List[Type['OpenApiViewExtension']] = []
+
+    def __init__(self, target, target_callback):
+        super().__init__(target)
+        self.target_callback = target_callback
 
     @classmethod
     def _load_class(cls):
@@ -123,7 +127,7 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
     def get_match(cls, target) -> 'Optional[OpenApiViewExtension]':
         for extension in sorted(cls._registry, key=lambda e: e.priority, reverse=True):
             if extension._matches(target.cls):
-                return extension(target)
+                return extension(target.cls, target)
         return None
 
     @abstractmethod
