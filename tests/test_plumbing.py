@@ -27,6 +27,16 @@ from drf_spectacular.plumbing import (
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
 
+if hasattr(typing, "NotRequired"):
+    NotRequired = typing.NotRequired
+else:
+    from typing_extensions import NotRequired
+
+if hasattr(typing, "Required"):
+    Required = typing.Required
+else:
+    from typing_extensions import Required
+
 
 def test_get_list_serializer_preserves_context():
     serializer = serializers.Serializer(context={"foo": "bar"})
@@ -246,6 +256,12 @@ if sys.version_info >= (3, 9) or sys.version_info < (3, 8):
     class TD4(TD4Optional):
         """A test description2"""
         b: bool
+
+    class TD5(TypedDict):
+        """A test description3"""
+        a: NotRequired[str]
+        b: Required[bool]
+
     TYPE_HINT_TEST_PARAMS.append((
         TD1,
         {
@@ -276,6 +292,18 @@ if sys.version_info >= (3, 9) or sys.version_info < (3, 8):
         {
             'type': 'object',
             'description': 'A test description2',
+            'properties': {
+                'a': {'type': 'string'},
+                'b': {'type': 'boolean'}
+            },
+            'required': ['b'],
+        })
+    )
+    TYPE_HINT_TEST_PARAMS.append((
+        TD5,
+        {
+            'type': 'object',
+            'description': 'A test description3',
             'properties': {
                 'a': {'type': 'string'},
                 'b': {'type': 'boolean'}
