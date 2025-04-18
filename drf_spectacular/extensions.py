@@ -126,7 +126,7 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
     @classmethod
     def get_match(cls, target) -> 'Optional[OpenApiViewExtension]':
         for extension in sorted(cls._registry, key=lambda e: e.priority, reverse=True):
-            if extension._matches(target.cls):
+            if hasattr(target, "cls") and extension._matches(target.cls):
                 return extension(target.cls, target)
         return None
 
