@@ -910,6 +910,8 @@ def _load_enum_name_overrides(language: str):
             choices = choices.choices
         if inspect.isclass(choices) and issubclass(choices, Enum):
             choices = [(c.value, c.name) for c in choices]
+        if callable(choices):
+            choices = choices()
         normalized_choices = []
         for choice in choices:
             # Allow None values in the simple values list case
