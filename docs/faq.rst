@@ -135,7 +135,7 @@ problems, of two kinds:
 
 You can resolve (or silence) enum issues by adding an entry to the
 ``ENUM_NAME_OVERRIDES`` setting. Values can take the form of choices (list of tuples), value lists
-(list of strings), or import strings. Django's ``models.Choices`` and Python's ``Enum`` classes
+(list of strings), callable with choices, or import strings. Django's ``models.Choices`` and Python's ``Enum`` classes
 are supported as well. The key is a string that you choose as a name to give to
 this set of values.
 
@@ -152,6 +152,8 @@ For example:
             'CountryEnum': 'import_path.enums.CountryEnum',
             # choices is an attribute of class CurrencyContainer containing a list of tuples
             'CurrencyEnum': 'import_path.CurrencyContainer.choices',
+            # callable with choices
+            'NameEnum': 'import_path.enums.NameEnum.as_choices',
         }
     }
 
