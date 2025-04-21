@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=61.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drf-spectacular"
+authors = [{name = "T. Franzel", email = "tfranzel@gmail.com"}]
+license = {text = "BSD"}
+description = "Sane and flexible OpenAPI 3 schema generation for Django REST framework"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 2.2",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Documentation",
+    "Topic :: Software Development :: Code Generators",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "Django>=2.2",
+    "djangorestframework>=3.10.3",
+    "uritemplate>=2.0.0",
+    "PyYAML>=5.1",
+    "jsonschema>=2.6.0",
+    "inflection>=0.3.1",
+    'typing-extensions; python_version < "3.10"',
+]
+dynamic = ["version"]
+
+[project.readme]
+file = "README.rst"
+content-type = "text/x-rst"
+
+[project.urls]
+Homepage = "https://github.com/tfranzel/drf-spectacular"
+Source = "https://github.com/tfranzel/drf-spectacular"
+Documentation = "https://drf-spectacular.readthedocs.io"
+
+[project.optional-dependencies]
+offline = ["drf-spectacular-sidecar"]
+sidecar = ["drf-spectacular-sidecar"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages]
+find = {namespaces = false}
+
+[tool.setuptools.dynamic]
+version = {attr = "drf_spectacular.__version__"}
