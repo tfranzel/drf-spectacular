@@ -131,6 +131,7 @@ these static files as a separate optional package. Usage is as follows:
         'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
         'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
         'REDOC_DIST': 'SIDECAR',
+        'SCALAR_DIST': 'SIDECAR',
         # OTHER SETTINGS
     }
 
