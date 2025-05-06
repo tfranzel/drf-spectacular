@@ -292,7 +292,7 @@ class SpectacularScalarView(APIView):
                 'title': self.title,
                 'scalar_standalone': self._scalar_resource('standalone.js'),
                 'schema_url': self._get_schema_url(request),
-                'scalar_css': self._scalar_resource('style.css'),
+                'scalar_css': self._scalar_resource('style.min.css'),
                 'settings': self._dump(spectacular_settings.SCALAR_UI_SETTINGS),
             },
             template_name=self.template_name
