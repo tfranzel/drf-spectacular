@@ -245,7 +245,7 @@ def get_doc(obj) -> str:
         try:
             return lst.index(item)
         except ValueError:
-            return float("inf")
+            return len(lst)
 
     lib_barrier = min(
         safe_index(obj.__mro__, c) for c in spectacular_settings.GET_LIB_DOC_EXCLUDES()
