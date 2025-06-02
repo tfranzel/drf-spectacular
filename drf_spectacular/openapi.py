@@ -500,7 +500,7 @@ class AutoSchema(ViewInspector):
             resolved_parameter = resolve_django_path_parameter(
                 self.path_regex, variable, self.map_renderers('format'),
             )
-            if not resolved_parameter:
+            if not resolved_parameter and model is None:
                 resolved_parameter = resolve_regex_path_parameter(self.path_regex, variable)
 
             if resolved_parameter:
@@ -523,6 +523,10 @@ class AutoSchema(ViewInspector):
                         model_field_name = variable
                     model_field = follow_model_field_lookup(model, model_field_name)
                     schema = self._map_model_field(model_field, direction=None)
+                    if 'type' in schema and schema['type'] == 'string':
+                        regex_resolved_parameter = resolve_regex_path_parameter(self.path_regex, variable)
+                        if regex_resolved_parameter:
+                            schema = regex_resolved_parameter['schema']
                     if 'description' not in schema and model_field.primary_key:
                         description = get_pk_description(model, model_field)
                 except django_exceptions.FieldError:
