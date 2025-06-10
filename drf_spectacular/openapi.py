@@ -1045,7 +1045,25 @@ class AutoSchema(ViewInspector):
         required = set()
         properties = {}
 
-        for field in serializer.fields.values():
+        try:
+            fields = serializer.fields.values()
+        except ValueError as exc:
+            if 'Abstract Models' in str(exc):
+                warn(
+                    f'ModelSerializer "{serializer.__class__.__name__}" uses an abstract model. '
+                    f'Falling back to explicitly declared fields only.'
+                )
+                from rest_framework.utils.serializer_helpers import BindingDict
+
+                declared = serializers.Serializer.get_fields(serializer)
+                bound_fields = BindingDict(serializer)
+                for name, field in declared.items():
+                    bound_fields[name] = field
+                fields = bound_fields.values()
+            else:
+                raise
+
+        for field in fields:
             if isinstance(field, serializers.HiddenField):
                 continue
             if field.field_name in get_override(serializer, 'exclude_fields', []):

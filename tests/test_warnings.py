@@ -538,3 +538,26 @@ def test_request_encoding_on_invalid_content_type(capsys):
     generate_schema('/x/', view_function=view_func)
     stderr = capsys.readouterr().err
     assert 'Encodings object on media types other than' in stderr
+
+
+def test_abstract_model_serializer_warning(capsys):
+    class AbstractModel(models.Model):
+        field = models.CharField(max_length=10)
+
+        class Meta:
+            abstract = True
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = AbstractModel
+            fields = '__all__'
+
+    class XAPIView(APIView):
+        serializer_class = XSerializer
+
+        def get(self, request):
+            pass  # pragma: no cover
+
+    generate_schema('x', view=XAPIView)
+    stderr = capsys.readouterr().err
+    assert 'abstract model' in stderr
