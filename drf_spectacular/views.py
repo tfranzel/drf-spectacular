@@ -116,7 +116,10 @@ class SpectacularJSONAPIView(SpectacularAPIView):
 
 
 def _get_sidecar_url(filepath):
-    return static(f'drf_spectacular_sidecar/{filepath}')
+    static_path = static(f'drf_spectacular_sidecar/{filepath}')
+    if "scalar" in static_path:
+        static_path = static_path.replace("%40", "@")
+    return static_path
 
 
 class SpectacularSwaggerView(APIView):
@@ -266,6 +269,47 @@ class SpectacularRedocView(APIView):
         if spectacular_settings.REDOC_DIST == 'SIDECAR':
             return _get_sidecar_url('redoc/bundles/redoc.standalone.js')
         return f'{spectacular_settings.REDOC_DIST}/bundles/redoc.standalone.js'
+
+    def _get_schema_url(self, request):
+        schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
+        return set_query_parameters(
+            url=schema_url,
+            lang=request.GET.get('lang'),
+            version=request.GET.get('version')
+        )
+
+
+class SpectacularScalarView(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
+    permission_classes = spectacular_settings.SERVE_PERMISSIONS
+    authentication_classes = AUTHENTICATION_CLASSES
+    url_name: str = 'schema'
+    url: Optional[str] = None
+    template_name: str = 'drf_spectacular/scalar.html'
+    title: Optional[str] = spectacular_settings.TITLE
+
+    @extend_schema(exclude=True)
+    def get(self, request, *args, **kwargs):
+        return Response(
+            data={
+                'title': self.title,
+                'scalar_standalone': self._scalar_standalone(),
+                'schema_url': self._get_schema_url(request),
+                'settings': self._dump(spectacular_settings.SCALAR_UI_SETTINGS),
+            },
+            template_name=self.template_name
+        )
+
+    def _dump(self, data):
+        if not data:
+            data = {}
+        return json.dumps(data, indent=2)
+
+    @staticmethod
+    def _scalar_standalone():
+        if spectacular_settings.SCALAR_DIST == 'SIDECAR':
+            return _get_sidecar_url('@scalar/api-reference/dist/browser/standalone.js')
+        return f'{spectacular_settings.SCALAR_DIST}/dist/browser/standalone.js'
 
     def _get_schema_url(self, request):
         schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
