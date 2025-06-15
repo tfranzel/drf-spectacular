@@ -301,8 +301,7 @@ class SpectacularScalarView(APIView):
         )
 
     def _dump(self, data):
-        if not data:
-            data = {}
+        data = data or {}
         return json.dumps(data, indent=2)
 
     @staticmethod
