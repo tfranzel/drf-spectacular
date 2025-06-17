@@ -1,5 +1,3 @@
-from rest_framework.utils.model_meta import get_field_info
-
 from drf_spectacular.drainage import warn
 from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerializerFieldExtension
 from drf_spectacular.plumbing import (
