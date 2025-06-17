@@ -46,14 +46,17 @@ def test_rest_framework_gis(no_warnings, clear_caches, django_transforms):
     # all GIS fields as GeoJSON in singular and list form
     fields = [
         'Point', 'Polygon', 'Linestring', 'Geometry',
-        'Multipoint', 'Multipolygon', 'Multilinestring', 'Geometrycollection'
+        'Multipoint', 'Multipolygon', 'Multilinestring', 'Geometrycollection', 'AnotherSourceGeometry'
     ]
     for name in fields:
         @extend_schema_serializer(component_name=name)
         class XSerializer(GeoFeatureModelSerializer):
+            if name == 'AnotherSourceGeometry':
+                geometry = SerializerGeometryField(source='field_polygon')
+
             class Meta:
                 model = GeoModel
-                geo_field = f'field_{name.lower()}'
+                geo_field = 'geometry' if name == 'AnotherSourceGeometry' else f'field_{name.lower()}'
                 auto_bbox = name == 'Polygon'
                 fields = ['id', 'field_random1', 'field_random2', 'field_gis_plain']
 
