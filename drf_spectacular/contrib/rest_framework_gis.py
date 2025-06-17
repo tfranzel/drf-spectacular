@@ -1,5 +1,3 @@
-from rest_framework.utils.model_meta import get_field_info
-
 from drf_spectacular.drainage import warn
 from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiSerializerFieldExtension
 from drf_spectacular.plumbing import (
@@ -122,7 +120,7 @@ def map_geo_field(serializer, geo_field_name):
     if isinstance(field, GeometrySerializerMethodField):
         warn("Geometry generation for GeometrySerializerMethodField is not supported.")
         return {}
-    model_field = get_field_info(serializer.Meta.model).fields[geo_field_name]
+    model_field = follow_field_source(serializer.Meta.model, field.source.split('.'))
     return build_geo_schema(model_field)
 
 
