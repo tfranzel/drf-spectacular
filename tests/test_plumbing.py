@@ -21,7 +21,7 @@ from rest_framework import generics, serializers
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     analyze_named_regex_pattern, build_basic_type, build_choice_field, detype_pattern,
-    follow_field_source, force_instance, get_list_serializer, get_relative_url, is_field,
+    follow_field_source, force_instance, get_doc, get_list_serializer, get_relative_url, is_field,
     is_serializer, resolve_type_hint, safe_ref, set_query_parameters,
 )
 from drf_spectacular.validation import validate_schema
@@ -452,3 +452,13 @@ def test_url_tooling_with_lazy_url():
 
     assert get_relative_url(lazystr(some_url)) == "/accounts/"
     assert set_query_parameters(lazystr(some_url), foo=123) == some_url + "?foo=123"
+
+
+def test_get_doc():
+    T = typing.TypeVar('T')
+
+    class MyClass(typing.Generic[T]):
+        pass
+
+    doc = get_doc(MyClass)
+    assert doc == ""
