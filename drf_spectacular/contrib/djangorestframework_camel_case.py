@@ -1,10 +1,10 @@
 import re
-from typing import Optional
+from typing import MutableMapping, Optional
 
 from django.utils.module_loading import import_string
 
 
-def camelize_serializer_fields(result, generator, request, public):
+def camelize_serializer_fields(result: MutableMapping, generator, request, public):
     from django.conf import settings
     from djangorestframework_camel_case.settings import api_settings
     from djangorestframework_camel_case.util import camelize_re, underscore_to_camel
@@ -20,12 +20,10 @@ def camelize_serializer_fields(result, generator, request, public):
         except ImportError:
             return False
 
-        for middleware in [import_string(m) for m in settings.MIDDLEWARE]:
-            try:
-                if issubclass(middleware, CamelCaseMiddleWare):
-                    return True
-            except TypeError:
-                pass
+        return any(
+            isinstance(m, type) and issubclass(m, CamelCaseMiddleWare)
+            for m in map(import_string, settings.MIDDLEWARE)
+        )
 
     def camelize_str(key: str) -> str:
         new_key = re.sub(camelize_re, underscore_to_camel, key) if "_" in key else key
@@ -33,7 +31,7 @@ def camelize_serializer_fields(result, generator, request, public):
             return key
         return new_key
 
-    def camelize_component(schema: dict, name: Optional[str] = None) -> dict:
+    def camelize_component(schema: MutableMapping, name: Optional[str] = None) -> MutableMapping:
         if name is not None and (name in ignore_fields or camelize_str(name) in ignore_fields):
             return schema
         elif schema.get('type') == 'object':
@@ -44,8 +42,8 @@ def camelize_serializer_fields(result, generator, request, public):
                 }
             if 'required' in schema:
                 schema['required'] = [camelize_str(field) for field in schema['required']]
-        elif schema.get('type') == 'array':
-            camelize_component(schema['items'])
+        elif schema.get("type") == "array" and isinstance(schema["items"], MutableMapping):
+            camelize_component(schema["items"])
         return schema
 
     for (_, component_type), component in generator.registry._components.items():
