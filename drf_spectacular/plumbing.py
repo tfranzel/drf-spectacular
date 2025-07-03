@@ -939,7 +939,7 @@ def _load_enum_name_overrides(language: str):
 
 
 def list_hash(lst: Any) -> str:
-    return hashlib.sha256(json.dumps(list(lst), sort_keys=True, cls=JSONEncoder).encode()).hexdigest()[:16]
+    return hashlib.sha256(json.dumps(sorted(lst), sort_keys=True, cls=JSONEncoder).encode()).hexdigest()[:16]
 
 
 def anchor_pattern(pattern: str) -> str:
