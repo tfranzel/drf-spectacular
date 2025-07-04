@@ -1,7 +1,12 @@
 import json
 import os
 
-import jsonschema
+try:
+    import fastjsonschema
+    use_fastjsonschema = True
+except ImportError:
+    import jsonschema
+    use_fastjsonschema = False
 
 
 def validate_schema(api_schema):
@@ -31,4 +36,8 @@ def validate_schema(api_schema):
     from drf_spectacular.renderers import OpenApiJsonRenderer
     api_schema = json.loads(OpenApiJsonRenderer().render(api_schema))
 
-    jsonschema.validate(instance=api_schema, schema=openapi3_schema_spec)
+    if use_fastjsonschema:
+        validate = fastjsonschema.compile(openapi3_schema_spec)
+        validate(api_schema)
+    else:
+        jsonschema.validate(instance=api_schema, schema=openapi3_schema_spec)
