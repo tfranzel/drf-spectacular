@@ -307,7 +307,8 @@ def build_basic_type(obj: Union[_KnownPythonTypes, OpenApiTypes]) -> Optional[_S
 
 
 def build_array_type(schema: _SchemaType, min_length=None, max_length=None) -> _SchemaType:
-    schema = {'type': 'array', 'items': schema}
+    schema = {'type': 'array', 'items': schema.copy()}
+    schema["items"].pop("default", None)
     if min_length is not None:
         schema['minLength'] = min_length
     if max_length is not None:
