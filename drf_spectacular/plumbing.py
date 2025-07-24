@@ -13,7 +13,8 @@ from collections import OrderedDict, defaultdict
 from decimal import Decimal
 from enum import Enum
 from typing import (
-    Any, DefaultDict, Dict, Generic, List, Optional, Sequence, Tuple, Type, TypeVar, Union,
+    Any, DefaultDict, Dict, Generic, Iterable, List, Optional, Sequence, Tuple, Type, TypeVar,
+    Union,
 )
 
 if sys.version_info >= (3, 10):
@@ -818,7 +819,7 @@ class ComponentRegistry:
 
 
 class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
-    _registry: List[Type[T]] = []
+    _registry: Iterable[Type[T]] = []
     target_class: Union[None, str, Type[object]] = None
     match_subclasses = False
     priority = 0
