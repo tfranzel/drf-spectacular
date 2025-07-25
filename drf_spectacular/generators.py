@@ -1,4 +1,4 @@
-import os
+import posixpath
 import re
 
 from django.urls import URLPattern, URLResolver
@@ -210,7 +210,7 @@ class SchemaGenerator(BaseSchemaGenerator):
             # than one view to prevent emission of erroneous and unnecessary fallback names.
             non_trivial_prefix = len(set([view.__class__ for _, _, _, view in endpoints])) > 1
             if non_trivial_prefix:
-                path_prefix = os.path.commonpath([path for path, _, _, _ in endpoints])
+                path_prefix = posixpath.commonpath([path for path, _, _, _ in endpoints])
                 path_prefix = re.escape(path_prefix)  # guard for RE special chars in path
             else:
                 path_prefix = '/'
