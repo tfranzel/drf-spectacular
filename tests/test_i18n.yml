@@ -106,7 +106,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Internätiönalisierung.
+        description: A unique integer value identifying this root
         required: true
       tags:
       - x

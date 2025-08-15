@@ -5,6 +5,7 @@ import yaml
 from django.db import models
 from django.urls import include, path
 from django.utils import translation
+from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient
@@ -66,8 +67,21 @@ urlpatterns = [
 )
 def test_i18n_strings(no_warnings):
     with translation.override('de-de'):
+        id_desciption = gettext('A {value_type} identifying this {name}.').format(
+            value_type=_('unique integer value'),
+            name=I18nModel._meta.verbose_name,
+        )
         schema = generate_schema(None, patterns=urlpatterns)
-        assert_schema(schema, 'tests/test_i18n.yml')
+        assert_schema(
+            schema,
+            'tests/test_i18n.yml',
+            reverse_transforms=[
+                lambda x: x.replace(
+                    '\n        description: A unique integer value identifying this root',
+                    f'\n        description: {id_desciption}'
+                )
+            ]
+        )
 
 
 @pytest.mark.parametrize(['url', 'header', 'translated'], [
