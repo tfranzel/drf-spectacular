@@ -1,32 +1,28 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html>
   <head>
     {% block head %}
-    <title>{{ title|default:"Redoc" }}</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Roboto:wght@300;400;700&display=swap">
-    <style>
-      {# Redoc doesn't change outer page styles. #}
-      body { margin: 0; padding: 0; }
-    </style>
+      <title>{{ title|default:"Redoc" }}</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Roboto:wght@300;400;700&display=swap">
+      <link rel="stylesheet" href="{% static "drf_spectacular/redoc.css" %}">
     {% endblock head %}
   </head>
   <body>
     {% block body %}
-    {% if settings %}
-    <div id="redoc-container"></div>
-    <script src="{{ redoc_standalone }}"></script>
-    <script>
-      const redocSettings = {{ settings|safe }};
-      Redoc.init("{{ schema_url }}", redocSettings, document.getElementById('redoc-container'))
-    </script>
-    {% else %}
-    <redoc spec-url="{{ schema_url }}"></redoc>
-    <script src="{{ redoc_standalone }}"></script>
-    {% endif %}
-    {% endblock body %}
+      {% if settings %}
+        <div id="redoc-container"></div>
+        <script src="{{ redoc_standalone }}"></script>
+        {{ settings|json_script:"settings" }}
+        <script src="{% static 'drf_spectacular/redoc.js' %}"
+            data-schemaurl="{{ schema_url }}"></script>
+      {% else %}
+        <redoc spec-url="{{ schema_url }}"></redoc>
+        <script src="{{ redoc_standalone }}"></script>
+      {% endif %}
+      {% endblock body %}
   </body>
 </html>
