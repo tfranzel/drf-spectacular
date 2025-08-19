@@ -94,6 +94,7 @@ class ProductFilter(FilterSet):
     # implicit filter declaration
     subproduct__sub_price = NumberFilter()  # reverse relation
     other_sub_product__uuid = UUIDFilter()  # forward relation
+    other_sub_product = ModelChoiceFilter(queryset=Product.objects.all(), to_field_name="uuid")
     # special cases
     ordering = OrderingFilter(
         fields=('price', 'in_stock'),
@@ -140,7 +141,7 @@ class ProductFilter(FilterSet):
         model = Product
         fields = [
             'category', 'in_stock', 'max_price', 'max_sub_price', 'sub',
-            'subproduct__sub_price', 'other_sub_product__uuid',
+            'subproduct__sub_price', 'other_sub_product__uuid', 'other_sub_product'
         ]
 
     def filter_method_typed(self, queryset, name, value: int):
