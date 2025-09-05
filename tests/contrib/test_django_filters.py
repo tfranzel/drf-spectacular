@@ -436,3 +436,30 @@ def test_filter_on_listapiview(no_warnings):
 
     schema = generate_schema('/x/', view=XListView)
     assert len(schema['paths']['/x/']['get']['parameters']) > 1
+
+@pytest.mark.contrib('django_filter')
+@pytest.mark.parametrize("null_label,expected_enum", [
+    ("null", ["a", "b", "null"]),
+    (None, ["a", "b"]),
+])
+def test_filterset_enum_includes_allow_null_label_if_not_None(no_warnings, null_label, expected_enum):
+    class SimpleModelFilterSet(FilterSet):
+        class Meta:
+            model = SimpleModel
+            fields = ("category",)
+
+        category = ChoiceFilter(
+            choices=(('a', 'A'), ('b', 'B')),
+            null_label=null_label
+        )
+
+    class XViewSet(viewsets.ModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+        filter_backends = [DjangoFilterBackend]
+        filterset_class = SimpleModelFilterSet
+
+    schema = generate_schema('/x', XViewSet)
+    category_type_schema = schema['paths']['/x/']['get']['parameters'][0]
+    assert category_type_schema['name'] == 'category'
+    assert category_type_schema['schema']['enum'] == expected_enum
