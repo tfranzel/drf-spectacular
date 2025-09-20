@@ -2554,8 +2554,8 @@ def test_description_whitespace_stripping(no_warnings):
 
         def create(self, request):
             """
-                create: multi line indented  
-                description docstring        
+                create: multi line indented
+                description docstring
             """  # noqa: W291
             pass  # pragma: no cover
 
@@ -3461,3 +3461,52 @@ def test_primary_key_related_field_with_custom_pk_field(no_warnings):
     assert schema['components']['schemas']['X']['properties']['field'] == {
         'readOnly': True, 'type': 'integer'
     }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE', False)
+def test_enum_postprocessing_openapi31_nullable_regression(no_warnings):
+    """
+    Regression test for nullable metadata loss in enum postprocessing with OpenAPI 3.1.
+
+    When using OAS_VERSION="3.1.0" + ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE=False,
+    nullable choice fields should preserve their nullable metadata.
+
+    The bug: OpenAPI 3.1 converts nullable enums to type=['string', 'null'],
+    but enum postprocessing removes 'null' without preserving nullable=True
+    when no separate NullEnum component is created.
+    """
+    # Define pet type choices similar to the doc example
+    PET_TYPE_CHOICES = [('dog', 'Dog'), ('cat', 'Cat')]
+
+    class PetSerializer(serializers.Serializer):
+        pet_type = serializers.ChoiceField(choices=PET_TYPE_CHOICES, allow_null=True)
+
+    class PetAPIView(APIView):
+        @extend_schema(request=PetSerializer, responses=PetSerializer)
+        def post(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('/pets', view=PetAPIView)
+
+    # Verify that the enum component is created correctly (no 'null' in enum)
+    pet_type_enum = schema['components']['schemas']['PetTypeEnum']
+    assert pet_type_enum == {
+        'description': '* `dog` - Dog\n* `cat` - Cat',
+        'enum': ['dog', 'cat'],
+        'type': 'string'  # Should be 'string', not ['string', 'null']
+    }
+
+    # Verify that the serializer property preserves nullable=True
+    pet_schema = schema['components']['schemas']['Pet']
+    pet_type_property = pet_schema['properties']['pet_type']
+
+    # This is the key assertion: the property should have nullable=True
+    # and reference the enum component
+    assert pet_type_property == {
+        'allOf': [{'$ref': '#/components/schemas/PetTypeEnum'}],
+        'nullable': True  # This should be preserved by the fix
+    }
+
+    # Ensure no separate NullEnum component was created (since setting is False)
+    assert 'NullEnum' not in schema['components']['schemas']
