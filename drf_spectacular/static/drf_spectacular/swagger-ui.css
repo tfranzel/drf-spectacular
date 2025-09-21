@@ -1,0 +1,15 @@
+html {
+    box-sizing: border-box;
+    overflow-y: scroll;
+}
+
+*,
+*:after,
+*:before {
+    box-sizing: inherit;
+}
+
+body {
+    background: #fafafa;
+    margin: 0;
+}

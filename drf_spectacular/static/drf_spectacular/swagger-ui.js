@@ -1,7 +1,18 @@
 "use strict";
 
-const swaggerSettings = {{ settings|safe }};
-const schemaAuthNames = {{ schema_auth_names|safe }};
+const swaggerSettings = JSON.parse(document.getElementById('settings').textContent);
+const schemaAuthNames = JSON.parse(document.getElementById('schema_auth_names').textContent);
+const csrfHeaderName = document.currentScript.dataset.csrfheadername;
+const csrfToken = document.currentScript.dataset.csrftoken;
+const schemaUrl = document.currentScript.dataset.schemaurl;
+
+const oAuthConfigElement = document.getElementById('oauth2_config')
+let oauth2Config = null;
+if (oAuthConfigElement) {
+  oauth2Config = JSON.parse(oAuthConfigElement.textContent);
+}
+
+
 let schemaAuthFailed = false;
 const plugins = [];
 
@@ -107,13 +118,13 @@ const requestInterceptor = (request, ...args) => {
   }
   // selectively omit adding headers to mitigate CORS issues.
   if (!["GET", undefined].includes(request.method) && request.credentials === "same-origin") {
-    request.headers["{{ csrf_header_name }}"] = "{{ csrf_token }}";
+    request.headers[csrfHeaderName] = csrfToken;
   }
   return request;
 };
 
 const ui = SwaggerUIBundle({
-  url: "{{ schema_url|escapejs }}",
+  url: schemaUrl,
   dom_id: "#swagger-ui",
   presets: [SwaggerUIBundle.presets.apis],
   plugins,
@@ -123,4 +134,6 @@ const ui = SwaggerUIBundle({
   ...swaggerSettings,
 });
 
-{% if oauth2_config %}ui.initOAuth({{ oauth2_config|safe }});{% endif %}
+if (oauth2Config) {
+  ui.initOAuth(oauth2Config);
+}
