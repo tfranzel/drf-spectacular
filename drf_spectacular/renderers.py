@@ -6,12 +6,12 @@ from uuid import UUID
 from django.utils.safestring import SafeString
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.renderers import BaseRenderer, JSONRenderer
-
 from yaml import dump
+
 try:
     from yaml import CSafeDumper as SafeDumper
 except ImportError:
-    from yaml import SafeDumper
+    from yaml import SafeDumper  # type: ignore[assignment]
 
 
 class OpenApiYamlRenderer(BaseRenderer):
@@ -56,7 +56,8 @@ class OpenApiYamlRenderer(BaseRenderer):
         Dumper.add_representer(UUID, uuid_representer)
 
         def safestring_representer(dumper, data):
-            return dumper.represent_str(data)
+            # class SafeString(str) is tricky to strip; str(x) and f"{x}" won't work
+            return dumper.represent_str(data.encode().decode())
         Dumper.add_representer(SafeString, safestring_representer)
 
         def ordereddict_representer(dumper, data):
