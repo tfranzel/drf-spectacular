@@ -200,6 +200,7 @@ def get_lib_doc_excludes():
     return [
         object,
         dict,
+        Generic,
         views.APIView,
         *[getattr(serializers, c) for c in dir(serializers) if c.endswith('Serializer')],
         *[getattr(viewsets, c) for c in dir(viewsets) if c.endswith('ViewSet')],
