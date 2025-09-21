@@ -106,7 +106,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Internätiönalisierung.
+        description: Ein eindeutiger Ganzzahl-Wert, der Internätiönalisierung identifiziert.
         required: true
       tags:
       - x

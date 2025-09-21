@@ -6,6 +6,7 @@ from django.db import models
 from django.urls import include, path
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
+from rest_framework import __version__ as DRF_VERSION  # type: ignore[attr-defined]
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient
 
@@ -64,6 +65,7 @@ urlpatterns = [
     'drf_spectacular.settings.spectacular_settings.DESCRIPTION',
     _('Lazy translated description with missing translation')
 )
+@pytest.mark.skipif(DRF_VERSION < '3.16.1', reason='DRF updated translations')
 def test_i18n_strings(no_warnings):
     with translation.override('de-de'):
         schema = generate_schema(None, patterns=urlpatterns)
