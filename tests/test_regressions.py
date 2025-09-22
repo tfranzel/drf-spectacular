@@ -3042,8 +3042,7 @@ def test_primary_key_related_field_default_value(no_warnings):
     assert schema['components']['schemas']['X']['properties'] == {
         'field': {
             'type': 'array',
-            # this nested default is wrong but a consequence of DRF's init system
-            'items': {'type': 'integer', 'default': []},
+            'items': {'type': 'integer'},
             'default': []
         }
     }
