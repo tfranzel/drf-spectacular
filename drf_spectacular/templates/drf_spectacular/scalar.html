@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+
+<head>
+    {% block head %}
+    <title>{{ title|default:"Scalar" }}</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{{ scalar_css }}">
+</head>
+
+<body>
+    {% block body %}
+    <div id="app"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+
+    {% if settings %}
+    <script id="api-reference" type="application/yaml" data-url="{{ schema_url }}"></script>
+    <script src="{{ scalar_standalone }}"></script>
+    <script>
+        const scalarSetting = {{ settings| safe }};
+        document.getElementById('api-reference').dataset.configuration = JSON.stringify(scalarSetting)
+    </script>
+    {% else %}
+    <script id="api-reference" type="application/yaml" data-url="{{ schema_url }}"></script>
+    <script src="{{ scalar_standalone }}"></script>
+    {% endif %}
+    {% endblock body %}
+</body>
+
+</html>
