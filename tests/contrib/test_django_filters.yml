@@ -167,6 +167,11 @@ paths:
         explode: false
         style: form
       - in: query
+        name: other_sub_product
+        schema:
+          type: string
+          format: uuid
+      - in: query
         name: other_sub_product__uuid
         schema:
           type: string
