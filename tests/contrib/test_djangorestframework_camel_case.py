@@ -109,3 +109,38 @@ def test_camelize_middleware(no_warnings):
         'tests/contrib/test_djangorestframework_camel_case.yml',
         reverse_transforms=[lambda x: x.replace("field_parameter", "fieldParameter")]
     )
+
+
+@mock.patch(
+    "django.conf.settings.MIDDLEWARE",
+    ["djangorestframework_camel_case.middleware.CamelCaseMiddleWare"],
+    create=True,
+)
+def test_camelize_can_can_handle_tuples(no_warnings):
+    """
+    I don't know how to express this with a drf.Serializer, but it is within spec to
+    have items be False.
+    It means "prefixItems" is complete, and no more items are valid:
+    https://json-schema.org/understanding-json-schema/reference/array
+    """
+    component = mock.MagicMock()
+    # a 2-tuple
+    component.schema = {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "prefixItems": [
+            {"type": "string"},
+            {"$ref": "#/components/schemas/SomeThing"},
+        ],
+        "items": False,
+    }
+    generator = mock.MagicMock()
+    generator.registry._components.items.return_value = [
+        ((mock.MagicMock(), "schemas"), component)
+    ]
+
+    # this call should not raise an exception
+    camelize_serializer_fields(
+        mock.MagicMock(), generator, mock.MagicMock(), mock.MagicMock()
+    )
