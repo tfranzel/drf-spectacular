@@ -63,6 +63,21 @@ Solution for Redoc:
     CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "fonts.googleapis.com")
     CSP_FONT_SRC = ("'self'", "fonts.gstatic.com")
 
+Solution for Scalar UI:
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    # Option: SIDECAR
+    SPECTACULAR_SETTINGS = {
+         ...
+        'SCALAR_DIST': 'SIDECAR',
+    }
+    CSP_DEFAULT_SRC = ("'self'", "'unsafe-inline'")
+
+    # Option: CDN
+    CSP_DEFAULT_SRC = ("'self'", "'unsafe-inline'", "cdn.jsdelivr.net")
+
 I cannot use :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` on library code
 --------------------------------------------------------------------------------------------
 
@@ -277,7 +292,7 @@ My ``@action`` is erroneously paginated or has filter parameters that I do not w
 This usually happens when ``@extend_schema(responses=XSerializer(many=True))`` is used. Actions inherit filter
 and pagination classes from their ``ViewSet``. If the response is then marked as a list, the ``pagination_class``
 kicks in. Since actions are handled manually by the user, this behavior is usually not immediately obvious.
-To make your intentions clear to *drf-spectacular*, you need to clear the offending classes in the action
+To make your intentions clear to *drf-spectacular*, you can clear the offending classes in the action
 decorator, e.g. setting ``pagination_class=None``.
 
 Users of *django-filter* might also see unwanted query parameters. Since the same mechanics apply here too,
