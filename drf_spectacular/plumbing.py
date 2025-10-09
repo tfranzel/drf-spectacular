@@ -100,6 +100,16 @@ if sys.version_info >= (3, 8):
 else:
     CACHED_PROPERTY_FUNCS = (cached_property,)
 
+if hasattr(typing, "NotRequired"):
+    NotRequired = typing.NotRequired
+else:
+    from typing_extensions import NotRequired
+
+if hasattr(typing, "Required"):
+    Required = typing.Required
+else:
+    from typing_extensions import Required
+
 T = TypeVar('T')
 
 
@@ -1324,13 +1334,39 @@ def _resolve_typeddict(hint):
     required = None
 
     if hasattr(hint, '__required_keys__'):
-        required = [h for h in hint.__required_keys__]
+        required = {h for h in hint.__required_keys__}
+
+    properties = {}
+
+    for k, v in get_type_hints(hint).items():
+        origin, args = _get_type_hint_origin(v)
+
+        # Unwrap Required and NotRequired, as get_type_hints() does
+        # not understand them
+        if origin == NotRequired or origin == Required:
+            # If we are on Python3.11 or later, or we are on an earlier
+            # version of python and are explicitly using typing_extensions.TypedDict,
+            # then the value of required should already be set correctly
+            # However, it does present a bit of a foot-gun, so we
+            # have repeated the logic here as a safeguard in the case
+            # that a user is on Python version 3.9 or 3.10 is not using
+            # typing_extensions.TypedDict
+            if origin == Required:
+                required.add(k)
+            else:
+                required.discard(k)
+
+            if len(args) != 1:
+                raise UnableToProceedError()
+
+            properties[k] = resolve_type_hint(args[0])
+
+        else:
+            properties[k] = resolve_type_hint(v)
 
     return build_object_type(
-        properties={
-            k: resolve_type_hint(v) for k, v in get_type_hints(hint).items()
-        },
-        required=required,
+        properties=properties,
+        required=None if required is None else list(required),
         description=get_doc(hint),
     )
 
