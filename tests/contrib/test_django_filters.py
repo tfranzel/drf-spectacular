@@ -437,6 +437,7 @@ def test_filter_on_listapiview(no_warnings):
     schema = generate_schema('/x/', view=XListView)
     assert len(schema['paths']['/x/']['get']['parameters']) > 1
 
+
 @pytest.mark.contrib('django_filter')
 @pytest.mark.parametrize("null_label,expected_enum", [
     ("null", ["a", "b", "null"]),
