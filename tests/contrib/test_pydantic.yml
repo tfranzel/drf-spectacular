@@ -41,6 +41,7 @@ components:
         b:
           $ref: '#/components/schemas/B'
         d:
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: D
           type: string
         x:
