@@ -816,8 +816,9 @@ class AutoSchema(ViewInspector):
             if getattr(field, 'coerce_to_string', api_settings.COERCE_DECIMAL_TO_STRING):
                 content = {**build_basic_type(OpenApiTypes.STR), 'format': 'decimal'}
                 if field.max_whole_digits is not None:
-                    content['pattern'] = r'^-?0?' if field.max_whole_digits == 0\
-                                         else fr'^-?\d{{0,{field.max_whole_digits}}}'
+                    content['pattern'] = (
+                        r'^-?0?' if field.max_whole_digits == 0 else fr'^-?\d{{0,{field.max_whole_digits}}}'
+                    )
                     content['pattern'] += fr'(?:\.\d{{0,{field.decimal_places}}})?$'
             else:
                 content = build_basic_type(OpenApiTypes.DECIMAL)
