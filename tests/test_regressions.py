@@ -1198,6 +1198,9 @@ def test_pagination(no_warnings):
     # substituted component on list
     assert 'Simple' in schema['components']['schemas']
     assert 'PaginatedSimpleList' in schema['components']['schemas']
+    assert get_response_schema(schema['paths']['/x/']['get']) == {
+        '$ref': '#/components/schemas/PaginatedSimpleList'
+    }
     substitution = schema['components']['schemas']['PaginatedSimpleList']
     assert substitution['type'] == 'object'
     assert substitution['properties']['results']['items']['$ref'] == '#/components/schemas/Simple'
