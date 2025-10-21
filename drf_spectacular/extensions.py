@@ -112,8 +112,8 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
     """
     _registry: List[Type['OpenApiViewExtension']] = []
 
-    def __init__(self, target, target_callback):
-        super().__init__(target)
+    def __init__(self, target_callback):
+        super().__init__(target_callback.cls)
         self.target_callback = target_callback
 
     @classmethod
@@ -124,10 +124,10 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
             cls.target_class = cls.target_class.cls
 
     @classmethod
-    def get_match(cls, target) -> 'Optional[OpenApiViewExtension]':
+    def get_match(cls, target_callback) -> 'Optional[OpenApiViewExtension]':
         for extension in sorted(cls._registry, key=lambda e: e.priority, reverse=True):
-            if hasattr(target, "cls") and extension._matches(target.cls):
-                return extension(target.cls, target)
+            if extension._matches(target_callback.cls):
+                return extension(target_callback)
         return None
 
     @abstractmethod
