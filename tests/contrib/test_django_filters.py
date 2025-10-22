@@ -4,6 +4,7 @@ import pytest
 from django import __version__ as DJANGO_VERSION
 from django.db import models
 from django.db.models import F
+from django.test import override_settings
 from django.urls import include, path
 from rest_framework import generics, routers, serializers, viewsets
 from rest_framework.test import APIClient
@@ -183,6 +184,9 @@ class ProductViewset(viewsets.ReadOnlyModelViewSet):
 
 
 @pytest.mark.contrib('django_filter')
+@override_settings(
+    FILTERS_EMPTY_CHOICE_LABEL=None,
+)
 def test_django_filters(no_warnings):
     assert_schema(
         generate_schema('products', ProductViewset),
@@ -440,9 +444,13 @@ def test_filter_on_listapiview(no_warnings):
 
 @pytest.mark.contrib('django_filter')
 @pytest.mark.parametrize("null_label,expected_enum", [
-    ("null", ["a", "b", "null"]),
+    ("NULL LABEL", ["NULL VALUE", "a", "b"]),
     (None, ["a", "b"]),
 ])
+@override_settings(
+    FILTERS_NULL_CHOICE_VALUE="NULL VALUE",
+    FILTERS_EMPTY_CHOICE_LABEL=None,
+)
 def test_filterset_enum_includes_allow_null_label_if_not_None(no_warnings, null_label, expected_enum):
     class SimpleModelFilterSet(FilterSet):
         class Meta:
@@ -464,3 +472,44 @@ def test_filterset_enum_includes_allow_null_label_if_not_None(no_warnings, null_
     category_type_schema = schema['paths']['/x/']['get']['parameters'][0]
     assert category_type_schema['name'] == 'category'
     assert category_type_schema['schema']['enum'] == expected_enum
+
+
+@pytest.mark.contrib('django_filter')
+@pytest.mark.parametrize(
+    "empty_label,null_label",
+    [
+        ("EMPTY LABEL", "NULL LABEL"),   # both set
+        (None, "NULL LABEL"),            # empty label None
+        ("EMPTY LABEL", None),           # null label None
+        (None, None),                    # both None
+    ],
+)
+def test_filterset_enum_respects_overridden_settings(empty_label, null_label, no_warnings):
+    with override_settings(
+        FILTERS_EMPTY_CHOICE_LABEL=empty_label,
+        FILTERS_NULL_CHOICE_LABEL=null_label,
+        FILTERS_NULL_CHOICE_VALUE="NULL VALUE",
+    ):
+        class SimpleModelFilterSet(FilterSet):
+            class Meta:
+                model = SimpleModel
+                fields = ("category",)
+
+            category = ChoiceFilter(
+                choices=(('a', 'A'), ('b', 'B')),
+            )
+
+        class XViewSet(viewsets.ModelViewSet):
+            queryset = SimpleModel.objects.all()
+            serializer_class = SimpleSerializer
+            filter_backends = [DjangoFilterBackend]
+            filterset_class = SimpleModelFilterSet
+
+        schema = generate_schema('/x', XViewSet)
+        category_type_schema = schema['paths']['/x/']['get']['parameters'][0]
+
+        assert category_type_schema['name'] == 'category'
+        assert ("NULL VALUE" in category_type_schema['schema']['enum']) == (null_label is not None)
+        assert "a" in category_type_schema['schema']['enum']
+        assert "b" in category_type_schema['schema']['enum']
+        assert ("" in category_type_schema['schema']['enum']) == (empty_label is not None)

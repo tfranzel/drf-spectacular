@@ -230,9 +230,11 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         else:
             choices = [c for c, _ in filter_field.extra['choices']]
 
-        null_label = filter_field.extra.get('null_label', None)
-        if null_label is not None:
-            choices.append(null_label)
+        if filter_field.field.empty_label:
+            choices.append('')
+
+        if filter_field.field.null_label:
+            choices.append(filter_field.field.null_value)
 
         return choices
 
