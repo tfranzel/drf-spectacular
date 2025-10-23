@@ -61,6 +61,10 @@ class Product(models.Model):
 
 class SubProduct(models.Model):
     sub_price = models.FloatField()
+    sub_category = models.CharField(
+        max_length=10,
+        choices=(('C', 'ccc'), ('D', 'ddd')),
+    )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
 
@@ -94,7 +98,12 @@ class ProductFilter(FilterSet):
     # implicit filter declaration
     subproduct__sub_price = NumberFilter()  # reverse relation
     other_sub_product__uuid = UUIDFilter()  # forward relation
-    other_sub_product = ModelChoiceFilter(queryset=Product.objects.all(), to_field_name="uuid")
+    # actually correct usage of ModelChoiceFilter - keep old for continuity
+    sub_prod_cat = ModelChoiceFilter(
+        queryset=SubProduct.objects.all(), field_name="subproduct", to_field_name="sub_category"
+    )
+    sub_prod_id = ModelChoiceFilter(queryset=SubProduct.objects.all(), field_name="subproduct")
+
     # special cases
     ordering = OrderingFilter(
         fields=('price', 'in_stock'),
@@ -206,7 +215,7 @@ def test_django_filters_requests(no_warnings):
     product = Product.objects.create(
         category='A', price=4, in_stock=True, other_sub_product=other_sub_product
     )
-    SubProduct.objects.create(sub_price=5, product=product)
+    SubProduct.objects.create(sub_price=5, product=product, sub_category="C")
 
     response = APIClient().get('/api/products/?max_price=1')
     assert response.status_code == 200
@@ -250,6 +259,10 @@ def test_django_filters_requests(no_warnings):
     response = APIClient().get('/api/products/?cat_callable=A')
     assert response.status_code == 200, response.content
     assert len(response.json()) == 1
+    response = APIClient().get('/api/products/?sub_prod_cat=C')
+    assert response.status_code == 200 and len(response.json()) == 1
+    response = APIClient().get('/api/products/?sub_prod_id=1')
+    assert response.status_code == 200 and len(response.json()) == 1
 
 
 @pytest.mark.contrib('django_filter')
