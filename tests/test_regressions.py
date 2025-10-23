@@ -3490,3 +3490,18 @@ def test_decimal_field_regex(no_warnings, decimal_places, max_digits, pattern):
         'format': 'decimal',
         **({'pattern': pattern} if pattern else {})
     }
+
+
+def test_extend_schema_serializer_description_overwrite(no_warnings):
+    @extend_schema_serializer(description="user-facing doc")
+    class XSerializer(serializers.Serializer):
+        """internal docs"""
+        field = serializers.CharField()
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['components']['schemas']['X']['description'] == "user-facing doc"

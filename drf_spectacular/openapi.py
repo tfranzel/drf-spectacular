@@ -1078,7 +1078,7 @@ class AutoSchema(ViewInspector):
         return build_object_type(
             properties=properties,
             required=required,
-            description=get_doc(serializer.__class__),
+            description=get_override(serializer, 'description', get_doc(serializer.__class__)),
         )
 
     def _insert_field_validators(self, field, schema):
