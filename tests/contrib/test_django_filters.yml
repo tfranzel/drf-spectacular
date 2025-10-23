@@ -167,6 +167,10 @@ paths:
         explode: false
         style: form
       - in: query
+        name: other_sub_product
+        schema:
+          type: integer
+      - in: query
         name: other_sub_product__uuid
         schema:
           type: string
@@ -201,6 +205,20 @@ paths:
           format: double
       - in: query
         name: sub
+        schema:
+          type: integer
+      - in: query
+        name: sub_prod_cat
+        schema:
+          type: string
+          enum:
+          - C
+          - D
+        description: |-
+          * `C` - ccc
+          * `D` - ddd
+      - in: query
+        name: sub_prod_id
         schema:
           type: integer
       - in: query

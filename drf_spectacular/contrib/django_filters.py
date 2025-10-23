@@ -234,6 +234,9 @@ class DjangoFilterExtension(OpenApiFilterExtension):
         if not filter_field.field_name:
             return None
         path = filter_field.field_name.split('__')
+        to_field_name = filter_field.extra.get("to_field_name")
+        if to_field_name is not None:
+            path.append(to_field_name)
         return follow_field_source(model, path, emit_warnings=False)
 
     def _get_schema_from_model_field(self, auto_schema, filter_field, model):
