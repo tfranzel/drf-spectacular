@@ -4,7 +4,7 @@ from typing import MutableMapping, Optional
 from django.utils.module_loading import import_string
 
 
-def camelize_serializer_fields(result: MutableMapping, generator, request, public):
+def camelize_serializer_fields(result, generator, request, public):
     from django.conf import settings
     from djangorestframework_camel_case.settings import api_settings
     from djangorestframework_camel_case.util import camelize_re, underscore_to_camel
@@ -42,8 +42,8 @@ def camelize_serializer_fields(result: MutableMapping, generator, request, publi
                 }
             if 'required' in schema:
                 schema['required'] = [camelize_str(field) for field in schema['required']]
-        elif schema.get("type") == "array" and isinstance(schema["items"], MutableMapping):
-            camelize_component(schema["items"])
+        elif schema.get('type') == 'array' and isinstance(schema['items'], MutableMapping):
+            camelize_component(schema['items'])
         return schema
 
     for (_, component_type), component in generator.registry._components.items():
