@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from django.utils.version import get_version_tuple
 from rest_framework import serializers
 
@@ -10,17 +11,22 @@ from drf_spectacular.extensions import OpenApiSerializerExtension, OpenApiViewEx
 from drf_spectacular.utils import extend_schema
 
 
-def get_dj_rest_auth_setting(class_name, setting_name):
+def get_dj_rest_auth_setting(class_name, setting_name, default=None):
     from dj_rest_auth.__version__ import __version__
 
-    if get_version_tuple(__version__) < (3, 0, 0):
-        from dj_rest_auth import app_settings
+    try:
+        if get_version_tuple(__version__) < (3, 0, 0):
+            from dj_rest_auth import app_settings
 
-        return getattr(app_settings, class_name)
-    else:
-        from dj_rest_auth.app_settings import api_settings
+            return getattr(app_settings, class_name)
+        else:
+            from dj_rest_auth.app_settings import api_settings
 
-        return getattr(api_settings, setting_name)
+            return getattr(api_settings, setting_name)
+    except AttributeError:
+        if default is not None:
+            return default
+        raise
 
 
 def get_token_serializer_class():
@@ -28,13 +34,18 @@ def get_token_serializer_class():
 
     if get_version_tuple(__version__) < (3, 0, 0):
         use_jwt = getattr(settings, 'REST_USE_JWT', False)
+        jwt_return_expiration = False
     else:
         from dj_rest_auth.app_settings import api_settings
 
         use_jwt = api_settings.USE_JWT
+        jwt_return_expiration = api_settings.JWT_AUTH_RETURN_EXPIRATION
 
     if use_jwt:
-        return get_dj_rest_auth_setting('JWTSerializer', 'JWT_SERIALIZER')
+        if jwt_return_expiration:
+            return get_dj_rest_auth_setting('JWTSerializer', 'JWT_SERIALIZER_WITH_EXPIRATION')
+        else:
+            return get_dj_rest_auth_setting('JWTSerializer', 'JWT_SERIALIZER')
     else:
         return get_dj_rest_auth_setting('TokenSerializer', 'TOKEN_SERIALIZER')
 
@@ -118,12 +129,45 @@ class RestAuthJWTSerializer(OpenApiSerializerExtension):
         return auto_schema._map_serializer(Fixed, direction)
 
 
+class RestAuthJWTSerializerWithExpiration(RestAuthJWTSerializer):
+    target_class = 'dj_rest_auth.serializers.JWTSerializerWithExpiration'
+
+    def get_name(self):
+        return 'JWTWithExpiration'
+
+
 class CookieTokenRefreshSerializerExtension(TokenRefreshSerializerExtension):
     target_class = 'dj_rest_auth.jwt_auth.CookieTokenRefreshSerializer'
     optional = True
 
     def get_name(self):
         return 'TokenRefresh'
+
+    def map_serializer(self, auto_schema, direction):
+        jwt_auth_return_expiration = get_dj_rest_auth_setting(
+            'JWT_AUTH_RETURN_EXPIRATION',
+            'JWT_AUTH_RETURN_EXPIRATION',
+            False
+        )
+
+        if not jwt_auth_return_expiration:
+            return super().map_serializer(auto_schema, direction)
+
+        from rest_framework_simplejwt.settings import api_settings as jwt_settings
+
+        if jwt_settings.ROTATE_REFRESH_TOKENS:
+            class Fixed(serializers.Serializer):
+                access = serializers.CharField(read_only=True)
+                refresh = serializers.CharField(required=False, help_text=_('WIll override cookie.'))
+                access_expiration = serializers.DateTimeField(read_only=True)
+                refresh_expiration = serializers.DateTimeField(read_only=True)
+        else:
+            class Fixed(serializers.Serializer):
+                access = serializers.CharField(read_only=True)
+                access_expiration = serializers.DateTimeField(read_only=True)
+                refresh = serializers.CharField(write_only=True, required=False, help_text=_('WIll override cookie.'))
+
+        return auto_schema._map_serializer(Fixed, direction)
 
 
 class RestAuthRegisterView(OpenApiViewExtension):
