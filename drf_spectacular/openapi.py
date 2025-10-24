@@ -907,6 +907,11 @@ class AutoSchema(ViewInspector):
                 return append_meta(build_basic_type(OpenApiTypes.STR), meta)
 
             target = follow_field_source(model, source)
+
+            # Whether a ReadOnlyField might be null is only known after following its source
+            if hasattr(target, 'null') and target.null:
+                meta['nullable'] = True
+
             if (
                 hasattr(target, "_partialmethod")
                 and target._partialmethod.func.__name__ == '_get_FIELD_display'
