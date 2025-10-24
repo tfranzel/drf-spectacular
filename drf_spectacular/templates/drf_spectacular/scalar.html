@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {% block head %}
+    <title>{{ title|default:"Scalar" }}</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1" />
+    {% endblock head %}
+  </head>
+
+  <body>
+    {% block body %}
+    <div id="scalar-container"></div>
+
+    <!-- Load the Script -->
+    <script src="{{ scalar_standalone }}"></script>
+
+    <!-- Initialize the Scalar API Reference -->
+    <script>
+      const scalarSettings = {{ settings|safe }};
+      Scalar.createApiReference('#scalar-container', {
+        // The URL of the OpenAPI/Swagger document
+        url: "{{ schema_url }}",
+        ...scalarSettings
+      })
+    </script>
+    {% endblock body %}
+  </body>
+</html>

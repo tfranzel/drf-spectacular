@@ -32,7 +32,7 @@ Features
     - Vendor specification extensions (``x-*``) in info, operations, parameters, components, and security schemes
     - Sane fallbacks
     - Sane ``operation_id`` naming (based on path)
-    - Schema serving with ``SpectacularAPIView`` (Redoc and Swagger-UI views are also available)
+    - Schema serving with ``SpectacularAPIView`` (Redoc, Swagger-UI, and Scalar views are also available)
     - Optional input/output serializer component split
     - Callback operations
     - OpenAPI 3.1 support (via setting ``OAS_VERSION``)
@@ -113,7 +113,7 @@ Self-contained UI installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Certain environments have no direct access to the internet and as such are unable
-to retrieve Swagger UI or Redoc from CDNs. `drf-spectacular-sidecar`_ provides
+to retrieve Swagger UI, Redoc, or Scalar from CDNs. `drf-spectacular-sidecar`_ provides
 these static files as a separate optional package. Usage is as follows:
 
 .. code:: bash
@@ -131,6 +131,7 @@ these static files as a separate optional package. Usage is as follows:
         'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
         'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
         'REDOC_DIST': 'SIDECAR',
+        'SCALAR_DIST': 'SIDECAR',
         # OTHER SETTINGS
     }
 
@@ -162,17 +163,18 @@ Generate your schema with the CLI:
     $ docker run -p 8080:8080 -e SWAGGER_JSON=/schema.yml -v ${PWD}/schema.yml:/schema.yml swaggerapi/swagger-ui
 
 If you also want to validate your schema add the ``--validate`` flag. Or serve your schema directly
-from your API. We also provide convenience wrappers for ``swagger-ui`` or ``redoc``.
+from your API. We also provide convenience wrappers for ``swagger-ui``, ``redoc``, and ``scalar``.
 
 .. code:: python
 
-    from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+    from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView, SpectacularScalarView
     urlpatterns = [
         # YOUR PATTERNS
         path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
         # Optional UI:
         path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
         path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+        path('api/schema/scalar/', SpectacularScalarView.as_view(url_name='schema'), name='scalar'),
     ]
 
 Usage
