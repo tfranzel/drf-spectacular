@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 from rest_framework import mixins, serializers, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 
 # Use 3.9 instead of 3.8 version because of missing __required_keys__ feature,
 # which allows for a consistent test schema over different versions.
@@ -14,7 +14,7 @@ else:
     from typing_extensions import TypedDict
 
 from drf_spectacular.contrib.djangorestframework_camel_case import camelize_serializer_fields
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field
 from tests import assert_schema, generate_schema
 
 
@@ -88,7 +88,6 @@ def test_camelize_serializer_fields(no_warnings):
 @mock.patch(
     'django.conf.settings.MIDDLEWARE',
     ['djangorestframework_camel_case.middleware.CamelCaseMiddleWare'],
-    create=True
 )
 @mock.patch(
     'drf_spectacular.settings.spectacular_settings.POSTPROCESSING_HOOKS',
@@ -112,35 +111,38 @@ def test_camelize_middleware(no_warnings):
 
 
 @mock.patch(
-    "django.conf.settings.MIDDLEWARE",
-    ["djangorestframework_camel_case.middleware.CamelCaseMiddleWare"],
-    create=True,
+    'django.conf.settings.MIDDLEWARE',
+    ['djangorestframework_camel_case.middleware.CamelCaseMiddleWare'],
 )
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+@pytest.mark.contrib('djangorestframework_camel_case')
 def test_camelize_can_can_handle_tuples(no_warnings):
-    """
-    I don't know how to express this with a drf.Serializer, but it is within spec to
-    have items be False.
-    It means "prefixItems" is complete, and no more items are valid:
-    https://json-schema.org/understanding-json-schema/reference/array
-    """
-    component = mock.MagicMock()
-    # a 2-tuple
-    component.schema = {
-        "type": "array",
-        "minItems": 2,
-        "maxItems": 2,
-        "prefixItems": [
-            {"type": "string"},
-            {"$ref": "#/components/schemas/SomeThing"},
-        ],
-        "items": False,
-    }
-    generator = mock.MagicMock()
-    generator.registry._components.items.return_value = [
-        ((mock.MagicMock(), "schemas"), component)
-    ]
 
-    # this call should not raise an exception
-    camelize_serializer_fields(
-        mock.MagicMock(), generator, mock.MagicMock(), mock.MagicMock()
-    )
+    class XSerializer(serializers.Serializer):
+        field = serializers.SerializerMethodField()
+
+        # It means "prefixItems" is complete, and no more items are valid:
+        # https://json-schema.org/understanding-json-schema/reference/array
+        @extend_schema_field(
+            field={
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "prefixItems": [
+                    {"type": "string"},
+                    {"$ref": "#/components/schemas/SomeThing"},
+                ],
+                "items": False,
+            }
+        )
+        def get_field(self, object):
+            pass  # pragma: no cover
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    # the actual test is that this will not throw
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties']['field']['items'] is False
