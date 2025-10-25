@@ -1,5 +1,6 @@
 import posixpath
 import re
+import weakref
 
 from django.urls import URLPattern, URLResolver
 from rest_framework import views, viewsets
@@ -106,6 +107,7 @@ class SchemaGenerator(BaseSchemaGenerator):
         self.registry = ComponentRegistry()
         self.api_version = kwargs.pop('api_version', None)
         self.inspector = None
+        self.schemas_storage = []
         super().__init__(*args, **kwargs)
 
     def coerce_path(self, path, method, view):
@@ -179,7 +181,7 @@ class SchemaGenerator(BaseSchemaGenerator):
             ) + view_schema_class.__mro__
             action_schema_class = type('ExtendedRearrangedSchema', mro, {})
 
-        view.schema = action_schema_class()
+        self._set_schema_to_view(view, action_schema_class())
         return view
 
     def _initialise_endpoints(self):
@@ -291,3 +293,11 @@ class SchemaGenerator(BaseSchemaGenerator):
             result = hook(result=result, generator=self, request=request, public=public)
 
         return sanitize_result_object(normalize_result_object(result))
+
+    def _set_schema_to_view(self, view, schema):
+        # The 'schema' argument is used to store the schema and view instance in the global scope,
+        # as 'schema' is a descriptor. To facilitate garbage collection of these objects,
+        # we wrap the schema in a weak reference and store it within the SchemaGenerator instance to keep it alive.
+        # Thus, the lifetime of both the view and the schema is tied to the lifetime of the SchemaGenerator instance.
+        view.schema = weakref.proxy(schema)
+        self.schemas_storage.append(schema)
