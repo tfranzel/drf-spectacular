@@ -1296,7 +1296,7 @@ class AutoSchema(ViewInspector):
 
     def _get_request_body(self, direction='request'):
         # only unsafe methods can have a body
-        if self.method not in ('PUT', 'PATCH', 'POST'):
+        if self.method not in ('PUT', 'PATCH', 'POST') and not spectacular_settings.OAS_VERSION.startswith('3.1'):
             return None
 
         request_serializer = self.get_request_serializer()
