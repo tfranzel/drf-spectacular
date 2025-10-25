@@ -715,7 +715,7 @@ class AutoSchema(ViewInspector):
                 if isinstance(field.parent, serializers.ManyRelatedField):
                     model = field.parent.parent.Meta.model
                     source = field.parent.source.split('.')
-                elif hasattr(field.parent, 'Meta'):
+                elif hasattr(field.parent, 'Meta') and hasattr(field.parent.Meta, 'model'):
                     model = field.parent.Meta.model
                     source = field.source.split('.')
                 else:
