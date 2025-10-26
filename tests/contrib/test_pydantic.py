@@ -44,7 +44,7 @@ class A(BaseModel):
 
 
 @pytest.mark.contrib('pydantic')
-@pytest.mark.skipif(sys.version_info < (3, 7), reason='python 3.7+ is required by package')
+@pytest.mark.skipif(sys.version_info < (3, 9), reason='python 3.9+ is required by package')
 def test_pydantic_decoration(no_warnings):
     class XAPIView(APIView):
         @extend_schema(request=A, responses=B)
@@ -56,7 +56,7 @@ def test_pydantic_decoration(no_warnings):
 
 
 @pytest.mark.contrib('pydantic')
-@pytest.mark.skipif(sys.version_info < (3, 7), reason='python 3.7+ is required by package')
+@pytest.mark.skipif(sys.version_info < (3, 9), reason='python 3.9+ is required by package')
 def test_pydantic_as_query_parameters(no_warnings):
     class QueryParams(BaseModel):
         foo: int

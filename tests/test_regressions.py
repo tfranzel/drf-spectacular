@@ -1198,6 +1198,9 @@ def test_pagination(no_warnings):
     # substituted component on list
     assert 'Simple' in schema['components']['schemas']
     assert 'PaginatedSimpleList' in schema['components']['schemas']
+    assert get_response_schema(schema['paths']['/x/']['get']) == {
+        '$ref': '#/components/schemas/PaginatedSimpleList'
+    }
     substitution = schema['components']['schemas']['PaginatedSimpleList']
     assert substitution['type'] == 'object'
     assert substitution['properties']['results']['items']['$ref'] == '#/components/schemas/Simple'
@@ -3042,8 +3045,7 @@ def test_primary_key_related_field_default_value(no_warnings):
     assert schema['components']['schemas']['X']['properties'] == {
         'field': {
             'type': 'array',
-            # this nested default is wrong but a consequence of DRF's init system
-            'items': {'type': 'integer', 'default': []},
+            'items': {'type': 'integer'},
             'default': []
         }
     }
@@ -3510,3 +3512,45 @@ def test_enum_postprocessing_openapi31_nullable_regression(no_warnings):
 
     # Ensure no separate NullEnum component was created (since setting is False)
     assert 'NullEnum' not in schema['components']['schemas']
+
+
+@pytest.mark.parametrize('decimal_places, max_digits, pattern', [
+    (2, 5, r'^-?\d{0,3}(?:\.\d{0,2})?$'),  # max_whole_digits = 3
+    (0, 5, r'^-?\d{0,5}(?:\.\d{0,0})?$'),  # max_whole_digits = 5
+    (5, 5, r'^-?0?(?:\.\d{0,5})?$'),  # max_whole_digits = 0
+    (None, None, r''),  # max_whole_digits = None
+])
+def test_decimal_field_regex(no_warnings, decimal_places, max_digits, pattern):
+    class XSerializer(serializers.Serializer):
+        field = serializers.DecimalField(
+            decimal_places=decimal_places,
+            max_digits=max_digits,
+            coerce_to_string=True,
+        )
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties']['field'] == {
+        'type': 'string',
+        'format': 'decimal',
+        **({'pattern': pattern} if pattern else {})
+    }
+
+
+def test_extend_schema_serializer_description_overwrite(no_warnings):
+    @extend_schema_serializer(description="user-facing doc")
+    class XSerializer(serializers.Serializer):
+        """internal docs"""
+        field = serializers.CharField()
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)
+    assert schema['components']['schemas']['X']['description'] == "user-facing doc"

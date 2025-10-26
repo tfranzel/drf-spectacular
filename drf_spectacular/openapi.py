@@ -689,6 +689,8 @@ class AutoSchema(ViewInspector):
             schema = self._map_serializer_field(field.child_relation, direction)
             # remove hand-over initkwargs applying only to outer scope
             schema.pop('readOnly', None)
+            # similarly from outer scope, default value is invalid inside 'items'
+            schema.pop('default', None)
             if meta.get('description') == schema.get('description'):
                 schema.pop('description', None)
             return append_meta(build_array_type(schema), meta)
@@ -713,7 +715,7 @@ class AutoSchema(ViewInspector):
                 if isinstance(field.parent, serializers.ManyRelatedField):
                     model = field.parent.parent.Meta.model
                     source = field.parent.source.split('.')
-                elif hasattr(field.parent, 'Meta'):
+                elif hasattr(field.parent, 'Meta') and hasattr(field.parent.Meta, 'model'):
                     model = field.parent.Meta.model
                     source = field.source.split('.')
                 else:
@@ -815,14 +817,14 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.DecimalField):
             if getattr(field, 'coerce_to_string', api_settings.COERCE_DECIMAL_TO_STRING):
                 content = {**build_basic_type(OpenApiTypes.STR), 'format': 'decimal'}
-                if field.max_whole_digits:
+                if field.max_whole_digits is not None:
                     content['pattern'] = (
-                        fr'^-?\d{{0,{field.max_whole_digits}}}'
-                        fr'(?:\.\d{{0,{field.decimal_places}}})?$'
+                        r'^-?0?' if field.max_whole_digits == 0 else fr'^-?\d{{0,{field.max_whole_digits}}}'
                     )
+                    content['pattern'] += fr'(?:\.\d{{0,{field.decimal_places}}})?$'
             else:
                 content = build_basic_type(OpenApiTypes.DECIMAL)
-                if field.max_whole_digits:
+                if field.max_whole_digits is not None:
                     value = 10 ** field.max_whole_digits
                     content.update({
                         'maximum': value,
@@ -1076,7 +1078,7 @@ class AutoSchema(ViewInspector):
         return build_object_type(
             properties=properties,
             required=required,
-            description=get_doc(serializer.__class__),
+            description=get_override(serializer, 'description', get_doc(serializer.__class__)),
         )
 
     def _insert_field_validators(self, field, schema):

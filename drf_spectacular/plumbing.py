@@ -200,6 +200,7 @@ def get_lib_doc_excludes():
     return [
         object,
         dict,
+        Generic,
         views.APIView,
         *[getattr(serializers, c) for c in dir(serializers) if c.endswith('Serializer')],
         *[getattr(viewsets, c) for c in dir(viewsets) if c.endswith('ViewSet')],
@@ -939,7 +940,7 @@ def _load_enum_name_overrides(language: str):
 
 
 def list_hash(lst: Any) -> str:
-    return hashlib.sha256(json.dumps(list(lst), sort_keys=True, cls=JSONEncoder).encode()).hexdigest()[:16]
+    return hashlib.sha256(json.dumps(sorted(lst), sort_keys=True, cls=JSONEncoder).encode()).hexdigest()[:16]
 
 
 def anchor_pattern(pattern: str) -> str:
