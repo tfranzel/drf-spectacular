@@ -6,7 +6,7 @@ from django.db import models
 from django.urls import include, path
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from rest_framework import __version__ as DRF_VERSION  # type: ignore[attr-defined]
+from rest_framework import __version__ as DRF_VERSION
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient
 

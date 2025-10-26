@@ -14,8 +14,8 @@ try:
         TokenObtainPairView, TokenObtainSlidingView, TokenRefreshView, TokenVerifyView,
     )
 except ImportError:
-    JWTAuthentication = None
-    JWTTokenUserAuthentication = None
+    JWTAuthentication = None  # type: ignore[misc,assignment]
+    JWTTokenUserAuthentication = None  # type: ignore[misc,assignment]
 
 
 class XSerializer(serializers.Serializer):

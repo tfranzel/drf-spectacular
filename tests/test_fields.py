@@ -116,7 +116,7 @@ class AllFields(models.Model):
         field_json = models.JSONField()
     else:
         @property
-        def field_json(self):
+        def field_json(self):  # type: ignore[misc]
             return {'A': 1, 'B': 2}
 
     @property
