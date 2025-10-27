@@ -82,7 +82,8 @@ def test_rest_auth_simplejwt_cookie(no_warnings):
 
 
 @pytest.mark.contrib('dj_rest_auth', 'rest_framework_simplejwt')
-@mock.patch('dj_rest_auth.app_settings.api_settings.USE_JWT', True, create=True)
+@mock.patch('dj_rest_auth.app_settings.api_settings.USE_JWT', True)
+@mock.patch('dj_rest_auth.app_settings.api_settings.JWT_AUTH_HTTPONLY', False)
 def test_rest_auth_token_blacklist(no_warnings, settings):
     # flush module import cache to re-evaluate conditional import
     import dj_rest_auth.urls
@@ -92,15 +93,13 @@ def test_rest_auth_token_blacklist(no_warnings, settings):
         'rest_framework_simplejwt',
         'rest_framework_simplejwt.token_blacklist',
     )
-    settings.SIMPLE_JWT = {
-        'BLACKLIST_AFTER_ROTATION': True
-    }
-
     urlpatterns = [
         path('rest-auth/', include('dj_rest_auth.urls')),
     ]
     schema = generate_schema(None, patterns=urlpatterns)
-    assert get_request_schema(schema['paths']['/rest-auth/logout/']['post'])['$ref'] == '#/components/schemas/Logout'
+    assert get_request_schema(schema['paths']['/rest-auth/logout/']['post'])['$ref'] == (
+        '#/components/schemas/Logout'
+    )
     assert schema['components']['schemas']['Logout'] == {
         'type': 'object',
         'properties': {

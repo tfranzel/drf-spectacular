@@ -78,10 +78,9 @@ class RestAuthLogoutView(OpenApiViewExtension):
 
         if (
             get_use_jwt()
-            and getattr(settings, 'SIMPLE_JWT', {}).get('BLACKLIST_AFTER_ROTATION', False)
             and 'rest_framework_simplejwt.token_blacklist' in settings.INSTALLED_APPS
+            and not get_dj_rest_auth_setting('JWT_AUTH_HTTPONLY', 'JWT_AUTH_HTTPONLY')
         ):
-
             class LogoutSerializer(serializers.Serializer):
                 refresh = serializers.CharField(required=True, allow_blank=False)
 
