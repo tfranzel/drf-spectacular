@@ -457,6 +457,9 @@ def build_choice_field(field) -> _SchemaType:
     if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
         schema['description'] = build_choice_description_list(field.choices.items())
 
+    if spectacular_settings.ENUM_GENERATE_X_ENUM_DESCRIPTIONS:
+        schema['x-enumDescriptions'] = dict(field.choices)
+
     schema['x-spec-enum-id'] = list_hash([(k, v) for k, v in field.choices.items() if k not in ('', None)])
 
     return schema

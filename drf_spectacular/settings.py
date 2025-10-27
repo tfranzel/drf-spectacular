@@ -120,6 +120,8 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': True,
     # Add/Append a list of (``choice value`` - choice name) to the enum description string.
     'ENUM_GENERATE_CHOICE_DESCRIPTION': True,
+    # Add x-enumDescriptions extension field to enum schemas.
+    'ENUM_GENERATE_X_ENUM_DESCRIPTIONS': False,
     # Optional suffix for generated enum.
     # e.g. {'ENUM_SUFFIX': "Type"} would produce an enum name 'StatusType'.
     'ENUM_SUFFIX': 'Enum',
