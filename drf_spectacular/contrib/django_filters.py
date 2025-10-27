@@ -226,17 +226,14 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             return None
         elif callable(filter_field.extra['choices']):
             # choices function may utilize the DB, so refrain from actually calling it.
-            choices = []
+            return []
         else:
             choices = [c for c, _ in filter_field.extra['choices']]
 
-        if filter_field.field.empty_label:
-            choices.append('')
+            if filter_field.field.null_label:
+                choices.append(filter_field.field.null_value)
 
-        if filter_field.field.null_label:
-            choices.append(filter_field.field.null_value)
-
-        return choices
+            return choices
 
     def _get_model_field(self, filter_field, model):
         if not filter_field.field_name:
