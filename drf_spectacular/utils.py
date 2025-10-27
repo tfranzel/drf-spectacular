@@ -1,8 +1,18 @@
+from copy import deepcopy
+import datetime
 import inspect
+from itertools import chain
+import re
 import sys
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar, Union
+from typing import (
+    Any, Callable, Dict, Optional, Pattern, Sequence, Tuple, Type, TypeVar, Union
+)
+from typing_extensions import Pattern
+from uuid import UUID
 
+from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.functional import Promise
+from django.utils.timezone import make_aware, is_naive
 
 # direct import due to https://github.com/microsoft/pyright/issues/3025
 if sys.version_info >= (3, 8):
@@ -11,7 +21,11 @@ else:
     from typing_extensions import Final, Literal
 
 from rest_framework.fields import Field, empty
+<<<<<<< HEAD
 from rest_framework.serializers import ListSerializer, Serializer
+=======
+from rest_framework.serializers import Serializer, ValidationError
+>>>>>>> 99bd63b (Adding value_from_request and value_as_* methods)
 from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import (
@@ -201,6 +215,11 @@ class OpenApiParameter(OpenApiSchemaBase):
     HEADER: Final = 'header'
     COOKIE: Final = 'cookie'
 
+    _splitter_for = {
+        'path': {'simple': ',', 'label': '.', 'matrix': ';'},
+        'query': {'form': ',', 'spaceDelimited': ' ', 'pipeDelimited': '|'}
+    }
+
     def __init__(
             self,
             name: str,
@@ -209,7 +228,7 @@ class OpenApiParameter(OpenApiSchemaBase):
             required: bool = False,
             description: _StrOrPromise = '',
             enum: Optional[Sequence[Any]] = None,
-            pattern: Optional[str] = None,
+            pattern: Optional[Pattern[bytes]] = None,
             deprecated: bool = False,
             style: Optional[str] = None,
             explode: Optional[bool] = None,
@@ -238,6 +257,166 @@ class OpenApiParameter(OpenApiSchemaBase):
         self.extensions = extensions
         self.exclude = exclude
         self.response = response
+
+        if self.location == 'path' and not self.required:
+            # Or, you know, we just set required to true...
+            raise TypeError(
+                f"{self.name} parameter in path but required not set"
+            )
+
+    def _validate_param_part(self, value):
+        """
+        Validate the value of a parameter, or part of a parameter, against the
+        OpenAPI type definition.  This allows values in arrays to be checked.
+        """
+        name = self.name
+        # print(f"validating {value} against {param} for {name}")
+        if self.many:
+            # param always has style attribute, but defaults to None
+            if self.style is None:
+                raise ValidationError(
+                    {name: "Coding error: parameter has many=True but no 'style' set"}
+                )
+            # Parameters in different locations are split in different ways - ugh
+            if self.location not in self._splitter_for:
+                raise ValidationError(
+                    f"Coding error: We do not know how to split parameters in the '{self.location}'"
+                )
+            if self.style not in self._splitter_for[self.location]:
+                raise ValidationError(
+                    f"Coding error: Invalid {self.location} array parameter style '{self.style}'"
+                )
+            split_chr = self._splitter_for[self.location][self.style]
+            if isinstance(value, str):
+                values = value.split(split_chr)
+            elif isinstance(value, list):
+                values = chain(map(lambda s: s.split(split_chr), value))
+            else:
+                values = [value]
+            # Check the list with the basic type of this variable
+            basic_param = deepcopy(self)
+            basic_param.many = False
+            basic_param.style = None
+            return [basic_param._validate_param_part(v) for v in values]
+        else:
+            if self.style:
+                # Parameters with 'many=False' probably shouldn't have their style
+                # property set.  Will the warning be read though?
+                raise ValidationError(
+                    f"Coding error: parameter has many=False but style={self.style}"
+                )
+
+        # Handle any Pythonic type conversions first
+        if self.type == OpenApiTypes.BOOL:
+            # Booleans don't do any further processing, so exit now
+            return str(value).lower() in ('true', '1', 'yes')
+        elif self.type in (OpenApiTypes.INT, OpenApiTypes.INT32, OpenApiTypes.INT64):
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValidationError(
+                    {name: "The value must be an integer"}
+                )
+        elif self.type in (OpenApiTypes.NUMBER, OpenApiTypes.DOUBLE, OpenApiTypes.FLOAT):
+            # Should this check for FORMAT_FLOAT and FORMAT_DOUBLE?
+            try:
+                value = float(value)
+            except ValueError:
+                raise ValidationError(
+                    {name: "The value must be a floating point number"}
+                )
+        elif self.type == OpenApiTypes.REGEX:
+            if not re.match(self.pattern, value):
+                raise ValidationError(
+                    {name: f"The value did not match the pattern '{self.pattern}'"}
+                )
+        elif self.type == OpenApiTypes.DATE:
+            try:
+                # datetime.date objects cannot be timezone aware, so they
+                # have to be converted into datetimes.  Haven't found a better
+                # way of doing this:
+                value = make_aware(datetime.datetime.fromordinal(
+                    parse_date(value).toordinal()
+                ))
+            except (ValueError, AttributeError):
+                raise ValidationError(
+                    {name: "The value did not look like a date"}
+                )
+        elif self.type == OpenApiTypes.DATETIME:
+            value = parse_datetime(value)
+            if value is None:
+                raise ValidationError(
+                    {name: "The value did not look like a datetime"}
+                )
+            if is_naive(value):
+                value = make_aware(value)
+        elif self.type == OpenApiTypes.UUID:
+            try:
+                value = UUID(value)
+            except ValueError:
+                raise ValidationError(
+                    {name: "The value must be a UUID"}
+                )
+        # The other param types don't need value conversion
+
+        # Check enumeration
+        if self.enum:
+            if value not in self.enum:
+                raise ValidationError(
+                    {name: f"The value is required to be "
+                    f"one of the following values: {', '.join(map(str, self.enum))}"}
+                )
+
+        # OK, validation has passed, return the value here
+        return value
+
+
+    def value_from_request(self, request) -> Any:
+        """
+        Return the value of the given parameter in the request.
+
+        If the parameter is not found in the request, this returns the
+        parameter's default value, if it has one, or None.
+
+        Otherwise, the parameter is converted to the correct Python type, its
+        value is validated, and arrays are parsed.
+        """
+        if self.name not in request.query_params:
+            if self.required:
+                raise ValidationError(
+                    {self.name: "Required parameter"}
+                )
+            # Parameter not supplied, return the default or None - but
+            # param may not have default attribute, so...
+            default = getattr(self, 'default', None)
+            if default is None:
+                return None
+            # The parameter default value must be in the format specified by the
+            # parameter - e.g. if a CSV list, then `value,value`.
+            try:
+                return self._validate_param_part(default)
+            except TypeError:
+                raise TypeError(
+                    f"Parameter {self.name} default parameter {self.default} "
+                    f"needs to be in serialized format"
+                )
+
+        values = request.query_params.getlist(self.name)
+        # ADVISOR-3047 - need to rely on whether the parameter takes many values
+        # rather than whether the value was given.
+        if len(values) > 1 and not self.many:
+            raise ValidationError(
+                {self.name: "Parameter must only be given a single value"}
+            )
+        if not self.many:
+            return self._validate_param_part(values[0])
+        return chain([self._validate_param_part(v) for v in values])
+
+    def value_as_int(self, request) -> int:
+        return self.value_from_request(request)
+
+    def value_as_str(self, request) -> str:
+        return self.value_from_request(request)
 
 
 class OpenApiResponse(OpenApiSchemaBase):
