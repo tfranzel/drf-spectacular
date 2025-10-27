@@ -139,21 +139,18 @@ class SpectacularSwaggerView(APIView):
                 'swagger_ui_standalone': self._swagger_ui_resource('swagger-ui-standalone-preset.js'),
                 'favicon_href': self._swagger_ui_favicon(),
                 'schema_url': self._get_schema_url(request),
-                'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
-                'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
+                'settings': spectacular_settings.SWAGGER_UI_SETTINGS,
+                'oauth2_config': spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG,
                 'template_name_js': self.template_name_js,
                 'script_url': None,
                 'csrf_header_name': self._get_csrf_header_name(),
-                'schema_auth_names': self._dump(self._get_schema_auth_names()),
+                'schema_auth_names': self._get_schema_auth_names(),
             },
             template_name=self.template_name,
             headers={
                 "Cross-Origin-Opener-Policy": "unsafe-none",
             }
         )
-
-    def _dump(self, data):
-        return data if isinstance(data, str) else json.dumps(data, indent=2)
 
     def _get_schema_url(self, request):
         schema_url = self.url or get_relative_url(reverse(self.url_name, request=request))
@@ -205,10 +202,10 @@ class SpectacularSwaggerSplitView(SpectacularSwaggerView):
             return Response(
                 data={
                     'schema_url': self._get_schema_url(request),
-                    'settings': self._dump(spectacular_settings.SWAGGER_UI_SETTINGS),
-                    'oauth2_config': self._dump(spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG),
+                    'settings': spectacular_settings.SWAGGER_UI_SETTINGS,
+                    'oauth2_config': spectacular_settings.SWAGGER_UI_OAUTH2_CONFIG,
                     'csrf_header_name': self._get_csrf_header_name(),
-                    'schema_auth_names': self._dump(self._get_schema_auth_names()),
+                    'schema_auth_names': self._get_schema_auth_names(),
                 },
                 template_name=self.template_name_js,
                 content_type='application/javascript',
@@ -248,18 +245,10 @@ class SpectacularRedocView(APIView):
                 'title': self.title,
                 'redoc_standalone': self._redoc_standalone(),
                 'schema_url': self._get_schema_url(request),
-                'settings': self._dump(spectacular_settings.REDOC_UI_SETTINGS),
+                'settings': spectacular_settings.REDOC_UI_SETTINGS,
             },
             template_name=self.template_name
         )
-
-    def _dump(self, data):
-        if not data:
-            return None
-        elif isinstance(data, str):
-            return data
-        else:
-            return json.dumps(data, indent=2)
 
     @staticmethod
     def _redoc_standalone():
