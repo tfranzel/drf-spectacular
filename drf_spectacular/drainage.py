@@ -179,11 +179,12 @@ def set_override(obj: Any, prop: str, value: Any) -> Any:
 
 def get_view_method_names(view, schema=None) -> List[str]:
     schema = schema or view.schema
+    view_is_async = getattr(view, "view_is_async", False)
     return [
         item for item in dir(view) if callable(getattr(view, item, None)) and (
             item in view.http_method_names
-            or item in schema.method_mapping.values()
-            or item == 'list'
+            or item in (schema.async_method_mapping if view_is_async else schema.method_mapping).values()
+            or item == ('alist' if view_is_async else 'list')
             or hasattr(getattr(view, item, None), 'mapping')
         )
     ]
@@ -202,9 +203,14 @@ def isolate_view_method(view, method_name):
     if method_name in view.__dict__ and method.__name__ != 'handler':
         return method
 
-    @functools.wraps(method)
-    def wrapped_method(self, request, *args, **kwargs):
-        return method(self, request, *args, **kwargs)
+    if getattr(view, "view_is_async", False):
+        @functools.wraps(method)
+        async def wrapped_method(self, request, *args, **kwargs):
+            return await method(self, request, *args, **kwargs)
+    else:
+        @functools.wraps(method)
+        def wrapped_method(self, request, *args, **kwargs):
+            return method(self, request, *args, **kwargs)
 
     # wraps() will only create a shallow copy of method.__dict__. Updates to "kwargs"
     # via @extend_schema would leak to the original method. Isolate by creating a copy.
