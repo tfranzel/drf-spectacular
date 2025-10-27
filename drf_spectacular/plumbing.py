@@ -100,8 +100,6 @@ if sys.version_info >= (3, 8):
 else:
     CACHED_PROPERTY_FUNCS = (cached_property,)
 
-T = TypeVar('T')
-
 
 class _Sentinel:
     pass
@@ -301,7 +299,7 @@ def build_basic_type(obj: Union[_KnownPythonTypes, OpenApiTypes]) -> Optional[_S
     elif obj in openapi_type_mapping:
         return dict(openapi_type_mapping[obj])
     elif obj in PYTHON_TYPE_MAPPING:
-        return dict(openapi_type_mapping[PYTHON_TYPE_MAPPING[obj]])
+        return dict(openapi_type_mapping[PYTHON_TYPE_MAPPING[obj]])  # type: ignore[index]
     else:
         warn(f'could not resolve type for "{obj}". defaulting to "string"')
         return dict(openapi_type_mapping[OpenApiTypes.STR])
@@ -818,6 +816,9 @@ class ComponentRegistry:
         }
 
 
+T = TypeVar('T', bound="OpenApiGeneratorExtension")
+
+
 class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
     _registry: List[Type[T]] = []
     target_class: Union[None, str, Type[object]] = None
@@ -870,7 +871,7 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
             return get_class(target) == cls.target_class
 
     @classmethod
-    def get_match(cls, target) -> Optional[T]:
+    def get_match(cls, target: Any) -> Optional[T]:
         for extension in sorted(cls._registry, key=lambda e: e.priority, reverse=True):
             if extension._matches(target):
                 return extension(target)
