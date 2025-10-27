@@ -4,6 +4,7 @@ import pytest
 from django import __version__ as DJANGO_VERSION
 from django.db import models
 from django.db.models import F
+from django.test import override_settings
 from django.urls import include, path
 from rest_framework import generics, routers, serializers, viewsets
 from rest_framework.test import APIClient
@@ -450,3 +451,31 @@ def test_filter_on_listapiview(no_warnings):
 
     schema = generate_schema('/x/', view=XListView)
     assert len(schema['paths']['/x/']['get']['parameters']) > 1
+
+
+@pytest.mark.contrib('django_filter')
+@override_settings(
+    FILTERS_NULL_CHOICE_VALUE="NULL VALUE",
+)
+def test_filterset_enum_includes_null_label(no_warnings):
+    class SimpleModelFilterSet(FilterSet):
+        class Meta:
+            model = SimpleModel
+            fields = ("category",)
+
+        category = ChoiceFilter(
+            choices=(('a', 'A'), ('b', 'B')),
+            null_label="NULL LABEL"
+        )
+
+    class XViewSet(viewsets.ModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+        filter_backends = [DjangoFilterBackend]
+        filterset_class = SimpleModelFilterSet
+
+    schema = generate_schema('/x', XViewSet)
+    category_type_schema = schema['paths']['/x/']['get']['parameters'][0]
+
+    assert category_type_schema['name'] == 'category'
+    assert category_type_schema['schema']['enum'] == ["NULL VALUE", "a", "b"]
