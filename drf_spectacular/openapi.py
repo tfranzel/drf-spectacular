@@ -9,6 +9,7 @@ import uritemplate
 from django.core import exceptions as django_exceptions
 from django.core import validators
 from django.db import models
+from django.utils.formats import get_format
 from django.utils.translation import gettext_lazy as _
 from rest_framework import permissions, renderers, serializers
 from rest_framework.fields import _UnvalidatedField, empty
@@ -821,7 +822,8 @@ class AutoSchema(ViewInspector):
                     content['pattern'] = (
                         r'^-?0?' if field.max_whole_digits == 0 else fr'^-?\d{{0,{field.max_whole_digits}}}'
                     )
-                    content['pattern'] += fr'(?:\.\d{{0,{field.decimal_places}}})?$'
+                    sep = get_format("DECIMAL_SEPARATOR") if field.localize else "."
+                    content['pattern'] += fr'(?:\{sep}\d{{0,{field.decimal_places}}})?$'
             else:
                 content = build_basic_type(OpenApiTypes.DECIMAL)
                 if field.max_whole_digits is not None:
