@@ -1,0 +1,76 @@
+[project]
+name = "drf-spectacular"
+dynamic = ["version"]
+description = "Sane and flexible OpenAPI 3 schema generation for Django REST framework"
+readme = "README.rst"
+requires-python = ">=3.7"
+license = "BSD-3-Clause"
+authors = [
+    {name = "T. Franzel", email = "tfranzel@gmail.com"}
+]
+keywords = ["django", "rest", "openapi", "schema", "api", "swagger"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 2.2",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Documentation",
+    "Topic :: Software Development :: Code Generators",
+]
+dependencies = [
+    "Django>=2.2",
+    "djangorestframework>=3.10.3",
+    "uritemplate>=2.0.0",
+    "PyYAML>=5.1",
+    "jsonschema>=2.6.0",
+    "inflection>=0.3.1",
+    "typing-extensions; python_version < '3.10'",
+]
+
+[project.optional-dependencies]
+offline = ["drf-spectacular-sidecar"]
+sidecar = ["drf-spectacular-sidecar"]
+
+[project.urls]
+Homepage = "https://github.com/tfranzel/drf-spectacular"
+Source = "https://github.com/tfranzel/drf-spectacular"
+Documentation = "https://drf-spectacular.readthedocs.io"
+
+[tool.setuptools.dynamic]
+version = {attr = "drf_spectacular.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["drf_spectacular*"]
+
+[tool.setuptools.package-data]
+drf_spectacular = [
+    "py.typed",
+    "validation/*.json",
+    "templates/drf_spectacular/*.html",
+    "templates/drf_spectacular/*.js",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
