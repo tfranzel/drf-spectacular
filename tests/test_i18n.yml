@@ -141,8 +141,13 @@ components:
           type: string
         field_choice:
           $ref: '#/components/schemas/FieldChoiceEnum'
+        field_decimal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\,\d{0,2})?$
       required:
       - field_choice
+      - field_decimal
       - field_str
       - id
   securitySchemes:

@@ -24,6 +24,7 @@ TRANSPORT_CHOICES = (
 class I18nModel(models.Model):
     field_str = models.TextField()
     field_choice = models.CharField(max_length=10, choices=TRANSPORT_CHOICES)
+    field_decimal = models.DecimalField(max_digits=4, decimal_places=2)
 
     class Meta:
         verbose_name = _("Internationalization")
@@ -34,6 +35,7 @@ class XSerializer(serializers.ModelSerializer):
     class Meta:
         model = I18nModel
         fields = '__all__'
+        extra_kwargs = {'field_decimal': {'localize': True}}
 
 
 class XViewset(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
