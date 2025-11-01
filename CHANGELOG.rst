@@ -1,6 +1,56 @@
 Changelog
 =========
 
+0.29.0 (2025-11-01)
+-------------------
+
+- Add l18n handling for Decimal field `#1466 <https://github.com/tfranzel/drf-spectacular/issues/1466>`_
+- Fix LogoutSerializer for JWT/dj_rest_auth `#1392 <https://github.com/tfranzel/drf-spectacular/issues/1392>`_
+- fix: support token blacklist feature in rest_auth [Bart van Andel]
+- [django-filter] Add null_label if set in ChoiceFilter (`#1450 <https://github.com/tfranzel/drf-spectacular/issues/1450>`_) [Enric Pou]
+- fix: camelize tuples/fixed length array (`#1432 <https://github.com/tfranzel/drf-spectacular/issues/1432>`_) [Chris Wesseling]
+- Fix items:False case in enum hook `#1432 <https://github.com/tfranzel/drf-spectacular/issues/1432>`_
+- Add option to overwrite serializer description `#1463 <https://github.com/tfranzel/drf-spectacular/issues/1463>`_
+- Fix `OpenApiViewExtension` not providing view instance under `self.target` (`#1405 <https://github.com/tfranzel/drf-spectacular/issues/1405>`_) [astro-stan]
+- Move list default fix to source of the problem `#1436 <https://github.com/tfranzel/drf-spectacular/issues/1436>`_
+- Improve confusing doc `#1461 <https://github.com/tfranzel/drf-spectacular/issues/1461>`_
+- Add assert to pagination test `#1459 <https://github.com/tfranzel/drf-spectacular/issues/1459>`_
+- fix SafeString handling for picky CDumper (`#1435 <https://github.com/tfranzel/drf-spectacular/issues/1435>`_)
+- Remove EOL 3.7 from suite; pydantic not updated for <=3.8
+- Fix DecimalField with decimal_places and max_digits equal. [keter2002]
+- fix test for i18n changes on DRF (`#1444 <https://github.com/tfranzel/drf-spectacular/issues/1444>`_)
+- Improve to_filter_name support for django_filter [Matwey V. Kornilov]
+- fixes prefix estimation on windows [Luis Nell]
+- Fix default for array types [Stanislav Khlud]
+- fix: use CSafeDumper for render yaml if available [florian]
+- fix: sort list to produce same hash [florian]
+- Add typing.Generic to default lib_doc_excludes [Max Howald]
+- Add get_doc test for class that inherits from Generic [Max Howald]
+- Add Django REST framework 3.16 support [Paolo Melchiorre]
+- Fix memory leak [artemkucher]
+- Fix python 3.11 slice index [Egor Litvinov]
+- fix: correct port mapping for the container in README [Maksym Bieńkowski]
+- Update docs [q0w]
+- Allow setting callable for ENUM_NAME_OVERRIDES [q0w]
+- Add allauth's DRF token auth `#1401 <https://github.com/tfranzel/drf-spectacular/issues/1401>`_
+- update away from retired GH worker image
+- add condition to check, that serializer Meta has model attribute [aliev_vt]
+- Fix docs compile issue and update some old code (`#1389 <https://github.com/tfranzel/drf-spectacular/issues/1389>`_) [Mike Manger]
+- Fix location of @extend_schema_field [johnthagen]
+- Remove reference to non-exposed lazy_serializer [johnthagen]
+- Document how to lazily define a recursive SerializerMethod [johnthagen]
+- Link to SerializerMethod docs [johnthagen]
+- Document Django 5.1 support in README [johnthagen]
+- Bump django from 4.2.11 to 4.2.18 in /requirements [dependabot[bot]]
+- Enhance bug report template with instructions for better clarity [antoliny0919]
+- add pydantic computed field to tests `#1354 <https://github.com/tfranzel/drf-spectacular/issues/1354>`_
+
+Breaking changes / important additions:
+
+- Finally fixed the memory leak thanks to @artKucher.
+- Another performance improvement is the usage of the C versions of yaml, if available.
+- Apart from that, there are a lot of small improvements and bugfixes.
+
 0.28.0 (2024-11-30)
 -------------------
 
