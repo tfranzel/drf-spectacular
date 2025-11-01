@@ -11,7 +11,7 @@ Changelog
 - fix: camelize tuples/fixed length array (`#1432 <https://github.com/tfranzel/drf-spectacular/issues/1432>`_) [Chris Wesseling]
 - Fix items:False case in enum hook `#1432 <https://github.com/tfranzel/drf-spectacular/issues/1432>`_
 - Add option to overwrite serializer description `#1463 <https://github.com/tfranzel/drf-spectacular/issues/1463>`_
-- Fix `OpenApiViewExtension` not providing view instance under `self.target` (`#1405 <https://github.com/tfranzel/drf-spectacular/issues/1405>`_) [astro-stan]
+- Fix ``OpenApiViewExtension`` not providing view instance under ``self.target`` (`#1405 <https://github.com/tfranzel/drf-spectacular/issues/1405>`_) [astro-stan]
 - Move list default fix to source of the problem `#1436 <https://github.com/tfranzel/drf-spectacular/issues/1436>`_
 - Improve confusing doc `#1461 <https://github.com/tfranzel/drf-spectacular/issues/1461>`_
 - Add assert to pagination test `#1459 <https://github.com/tfranzel/drf-spectacular/issues/1459>`_
