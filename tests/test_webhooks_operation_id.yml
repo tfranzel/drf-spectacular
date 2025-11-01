@@ -1,0 +1,41 @@
+openapi: 3.1.0
+info:
+  title: ''
+  version: 0.0.0
+paths: {}
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        change:
+          type: string
+        external_id:
+          type: string
+          writeOnly: true
+      required:
+      - change
+      - external_id
+      - id
+webhooks:
+  SubscriptionEventWithOperationId:
+    post:
+      operationId: custom_webhook_operation_id
+      description: webhook that should include operationId in the generated schema
+      summary: webhook with custom operation id
+      tags:
+      - webhooks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      responses:
+        '200':
+          description: event was successfully received
+        4XX:
+          description: event will be retried shortly
