@@ -155,8 +155,14 @@ def postprocess_schema_enums(result, generator, **kwargs):
                         components.append(create_enum_component(f'Null{enum_suffix}', schema={'enum': [None]}))
 
             # undo OAS 3.1 type list NULL construction as we cover this in a separate component already
+            has_null_type = False
             if spectacular_settings.OAS_VERSION.startswith('3.1') and isinstance(enum_schema['type'], list):
+                has_null_type = 'null' in enum_schema['type']
                 enum_schema['type'] = [t for t in enum_schema['type'] if t != 'null'][0]
+
+                # If we removed null and no separate component will be created, preserve nullable
+                if has_null_type and not spectacular_settings.ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE:
+                    prop_schema['nullable'] = True
 
             if len(components) == 1:
                 prop_schema.update(components[0].ref)
