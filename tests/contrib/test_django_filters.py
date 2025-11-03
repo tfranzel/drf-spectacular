@@ -18,8 +18,8 @@ try:
     from django_filters.rest_framework import (
         AllValuesFilter, BaseInFilter, BooleanFilter, CharFilter, ChoiceFilter, DjangoFilterBackend,
         FilterSet, ModelChoiceFilter, ModelMultipleChoiceFilter, MultipleChoiceFilter, NumberFilter,
-        NumericRangeFilter, OrderingFilter, RangeFilter, UUIDFilter, TypedChoiceFilter,
-        TypedMultipleChoiceFilter, 
+        NumericRangeFilter, OrderingFilter, RangeFilter, TypedChoiceFilter,
+        TypedMultipleChoiceFilter, UUIDFilter,
     )
 except ImportError:
     class DjangoFilterBackend:  # type: ignore
