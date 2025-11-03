@@ -18,7 +18,8 @@ try:
     from django_filters.rest_framework import (
         AllValuesFilter, BaseInFilter, BooleanFilter, CharFilter, ChoiceFilter, DjangoFilterBackend,
         FilterSet, ModelChoiceFilter, ModelMultipleChoiceFilter, MultipleChoiceFilter, NumberFilter,
-        NumericRangeFilter, OrderingFilter, RangeFilter, UUIDFilter,
+        NumericRangeFilter, OrderingFilter, RangeFilter, UUIDFilter, TypedChoiceFilter,
+        TypedMultipleChoiceFilter, 
     )
 except ImportError:
     class DjangoFilterBackend:  # type: ignore
@@ -458,24 +459,42 @@ def test_filter_on_listapiview(no_warnings):
     FILTERS_NULL_CHOICE_VALUE="NULL VALUE",
 )
 def test_filterset_enum_includes_null_label(no_warnings):
-    class SimpleModelFilterSet(FilterSet):
+    class ProductFilterSet(FilterSet):
         class Meta:
-            model = SimpleModel
+            model = Product
             fields = ("category",)
 
         category = ChoiceFilter(
             choices=(('a', 'A'), ('b', 'B')),
             null_label="NULL LABEL"
         )
+        category_typed = TypedChoiceFilter(
+            choices=(('a', 'A'), ('b', 'B')),
+            field_name='category'
+        )
+        category_typed_multi = TypedMultipleChoiceFilter(
+            choices=(('a', 'A'), ('b', 'B')),
+            field_name='category'
+        )
 
     class XViewSet(viewsets.ModelViewSet):
-        queryset = SimpleModel.objects.all()
-        serializer_class = SimpleSerializer
+        queryset = Product.objects.all()
+        serializer_class = ProductSerializer
         filter_backends = [DjangoFilterBackend]
-        filterset_class = SimpleModelFilterSet
+        filterset_class = ProductFilterSet
 
     schema = generate_schema('/x', XViewSet)
     category_type_schema = schema['paths']['/x/']['get']['parameters'][0]
 
     assert category_type_schema['name'] == 'category'
     assert category_type_schema['schema']['enum'] == ["NULL VALUE", "a", "b"]
+
+    category_typed_type_schema = schema['paths']['/x/']['get']['parameters'][1]
+
+    assert category_typed_type_schema['name'] == 'category_typed'
+    assert category_typed_type_schema['schema']['enum'] == ["a", "b"]
+
+    category_typed_multi_type_schema = schema['paths']['/x/']['get']['parameters'][2]
+
+    assert category_typed_multi_type_schema['name'] == 'category_typed_multi'
+    assert category_typed_multi_type_schema['schema']['items']['enum'] == ["a", "b"]
