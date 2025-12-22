@@ -228,6 +228,37 @@ A simple custom HTTP header based authentication could be achieved like this:
                 'name': 'api_key',
             }
 
+Swagger UI authentication behaviour
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When serving Swagger UI via :py:class:`~drf_spectacular.views.SpectacularSwaggerView`, the
+authorization options shown in the "Authorize" dialog are derived from the authentication
+classes configured for the schema and documentation views.
+
+The following settings influence what Swagger UI exposes:
+
+- ``SERVE_PUBLIC``  
+  If enabled, Swagger UI is treated as a public endpoint and authentication schemes are
+  intentionally hidden from the UI. In this mode, the "Authorize" button will not display
+  any authentication options.
+
+- ``SERVE_AUTHENTICATION``  
+  If set, this explicitly defines which Django REST Framework authentication classes are used
+  when serving the schema and documentation views. If unset, the default DRF authentication
+  classes are used.
+
+Swagger UI determines which authentication schemes to display by mapping the configured
+authentication classes to their corresponding :py:class:`~drf_spectacular.extensions.OpenApiAuthenticationExtension`.
+Only authentication classes with a matching extension (and thus a defined ``name``) will appear
+as authorization options in the UI.
+
+Troubleshooting missing authorization options:
+
+- Ensure ``SERVE_PUBLIC`` is disabled when you expect authentication options in Swagger UI.
+- Ensure the documentation views use the intended authentication classes (``SERVE_AUTHENTICATION`` or DRF defaults).
+- Ensure a matching :py:class:`~drf_spectacular.extensions.OpenApiAuthenticationExtension` exists for your
+  configured authentication class.
+
 
 Declare field output with :py:class:`OpenApiSerializerFieldExtension <drf_spectacular.extensions.OpenApiSerializerFieldExtension>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
