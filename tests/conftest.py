@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 from importlib import import_module
 
 import django
@@ -36,6 +37,13 @@ def pytest_configure(config):
     except ImportError:
         allauth_version = ""
 
+    # GIS lib hack for Mac OSX
+    if sys.platform == 'darwin':
+        os.environ['DYLD_LIBRARY_PATH'] = ':'.join([
+            os.environ.get('DYLD_LIBRARY_PATH', ''),
+            '/opt/homebrew/opt/gdal/lib',
+            '/opt/homebrew/opt/geos/lib'
+        ])
     # only load GIS if library is installed. This is required for the GIS test to work
     if is_gis_installed():
         contrib_apps.append('rest_framework_gis')

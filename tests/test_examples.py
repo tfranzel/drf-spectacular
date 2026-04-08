@@ -1,5 +1,5 @@
 import pytest
-from rest_framework import __version__ as DRF_VERSION  # type: ignore[attr-defined]
+from rest_framework import __version__ as DRF_VERSION
 from rest_framework import generics, pagination, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response

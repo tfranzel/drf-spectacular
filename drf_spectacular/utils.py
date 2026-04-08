@@ -602,6 +602,7 @@ def extend_schema_serializer(
         examples: Optional[Sequence[OpenApiExample]] = None,
         extensions: Optional[Dict[str, Any]] = None,
         component_name: Optional[str] = None,
+        description: Optional[_StrOrPromise] = None,
 ) -> Callable[[F], F]:
     """
     Decorator for the "serializer" kind. Intended for overriding default serializer behaviour that
@@ -615,6 +616,7 @@ def extend_schema_serializer(
     :param examples: define example data to serializer.
     :param extensions: specification extensions, e.g. ``x-is-dynamic``, etc.
     :param component_name: override default class name extraction.
+    :param description: override the class docstring for component description
     """
     def decorator(klass):
         if many is not None:
@@ -629,6 +631,8 @@ def extend_schema_serializer(
             set_override(klass, 'extensions', extensions)
         if component_name:
             set_override(klass, 'component_name', component_name)
+        if description is not None:
+            set_override(klass, 'description', description)
         return klass
 
     return decorator

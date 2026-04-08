@@ -136,8 +136,8 @@ On rare occasions (e.g. envelope serializers), overriding list detection with ``
                     'songs': {'top10': True},
                     'single': {'top10': True}
                 },
-                request_only=True, # signal that example only applies to requests
-                response_only=True, # signal that example only applies to responses
+                # request_only=True, # signal that example only applies to requests
+                # response_only=True, # signal that example only applies to responses
             ),
         ]
     )

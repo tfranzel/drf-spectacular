@@ -6,6 +6,7 @@ from django.db import models
 from django.urls import include, path
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
+from rest_framework import __version__ as DRF_VERSION
 from rest_framework import mixins, routers, serializers, viewsets
 from rest_framework.test import APIClient
 
@@ -23,6 +24,7 @@ TRANSPORT_CHOICES = (
 class I18nModel(models.Model):
     field_str = models.TextField()
     field_choice = models.CharField(max_length=10, choices=TRANSPORT_CHOICES)
+    field_decimal = models.DecimalField(max_digits=4, decimal_places=2)
 
     class Meta:
         verbose_name = _("Internationalization")
@@ -33,6 +35,7 @@ class XSerializer(serializers.ModelSerializer):
     class Meta:
         model = I18nModel
         fields = '__all__'
+        extra_kwargs = {'field_decimal': {'localize': True}}
 
 
 class XViewset(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -64,6 +67,7 @@ urlpatterns = [
     'drf_spectacular.settings.spectacular_settings.DESCRIPTION',
     _('Lazy translated description with missing translation')
 )
+@pytest.mark.skipif(DRF_VERSION < '3.16.1', reason='DRF updated translations')
 def test_i18n_strings(no_warnings):
     with translation.override('de-de'):
         schema = generate_schema(None, patterns=urlpatterns)

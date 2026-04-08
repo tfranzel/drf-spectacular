@@ -152,7 +152,7 @@ def test_extension_not_found_for_installed_app(capsys):
         def view_replacement(self):
             pass  # pragma: no cover
 
-    OpenApiViewExtension.get_match(object())
+    OpenApiViewExtension.get_match(APIView().as_view())
     assert 'target class was not found' in capsys.readouterr().err
 
 

@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 from django.db import models
-from rest_framework import __version__ as DRF_VERSION  # type: ignore[attr-defined]
+from rest_framework import __version__ as DRF_VERSION
 from rest_framework import mixins, routers, serializers, viewsets
 
 from drf_spectacular.utils import extend_schema_serializer

@@ -23,17 +23,19 @@ def get_dj_rest_auth_setting(class_name, setting_name):
         return getattr(api_settings, setting_name)
 
 
-def get_token_serializer_class():
+def get_use_jwt():
     from dj_rest_auth.__version__ import __version__
 
     if get_version_tuple(__version__) < (3, 0, 0):
-        use_jwt = getattr(settings, 'REST_USE_JWT', False)
+        return getattr(settings, 'REST_USE_JWT', False)
     else:
         from dj_rest_auth.app_settings import api_settings
 
-        use_jwt = api_settings.USE_JWT
+        return api_settings.USE_JWT
 
-    if use_jwt:
+
+def get_token_serializer_class():
+    if get_use_jwt():
         return get_dj_rest_auth_setting('JWTSerializer', 'JWT_SERIALIZER')
     else:
         return get_dj_rest_auth_setting('TokenSerializer', 'TOKEN_SERIALIZER')
@@ -74,12 +76,26 @@ class RestAuthLogoutView(OpenApiViewExtension):
         else:
             get_schema_params = {'exclude': True}
 
+        if (
+            get_use_jwt()
+            and 'rest_framework_simplejwt.token_blacklist' in settings.INSTALLED_APPS
+            and not get_dj_rest_auth_setting('JWT_AUTH_HTTPONLY', 'JWT_AUTH_HTTPONLY')
+        ):
+            class LogoutSerializer(serializers.Serializer):
+                refresh = serializers.CharField(required=True, allow_blank=False)
+
+            post_request_class = LogoutSerializer
+        else:
+            post_request_class = None
+
         class Fixed(self.target_class):
             @extend_schema(**get_schema_params)
             def get(self, request, *args, **kwargs):
                 pass  # pragma: no cover
 
-            @extend_schema(request=None, responses=RestAuthDetailSerializer)
+            @extend_schema(
+                request=post_request_class, responses=RestAuthDetailSerializer
+            )
             def post(self, request, *args, **kwargs):
                 pass  # pragma: no cover
 
