@@ -49,6 +49,7 @@ Features
         - `djangorestframework-dataclasses <https://github.com/oxan/djangorestframework-dataclasses>`_
         - `django-rest-framework-gis <https://github.com/openwisp/django-rest-framework-gis>`_
         - `Pydantic (>=2.0) <https://github.com/pydantic/pydantic>`_
+        - `django-rest-knox <https://github.com/jazzband/django-rest-knox>`_
 
 
 For more information visit the `documentation <https://drf-spectacular.readthedocs.io/>`_.
