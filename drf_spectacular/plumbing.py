@@ -1528,6 +1528,10 @@ def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry
             )
             operation = {}
 
+            operation_id = mocked_view.schema.get_operation_id()
+            if operation_id != api_settings.DEFAULT_SCHEMA_CLASS.get_operation_id(mocked_view.schema):  # type: ignore
+                operation['operationId'] = operation_id
+
             description = mocked_view.schema.get_description()
             if description:
                 operation['description'] = description
