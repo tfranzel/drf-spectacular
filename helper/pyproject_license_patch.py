@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 pyproject = Path("pyproject.toml")
 
