@@ -344,7 +344,7 @@ class OpenApiWebhook(OpenApiSchemaBase):
 
 
 def extend_schema(
-        operation_id: Optional[str] = None,
+        operation_id: Optional[str] = empty,
         parameters: Optional[Sequence[Union[OpenApiParameter, _SerializerType]]] = None,
         request: Any = empty,
         responses: Any = empty,
@@ -456,9 +456,12 @@ def extend_schema(
                 return super().is_excluded()
 
             def get_operation_id(self):
-                if operation_id and is_in_scope(self):
+                if operation_id is not empty and is_in_scope(self):
                     return operation_id
                 return super().get_operation_id()
+
+            def has_explicit_operation_id(self):
+                return operation_id is not empty and operation_id is not None and is_in_scope(self)
 
             def get_override_parameters(self):
                 if parameters and is_in_scope(self):
