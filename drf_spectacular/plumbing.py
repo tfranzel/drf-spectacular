@@ -8,6 +8,7 @@ import sys
 import types
 import typing
 import urllib.parse
+import warnings
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
 from decimal import Decimal
@@ -231,6 +232,9 @@ def get_view_model(view, emit_warnings=True):
 
 def get_doc(obj) -> str:
     """ get doc string with fallback on obj's base classes (ignoring DRF documentation). """
+    if spectacular_settings.DISABLE_DOCSTRING_DESCRIPTIONS:
+        return ''
+
     def post_cleanup(doc: str) -> str:
         # also clean up trailing whitespace for each line
         return '\n'.join(line.rstrip() for line in doc.rstrip().split('\n'))
@@ -1337,12 +1341,14 @@ def _resolve_typeddict(hint):
 
 
 def is_higher_order_type_hint(hint) -> bool:
-    return isinstance(hint, (
-        getattr(types, 'GenericAlias', _Sentinel),
-        getattr(types, 'UnionType', _Sentinel),
-        getattr(typing, '_GenericAlias', _Sentinel),
-        getattr(typing, '_UnionGenericAlias', _Sentinel),
-    ))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return isinstance(hint, (
+            getattr(types, 'GenericAlias', _Sentinel),
+            getattr(types, 'UnionType', _Sentinel),
+            getattr(typing, '_GenericAlias', _Sentinel),
+            getattr(typing, '_UnionGenericAlias', _Sentinel),
+        ))
 
 
 def resolve_type_hint(hint):
@@ -1389,6 +1395,10 @@ def resolve_type_hint(hint):
         mixin_base_types = [t for t in hint.__mro__ if is_basic_type(t)]
         if mixin_base_types:
             schema.update(build_basic_type(mixin_base_types[0]))
+        if issubclass(hint, Choices):
+            if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
+                schema['description'] = build_choice_description_list(hint.choices)
+            schema['x-spec-enum-id'] = list_hash([(k, v) for k, v in hint.choices if k not in ('', None)])
         return schema
     elif isinstance(hint, TYPED_DICT_META_TYPES):
         return _resolve_typeddict(hint)

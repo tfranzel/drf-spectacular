@@ -962,11 +962,11 @@ def test_schema_contains_only_allowed_methods(no_warnings):
     class XSerializer(serializers.Serializer):
         integer = serializers.IntegerField()
 
-    class X(models.Model):
+    class M16(models.Model):
         integer = models.IntegerField()
 
     class XAPIView(generics.ListCreateAPIView):
-        model = X
+        model = M16
         serializer_class = XSerializer
 
     urlpatterns = [
@@ -2572,6 +2572,46 @@ def test_description_whitespace_stripping(no_warnings):
     assert schema['paths']['/x/']['post']['description'] == (
         'create: multi line indented\ndescription docstring'
     )
+
+
+@pytest.mark.parametrize('disable', [False, True])
+def test_disable_docstring_descriptions(no_warnings, disable):
+    class XSerializer(serializers.Serializer):
+        """serializer docstring"""
+        field = serializers.CharField()
+        field_method = serializers.SerializerMethodField()
+
+        def get_field_method(self) -> str:
+            """method field docstring"""
+            return ''  # pragma: no cover
+
+    class XViewset(viewsets.ModelViewSet):
+        """view class docstring"""
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.none()
+
+        def retrieve(self, request):
+            """action docstring"""
+            pass  # pragma: no cover
+
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.DISABLE_DOCSTRING_DESCRIPTIONS', disable
+    ):
+        schema = generate_schema('/x', XViewset)
+
+    if disable:
+        assert 'description' not in schema['paths']['/x/']['get']
+        assert 'description' not in schema['paths']['/x/{id}/']['get']
+        assert 'description' not in schema['components']['schemas']['X']
+        assert 'description' not in schema['components']['schemas']['X']['properties']['field_method']
+    else:
+        assert schema['paths']['/x/']['get']['description'] == 'view class docstring'
+        assert schema['paths']['/x/{id}/']['get']['description'] == 'action docstring'
+        assert schema['components']['schemas']['X']['description'] == 'serializer docstring'
+        assert (
+            schema['components']['schemas']['X']['properties']['field_method']['description']
+            == 'method field docstring'
+        )
 
 
 @pytest.mark.parametrize('list_variation', [

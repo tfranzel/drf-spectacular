@@ -49,6 +49,7 @@ Features
         - `djangorestframework-dataclasses <https://github.com/oxan/djangorestframework-dataclasses>`_
         - `django-rest-framework-gis <https://github.com/openwisp/django-rest-framework-gis>`_
         - `Pydantic (>=2.0) <https://github.com/pydantic/pydantic>`_
+        - `django-rest-knox <https://github.com/jazzband/django-rest-knox>`_
 
 
 For more information visit the `documentation <https://drf-spectacular.readthedocs.io/>`_.
@@ -62,8 +63,8 @@ Requirements
 ------------
 
 -  Python >= 3.7
--  Django (2.2, 3.2, 4.0, 4.1, 4.2, 5.0, 5.1, 5.2)
--  Django REST Framework (3.10.3, 3.11, 3.12, 3.13, 3.14, 3.15, 3.16)
+-  Django (3.2, 4.0, 4.1, 4.2, 5.0, 5.1, 5.2, 6.0)
+-  Django REST Framework (3.12, 3.13, 3.14, 3.15, 3.16, 3.17)
 
 Installation
 ------------

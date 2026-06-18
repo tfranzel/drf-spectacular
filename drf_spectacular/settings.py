@@ -126,6 +126,10 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
 
     # function that returns a list of all classes that should be excluded from doc string extraction
     'GET_LIB_DOC_EXCLUDES': 'drf_spectacular.plumbing.get_lib_doc_excludes',
+    # Stops docstrings of views, serializers and their methods, from being used as
+    # description strings in the schema. Useful when docstrings are for internal use
+    # only and should not be exposed in the API documentation.
+    'DISABLE_DOCSTRING_DESCRIPTIONS': False,
 
     # Function that returns a mocked request for view processing. For CLI usage
     # original_request will be None.
