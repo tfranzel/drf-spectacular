@@ -171,3 +171,13 @@ Pydantic 1:
 
 .. literalinclude:: blueprints/pydantic.py
 
+
+msgspec
+-------
+
+Basic support for `msgspec <https://github.com/jcrist/msgspec>`_ models.
+
+This blueprint allows the use of `@extend_schema` with base classes of type `msgspec.Struct` 
+or a type annotation of `list[msgspec.Struct]` and generates a corresponding schema.
+
+.. literalinclude:: blueprints/msgspec.py
