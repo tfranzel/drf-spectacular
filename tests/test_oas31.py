@@ -1,6 +1,7 @@
 from unittest import mock
 
 from rest_framework import serializers, viewsets
+from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 
 from drf_spectacular.utils import extend_schema
@@ -89,3 +90,22 @@ def test_validator_addition_for_oas31(no_warnings):
         },
         'type': 'object'
     }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_safe_method_request_body(no_warnings):
+
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField(allow_blank=True, allow_null=True, max_length=40, required=False)
+
+    @extend_schema(request=XSerializer)
+    @api_view(['DELETE'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+
+    operation = schema['paths']['/x']['delete']
+    assert operation['requestBody']['content']['application/json'] == {'schema': {'$ref': '#/components/schemas/X'}}
+
+
