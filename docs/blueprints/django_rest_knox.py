@@ -5,13 +5,13 @@ from knox.views import LoginView, LogoutAllView, LogoutView
 from rest_framework import serializers
 
 
-class LoginResponseSerializer(serializers.Serializer):
+class TokenLoginSerializer(serializers.Serializer):
     token = serializers.CharField()
     expiry = serializers.DateTimeField()
 
 
 @extend_schema_view(
-    post=extend_schema(request=None, responses=LoginResponseSerializer),
+    post=extend_schema(request=None, responses=TokenLoginSerializer),
 )
 class KnoxLoginView(LoginView):
     """"""
