@@ -12,7 +12,7 @@ import pytest
 from django import __version__ as DJANGO_VERSION
 from django.core import validators
 from django.db import models
-from django.db.models import fields
+from django.db.models import F, fields
 from django.urls import path, re_path, register_converter
 from django.urls.converters import StringConverter
 from rest_framework import (
@@ -3545,3 +3545,31 @@ def test_extend_schema_serializer_description_overwrite(no_warnings):
 
     schema = generate_schema('/x/', view_function=view_func)
     assert schema['components']['schemas']['X']['description'] == "user-facing doc"
+
+
+@pytest.mark.skipif(DJANGO_VERSION < '5', reason='GeneratedField introduced in 5')
+def test_generated_field(no_warnings):
+    class M17(models.Model):
+        side = models.FloatField()
+        area = models.GeneratedField(
+            expression=F("side") * F("side"),
+            output_field=models.BigIntegerField(),
+            db_persist=True,
+        )
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = M17
+            fields = '__all__'
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+
+    schema = generate_schema('m3', XViewset)
+
+    assert schema['components']['schemas']['X']["properties"] == {
+        'id': {'readOnly': True, 'type': 'integer'},
+        'area': {'readOnly': True, 'type': 'integer'},
+        'side': {'format': 'double', 'type': 'number'},
+    }
