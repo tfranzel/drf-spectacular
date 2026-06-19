@@ -3556,6 +3556,11 @@ def test_generated_field(no_warnings):
             output_field=models.BigIntegerField(),
             db_persist=True,
         )
+        area_decimal = models.GeneratedField(
+            expression=F("side") * F("side"),
+            output_field=models.DecimalField(max_digits=15, decimal_places=2),
+            db_persist=True,
+        )
 
     class XSerializer(serializers.ModelSerializer):
         class Meta:
@@ -3571,5 +3576,8 @@ def test_generated_field(no_warnings):
     assert schema['components']['schemas']['X']["properties"] == {
         'id': {'readOnly': True, 'type': 'integer'},
         'area': {'readOnly': True, 'type': 'integer'},
+        'area_decimal': {
+            'format': 'decimal', 'pattern': '^-?\\d{0,13}(?:\\.\\d{0,2})?$', 'readOnly': True, 'type': 'string',
+        },
         'side': {'format': 'double', 'type': 'number'},
     }
