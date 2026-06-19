@@ -171,3 +171,12 @@ Pydantic 1:
 
 .. literalinclude:: blueprints/pydantic.py
 
+django-rest-knox
+----------------
+
+Support for django-rest-knox's auth extension is supported natively, but the
+actual Views will still be missing structure in the generated OpenAPI document.
+
+To fix this:
+
+.. literalinclude:: blueprints/django_rest_knox.py
