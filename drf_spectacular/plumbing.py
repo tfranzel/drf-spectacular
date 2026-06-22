@@ -965,7 +965,7 @@ def build_choices_class_name_overrides():
             visit(sub)
             try:
                 pairs = [(value, label) for value, label in sub.choices if value not in ('', None)]
-            except Exception:
+            except Exception:  # pragma: no cover
                 continue  # base classes without members, or non-standard choices
             if pairs:
                 by_hash[list_hash(pairs)].add(sub)

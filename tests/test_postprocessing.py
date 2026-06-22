@@ -240,6 +240,28 @@ def test_enum_name_from_integer_choices_class(capsys, clear_caches):
     assert 'PriorityLevelChoices' not in capsys.readouterr().err  # not flagged ambiguous
 
 
+class GaugeEnum(TextChoices):
+    # class name already ends in ENUM_SUFFIX; distinctive values keep the set unique
+    LOW = 'gauge_low', 'Low'
+    HIGH = 'gauge_high', 'High'
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+def test_enum_name_from_choices_class_no_double_suffix(clear_caches):
+    class XSerializer(serializers.Serializer):
+        level = serializers.ChoiceField(choices=GaugeEnum.choices)
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    schemas = schema['components']['schemas']
+    # class name already ends in ENUM_SUFFIX, so it is used as-is, not "GaugeEnumEnum"
+    assert 'GaugeEnum' in schemas['X']['properties']['level']['$ref']
+    assert 'GaugeEnumEnum' not in schemas
+    assert 'LevelEnum' not in schemas
+
+
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
     'Shade': 'tests.test_postprocessing.ColorChoices'
