@@ -1,5 +1,6 @@
+import json
 import typing
-from enum import Enum
+from enum import Enum, IntEnum, IntFlag
 from unittest import mock
 
 import pytest
@@ -16,7 +17,7 @@ except ImportError:
     IntegerChoices = object  # type: ignore  # django < 3.0 handling
 
 from drf_spectacular.plumbing import _load_enum_name_overrides, list_hash, load_enum_name_overrides
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field
 from tests import assert_schema, generate_schema
 
 language_choices = (
@@ -189,6 +190,338 @@ def test_global_enum_naming_override_with_blank_and_none(no_warnings, clear_cach
         '#/components/schemas/BlankEnum',
         '#/components/schemas/NullEnum'
     ]
+
+
+class ColorChoices(TextChoices):
+    # deliberately distinctive values so the set is unique across the test process
+    CRIMSON = 'clr_crimson', 'Crimson'
+    AZURE = 'clr_azure', 'Azure'
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+def test_enum_name_from_choices_class(capsys, clear_caches):
+    class XSerializer(serializers.Serializer):
+        # field name differs from the backing Choices class on purpose
+        kind = serializers.ChoiceField(choices=ColorChoices.choices)
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    # component is named after the Choices class (+ ENUM_SUFFIX), not the field "kind"
+    assert 'ColorChoicesEnum' in schema['components']['schemas']['X']['properties']['kind']['$ref']
+    assert 'ColorChoicesEnum' in schema['components']['schemas']
+    assert 'KindEnum' not in schema['components']['schemas']
+    assert 'ColorChoices' not in capsys.readouterr().err  # not flagged ambiguous
+
+
+class PriorityLevelChoices(IntegerChoices):
+    # distinctive integer values so the set is unique across the test process
+    LOW = 11, 'Low'
+    HIGH = 99, 'High'
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+def test_enum_name_from_integer_choices_class(capsys, clear_caches):
+    class XSerializer(serializers.Serializer):
+        # field name differs from the backing IntegerChoices class on purpose
+        rank = serializers.ChoiceField(choices=PriorityLevelChoices.choices)
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    # component is named after the IntegerChoices class (+ ENUM_SUFFIX), not the field "rank"
+    enum = schema['components']['schemas']['PriorityLevelChoicesEnum']
+    assert 'PriorityLevelChoicesEnum' in schema['components']['schemas']['X']['properties']['rank']['$ref']
+    assert 'RankEnum' not in schema['components']['schemas']
+    assert enum['type'] == 'integer'
+    assert enum['enum'] == [11, 99]
+    assert 'PriorityLevelChoices' not in capsys.readouterr().err  # not flagged ambiguous
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
+    'Shade': 'tests.test_postprocessing.ColorChoices'
+})
+def test_enum_name_from_choices_class_explicit_override_wins(clear_caches):
+    class XSerializer(serializers.Serializer):
+        kind = serializers.ChoiceField(choices=ColorChoices.choices)
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    # explicit ENUM_NAME_OVERRIDES takes precedence over the auto class-derived name
+    assert 'Shade' in schema['components']['schemas']['X']['properties']['kind']['$ref']
+    assert 'ColorChoicesEnum' not in schema['components']['schemas']
+
+
+explicit_clash_choices = [('xclash_1', 'One'), ('xclash_2', 'Two')]
+
+
+class GadgetEnumChoices(TextChoices):
+    # class-derived name (+ suffix) collides with the explicit override name below, but for a
+    # different value set; distinctive values keep the set unique across the test process
+    SPROCKET = 'gdg_sprocket', 'Sprocket'
+    WIDGET = 'gdg_widget', 'Widget'
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
+    # explicit name equals the class-derived name (GadgetEnumChoices -> GadgetEnumChoicesEnum)
+    # but maps a different value set
+    'GadgetEnumChoicesEnum': 'tests.test_postprocessing.explicit_clash_choices'
+})
+def test_enum_name_from_choices_class_explicit_collision_auto_yields(capsys, clear_caches):
+    class XSerializer(serializers.Serializer):
+        explicit_field = serializers.ChoiceField(choices=explicit_clash_choices)
+        auto_field = serializers.ChoiceField(choices=GadgetEnumChoices.choices)
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    schemas = schema['components']['schemas']
+    props = schemas['X']['properties']
+    # explicit override keeps the contested name; the auto-derived class yields to field-name
+    assert 'GadgetEnumChoicesEnum' in props['explicit_field']['$ref']
+    assert schemas['GadgetEnumChoicesEnum']['enum'] == ['xclash_1', 'xclash_2']
+    assert 'AutoFieldEnum' in props['auto_field']['$ref']
+    assert schemas['AutoFieldEnum']['enum'] == ['gdg_sprocket', 'gdg_widget']
+    # yielding to an explicit override is a clean resolution, not the ambiguous-warning case:
+    # the contested name is not the subject of a warning (other unrelated enums may warn)
+    assert 'GadgetEnumChoicesEnum' not in capsys.readouterr().err
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+def test_enum_name_from_choices_class_ambiguous_falls_back(capsys, clear_caches):
+    # two distinct Choices classes with an identical value set; defined locally so they are
+    # garbage-collected (and drop out of __subclasses__) after this test
+    class AmbiguousAChoices(TextChoices):
+        X = 'ambig_x', 'X'
+        Y = 'ambig_y', 'Y'
+
+    class AmbiguousBChoices(TextChoices):
+        X = 'ambig_x', 'X'
+        Y = 'ambig_y', 'Y'
+
+    class XSerializer(serializers.Serializer):
+        kind = serializers.ChoiceField(choices=AmbiguousAChoices.choices)
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    stderr = capsys.readouterr().err
+    # the shared value set is ambiguous -> warn and fall back to field-name resolution
+    assert 'could not name an enum' in stderr
+    assert 'KindEnum' in schema['components']['schemas']
+    assert any(n in stderr for n in ('AmbiguousAChoices', 'AmbiguousBChoices'))
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+def test_enum_name_from_choices_class_name_collision_falls_back(capsys, clear_caches):
+    # two classes sharing a __name__ but different values (as across apps) would collapse into
+    # one component, so neither claims the name. local so they are GC'd after the test.
+    # functional API takes (member_name, value) pairs; values deliberately distinctive
+    NameClashA = TextChoices('SameNameChoices', [('CA1', 'clash_a1'), ('CA2', 'clash_a2')])
+    NameClashB = TextChoices('SameNameChoices', [('CB1', 'clash_b1'), ('CB2', 'clash_b2')])
+
+    class XSerializer(serializers.Serializer):
+        # distinct field names so the fallback yields two distinct, correct components
+        alpha = serializers.ChoiceField(choices=NameClashA.choices)
+        beta = serializers.ChoiceField(choices=NameClashB.choices)
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    schemas = schema['components']['schemas']
+    stderr = capsys.readouterr().err
+    # collision detected -> warn and fall back; neither enum collapses into the other
+    assert 'could not name an enum' in stderr
+    assert 'SameNameChoicesEnum' not in schemas
+    assert schemas['AlphaEnum']['enum'] == ['clash_a1', 'clash_a2']
+    assert schemas['BetaEnum']['enum'] == ['clash_b1', 'clash_b2']
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+def test_enum_name_from_native_enum_name_collision_falls_back(capsys, clear_caches):
+    # same as the collision test above, but via the type-hint capture path: two native enums
+    # sharing a __name__ with different values must not collapse into one component.
+    NativeClashA = Enum('SharedName', [('A1', 'native_a1'), ('A2', 'native_a2')])
+    NativeClashB = Enum('SharedName', [('B1', 'native_b1'), ('B2', 'native_b2')])
+
+    class XSerializer(serializers.Serializer):
+        alpha = serializers.SerializerMethodField()
+        beta = serializers.SerializerMethodField()
+
+        @extend_schema_field(NativeClashA)
+        def get_alpha(self, obj):
+            return 'native_a1'  # pragma: no cover
+
+        @extend_schema_field(NativeClashB)
+        def get_beta(self, obj):
+            return 'native_b1'  # pragma: no cover
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    schemas = schema['components']['schemas']
+    stderr = capsys.readouterr().err
+    assert 'could not name an enum' in stderr
+    assert 'SharedNameEnum' not in schemas
+    assert schemas['AlphaEnum']['enum'] == ['native_a1', 'native_a2']
+    assert schemas['BetaEnum']['enum'] == ['native_b1', 'native_b2']
+
+
+class NativeSuit(Enum):
+    # native enum.Enum reached via a type hint; distinctive values, field name will differ
+    HEART = 'native_heart'
+    SPADE = 'native_spade'
+
+
+class NativePriorityRank(IntEnum):
+    # native enum.IntEnum reached via a type hint; distinctive values
+    LOW = 4101
+    HIGH = 4109
+
+
+class NativeAccessFlag(IntFlag):
+    # native enum.IntFlag reached via a type hint; bitwise (power-of-two) values
+    READ = 4096
+    WRITE = 8192
+    EXECUTE = 16384
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+def test_enum_name_from_native_enum_via_type_hint(capsys, clear_caches):
+    class XSerializer(serializers.Serializer):
+        suit = serializers.SerializerMethodField()  # field name != class name
+
+        @extend_schema_field(NativeSuit)
+        def get_suit(self, obj):
+            return 'native_heart'  # pragma: no cover
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    schemas = schema['components']['schemas']
+    suit = schemas['X']['properties']['suit']
+    ref = suit.get('$ref') or suit['allOf'][0]['$ref']  # read-only method field wraps in allOf
+    # named after the native Enum class captured at the source (x-spec-enum-name), not field "suit"
+    assert 'NativeSuitEnum' in ref
+    assert 'NativeSuitEnum' in schemas
+    assert 'SuitEnum' not in schemas
+    # the x-spec-enum-name helper must never leak into the emitted schema
+    assert 'x-spec-enum-name' not in json.dumps(schema)
+    assert 'NativeSuit' not in capsys.readouterr().err  # not flagged ambiguous
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+def test_enum_name_from_native_int_enum_via_type_hint(clear_caches):
+    class XSerializer(serializers.Serializer):
+        rank = serializers.SerializerMethodField()  # field name != class name
+
+        @extend_schema_field(NativePriorityRank)
+        def get_rank(self, obj):
+            return 4101  # pragma: no cover
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    schemas = schema['components']['schemas']
+    enum = schemas['NativePriorityRankEnum']
+    rank = schemas['X']['properties']['rank']
+    ref = rank.get('$ref') or rank['allOf'][0]['$ref']  # read-only method field wraps in allOf
+    assert 'NativePriorityRankEnum' in ref
+    assert 'RankEnum' not in schemas
+    assert enum['type'] == 'integer'
+    assert enum['enum'] == [4101, 4109]
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+def test_enum_name_from_native_int_flag_via_type_hint(clear_caches):
+    # IntFlag is an Enum subclass, so it flows through the same capture path; pin that the
+    # individual (bitwise, power-of-two) member values are enumerated and integer-typed
+    class XSerializer(serializers.Serializer):
+        access = serializers.SerializerMethodField()  # field name != class name
+
+        @extend_schema_field(NativeAccessFlag)
+        def get_access(self, obj):
+            return 4096  # pragma: no cover
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    schemas = schema['components']['schemas']
+    enum = schemas['NativeAccessFlagEnum']
+    access = schemas['X']['properties']['access']
+    ref = access.get('$ref') or access['allOf'][0]['$ref']  # read-only method field wraps in allOf
+    # named after the IntFlag class, not the field "access"
+    assert 'NativeAccessFlagEnum' in ref
+    assert 'AccessEnum' not in schemas
+    assert enum['type'] == 'integer'
+    # the member values themselves are enumerated (bitwise combinations are not)
+    assert enum['enum'] == [4096, 8192, 16384]
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', True)
+def test_enum_name_from_native_enum_ambiguous_falls_back(capsys, clear_caches):
+    # two native enums with the same values but different names, via the type-hint capture path.
+    # they cannot be told apart by value, so the name is dropped and the warning names both.
+    NativeAmbigA = Enum('NativeAmbigA', [('M1', 'ambig_native_1'), ('M2', 'ambig_native_2')])
+    NativeAmbigB = Enum('NativeAmbigB', [('M1', 'ambig_native_1'), ('M2', 'ambig_native_2')])
+
+    class XSerializer(serializers.Serializer):
+        alpha = serializers.SerializerMethodField()
+        beta = serializers.SerializerMethodField()
+
+        @extend_schema_field(NativeAmbigA)
+        def get_alpha(self, obj):
+            return 'ambig_native_1'  # pragma: no cover
+
+        @extend_schema_field(NativeAmbigB)
+        def get_beta(self, obj):
+            return 'ambig_native_1'  # pragma: no cover
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    schemas = schema['components']['schemas']
+    stderr = capsys.readouterr().err
+    # ambiguous shared value set -> warn (naming both culprits) and fall back to field names
+    assert 'could not name an enum' in stderr
+    assert 'NativeAmbigAEnum' in stderr and 'NativeAmbigBEnum' in stderr
+    assert 'AlphaEnum' in schemas and 'BetaEnum' in schemas
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_FROM_CLASS', False)
+def test_enum_name_from_class_disabled_keeps_field_name(clear_caches):
+    # with the setting off, naming is unchanged (field-derived) and no helper field leaks
+    class XSerializer(serializers.Serializer):
+        suit = serializers.SerializerMethodField()
+
+        @extend_schema_field(NativeSuit)
+        def get_suit(self, obj):
+            return 'native_heart'  # pragma: no cover
+
+    class XView(generics.RetrieveAPIView):
+        serializer_class = XSerializer
+
+    schema = generate_schema('/x', view=XView)
+    schemas = schema['components']['schemas']
+    suit = schemas['X']['properties']['suit']
+    ref = suit.get('$ref') or suit['allOf'][0]['$ref']  # read-only method field wraps in allOf
+    assert 'SuitEnum' in ref
+    assert 'NativeSuitEnum' not in schemas
+    assert 'x-spec-enum-name' not in json.dumps(schema)
 
 
 def test_enum_name_reuse_warning(capsys):

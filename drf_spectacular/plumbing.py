@@ -944,6 +944,51 @@ def _load_enum_name_overrides(language: str):
     return overrides
 
 
+def apply_enum_suffix(name):
+    """append ENUM_SUFFIX to a class-derived name unless already present, so class-derived
+    names match field-derived ones (PaymentType -> PaymentTypeEnum)."""
+    suffix = spectacular_settings.ENUM_SUFFIX
+    if suffix and not name.endswith(suffix):
+        return f'{name}{suffix}'
+    return name
+
+
+def build_choices_class_name_overrides():
+    """map value-set hash -> class name for each Choices subclass, using the same hash
+    build_choice_field injects as x-spec-enum-id. the field-backed fallback for naming an enum
+    after its class (ChoiceField drops the class; type-hinted enums use x-spec-enum-name
+    instead). same values under different class names are skipped with a warning."""
+    by_hash: DefaultDict[str, set] = defaultdict(set)
+
+    def visit(cls):
+        for sub in cls.__subclasses__():
+            visit(sub)
+            try:
+                pairs = [(value, label) for value, label in sub.choices if value not in ('', None)]
+            except Exception:
+                continue  # base classes without members, or non-standard choices
+            if pairs:
+                by_hash[list_hash(pairs)].add(sub)
+
+    visit(Choices)
+
+    # same values under multiple class names is dropped here; the mirror case (same name,
+    # different values) is handled on the merged map in postprocess_schema_enums.
+    overrides = {}
+    for enum_hash, classes in by_hash.items():
+        names = {cls.__name__ for cls in classes}
+        if len(names) == 1:
+            overrides[enum_hash] = apply_enum_suffix(next(iter(names)))
+        else:
+            qualified = ', '.join(sorted(f'{c.__module__}.{c.__qualname__}' for c in classes))
+            warn(
+                f'ENUM_NAME_FROM_CLASS could not name an enum: multiple Choices '
+                f'classes share an identical value set ({qualified}). Falling back to field '
+                f'name resolution; add an entry to ENUM_NAME_OVERRIDES to disambiguate.'
+            )
+    return overrides
+
+
 def list_hash(lst: Any) -> str:
     return hashlib.sha256(json.dumps(sorted(lst), sort_keys=True, cls=JSONEncoder).encode()).hexdigest()[:16]
 
@@ -1399,6 +1444,10 @@ def resolve_type_hint(hint):
             if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
                 schema['description'] = build_choice_description_list(hint.choices)
             schema['x-spec-enum-id'] = list_hash([(k, v) for k, v in hint.choices if k not in ('', None)])
+        # remember the class name so ENUM_NAME_FROM_CLASS can name the component after it.
+        # covers any Enum reached via a type hint; the field-backed path loses the class and
+        # falls back to build_choices_class_name_overrides instead.
+        schema['x-spec-enum-name'] = hint.__name__
         return schema
     elif isinstance(hint, TYPED_DICT_META_TYPES):
         return _resolve_typeddict(hint)

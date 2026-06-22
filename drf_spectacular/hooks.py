@@ -7,7 +7,8 @@ from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import warn
 from drf_spectacular.plumbing import (
-    ResolvedComponent, list_hash, load_enum_name_overrides, safe_ref,
+    ResolvedComponent, apply_enum_suffix, build_choices_class_name_overrides, list_hash,
+    load_enum_name_overrides, safe_ref,
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -59,10 +60,17 @@ def postprocess_schema_enums(result, generator, **kwargs):
 
     schemas = result.get('components', {}).get('schemas', {})
 
-    overrides = load_enum_name_overrides()
+    explicit_overrides = load_enum_name_overrides()
+    use_class_names = spectacular_settings.ENUM_NAME_FROM_CLASS
 
     prop_hash_mapping = defaultdict(set)
     hash_name_mapping = defaultdict(set)
+    # class names captured at the source (x-spec-enum-name, set in resolve_type_hint for
+    # type-hinted enums). hash -> name, conflicts dropped below.
+    captured_class_names: dict = {}
+    captured_conflicts = set()
+    # all captured names per hash, so the ambiguity warning can name the culprits.
+    captured_names_by_hash = defaultdict(set)
     # collect all enums, their names and choice sets
     for component_name, props in iter_prop_containers(schemas):
         for prop_name, prop_schema in props.items():
@@ -74,6 +82,54 @@ def postprocess_schema_enums(result, generator, **kwargs):
             prop_enum_cleaned_hash = extract_hash(prop_schema)
             prop_hash_mapping[prop_name].add(prop_enum_cleaned_hash)
             hash_name_mapping[prop_enum_cleaned_hash].add((component_name, prop_name))
+
+            if use_class_names and prop_schema.get('x-spec-enum-name'):
+                name = apply_enum_suffix(prop_schema['x-spec-enum-name'])
+                captured_names_by_hash[prop_enum_cleaned_hash].add(name)
+                if captured_class_names.get(prop_enum_cleaned_hash, name) != name:
+                    captured_conflicts.add(prop_enum_cleaned_hash)
+                else:
+                    captured_class_names[prop_enum_cleaned_hash] = name
+
+    if use_class_names:
+        # drop captured names that are ambiguous: same values, different class names
+        for enum_hash in captured_conflicts:
+            captured_class_names.pop(enum_hash, None)
+            names = ', '.join(sorted(captured_names_by_hash[enum_hash]))
+            warn(
+                f'ENUM_NAME_FROM_CLASS could not name an enum: differently named enum '
+                f'classes ({names}) share an identical value set. Falling back to field name '
+                f'resolution; add an entry to ENUM_NAME_OVERRIDES to disambiguate.'
+            )
+        # merge auto-derived sources (field-backed registry < captured name), then explicit
+        # ENUM_NAME_OVERRIDES on top. explicit always wins.
+        overrides = {
+            **build_choices_class_name_overrides(),
+            **captured_class_names,
+            **explicit_overrides,
+        }
+        # two value sets resolving to one name would silently collapse into a single component.
+        # drop the colliding entries so they fall back to field-name resolution, but keep explicit
+        # overrides (they win). warn only for purely auto-derived collisions. explicit-vs-explicit
+        # is left to the user, same as without this setting.
+        hashes_by_name = defaultdict(set)
+        for enum_hash, name in overrides.items():
+            hashes_by_name[name].add(enum_hash)
+        for name, hashes in hashes_by_name.items():
+            if len(hashes) <= 1:
+                continue
+            explicit_hashes = {h for h in hashes if explicit_overrides.get(h) == name}
+            for enum_hash in hashes - explicit_hashes:  # auto-derived entries yield; explicit kept
+                overrides.pop(enum_hash, None)
+            if not explicit_hashes:
+                warn(
+                    f'ENUM_NAME_FROM_CLASS could not name an enum: multiple enum '
+                    f'classes resolve to the name "{name}" for distinct value sets. Falling '
+                    f'back to field name resolution; add an entry to ENUM_NAME_OVERRIDES to '
+                    f'disambiguate.'
+                )
+    else:
+        overrides = explicit_overrides
 
     # get the suffix to be used for enums from settings
     enum_suffix = spectacular_settings.ENUM_SUFFIX
@@ -132,7 +188,10 @@ def postprocess_schema_enums(result, generator, **kwargs):
 
             # split property into remaining property and enum component parts
             enum_schema = {k: v for k, v in prop_schema.items() if k in ['type', 'enum']}
-            prop_schema = {k: v for k, v in prop_schema.items() if k not in ['type', 'enum', 'x-spec-enum-id']}
+            prop_schema = {
+                k: v for k, v in prop_schema.items()
+                if k not in ['type', 'enum', 'x-spec-enum-id', 'x-spec-enum-name']
+            }
 
             # separate actual description from name-value tuples
             if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
@@ -180,13 +239,14 @@ def postprocess_schema_enums(result, generator, **kwargs):
 def postprocess_schema_enum_id_removal(result, generator, **kwargs):
     """
     Iterative modifying approach to scanning the whole schema and removing the
-    temporary helper ids that allowed us to distinguish similar enums.
+    temporary helper fields (x-spec-enum-id / x-spec-enum-name) that allowed us to
+    distinguish and name similar enums.
     """
     def clean(sub_result):
         if isinstance(sub_result, dict):
             for key in list(sub_result):
-                if key == 'x-spec-enum-id':
-                    del sub_result['x-spec-enum-id']
+                if key in ('x-spec-enum-id', 'x-spec-enum-name'):
+                    del sub_result[key]
                 else:
                     clean(sub_result[key])
         elif isinstance(sub_result, (list, tuple)):
