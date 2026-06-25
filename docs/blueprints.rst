@@ -180,3 +180,13 @@ actual Views will still be missing structure in the generated OpenAPI document.
 To fix this:
 
 .. literalinclude:: blueprints/django_rest_knox.py
+
+You may also want to configure using the standard Authorization header prefix to
+add out-of-the-box compatibility with OpenAPI generators and the bundled Swagger
+UI:
+
+.. code-block:: python
+
+    REST_KNOX = {
+        "AUTH_HEADER_PREFIX": "Bearer",
+    }
