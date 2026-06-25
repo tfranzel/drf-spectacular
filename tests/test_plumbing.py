@@ -174,10 +174,10 @@ TYPE_HINT_TEST_PARAMS = [
         {'oneOf': [{'type': 'string'}, {'type': 'integer'}], 'nullable': True}
     ), (
         LanguageEnum,
-        {'enum': ['en', 'de'], 'type': 'string'}
+        {'enum': ['en', 'de'], 'type': 'string', 'x-spec-enum-name': 'LanguageEnum'}
     ), (
         InvalidLanguageEnum,
-        {'enum': ['en', 'de']}
+        {'enum': ['en', 'de'], 'x-spec-enum-name': 'InvalidLanguageEnum'}
     ), (
         NamedTupleB,
         {
@@ -202,7 +202,8 @@ if DJANGO_VERSION > '3':
             'enum': ['en', 'de'],
             'type': 'string',
             'description': '* `en` - En\n* `de` - De',
-            'x-spec-enum-id': '982ab9eaa2725610'
+            'x-spec-enum-id': '982ab9eaa2725610',
+            'x-spec-enum-name': 'LanguageChoices'
         }
     ))
 

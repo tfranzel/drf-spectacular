@@ -160,6 +160,42 @@ For example:
 If you have multiple semantically distinct enums that happen to have the same
 set of values, and you want different names for them, this mechanism won't work.
 
+Alternatively, rather than naming each enum by hand, you can have *drf-spectacular*
+name every enum after the ``models.Choices`` or ``Enum`` class that backs it, just
+like components are already named after their serializer class. Enable
+:ref:`ENUM_NAME_FROM_CLASS <settings>`:
+
+.. code-block:: python
+
+    SPECTACULAR_SETTINGS = {
+        ...
+        'ENUM_NAME_FROM_CLASS': True,
+    }
+
+With this, a field backed by ``class Priority(models.IntegerChoices)`` produces the
+component ``PriorityEnum`` regardless of the field name, and an enum reached through a
+type hint (e.g. a ``SerializerMethodField`` annotated with
+``@extend_schema_field(MyEnum)``) becomes ``MyEnum``. No per-enum entries and no field
+renames are needed, and explicit ``ENUM_NAME_OVERRIDES`` still take precedence.
+
+Field choices are matched to a ``models.Choices`` subclass by their set of choices, since
+DRF's ``ChoiceField`` only retains the choices (values and labels), not the class. A plain
+``Enum`` used directly as field choices is therefore only named after its class when it is
+also reached through a type hint.
+
+As with the default mechanism, some situations cannot be resolved automatically. Each
+emits a warning and falls back to the field-name resolution described above, of two
+kinds:
+
+* two distinct classes with the same set of choices, where the name cannot be
+  inferred from the values alone.
+* two distinct classes that share a class name but back different sets of choices
+  (as can happen across apps). Naming both after the class would collapse them into a
+  single component, so neither claims the name.
+
+In both cases, add an ``ENUM_NAME_OVERRIDES`` entry to give the affected enums an
+explicit name.
+
 My endpoints use different serializers depending on the situation
 -----------------------------------------------------------------
 

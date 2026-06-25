@@ -116,6 +116,11 @@ SPECTACULAR_DEFAULTS: Dict[str, Any] = {
     # enum name overrides. dict with keys "YourEnum" and their choice values "field.choices"
     # e.g. {'SomeEnum': ['A', 'B'], 'OtherEnum': 'import.path.to.choices'}
     'ENUM_NAME_OVERRIDES': {},
+    # Name enum components after the Choices/Enum class that backs them, rather than the
+    # referencing field (like components are named after their serializer). Type-hinted enums use
+    # their class directly; field-backed choices are matched to a Choices subclass by value set.
+    # Explicit ENUM_NAME_OVERRIDES win; ambiguous classes fall back to field names (with a warning).
+    'ENUM_NAME_FROM_CLASS': False,
     # Adds "blank" and "null" enum choices where appropriate. disable on client generation issues
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': True,
     # Add/Append a list of (``choice value`` - choice name) to the enum description string.
