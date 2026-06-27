@@ -543,7 +543,7 @@ def safe_ref(schema: _SchemaType) -> _SchemaType:
 
 
 def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
-    if spectacular_settings.OAS_VERSION.startswith('3.1'):
+    if is_jsonschema_compliant():
         schema = schema.copy()
         meta = meta.copy()
 
@@ -1563,3 +1563,10 @@ def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry
         result[webhook.name] = path_items
 
     return result
+
+
+def is_jsonschema_compliant():
+    return (
+        spectacular_settings.OAS_VERSION.startswith('3.1')
+        or spectacular_settings.OAS_VERSION.startswith('3.2')
+    )
