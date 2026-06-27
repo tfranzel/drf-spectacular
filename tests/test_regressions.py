@@ -3590,12 +3590,12 @@ def test_extend_schema_field_with_multiple_types_and_description_with_oas_3_1(no
         name2 = serializers.SerializerMethodField()
 
         # needs 2 types + description to trigger throwing corner-case
-        def get_name1(self) -> str | int:
+        def get_name1(self) -> typing.Union[str, int]:
             """some description 1"""
             return 0  # pragma: no cover
 
         # basic variation for good measure
-        def get_name2(self) -> str | int | None:
+        def get_name2(self) -> typing.Union[str, int, None]:
             """some description 2"""
             return 0  # pragma: no cover
 
