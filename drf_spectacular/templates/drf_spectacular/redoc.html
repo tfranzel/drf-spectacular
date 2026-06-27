@@ -19,8 +19,9 @@
     {% if settings %}
     <div id="redoc-container"></div>
     <script src="{{ redoc_standalone }}"></script>
+    {{ settings|json_script:"redoc-settings" }}
     <script>
-      const redocSettings = {{ settings|safe }};
+      const redocSettings = JSON.parse(document.getElementById('redoc-settings').textContent);
       Redoc.init("{{ schema_url }}", redocSettings, document.getElementById('redoc-container'))
     </script>
     {% else %}
