@@ -547,8 +547,8 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
         schema = schema.copy()
         meta = meta.copy()
 
-        schema_nullable = meta.pop('nullable', None)
-        meta_nullable = schema.pop('nullable', None)
+        schema_nullable = schema.pop('nullable', None)
+        meta_nullable = meta.pop('nullable', None)
 
         if schema_nullable or meta_nullable:
             if 'type' in schema:

@@ -666,7 +666,7 @@ class AutoSchema(ViewInspector):
             elif is_higher_order_type_hint(override):
                 schema = resolve_type_hint(override)
             elif isinstance(override, dict):
-                schema = override
+                schema = copy.deepcopy(override)
             else:
                 schema = self._map_serializer_field(force_instance(override), direction)
 
