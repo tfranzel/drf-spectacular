@@ -558,7 +558,7 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
                     schema['type'] = [*schema['type'], 'null']
             elif '$ref' in schema:
                 schema = {'oneOf': [schema, {'type': 'null'}]}
-            elif len(schema) == 1 and 'oneOf' in schema:
+            elif 'oneOf' in schema:
                 schema['oneOf'].append({'type': 'null'})
             elif not schema:
                 schema = {'oneOf': [{}, {'type': 'null'}]}
