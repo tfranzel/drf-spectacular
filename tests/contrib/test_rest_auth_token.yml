@@ -349,8 +349,11 @@ components:
         username:
           type: string
         email:
-          type: string
-          format: email
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
         password:
           type: string
       required:

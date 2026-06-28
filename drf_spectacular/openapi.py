@@ -1174,17 +1174,15 @@ class AutoSchema(ViewInspector):
                     update_constraint(schema, 'minProperties', max, v.limit_value)
 
         # For format-constrained string fields (e.g. EmailField) with allow_blank=True,
-        # add an anyOf with the empty string option.
-        # Runs after validators so constraints like maxLength are already applied.
+        # add an empty string option.
         if (
             getattr(field, 'allow_blank', False)
             and schema_type == 'string'
-            and 'format' in schema
+            and ('format' in schema or 'pattern' in schema or 'minLength' in schema)
         ):
-            # Keep readOnly/writeOnly/nullable etc. at the outer anyOf level.
             outer_keys = {'readOnly', 'writeOnly', 'nullable', 'deprecated', 'description', 'title'}
             inner = {k: schema.pop(k) for k in list(schema) if k not in outer_keys}
-            schema['anyOf'] = [inner, {'type': 'string', 'maxLength': 0}]
+            schema['oneOf'] = [inner, {'type': 'string', 'maxLength': 0}]
 
     def _map_response_type_hint(self, method):
         hint = get_override(method, 'field') or get_type_hints(method).get('return')
