@@ -3622,3 +3622,33 @@ def test_extend_schema_field_with_multiple_types_and_description_with_oas_3_1(no
         'required': ['name1', 'name2'],
         'type': 'object'
     }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_exasdasdrite(no_warnings):
+    class XSerializer(serializers.Serializer):
+        f1 = serializers.EmailField(max_length=254)
+        f2 = serializers.EmailField(allow_blank=True, max_length=254, required=False)
+        f3 = serializers.EmailField(allow_blank=True, allow_null=True, max_length=254, required=False)
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['components']['schemas']['X']["properties"] == {
+        'f1': {'format': 'email', 'maxLength': 254, 'type': 'string'},
+        'f2': {
+            'oneOf': [
+                {'format': 'email', 'maxLength': 254, 'type': 'string'},
+                {'maxLength': 0, 'type': 'string'}
+            ]
+        },
+        'f3': {
+            'oneOf': [
+                {'format': 'email', 'maxLength': 254, 'type': ['string', 'null']},
+                {'maxLength': 0, 'type': 'string'},
+            ]
+        }
+    }
