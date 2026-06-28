@@ -110,6 +110,10 @@ def test_serializer_reverse_relations_including_read_only(no_warnings):
         id = models.FloatField(primary_key=True)
         field = models.ForeignKey(M5, on_delete=models.CASCADE)
 
+    class M5ForeignRelatedField(serializers.PrimaryKeyRelatedField):
+        def get_queryset(self):
+            return M5Foreign.objects.all()
+
     class XSerializer(serializers.ModelSerializer):
         m5foreign_set_explicit = serializers.PrimaryKeyRelatedField(
             many=True, source='m5foreign_set', queryset=M5Foreign.objects.all()
@@ -127,11 +131,16 @@ def test_serializer_reverse_relations_including_read_only(no_warnings):
             source='m5one', read_only=True,
         )
 
+        m5foreign_set_explicit_subclass = M5ForeignRelatedField(
+            many=True, source='m5foreign_set',
+        )
+
         class Meta:
             model = M5
             fields = [
                 'm5many_set',
                 'm5many_set_explicit',
+                'm5foreign_set_explicit_subclass',
                 'm5many_set_ro',
                 'm5foreign_set',
                 'm5foreign_set_explicit',
@@ -156,6 +165,7 @@ def test_serializer_reverse_relations_including_read_only(no_warnings):
     assert properties['m5foreign_set']['items'] == m5foreign_pk
     assert properties['m5foreign_set_ro']['items'] == m5foreign_pk
     assert properties['m5foreign_set_explicit']['items'] == m5foreign_pk
+    assert properties['m5foreign_set_explicit_subclass']['items'] == m5foreign_pk
 
     assert properties['m5one'] == {'type': 'string'}
     assert properties['m5one_ro'] == {'readOnly': True, 'type': 'string'}

@@ -9,6 +9,8 @@ import uritemplate
 from django.core import exceptions as django_exceptions
 from django.core import validators
 from django.db import models
+from django.db.models import Manager
+from django.db.models.query import QuerySet
 from django.utils.formats import get_format
 from django.utils.translation import gettext_lazy as _
 from rest_framework import permissions, renderers, serializers
@@ -737,6 +739,13 @@ class AutoSchema(ViewInspector):
                     model_field = follow_field_source(model, source, default=models.TextField())
                 else:
                     model_field = field.queryset.model._meta.pk
+            elif (queryset := field.get_queryset()) is not None and isinstance(queryset, (QuerySet, Manager)):
+                if is_slug:
+                    model = queryset.model
+                    source = [field.slug_field]
+                    model_field = follow_field_source(model, source, default=models.TextField())
+                else:
+                    model_field = queryset.model._meta.pk
             else:
                 if isinstance(field.parent, serializers.ManyRelatedField):
                     model = field.parent.parent.Meta.model
