@@ -560,6 +560,10 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
                 schema = {'oneOf': [schema, {'type': 'null'}]}
             elif 'oneOf' in schema:
                 schema['oneOf'].append({'type': 'null'})
+            elif 'anyOf' in schema:
+                schema['anyOf'].append({'type': 'null'})
+            elif 'allOf' in schema:
+                schema['oneOf'] = [{'allOf': schema.pop('allOf')}, {'type': 'null'}]
             elif not schema:
                 schema = {'oneOf': [{}, {'type': 'null'}]}
             else:
