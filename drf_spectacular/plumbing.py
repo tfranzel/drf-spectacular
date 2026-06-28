@@ -543,12 +543,12 @@ def safe_ref(schema: _SchemaType) -> _SchemaType:
 
 
 def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
-    if spectacular_settings.OAS_VERSION.startswith('3.1'):
+    if is_jsonschema_compliant():
         schema = schema.copy()
         meta = meta.copy()
 
-        schema_nullable = meta.pop('nullable', None)
-        meta_nullable = schema.pop('nullable', None)
+        schema_nullable = schema.pop('nullable', None)
+        meta_nullable = meta.pop('nullable', None)
 
         if schema_nullable or meta_nullable:
             if 'type' in schema:
@@ -558,8 +558,12 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
                     schema['type'] = [*schema['type'], 'null']
             elif '$ref' in schema:
                 schema = {'oneOf': [schema, {'type': 'null'}]}
-            elif len(schema) == 1 and 'oneOf' in schema:
+            elif 'oneOf' in schema:
                 schema['oneOf'].append({'type': 'null'})
+            elif 'anyOf' in schema:
+                schema['anyOf'].append({'type': 'null'})
+            elif 'allOf' in schema:
+                schema['oneOf'] = [{'allOf': schema.pop('allOf')}, {'type': 'null'}]
             elif not schema:
                 schema = {'oneOf': [{}, {'type': 'null'}]}
             else:
@@ -1528,6 +1532,10 @@ def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry
             )
             operation = {}
 
+            operation_id = mocked_view.schema.get_operation_id()
+            if operation_id != api_settings.DEFAULT_SCHEMA_CLASS.get_operation_id(mocked_view.schema):  # type: ignore
+                operation['operationId'] = operation_id
+
             description = mocked_view.schema.get_description()
             if description:
                 operation['description'] = description
@@ -1559,3 +1567,10 @@ def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry
         result[webhook.name] = path_items
 
     return result
+
+
+def is_jsonschema_compliant():
+    return (
+        spectacular_settings.OAS_VERSION.startswith('3.1')
+        or spectacular_settings.OAS_VERSION.startswith('3.2')
+    )

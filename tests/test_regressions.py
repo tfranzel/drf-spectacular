@@ -12,7 +12,7 @@ import pytest
 from django import __version__ as DJANGO_VERSION
 from django.core import validators
 from django.db import models
-from django.db.models import fields
+from django.db.models import F, fields
 from django.urls import path, re_path, register_converter
 from django.urls.converters import StringConverter
 from rest_framework import (
@@ -3545,3 +3545,80 @@ def test_extend_schema_serializer_description_overwrite(no_warnings):
 
     schema = generate_schema('/x/', view_function=view_func)
     assert schema['components']['schemas']['X']['description'] == "user-facing doc"
+
+
+@pytest.mark.skipif(DJANGO_VERSION < '5', reason='GeneratedField introduced in 5')
+def test_generated_field(no_warnings):
+    class M17(models.Model):
+        side = models.FloatField()
+        area = models.GeneratedField(
+            expression=F("side") * F("side"),
+            output_field=models.BigIntegerField(),
+            db_persist=True,
+        )
+        area_decimal = models.GeneratedField(
+            expression=F("side") * F("side"),
+            output_field=models.DecimalField(max_digits=15, decimal_places=2),
+            db_persist=True,
+        )
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = M17
+            fields = '__all__'
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+
+    schema = generate_schema('m3', XViewset)
+
+    assert schema['components']['schemas']['X']["properties"] == {
+        'id': {'readOnly': True, 'type': 'integer'},
+        'area': {'readOnly': True, 'type': 'integer'},
+        'area_decimal': {
+            'format': 'decimal', 'pattern': '^-?\\d{0,13}(?:\\.\\d{0,2})?$', 'readOnly': True, 'type': 'string',
+        },
+        'side': {'format': 'double', 'type': 'number'},
+    }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_extend_schema_field_with_multiple_types_and_description_with_oas_3_1(no_warnings):
+    class XSerializer(serializers.Serializer):
+        name1 = serializers.SerializerMethodField(allow_null=True)
+        name2 = serializers.SerializerMethodField()
+
+        # needs 2 types + description to trigger throwing corner-case
+        def get_name1(self) -> typing.Union[str, int]:
+            """some description 1"""
+            return 0  # pragma: no cover
+
+        # basic variation for good measure
+        def get_name2(self) -> typing.Union[str, int, None]:
+            """some description 2"""
+            return 0  # pragma: no cover
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+
+    assert schema['components']['schemas']['X'] == {
+        'properties': {
+            'name1': {
+                'description': 'some description 1',
+                'oneOf': [{'type': 'string'}, {'type': 'integer'}, {'type': 'null'}],
+                'readOnly': True
+            },
+            'name2': {
+                'description': 'some description 2',
+                'oneOf': [{'type': 'string'}, {'type': 'integer'}, {'type': 'null'}],
+                'readOnly': True
+            },
+        },
+        'required': ['name1', 'name2'],
+        'type': 'object'
+    }
