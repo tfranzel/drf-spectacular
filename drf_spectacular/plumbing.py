@@ -474,7 +474,7 @@ def build_bearer_security_scheme_object(
     header_name: str,
     token_prefix: str,
     bearer_format: Optional[str] = None
-) -> dict[str, str]:
+) -> Dict[str, str]:
     """ Either build a bearer scheme or a fallback due to OpenAPI 3.0.3 limitations """
     # normalize Django header quirks
     if header_name.startswith('HTTP_'):
