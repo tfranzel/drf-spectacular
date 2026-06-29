@@ -1,2 +1,2 @@
-Django==5.2.7
-djangorestframework==3.16.1
+Django==5.2.15
+djangorestframework==3.17.1
