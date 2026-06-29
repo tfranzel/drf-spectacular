@@ -473,7 +473,7 @@ def build_choice_description_list(choices) -> str:
 def build_bearer_security_scheme_object(
     header_name: str,
     token_prefix: str,
-    bearer_format: str | None = None
+    bearer_format: Optional[str] = None
 ) -> dict[str, str]:
     """ Either build a bearer scheme or a fallback due to OpenAPI 3.0.3 limitations """
     # normalize Django header quirks
