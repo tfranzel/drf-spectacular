@@ -62,7 +62,7 @@ Provided by `T. Franzel <https://github.com/tfranzel>`_. `Licensed under 3-Claus
 Requirements
 ------------
 
--  Python >= 3.7
+-  Python >= 3.8
 -  Django (3.2, 4.0, 4.1, 4.2, 5.0, 5.1, 5.2, 6.0)
 -  Django REST Framework (3.12, 3.13, 3.14, 3.15, 3.16, 3.17)
 

@@ -3625,7 +3625,7 @@ def test_extend_schema_field_with_multiple_types_and_description_with_oas_3_1(no
 
 
 @mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
-def test_exasdasdrite(no_warnings):
+def test_blank_handling_for_constraint_serializer_charfields(no_warnings):
     class XSerializer(serializers.Serializer):
         f1 = serializers.EmailField(max_length=254)
         f2 = serializers.EmailField(allow_blank=True, max_length=254, required=False)
