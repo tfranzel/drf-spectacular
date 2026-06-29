@@ -797,6 +797,46 @@ def test_file_field_duality_on_split_request(no_warnings):
     assert schema['components']['schemas']['XRequest']['properties']['file']['format'] == 'binary'
 
 
+def test_file_field_blank_is_nullable_in_response(no_warnings):
+    class M1493(models.Model):
+        document = models.FileField(blank=True)
+        required_doc = models.FileField()
+
+    class M1493Serializer(serializers.ModelSerializer):
+        class Meta:
+            model = M1493
+            fields = ['document', 'required_doc']
+
+    class M1493View(generics.RetrieveAPIView):
+        serializer_class = M1493Serializer
+        queryset = M1493.objects.none()
+
+    schema = generate_schema('/x', view=M1493View)
+    props = schema['components']['schemas']['M1493']['properties']
+    # FileField(blank=True) returns None from to_representation for empty values
+    assert props['document'] == {'type': 'string', 'format': 'uri', 'nullable': True}
+    # required FileField stays non-nullable
+    assert props['required_doc'] == {'type': 'string', 'format': 'uri'}
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_file_field_blank_nullable_only_in_response_on_split_request(no_warnings):
+    class XSerializer(serializers.Serializer):
+        file = serializers.FileField(required=False)
+
+    class XView(generics.ListCreateAPIView):
+        serializer_class = XSerializer
+        parser_classes = [parsers.MultiPartParser]
+
+    schema = generate_schema('/x', view=XView)
+    response_file = schema['components']['schemas']['X']['properties']['file']
+    request_file = schema['components']['schemas']['XRequest']['properties']['file']
+    # response can be null because DRF's FileField returns None for empty values
+    assert response_file.get('nullable') is True
+    # request side should not be marked nullable (allow_null is False)
+    assert 'nullable' not in request_file
+
+
 @mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
 def test_component_split_nested_ro_wo_serializer(no_warnings):
     class RoSerializer(serializers.Serializer):

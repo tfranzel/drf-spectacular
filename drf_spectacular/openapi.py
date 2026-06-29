@@ -1028,6 +1028,14 @@ class AutoSchema(ViewInspector):
         if field.allow_null:
             # this will be converted later in case of OAS 3.1
             meta['nullable'] = True
+        elif (
+            isinstance(field, serializers.FileField)
+            and direction == 'response'
+            and not field.required
+        ):
+            # FileField.to_representation returns None for empty values regardless of
+            # allow_null, so blank=True / required=False model fields produce null responses.
+            meta['nullable'] = True
         if isinstance(field, serializers.CharField) and not field.allow_blank:
             # blank check only applies to inbound requests
             if spectacular_settings.COMPONENT_SPLIT_REQUEST:
