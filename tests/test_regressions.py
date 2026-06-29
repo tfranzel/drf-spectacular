@@ -3652,3 +3652,14 @@ def test_blank_handling_for_constraint_serializer_charfields(no_warnings):
             ]
         }
     }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.2.0')
+def test_openapi_version_3_2_0(no_warnings):
+
+    class XViewSet(viewsets.ModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    schema = generate_schema('x', XViewSet)
+    assert schema["openapi"] == "3.2.0"

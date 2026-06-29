@@ -21,6 +21,8 @@ def validate_schema(api_schema):
         schema_spec_path = os.path.join(os.path.dirname(__file__), 'openapi_3_0_schema.json')
     elif api_schema['openapi'].startswith("3.1"):
         schema_spec_path = os.path.join(os.path.dirname(__file__), 'openapi_3_1_schema.json')
+    elif api_schema['openapi'].startswith("3.2"):
+        schema_spec_path = os.path.join(os.path.dirname(__file__), 'openapi_3_2_schema.json')
     else:
         raise RuntimeError('No validation specification available')  # pragma: no cover
 
