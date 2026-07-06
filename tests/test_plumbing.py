@@ -434,6 +434,18 @@ def test_choicefield_empty_choices():
     assert schema['type'] == 'string'
 
 
+@mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_GENERATE_X_ENUM_DESCRIPTIONS', True)
+def test_choicefield_x_enumdescriptions():
+    schema = build_choice_field(serializers.ChoiceField(
+        [('bluepill', 'Blue Pill'), ('redpill', 'Red Pill')],
+        allow_null=True, allow_blank=True
+    ))
+    assert schema['x-enumDescriptions'] == {
+        'bluepill': 'Blue Pill',
+        'redpill': 'Red Pill',
+    }
+
+
 def test_safe_ref():
     schema = build_basic_type(str)
     schema['$ref'] = '#/components/schemas/Foo'
