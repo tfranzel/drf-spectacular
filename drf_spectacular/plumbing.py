@@ -838,15 +838,15 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
     priority = 0
     optional = False
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         cls._registry.append(cls)
 
-    def __init__(self, target):
+    def __init__(self, target: Any) -> None:
         self.target = target
 
     @classmethod
-    def _load_class(cls):
+    def _load_class(cls) -> None:
         try:
             cls.target_class = import_string(cls.target_class)
         except ImportError:
