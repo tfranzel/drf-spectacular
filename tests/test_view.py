@@ -13,8 +13,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.validation import validate_schema
 from drf_spectacular.views import (
-    SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerOauthRedirectView,
-    SpectacularSwaggerSplitView, SpectacularSwaggerView,
+    SpectacularAPIView, SpectacularRedocView, SpectacularScalarView,
+    SpectacularSwaggerOauthRedirectView, SpectacularSwaggerSplitView, SpectacularSwaggerView,
 )
 
 
@@ -39,6 +39,7 @@ urlpatterns_v2 = [
         name="swagger-oauth-redirect"),
     path('api/v2/schema/swagger-ui-alt/', SpectacularSwaggerSplitView.as_view(), name='swagger-alt'),
     path('api/v2/schema/redoc/', SpectacularRedocView.as_view(), name='redoc'),
+    path('api/v2/schema/scalar/', SpectacularScalarView.as_view(), name='scalar'),
 ]
 urlpatterns_v2.append(
     path('api/v2/schema/', SpectacularAPIView.as_view(urlconf=urlpatterns_v2), name='schema'),
@@ -110,7 +111,7 @@ def test_spectacular_view_accept_unknown(no_warnings):
     )
 
 
-@pytest.mark.parametrize('ui', ['redoc', 'swagger-ui'])
+@pytest.mark.parametrize('ui', ['redoc', 'swagger-ui', 'scalar'])
 @pytest.mark.urls(__name__)
 def test_spectacular_ui_view(no_warnings, ui):
     from drf_spectacular.settings import spectacular_settings
@@ -120,6 +121,9 @@ def test_spectacular_ui_view(no_warnings, ui):
     if ui == 'redoc':
         assert b'<title>Redoc</title>' in response.content
         assert spectacular_settings.REDOC_DIST.encode() in response.content
+    elif ui == 'scalar':
+        assert b'<title>Scalar</title>' in response.content
+        assert spectacular_settings.SCALAR_DIST.encode() in response.content
     else:
         assert b'<title>Swagger</title>' in response.content
         assert spectacular_settings.SWAGGER_UI_DIST.encode() in response.content
