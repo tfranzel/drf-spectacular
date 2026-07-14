@@ -72,6 +72,34 @@ def test_nullable_enum_resolution(no_warnings):
 
 
 @mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_nullable_enum_with_explicit_null_choice(no_warnings):
+    class XSerializer(serializers.Serializer):
+        status = serializers.ChoiceField(
+            choices=[(None, 'Unknown'), ('active', 'Active')],
+            allow_null=True,
+        )
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    schema = generate_schema('x', view=XAPIView)
+
+    assert schema['components']['schemas']['StatusEnum'] == {
+        'description': '* `None` - Unknown\n* `active` - Active',
+        'enum': ['active'],
+        'type': 'string',
+    }
+    assert schema['components']['schemas']['X']['properties']['status'] == {
+        'oneOf': [
+            {'$ref': '#/components/schemas/StatusEnum'},
+            {'$ref': '#/components/schemas/NullEnum'},
+        ]
+    }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
 def test_validator_addition_for_oas31(no_warnings):
 
     class XSerializer(serializers.Serializer):
