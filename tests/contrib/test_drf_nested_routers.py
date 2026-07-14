@@ -88,8 +88,4 @@ def test_drf_nested_routers_basic_example_variation(no_warnings):
     assert_schema(
         _generate_nested_routers_schema(RootViewSet, ChildViewSet),
         'tests/contrib/test_drf_nested_routers.yml',
-        reverse_transforms=[
-            lambda x: x.replace('format: uuid', 'pattern: ^[0-9]+$'),
-            lambda x: x.replace('\n        description: A UUID string identifying this root.', '')
-        ]
     )
