@@ -407,7 +407,7 @@ def test_choicefield_choices_enum():
         choices=['bluepill', 'redpill', '', None], allow_null=True, allow_blank=True
     ))
     assert schema['enum'] == ['bluepill', 'redpill', '', None]
-    assert 'type' not in schema
+    assert schema['type'] == 'string'
 
     schema = build_choice_field(serializers.ChoiceField(
         choices=[1, 2], allow_blank=True

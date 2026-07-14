@@ -428,16 +428,17 @@ def build_choice_field(field) -> _SchemaType:
     if field.allow_blank and '' not in choices:
         choices.append('')
 
-    if not choices:
+    type_choices = [choice for choice in choices if choice is not None]
+    if not type_choices:
         type = None
-    elif all(isinstance(choice, bool) for choice in choices):
+    elif all(isinstance(choice, bool) for choice in type_choices):
         type = 'boolean'
-    elif all(isinstance(choice, int) for choice in choices):
+    elif all(isinstance(choice, int) for choice in type_choices):
         type = 'integer'
-    elif all(isinstance(choice, (int, float, Decimal)) for choice in choices):  # `number` includes `integer`
+    elif all(isinstance(choice, (int, float, Decimal)) for choice in type_choices):  # `number` includes `integer`
         # Ref: https://tools.ietf.org/html/draft-wright-json-schema-validation-00#section-5.21
         type = 'number'
-    elif all(isinstance(choice, str) for choice in choices):
+    elif all(isinstance(choice, str) for choice in type_choices):
         type = 'string'
     else:
         type = None
