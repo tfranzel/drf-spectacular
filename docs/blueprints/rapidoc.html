@@ -8,5 +8,24 @@
   </head>
   <body>
     <rapi-doc spec-url="{{ schema_url }}"></rapi-doc>
+    <script>
+      (function() {
+        var timer;
+        function applyRtlSupport() {
+          var els = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, input, textarea');
+          for (var i = 0; i < els.length; i++) {
+            if (!els[i].hasAttribute('dir')) {
+              els[i].setAttribute('dir', 'auto');
+            }
+            els[i].style.textAlign = 'justify';
+          }
+        }
+        applyRtlSupport();
+        new MutationObserver(function() {
+          clearTimeout(timer);
+          timer = setTimeout(applyRtlSupport, 100);
+        }).observe(document.body, { childList: true, subtree: true });
+      })();
+    </script>
   </body>
 </html>
