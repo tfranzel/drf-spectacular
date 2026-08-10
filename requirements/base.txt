@@ -1,4 +1,4 @@
-Django>=2.2
+Django>=5.2.16
 djangorestframework>=3.10.3
 uritemplate>=2.0.0
 PyYAML>=5.1
