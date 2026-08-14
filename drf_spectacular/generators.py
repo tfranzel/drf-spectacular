@@ -158,7 +158,12 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         action_schema = getattr(action, 'kwargs', {}).get('schema', None)
         if not action_schema:
-            # there is no method/action customized schema so we are done here.
+            # Extra-action routes copy the @action method's kwargs into
+            # initkwargs. @extend_schema stores a schema *class* there, so a
+            # mapped method that was not itself decorated leaves view.schema
+            # as that class, which fails the instance check in parse().
+            if isinstance(view.schema, type):
+                self._set_schema_to_view(view, get_class(callback.cls.schema)())
             return view
 
         # action_schema is either a class or instance. when @extend_schema is used, it
