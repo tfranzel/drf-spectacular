@@ -3703,3 +3703,39 @@ def test_openapi_version_3_2_0(no_warnings):
 
     schema = generate_schema('x', XViewSet)
     assert schema["openapi"] == "3.2.0"
+
+
+def test_extend_schema_on_action_with_undecorated_mapping(no_warnings):
+    # https://github.com/tfranzel/drf-spectacular/issues/1373
+    # @extend_schema on @action plus an undecorated @action.mapping.* method
+    # used to leave view.schema as a class and crash schema generation.
+
+    class XSerializer(serializers.Serializer):
+        field = serializers.IntegerField()
+
+    class ZSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+    @extend_schema_view(
+        list=extend_schema(responses=ZSerializer),
+    )
+    class XViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.none()
+
+        @extend_schema(responses=XSerializer)
+        @action(methods=['put'], detail=False, url_path='personalization')
+        def personalization(self, request, *args, **kwargs):
+            return None  # pragma: no cover
+
+        @personalization.mapping.get
+        def get_personalization(self, request, *args, **kwargs):
+            return None  # pragma: no cover
+
+    schema = generate_schema('x', XViewset)
+    paths = schema['paths']
+    assert 'put' in paths['/x/personalization/']
+    assert 'get' in paths['/x/personalization/']
+    assert get_response_schema(paths['/x/personalization/']['put'])['$ref'].endswith('X')
+    assert get_response_schema(paths['/x/personalization/']['get'])['$ref'].endswith('X')
+
