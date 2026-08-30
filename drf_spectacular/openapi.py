@@ -1180,13 +1180,23 @@ class AutoSchema(ViewInspector):
                     update_constraint(schema, 'minProperties', max, v.limit_value)
 
         # For format-constrained string fields (e.g. EmailField) with allow_blank=True,
-        # add an empty string option.
+        # add an empty string option. Keep default/title/etc. on the outer schema so
+        # default="" is not nested inside format:email (invalid) and we do not wrap
+        # an already-blank oneOf a second time (#1517).
+        already_blank_oneof = (
+            isinstance(schema.get('oneOf'), list)
+            and {'type': 'string', 'maxLength': 0} in schema['oneOf']
+        )
         if (
             getattr(field, 'allow_blank', False)
             and schema_type == 'string'
             and ('format' in schema or 'pattern' in schema or 'minLength' in schema)
+            and not already_blank_oneof
         ):
-            outer_keys = {'readOnly', 'writeOnly', 'nullable', 'deprecated', 'description', 'title'}
+            outer_keys = {
+                'readOnly', 'writeOnly', 'nullable', 'deprecated',
+                'description', 'title', 'default',
+            }
             inner = {k: schema.pop(k) for k in list(schema) if k not in outer_keys}
             schema['oneOf'] = [inner, {'type': 'string', 'maxLength': 0}]
 

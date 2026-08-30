@@ -3694,6 +3694,37 @@ def test_blank_handling_for_constraint_serializer_charfields(no_warnings):
     }
 
 
+def test_emailfield_empty_default_does_not_nest_blank_oneof(no_warnings):
+    # Regression #1517: EmailField(allow_blank=True, default="") must keep the
+    # single #1511 blank oneOf, with default on the outer schema. Putting
+    # default="" inside format:email (or wrapping a second maxLength:0 oneOf)
+    # is rejected by openapi_spec_validator.
+    class XSerializer(serializers.Serializer):
+        email = serializers.EmailField(
+            allow_blank=True, default='', max_length=254, required=False, label='E-mail'
+        )
+        email_no_default = serializers.EmailField(allow_blank=True, max_length=254, required=False)
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    props = schema['components']['schemas']['X']['properties']
+
+    blank = {'type': 'string', 'maxLength': 0}
+    email_inner = {'type': 'string', 'format': 'email', 'maxLength': 254}
+
+    assert props['email_no_default'] == {'oneOf': [email_inner, blank]}
+
+    email = props['email']
+    assert all('oneOf' not in branch for branch in email['oneOf'])
+    assert email['oneOf'] == [email_inner, blank]
+    assert email.get('default') == ''
+    assert not any(branch.get('default') == '' for branch in email['oneOf'])
+
+
 @mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.2.0')
 def test_openapi_version_3_2_0(no_warnings):
 
