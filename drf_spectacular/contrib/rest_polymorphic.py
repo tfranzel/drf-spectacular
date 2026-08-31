@@ -79,3 +79,9 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
         )
         auto_schema.registry.register_on_missing(component_typed)
         return component_typed
+
+
+class DjangoPolymorphicSerializerExtension(PolymorphicSerializerExtension):
+    # As of django-polymorphic 4.10.0, the rest_polymorphic package functionality
+    # is included in the core django-polymorphic package under this namespace.
+    target_class = 'polymorphic.contrib.drf.serializers.PolymorphicSerializer'

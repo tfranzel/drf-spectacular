@@ -48,6 +48,12 @@ class OpenApiTypes(enum.Enum):
     INT32 = enum.auto()
     #: Converted to ``{"type": "integer", "format": "int64"}``.
     INT64 = enum.auto()
+    #: Converted to ``{"type": "integer", "format": "uint16"}``.
+    UINT16 = enum.auto()
+    #: Converted to ``{"type": "integer", "format": "uint32"}``.
+    UINT32 = enum.auto()
+    #: Converted to ``{"type": "integer", "format": "uint64"}``.
+    UINT64 = enum.auto()
     #: Converted to ``{"type": "string", "format": "uuid"}``.
     #: Equivalent to :py:class:`~uuid.UUID`.
     UUID = enum.auto()
@@ -123,6 +129,9 @@ OPENAPI_TYPE_MAPPING = {
     OpenApiTypes.INT: {'type': 'integer'},
     OpenApiTypes.INT32: {'type': 'integer', 'format': 'int32'},
     OpenApiTypes.INT64: {'type': 'integer', 'format': 'int64'},
+    OpenApiTypes.UINT16: {'type': 'integer', 'format': 'uint16'},
+    OpenApiTypes.UINT32: {'type': 'integer', 'format': 'uint32'},
+    OpenApiTypes.UINT64: {'type': 'integer', 'format': 'uint64'},
     OpenApiTypes.UUID: {'type': 'string', 'format': 'uuid'},
     OpenApiTypes.URI: {'type': 'string', 'format': 'uri'},
     OpenApiTypes.URI_REF: {'type': 'string', 'format': 'uri-reference'},

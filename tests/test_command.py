@@ -1,10 +1,11 @@
+import io
 import tempfile
 from unittest import mock
 
 import pytest
 import yaml
 from django.core import management
-from django.core.management import CommandError
+from django.core.management import CommandError, load_command_class
 from django.core.management.base import SystemCheckError
 from django.urls import path
 from rest_framework.decorators import api_view
@@ -88,3 +89,41 @@ def test_command_check_fail(capsys):
     stdout = capsys.readouterr().err
     assert 'System check identified some issues' in stdout
     assert 'drf_spectacular.W002' in stdout
+
+
+def test_command_help_text():
+    """Regression test for #1175: every spectacular-specific flag must carry a
+    `help=` description so that `./manage.py spectacular --help` is
+    self-documenting and does not need to send users back to the source.
+    """
+    cmd = load_command_class('drf_spectacular', 'spectacular')
+    parser = cmd.create_parser('manage.py', 'spectacular')
+    # collect actions defined by the spectacular command (skip stock Django actions)
+    spectacular_flags = {
+        '--format', '--urlconf', '--generator-class', '--file', '--fail-on-warn',
+        '--validate', '--api-version', '--lang', '--color', '--custom-settings',
+    }
+    actions_by_flag = {
+        opt_str: action
+        for action in parser._actions
+        for opt_str in action.option_strings
+        if opt_str in spectacular_flags
+    }
+    # all spectacular flags should be present and carry help text
+    assert spectacular_flags <= set(actions_by_flag), (
+        f"missing flags: {spectacular_flags - set(actions_by_flag)}"
+    )
+    missing_help = [
+        flag for flag, action in actions_by_flag.items() if not (action.help or '').strip()
+    ]
+    assert not missing_help, (
+        f"spectacular flags without help text: {missing_help}"
+    )
+    # also verify it surfaces in --help output
+    buf = io.StringIO()
+    parser.print_help(buf)
+    help_text = buf.getvalue()
+    for flag in spectacular_flags:
+        # the help text follows the flag on the same or next line, so just
+        # ensure the flag still appears at least once
+        assert flag in help_text

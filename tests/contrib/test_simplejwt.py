@@ -16,6 +16,7 @@ try:
 except ImportError:
     JWTAuthentication = None  # type: ignore[misc,assignment]
     JWTTokenUserAuthentication = None  # type: ignore[misc,assignment]
+    JWTStatelessUserAuthentication = None  # type: ignore[misc,assignment]
 
 
 class XSerializer(serializers.Serializer):

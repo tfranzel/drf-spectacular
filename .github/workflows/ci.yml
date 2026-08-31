@@ -40,6 +40,9 @@ jobs:
           sudo apt-get install -y gdal-bin libsqlite3-mod-spatialite
       - name: Install tox
         run: pip install tox
+      - name: Patch pyproject.toml for Python 3.8 (setuptools issue)
+        if: matrix.setup.python-version == '3.8'
+        run: python helper/pyproject_license_patch.py
       - name: Run Tox
         run: tox --skip-missing-interpreters=false -e ${{ matrix.setup.toxenv }}
       - uses: codecov/codecov-action@v4

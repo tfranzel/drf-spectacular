@@ -157,7 +157,7 @@ Usually, you cannot easily decorate or modify ``View``, ``Serializer`` or ``Fiel
 Extensions provide a way to hook into the introspection without actually touching the library.
 
 All extensions work on the same principle. You provide a ``target_class`` (import path
-string or actual class) and then state what *drf-spectcular* should use instead of what
+string or actual class) and then state what *drf-spectacular* should use instead of what
 it would normally discover.
 
 .. important:: The extensions register themselves automatically. Just be sure that the Python
@@ -193,6 +193,17 @@ is to augment or switch out the encountered view (only for schema generation). S
 the discovered class ``class Fixed(self.target_class)`` with a ``queryset`` or
 ``serializer_class`` attribute will often solve most issues.
 
+Implement :py:meth:`view_replacement() <drf_spectacular.extensions.OpenApiViewExtension.view_replacement>`
+to return a view class that temporarily replaces the original during schema generation.
+You can either build a new class-like view or temporarily augment the existing one.
+
+**Missing queryset:** When a view's queryset is dynamic or absent at class definition time,
+introspection cannot infer the model. Provide ``Model.objects.none()`` so *drf-spectacular*
+can resolve the model without executing real queries.
+
+**Missing serializer_class:** When a view does not declare a ``serializer_class``, add it in
+the replacement so the request/response schema can be inferred:
+
 .. code-block:: python
 
     class Fix4(OpenApiViewExtension):
@@ -202,7 +213,10 @@ the discovered class ``class Fixed(self.target_class)`` with a ``queryset`` or
             from oscar.apps.address.models import UserAddress
 
             class Fixed(self.target_class):
+                # Example 1: missing or dynamic information
                 queryset = UserAddress.objects.none()
+                # Example 2: another example for a common issue
+                serializer_class = AvailabilitySerializer
             return Fixed
 
 Specify authentication with :py:class:`OpenApiAuthenticationExtension <drf_spectacular.extensions.OpenApiAuthenticationExtension>`
@@ -233,9 +247,19 @@ Declare field output with :py:class:`OpenApiSerializerFieldExtension <drf_specta
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is mainly targeted to custom ``SerializerField``'s that are within library code. This extension
-is functionally equivalent to :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>`
+is functionally equivalent to using the decorator :py:func:`@extend_schema_field <drf_spectacular.utils.extend_schema_field>`,
+but provides more flexibility when dealing with complex or dynamic situations.
+
+For example use ``drf_spectacular.plumbing.build_basic_type`` to convert a Python type
+or :py:class:`OpenApiTypes <drf_spectacular.types.OpenApiTypes>` value into an OpenAPI schema dict
+(e.g. ``{'type': 'string'}``). Related helpers ``drf_spectacular.plumbing.build_array_type>``
+and ``drf_spectacular.plumbing.build_object_type`` are available for arrays and objects.
+
 
 .. code-block:: python
+
+    from drf_spectacular.plumbing import build_basic_type
+    from drf_spectacular.types import OpenApiTypes
 
     class CategoryFieldFix(OpenApiSerializerFieldExtension):
         target_class = 'oscarapi.serializers.fields.CategoryField'
@@ -273,10 +297,33 @@ more thing you can do. Postprocessing hooks run at the very end of schema genera
 the choice ``Enum`` are consolidated into component objects. You can register hooks with the
 ``POSTPROCESSING_HOOKS`` setting.
 
+Each hook receives the full `OpenAPI root object <https://spec.openapis.org/oas/v3.0.3#openapi-object>`_ and must return the (possibly modified) schema.
+The ``result`` dict has the standard OpenAPI 3 structure: ``openapi``, ``info``, ``paths``,
+``components`` (schemas, parameters, etc.), and optionally ``webhooks``, ``servers``, ``tags``.
+Modify ``result`` in place or return a new dict.
+
 .. code-block:: python
 
-    def custom_postprocessing_hook(result, generator, request, public):
-        # your modifications to the schema in parameter result
+    from typing import Any, Dict, Optional
+
+    def custom_postprocessing_hook(
+        result: Dict[str, Any],
+        generator: "SchemaGenerator",
+        request: Optional["HttpRequest"],
+        public: bool,
+    ) -> Dict[str, Any]:
+        """
+        result: the OpenAPI root object, e.g.:
+        {
+            "openapi": "3.0.3",
+            "info": {"title": "API", "version": "1.0.0"},
+            "paths": {},
+            "components": {"schemas": {}, "parameters": {}, "responses": {}},
+        }
+        generator: the SchemaGenerator instance (access registry, etc.)
+        request: the HTTP request that triggered schema generation, or None
+        public: True when generating a public schema (excludes internal endpoints)
+        """
         return result
 
 .. note:: Please note that setting ``POSTPROCESSING_HOOKS`` will override the default. If you intend to

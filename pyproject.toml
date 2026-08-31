@@ -3,7 +3,7 @@ name = "drf-spectacular"
 dynamic = ["version"]
 description = "Sane and flexible OpenAPI 3 schema generation for Django REST framework"
 readme = "README.rst"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = "BSD-3-Clause"
 authors = [
     {name = "T. Franzel", email = "tfranzel@gmail.com"}
@@ -21,6 +21,7 @@ classifiers = [
     "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.1",
     "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Natural Language :: English",
@@ -72,5 +73,5 @@ drf_spectacular = [
 ]
 
 [build-system]
-requires = ["setuptools>=75.3.2", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"

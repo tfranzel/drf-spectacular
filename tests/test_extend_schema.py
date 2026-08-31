@@ -280,6 +280,54 @@ def test_extend_schema_field_with_schema_as_oas_3_1(no_warnings):
     }
 
 
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_extend_schema_field_with_allOf_anyOf_schema_as_oas_3_1(no_warnings):
+    @extend_schema_field({'anyOf': [{'type': 'integer'}, {'type': 'string'}]})
+    class CustomField1(serializers.CharField):
+        pass
+
+    @extend_schema_field({
+        'allOf': [
+            {'type': 'object', 'properties': {'a': {'type': 'string'}}, 'required': ['a']},
+            {'type': 'object', 'properties': {'b': {'type': 'int'}}, 'required': ['b']},
+        ]
+    })
+    class CustomField2(serializers.CharField):
+        pass
+
+    class XSerializer(serializers.Serializer):
+        field1 = CustomField1(read_only=True, allow_null=True, help_text='info1')
+        field2 = CustomField2(read_only=True, allow_null=True, help_text='info2')
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+
+    assert schema['components']['schemas']['X']['properties'] == {
+        'field1': {
+            'anyOf': [{'type': 'integer'}, {'type': 'string'}, {'type': 'null'}],
+            'description': 'info1',
+            'readOnly': True
+        },
+        'field2': {
+            'description': 'info2',
+            'oneOf': [
+                {
+                    'allOf': [
+                        {'properties': {'a': {'type': 'string'}}, 'required': ['a'], 'type': 'object'},
+                        {'properties': {'b': {'type': 'int'}}, 'required': ['b'], 'type': 'object'}
+                    ]
+                },
+                {'type': 'null'}
+            ],
+            'readOnly': True
+        },
+    }
+
+
 def test_layered_extend_schema_on_view_and_method_with_meta(no_warnings):
     class XSerializer(serializers.Serializer):
         field = serializers.IntegerField()

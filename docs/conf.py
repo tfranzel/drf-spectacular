@@ -74,6 +74,8 @@ nitpick_ignore_regex = [
     ('py:class', r'drf_spectacular\.generators\..+'),
     ('py:class', r'drf_spectacular\.plumbing\..+'),
     ('py:class', r'drf_spectacular\.utils\.F'),
+    # Complex typing generics that Sphinx cannot resolve as py:obj references.
+    ('py:obj', r'typing\..+'),
 ]
 
 intersphinx_mapping = {

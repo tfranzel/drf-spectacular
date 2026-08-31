@@ -340,7 +340,9 @@ def test_model_setup_is_valid():
         field_file=None,
         field_img=None,  # TODO fill with data below
         field_date='2021-09-09',
-        field_datetime='2021-09-09T10:15:26.049862',
+        field_datetime=(
+            '2021-09-09T10:15:26.049862Z' if DJANGO_VERSION >= '5' else '2021-09-09T10:15:26.049862'
+        ),
         field_bigint=11111111111111,
         field_smallint=111111,
         field_posint=123,
@@ -374,6 +376,6 @@ def test_model_setup_is_valid():
         expected['field_file'] = f'http://testserver/{m.field_file.name}'
 
     if DJANGO_VERSION >= '5':
-        expected['field_datetime'] = '2021-09-09T10:15:26.049862-05:00'
+        expected['field_datetime'] = '2021-09-09T05:15:26.049862-05:00'
 
     assert_equal(json.loads(response.content), expected)

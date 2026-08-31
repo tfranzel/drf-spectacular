@@ -1,4 +1,5 @@
 # type: ignore
+import importlib
 from unittest import mock
 
 import pytest
@@ -11,13 +12,22 @@ from tests import assert_schema, generate_schema
 
 try:
     from polymorphic.models import PolymorphicModel
-    from rest_polymorphic.serializers import PolymorphicSerializer
 except ImportError:
     class PolymorphicModel(models.Model):
         pass
 
-    class PolymorphicSerializer(serializers.Serializer):
-        pass
+
+@pytest.fixture(params=[
+    'rest_polymorphic.serializers',
+    'polymorphic.contrib.drf.serializers'
+], ids=['rest_polymorphic', 'django_polymorphic_builtin'])
+def polymorphic_serializer_class(request):
+    """Fixture that yields PolymorphicSerializer from different modules."""
+    try:
+        module = importlib.import_module(request.param)
+        return module.PolymorphicSerializer
+    except ImportError:
+        pytest.skip(f"Module {request.param} not available")
 
 
 class Person(PolymorphicModel):
@@ -39,54 +49,83 @@ class NomadicPerson(Person):
     pass
 
 
-class PersonSerializer(PolymorphicSerializer):
-    model_serializer_mapping = {
-        LegalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.LegalPersonSerializer'),
-        NaturalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.NaturalPersonSerializer'),
-        NomadicPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.NomadicPersonSerializer'),
-    }
+def create_serializers(polymorphic_serializer_base):
+    """Factory function to create serializers with the given PolymorphicSerializer base class."""
 
-    def to_resource_type(self, model_or_instance):
-        # custom name for mapping the polymorphic models
-        return model_or_instance._meta.object_name.lower().replace('person', '')
+    class PersonSerializer(polymorphic_serializer_base):
+        model_serializer_mapping = {
+            LegalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.LegalPersonSerializer'),
+            NaturalPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.NaturalPersonSerializer'),
+            NomadicPerson: lazy_serializer('tests.contrib.test_rest_polymorphic.NomadicPersonSerializer'),
+        }
+
+        def to_resource_type(self, model_or_instance):
+            # custom name for mapping the polymorphic models
+            return model_or_instance._meta.object_name.lower().replace('person', '')
+
+    class LegalPersonSerializer(serializers.ModelSerializer):
+        # notice that introduces a recursion loop
+        board = PersonSerializer(many=True, read_only=True)
+
+        class Meta:
+            model = LegalPerson
+            fields = ('id', 'company_name', 'address', 'board')
+
+    class NaturalPersonSerializer(serializers.ModelSerializer):
+        # special case: PK related field pointing to a field that has 2 properties
+        #  - primary_key=True
+        #  - OneToOneField to base model (person_ptr_id)
+        supervisor_id = serializers.PrimaryKeyRelatedField(queryset=NaturalPerson.objects.all(), allow_null=True)
+
+        class Meta:
+            model = NaturalPerson
+            fields = ('id', 'first_name', 'last_name', 'address', 'supervisor_id')
+
+    class NomadicPersonSerializer(serializers.ModelSerializer):
+        # special case: all fields are read-only.
+        address = serializers.CharField(max_length=30, read_only=True)
+
+        class Meta:
+            model = NomadicPerson
+            fields = ('id', 'address')
+
+    return PersonSerializer, LegalPersonSerializer, NaturalPersonSerializer, NomadicPersonSerializer
 
 
-class LegalPersonSerializer(serializers.ModelSerializer):
-    # notice that introduces a recursion loop
-    board = PersonSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = LegalPerson
-        fields = ('id', 'company_name', 'address', 'board')
-
-
-class NaturalPersonSerializer(serializers.ModelSerializer):
-    # special case: PK related field pointing to a field that has 2 properties
-    #  - primary_key=True
-    #  - OneToOneField to base model (person_ptr_id)
-    supervisor_id = serializers.PrimaryKeyRelatedField(queryset=NaturalPerson.objects.all(), allow_null=True)
-
-    class Meta:
-        model = NaturalPerson
-        fields = ('id', 'first_name', 'last_name', 'address', 'supervisor_id')
+# Module-level serializer setup for lazy_serializer references
+# These will be updated by each test to use the correct base class
+PersonSerializer = None
+LegalPersonSerializer = None
+NaturalPersonSerializer = None
+NomadicPersonSerializer = None
 
 
-class NomadicPersonSerializer(serializers.ModelSerializer):
-    # special case: all fields are read-only.
-    address = serializers.CharField(max_length=30, read_only=True)
-
-    class Meta:
-        model = NomadicPerson
-        fields = ('id', 'address')
+def _setup_module_serializers(polymorphic_serializer_base):
+    """Set up module-level serializers for lazy_serializer references."""
+    global \
+        PersonSerializer, \
+        LegalPersonSerializer, \
+        NaturalPersonSerializer, \
+        NomadicPersonSerializer
+    (
+        PersonSerializer,
+        LegalPersonSerializer,
+        NaturalPersonSerializer,
+        NomadicPersonSerializer,
+    ) = create_serializers(polymorphic_serializer_base)
 
 
 class PersonViewSet(viewsets.ModelViewSet):
     queryset = Person.objects.all()
-    serializer_class = PersonSerializer
+
+    @property
+    def serializer_class(self):
+        return PersonSerializer
 
 
 @pytest.mark.contrib('polymorphic', 'rest_polymorphic')
-def test_rest_polymorphic(no_warnings):
+def test_rest_polymorphic(no_warnings, polymorphic_serializer_class):
+    _setup_module_serializers(polymorphic_serializer_class)
     assert_schema(
         generate_schema('persons', PersonViewSet),
         'tests/contrib/test_rest_polymorphic.yml'
@@ -95,7 +134,8 @@ def test_rest_polymorphic(no_warnings):
 
 @pytest.mark.contrib('polymorphic', 'rest_polymorphic')
 @mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
-def test_rest_polymorphic_split_request_with_ro_serializer(no_warnings):
+def test_rest_polymorphic_split_request_with_ro_serializer(no_warnings, polymorphic_serializer_class):
+    _setup_module_serializers(polymorphic_serializer_class)
     schema = generate_schema('persons', PersonViewSet)
     components = schema['components']['schemas']
     assert 'NomadicPersonRequest' not in components  # All fields were read-only.
@@ -129,7 +169,8 @@ def test_rest_polymorphic_split_request_with_ro_serializer(no_warnings):
 
 @pytest.mark.contrib('polymorphic', 'rest_polymorphic')
 @pytest.mark.django_db
-def test_model_setup_is_valid():
+def test_model_setup_is_valid(polymorphic_serializer_class):
+    _setup_module_serializers(polymorphic_serializer_class)
     peter = NaturalPerson(first_name='Peter', last_name='Parker')
     peter.save()
     may = NaturalPerson(first_name='May', last_name='Parker')

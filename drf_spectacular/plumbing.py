@@ -8,6 +8,7 @@ import sys
 import types
 import typing
 import urllib.parse
+import warnings
 from abc import ABCMeta
 from collections import OrderedDict, defaultdict
 from decimal import Decimal
@@ -231,6 +232,9 @@ def get_view_model(view, emit_warnings=True):
 
 def get_doc(obj) -> str:
     """ get doc string with fallback on obj's base classes (ignoring DRF documentation). """
+    if spectacular_settings.DISABLE_DOCSTRING_DESCRIPTIONS:
+        return ''
+
     def post_cleanup(doc: str) -> str:
         # also clean up trailing whitespace for each line
         return '\n'.join(line.rstrip() for line in doc.rstrip().split('\n'))
@@ -466,7 +470,11 @@ def build_choice_description_list(choices) -> str:
     return '\n'.join(f'* `{value}` - {label}' for value, label in choices)
 
 
-def build_bearer_security_scheme_object(header_name, token_prefix, bearer_format=None):
+def build_bearer_security_scheme_object(
+    header_name: str,
+    token_prefix: str,
+    bearer_format: Optional[str] = None
+) -> Dict[str, str]:
     """ Either build a bearer scheme or a fallback due to OpenAPI 3.0.3 limitations """
     # normalize Django header quirks
     if header_name.startswith('HTTP_'):
@@ -539,12 +547,12 @@ def safe_ref(schema: _SchemaType) -> _SchemaType:
 
 
 def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
-    if spectacular_settings.OAS_VERSION.startswith('3.1'):
+    if is_jsonschema_compliant():
         schema = schema.copy()
         meta = meta.copy()
 
-        schema_nullable = meta.pop('nullable', None)
-        meta_nullable = schema.pop('nullable', None)
+        schema_nullable = schema.pop('nullable', None)
+        meta_nullable = meta.pop('nullable', None)
 
         if schema_nullable or meta_nullable:
             if 'type' in schema:
@@ -554,8 +562,12 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
                     schema['type'] = [*schema['type'], 'null']
             elif '$ref' in schema:
                 schema = {'oneOf': [schema, {'type': 'null'}]}
-            elif len(schema) == 1 and 'oneOf' in schema:
+            elif 'oneOf' in schema:
                 schema['oneOf'].append({'type': 'null'})
+            elif 'anyOf' in schema:
+                schema['anyOf'].append({'type': 'null'})
+            elif 'allOf' in schema:
+                schema['oneOf'] = [{'allOf': schema.pop('allOf')}, {'type': 'null'}]
             elif not schema:
                 schema = {'oneOf': [{}, {'type': 'null'}]}
             else:
@@ -1337,12 +1349,14 @@ def _resolve_typeddict(hint):
 
 
 def is_higher_order_type_hint(hint) -> bool:
-    return isinstance(hint, (
-        getattr(types, 'GenericAlias', _Sentinel),
-        getattr(types, 'UnionType', _Sentinel),
-        getattr(typing, '_GenericAlias', _Sentinel),
-        getattr(typing, '_UnionGenericAlias', _Sentinel),
-    ))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return isinstance(hint, (
+            getattr(types, 'GenericAlias', _Sentinel),
+            getattr(types, 'UnionType', _Sentinel),
+            getattr(typing, '_GenericAlias', _Sentinel),
+            getattr(typing, '_UnionGenericAlias', _Sentinel),
+        ))
 
 
 def resolve_type_hint(hint):
@@ -1389,6 +1403,10 @@ def resolve_type_hint(hint):
         mixin_base_types = [t for t in hint.__mro__ if is_basic_type(t)]
         if mixin_base_types:
             schema.update(build_basic_type(mixin_base_types[0]))
+        if issubclass(hint, Choices):
+            if spectacular_settings.ENUM_GENERATE_CHOICE_DESCRIPTION:
+                schema['description'] = build_choice_description_list(hint.choices)
+            schema['x-spec-enum-id'] = list_hash([(k, v) for k, v in hint.choices if k not in ('', None)])
         return schema
     elif isinstance(hint, TYPED_DICT_META_TYPES):
         return _resolve_typeddict(hint)
@@ -1518,6 +1536,10 @@ def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry
             )
             operation = {}
 
+            operation_id = mocked_view.schema.get_operation_id()
+            if operation_id != api_settings.DEFAULT_SCHEMA_CLASS.get_operation_id(mocked_view.schema):  # type: ignore
+                operation['operationId'] = operation_id
+
             description = mocked_view.schema.get_description()
             if description:
                 operation['description'] = description
@@ -1549,3 +1571,10 @@ def process_webhooks(webhooks: List[OpenApiWebhook], registry: ComponentRegistry
         result[webhook.name] = path_items
 
     return result
+
+
+def is_jsonschema_compliant():
+    return (
+        spectacular_settings.OAS_VERSION.startswith('3.1')
+        or spectacular_settings.OAS_VERSION.startswith('3.2')
+    )

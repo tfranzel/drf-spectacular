@@ -602,6 +602,7 @@ class AutoSchema(ViewInspector):
                 field.child_relation.queryset = get_manager(model_field.related_model).none()
             return self._map_serializer_field(field, direction)
         elif field and not isinstance(field, (serializers.ReadOnlyField, serializers.ModelField)):
+            # main processing path
             return self._map_serializer_field(field, direction)
         elif isinstance(model_field, models.ForeignKey):
             return self._map_model_field(model_field.target_field, direction)
@@ -610,6 +611,20 @@ class AutoSchema(ViewInspector):
             return build_basic_type(OpenApiTypes.ANY)
         elif isinstance(model_field, models.BinaryField):
             return build_basic_type(OpenApiTypes.BYTE)
+        elif (
+            hasattr(models, 'GeneratedField')
+            and isinstance(model_field, models.GeneratedField)
+            and isinstance(model_field.output_field, models.DecimalField)
+        ):
+            # Explicitly handle that GeneratedFields lose their output field arguments in translation
+            # Decimal is not the only case, but likely accounts for the vast majority of errors.
+            return self._map_serializer_field(
+                serializers.DecimalField(
+                    max_digits=model_field.output_field.max_digits,
+                    decimal_places=model_field.output_field.decimal_places,
+                ),
+                direction
+            )
         elif hasattr(models, model_field.get_internal_type()):
             # be graceful when the model field is not explicitly mapped to a serializer
             internal_type = getattr(models, model_field.get_internal_type())
@@ -620,7 +635,17 @@ class AutoSchema(ViewInspector):
                     f'ModelSerializer. It may be a deprecated field. Defaulting to "string"'
                 )
                 return build_basic_type(OpenApiTypes.STR)
-            return self._map_serializer_field(field_cls(), direction)
+            try:
+                field = field_cls()
+            except:  # noqa
+                warn(
+                    f'Model field {model_field} was resolved to {field_cls.__name__}, which '
+                    f'failed to instantiate without arguments. Consider reporting this issue. '
+                    f'Defaulting to "string".'
+                )
+                return build_basic_type(OpenApiTypes.STR)
+
+            return self._map_serializer_field(field, direction)
         else:
             error(
                 f'could not resolve model field "{model_field}". Failed to resolve through '
@@ -641,7 +666,7 @@ class AutoSchema(ViewInspector):
             elif is_higher_order_type_hint(override):
                 schema = resolve_type_hint(override)
             elif isinstance(override, dict):
-                schema = override
+                schema = copy.deepcopy(override)
             else:
                 schema = self._map_serializer_field(force_instance(override), direction)
 
@@ -856,6 +881,12 @@ class AutoSchema(ViewInspector):
             else:
                 use_url = getattr(field, 'use_url', api_settings.UPLOADED_FILES_USE_URL)
                 content = build_basic_type(OpenApiTypes.URI if use_url else OpenApiTypes.STR)
+
+            if (not spectacular_settings.COMPONENT_SPLIT_REQUEST or direction == 'response') and not field.required:
+                # FileField.to_representation returns None for empty values regardless of
+                # allow_null, so blank=True / required=False model fields produce null responses.
+                content['nullable'] = True
+
             return append_meta(content, meta)
 
         if isinstance(field, serializers.SerializerMethodField):
@@ -1147,6 +1178,17 @@ class AutoSchema(ViewInspector):
                     update_constraint(schema, 'maxProperties', min, v.limit_value)
                 elif isinstance(v, validators.MinLengthValidator):
                     update_constraint(schema, 'minProperties', max, v.limit_value)
+
+        # For format-constrained string fields (e.g. EmailField) with allow_blank=True,
+        # add an empty string option.
+        if (
+            getattr(field, 'allow_blank', False)
+            and schema_type == 'string'
+            and ('format' in schema or 'pattern' in schema or 'minLength' in schema)
+        ):
+            outer_keys = {'readOnly', 'writeOnly', 'nullable', 'deprecated', 'description', 'title'}
+            inner = {k: schema.pop(k) for k in list(schema) if k not in outer_keys}
+            schema['oneOf'] = [inner, {'type': 'string', 'maxLength': 0}]
 
     def _map_response_type_hint(self, method):
         hint = get_override(method, 'field') or get_type_hints(method).get('return')

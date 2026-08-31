@@ -1,3 +1,4 @@
+import copy
 import inspect
 import sys
 from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar, Union
@@ -447,7 +448,7 @@ def extend_schema(
                 self.method = method.upper()
 
                 if operation is not None and is_in_scope(self):
-                    return operation
+                    return copy.deepcopy(operation)
                 return super().get_operation(path, path_regex, path_prefix, method, registry)
 
             def is_excluded(self):

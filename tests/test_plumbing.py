@@ -5,6 +5,7 @@ import sys
 import typing
 from datetime import datetime
 from enum import Enum
+from unittest import mock
 
 if sys.version_info >= (3, 8):
     from typing import TypedDict
@@ -197,7 +198,12 @@ if DJANGO_VERSION > '3':
 
     TYPE_HINT_TEST_PARAMS.append((
         LanguageChoices,
-        {'enum': ['en', 'de'], 'type': 'string'}
+        {
+            'enum': ['en', 'de'],
+            'type': 'string',
+            'description': '* `en` - En\n* `de` - De',
+            'x-spec-enum-id': '982ab9eaa2725610'
+        }
     ))
 
 TYPE_HINT_TEST_PARAMS.append((
@@ -462,3 +468,52 @@ def test_get_doc():
 
     doc = get_doc(MyClass)
     assert doc == ""
+
+
+@pytest.mark.parametrize('disable', [False, True])
+def test_get_doc_with_class_docstring(disable):
+    class MyClass:
+        """a docstring"""
+
+    with mock.patch(
+        "drf_spectacular.settings.spectacular_settings.DISABLE_DOCSTRING_DESCRIPTIONS",
+        disable,
+    ):
+        doc = get_doc(MyClass)
+        if disable:
+            assert doc == ""
+        else:
+            assert doc == "a docstring"
+
+
+@pytest.mark.parametrize('disable', [False, True])
+def test_get_doc_with_function_docstring(disable):
+    def my_func():
+        """a docstring"""
+
+    with mock.patch(
+        "drf_spectacular.settings.spectacular_settings.DISABLE_DOCSTRING_DESCRIPTIONS",
+        disable,
+    ):
+        doc = get_doc(my_func)
+        if disable:
+            assert doc == ""
+        else:
+            assert doc == "a docstring"
+
+
+@pytest.mark.parametrize('disable', [False, True])
+def test_get_doc_with_method_docstring(disable):
+    class MyClass:
+        def my_method(self):
+            """a docstring"""
+
+    with mock.patch(
+        "drf_spectacular.settings.spectacular_settings.DISABLE_DOCSTRING_DESCRIPTIONS",
+        disable,
+    ):
+        doc = get_doc(MyClass().my_method)
+        if disable:
+            assert doc == ""
+        else:
+            assert doc == "a docstring"

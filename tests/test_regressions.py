@@ -12,7 +12,7 @@ import pytest
 from django import __version__ as DJANGO_VERSION
 from django.core import validators
 from django.db import models
-from django.db.models import fields
+from django.db.models import F, fields
 from django.urls import path, re_path, register_converter
 from django.urls.converters import StringConverter
 from rest_framework import (
@@ -797,6 +797,46 @@ def test_file_field_duality_on_split_request(no_warnings):
     assert schema['components']['schemas']['XRequest']['properties']['file']['format'] == 'binary'
 
 
+def test_file_field_blank_is_nullable_in_response(no_warnings):
+    class M1493(models.Model):
+        document = models.FileField(blank=True)
+        required_doc = models.FileField()
+
+    class M1493Serializer(serializers.ModelSerializer):
+        class Meta:
+            model = M1493
+            fields = ['document', 'required_doc']
+
+    class M1493View(generics.RetrieveAPIView):
+        serializer_class = M1493Serializer
+        queryset = M1493.objects.none()
+
+    schema = generate_schema('/x', view=M1493View)
+    props = schema['components']['schemas']['M1493']['properties']
+    # FileField(blank=True) returns None from to_representation for empty values
+    assert props['document'] == {'type': 'string', 'format': 'uri', 'nullable': True}
+    # required FileField stays non-nullable
+    assert props['required_doc'] == {'type': 'string', 'format': 'uri'}
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_file_field_blank_nullable_only_in_response_on_split_request(no_warnings):
+    class XSerializer(serializers.Serializer):
+        file = serializers.FileField(required=False)
+
+    class XView(generics.ListCreateAPIView):
+        serializer_class = XSerializer
+        parser_classes = [parsers.MultiPartParser]
+
+    schema = generate_schema('/x', view=XView)
+    response_file = schema['components']['schemas']['X']['properties']['file']
+    request_file = schema['components']['schemas']['XRequest']['properties']['file']
+    # response can be null because DRF's FileField returns None for empty values
+    assert response_file.get('nullable') is True
+    # request side should not be marked nullable (allow_null is False)
+    assert 'nullable' not in request_file
+
+
 @mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
 def test_component_split_nested_ro_wo_serializer(no_warnings):
     class RoSerializer(serializers.Serializer):
@@ -962,11 +1002,11 @@ def test_schema_contains_only_allowed_methods(no_warnings):
     class XSerializer(serializers.Serializer):
         integer = serializers.IntegerField()
 
-    class X(models.Model):
+    class M16(models.Model):
         integer = models.IntegerField()
 
     class XAPIView(generics.ListCreateAPIView):
-        model = X
+        model = M16
         serializer_class = XSerializer
 
     urlpatterns = [
@@ -2574,6 +2614,46 @@ def test_description_whitespace_stripping(no_warnings):
     )
 
 
+@pytest.mark.parametrize('disable', [False, True])
+def test_disable_docstring_descriptions(no_warnings, disable):
+    class XSerializer(serializers.Serializer):
+        """serializer docstring"""
+        field = serializers.CharField()
+        field_method = serializers.SerializerMethodField()
+
+        def get_field_method(self) -> str:
+            """method field docstring"""
+            return ''  # pragma: no cover
+
+    class XViewset(viewsets.ModelViewSet):
+        """view class docstring"""
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.none()
+
+        def retrieve(self, request):
+            """action docstring"""
+            pass  # pragma: no cover
+
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.DISABLE_DOCSTRING_DESCRIPTIONS', disable
+    ):
+        schema = generate_schema('/x', XViewset)
+
+    if disable:
+        assert 'description' not in schema['paths']['/x/']['get']
+        assert 'description' not in schema['paths']['/x/{id}/']['get']
+        assert 'description' not in schema['components']['schemas']['X']
+        assert 'description' not in schema['components']['schemas']['X']['properties']['field_method']
+    else:
+        assert schema['paths']['/x/']['get']['description'] == 'view class docstring'
+        assert schema['paths']['/x/{id}/']['get']['description'] == 'action docstring'
+        assert schema['components']['schemas']['X']['description'] == 'serializer docstring'
+        assert (
+            schema['components']['schemas']['X']['properties']['field_method']['description']
+            == 'method field docstring'
+        )
+
+
 @pytest.mark.parametrize('list_variation', [
     serializers.ListField, serializers.ListSerializer
 ])
@@ -3505,3 +3585,121 @@ def test_extend_schema_serializer_description_overwrite(no_warnings):
 
     schema = generate_schema('/x/', view_function=view_func)
     assert schema['components']['schemas']['X']['description'] == "user-facing doc"
+
+
+@pytest.mark.skipif(DJANGO_VERSION < '5', reason='GeneratedField introduced in 5')
+def test_generated_field(no_warnings):
+    class M17(models.Model):
+        side = models.FloatField()
+        area = models.GeneratedField(
+            expression=F("side") * F("side"),
+            output_field=models.BigIntegerField(),
+            db_persist=True,
+        )
+        area_decimal = models.GeneratedField(
+            expression=F("side") * F("side"),
+            output_field=models.DecimalField(max_digits=15, decimal_places=2),
+            db_persist=True,
+        )
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = M17
+            fields = '__all__'
+
+    class XViewset(viewsets.ModelViewSet):
+        serializer_class = XSerializer
+        queryset = SimpleModel.objects.all()
+
+    schema = generate_schema('m3', XViewset)
+
+    assert schema['components']['schemas']['X']["properties"] == {
+        'id': {'readOnly': True, 'type': 'integer'},
+        'area': {'readOnly': True, 'type': 'integer'},
+        'area_decimal': {
+            'format': 'decimal', 'pattern': '^-?\\d{0,13}(?:\\.\\d{0,2})?$', 'readOnly': True, 'type': 'string',
+        },
+        'side': {'format': 'double', 'type': 'number'},
+    }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_extend_schema_field_with_multiple_types_and_description_with_oas_3_1(no_warnings):
+    class XSerializer(serializers.Serializer):
+        name1 = serializers.SerializerMethodField(allow_null=True)
+        name2 = serializers.SerializerMethodField()
+
+        # needs 2 types + description to trigger throwing corner-case
+        def get_name1(self) -> typing.Union[str, int]:
+            """some description 1"""
+            return 0  # pragma: no cover
+
+        # basic variation for good measure
+        def get_name2(self) -> typing.Union[str, int, None]:
+            """some description 2"""
+            return 0  # pragma: no cover
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+
+    assert schema['components']['schemas']['X'] == {
+        'properties': {
+            'name1': {
+                'description': 'some description 1',
+                'oneOf': [{'type': 'string'}, {'type': 'integer'}, {'type': 'null'}],
+                'readOnly': True
+            },
+            'name2': {
+                'description': 'some description 2',
+                'oneOf': [{'type': 'string'}, {'type': 'integer'}, {'type': 'null'}],
+                'readOnly': True
+            },
+        },
+        'required': ['name1', 'name2'],
+        'type': 'object'
+    }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_blank_handling_for_constraint_serializer_charfields(no_warnings):
+    class XSerializer(serializers.Serializer):
+        f1 = serializers.EmailField(max_length=254)
+        f2 = serializers.EmailField(allow_blank=True, max_length=254, required=False)
+        f3 = serializers.EmailField(allow_blank=True, allow_null=True, max_length=254, required=False)
+
+    @extend_schema(responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['components']['schemas']['X']["properties"] == {
+        'f1': {'format': 'email', 'maxLength': 254, 'type': 'string'},
+        'f2': {
+            'oneOf': [
+                {'format': 'email', 'maxLength': 254, 'type': 'string'},
+                {'maxLength': 0, 'type': 'string'}
+            ]
+        },
+        'f3': {
+            'oneOf': [
+                {'format': 'email', 'maxLength': 254, 'type': ['string', 'null']},
+                {'maxLength': 0, 'type': 'string'},
+            ]
+        }
+    }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.2.0')
+def test_openapi_version_3_2_0(no_warnings):
+
+    class XViewSet(viewsets.ModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+    schema = generate_schema('x', XViewSet)
+    assert schema["openapi"] == "3.2.0"

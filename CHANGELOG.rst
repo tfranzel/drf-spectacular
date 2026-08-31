@@ -1,6 +1,40 @@
 Changelog
 =========
 
+0.30.0 (2026-07-06)
+-------------------
+
+- Add OAS 3.2 schema for validation & test
+- Type hint build_bearer_security_scheme_object (`#1509 <https://github.com/tfranzel/drf-spectacular/issues/1509>`_) [johnthagen]
+- Fix formatted CharField allow_blank handling (`#1511 <https://github.com/tfranzel/drf-spectacular/issues/1511>`_, (`#1499 <https://github.com/tfranzel/drf-spectacular/issues/1499>`_)) [Luciano de la Iglesia]
+- Consider allOf anyOf with nullable on OAS3.1 `#1480 <https://github.com/tfranzel/drf-spectacular/issues/1480>`_
+- Proper handling for OAS 3.2
+- fix modification of user-provided schematas `#1500 <https://github.com/tfranzel/drf-spectacular/issues/1500>`_
+- relax contraint on oneOf null case with OAS3.1 `#1480 <https://github.com/tfranzel/drf-spectacular/issues/1480>`_
+- Add blueprint for django-rest-knox (`#1506 <https://github.com/tfranzel/drf-spectacular/issues/1506>`_) [johnthagen]
+- Mitigate GeneratedField lost arguments and special case for DecimalField `#1166 <https://github.com/tfranzel/drf-spectacular/issues/1166>`_
+- Webhook explicit operationId (`#1505 <https://github.com/tfranzel/drf-spectacular/issues/1505>`_)
+- change conflicting license field for 3.8 (`#1504 <https://github.com/tfranzel/drf-spectacular/issues/1504>`_)
+- Document django-rest-knox support [johnthagen]
+- add help text to spectacular management command arguments `#1175 <https://github.com/tfranzel/drf-spectacular/issues/1175>`_ [Jean-Baptiste Braun]
+- Mark FileField as nullable in response when not required `#1493 <https://github.com/tfranzel/drf-spectacular/issues/1493>`_ [mojtaba sohrabi]
+- Extend Choices hint fix with generated label description `#1486 <https://github.com/tfranzel/drf-spectacular/issues/1486>`_
+- Suppress py<=3.14 deprecation warning `#1497 <https://github.com/tfranzel/drf-spectacular/issues/1497>`_
+- Remove ancient DRF3.11 and Django2.2 due to contrib packages failing
+- feat: add support for django 6.0 and and drf 3.17 [Vjeran Grozdanic]
+- Add setting to disable docstring extraction [Phil Starkey]
+- feat: add support for polymorphic built-in drf support [Benedikt Bauer]
+- Clarifies post-processing hooks [Andy Piltser-Cowan]
+- Clarifies customizations step 5 [Andy Piltser-Cowan]
+- Fix dependency definition for Django 5.2 [Ülgen Sarıkavak]
+- Implement x-spec-enum-id for type hint Choices. [Noam Kushinsky]
+- Add Support for unsigned integers uint16, uint32 and uint64 [Nicolas Delaby]
+- Fix regression introduced in `#1450 <https://github.com/tfranzel/drf-spectacular/issues/1450>`_ (`#1469 <https://github.com/tfranzel/drf-spectacular/issues/1469>`_) [Oleg Höfling]
+
+Breaking changes / important additions:
+
+- Many small improvement, bug fixes, updates to the test suite and renovated test matrix. Some minor schema corrections are to be expected, but nothing drastic.
+
 0.29.0 (2025-11-01)
 -------------------
 

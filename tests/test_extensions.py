@@ -385,7 +385,10 @@ def test_serializer_with_dynamic_fields(no_warnings):
             'pattern': '^[\\w.@+-]+$',
             'maxLength': 150
         },
-        'email': {'type': 'string', 'format': 'email', 'title': 'Email address', 'maxLength': 254}
+        'email': {
+            'title': 'Email address',
+            'oneOf': [{'type': 'string', 'format': 'email', 'maxLength': 254}, {'type': 'string', 'maxLength': 0}]
+        }
     }
     assert schema['components']['schemas']['CompactUser']['properties'] == {
         'id': {'type': 'integer', 'readOnly': True}

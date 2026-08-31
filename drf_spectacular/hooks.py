@@ -7,7 +7,7 @@ from rest_framework.settings import api_settings
 
 from drf_spectacular.drainage import warn
 from drf_spectacular.plumbing import (
-    ResolvedComponent, list_hash, load_enum_name_overrides, safe_ref,
+    ResolvedComponent, is_jsonschema_compliant, list_hash, load_enum_name_overrides, safe_ref,
 )
 from drf_spectacular.settings import spectacular_settings
 
@@ -149,13 +149,13 @@ def postprocess_schema_enums(result, generator, **kwargs):
                 if '' in prop_enum_original_list:
                     components.append(create_enum_component(f'Blank{enum_suffix}', schema={'enum': ['']}))
                 if None in prop_enum_original_list:
-                    if spectacular_settings.OAS_VERSION.startswith('3.1'):
+                    if is_jsonschema_compliant():
                         components.append(create_enum_component(f'Null{enum_suffix}', schema={'type': 'null'}))
                     else:
                         components.append(create_enum_component(f'Null{enum_suffix}', schema={'enum': [None]}))
 
             # undo OAS 3.1 type list NULL construction as we cover this in a separate component already
-            if spectacular_settings.OAS_VERSION.startswith('3.1') and isinstance(enum_schema['type'], list):
+            if is_jsonschema_compliant() and isinstance(enum_schema['type'], list):
                 enum_schema['type'] = [t for t in enum_schema['type'] if t != 'null'][0]
 
             if len(components) == 1:

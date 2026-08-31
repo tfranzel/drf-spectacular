@@ -4,7 +4,7 @@ drf-spectacular
 
 |build-status| |codecov| |docs| |pypi-version| |pypi-dl|
 
-Sane and flexible `OpenAPI`_ (`3.0.3`_ & `3.1`_) schema generation for `Django REST framework`_.
+Sane and flexible `OpenAPI`_ (`3.0.3`_, `3.1`_ & `3.2`_) schema generation for `Django REST framework`_.
 
 This project has 3 goals:
     1. Extract as much schema information from DRF as possible.
@@ -49,6 +49,7 @@ Features
         - `djangorestframework-dataclasses <https://github.com/oxan/djangorestframework-dataclasses>`_
         - `django-rest-framework-gis <https://github.com/openwisp/django-rest-framework-gis>`_
         - `Pydantic (>=2.0) <https://github.com/pydantic/pydantic>`_
+        - `django-rest-knox <https://github.com/jazzband/django-rest-knox>`_
 
 
 For more information visit the `documentation <https://drf-spectacular.readthedocs.io/>`_.
@@ -61,9 +62,9 @@ Provided by `T. Franzel <https://github.com/tfranzel>`_. `Licensed under 3-Claus
 Requirements
 ------------
 
--  Python >= 3.7
--  Django (2.2, 3.2, 4.0, 4.1, 4.2, 5.0, 5.1, 5.2)
--  Django REST Framework (3.10.3, 3.11, 3.12, 3.13, 3.14, 3.15, 3.16)
+-  Python >= 3.8
+-  Django (3.2, 4.0, 4.1, 4.2, 5.0, 5.1, 5.2, 6.0)
+-  Django REST Framework (3.12, 3.13, 3.14, 3.15, 3.16, 3.17)
 
 Installation
 ------------
@@ -294,6 +295,7 @@ globally, and then simply run:
 .. _OpenAPI: https://swagger.io/
 .. _3.0.3: https://spec.openapis.org/oas/v3.0.3
 .. _3.1: https://spec.openapis.org/oas/v3.1.0
+.. _3.2: https://spec.openapis.org/oas/v3.2.0
 .. _tox: https://tox.wiki/
 .. _drf-spectacular-sidecar: https://github.com/tfranzel/drf-spectacular-sidecar
 
