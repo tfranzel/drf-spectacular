@@ -145,6 +145,8 @@ class SpectacularSwaggerView(APIView):
                 'script_url': None,
                 'csrf_header_name': self._get_csrf_header_name(),
                 'schema_auth_names': self._dump(self._get_schema_auth_names()),
+                # add nonce from django-csp if present
+                'csp_nonce': getattr(request, "csp_nonce", None),
             },
             template_name=self.template_name,
             headers={
