@@ -33,14 +33,24 @@ Solution for Swagger UI:
         'SWAGGER_UI_DIST': 'SIDECAR',
         'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
     }
-    CSP_DEFAULT_SRC = ("'self'", "'unsafe-inline'")
-    CSP_IMG_SRC = ("'self'", "data:")
+    CONTENT_SECURITY_POLICY = {
+        "DIRECTIVES": {
+            "default-src": [csp.constants.SELF],
+            "script-src": [csp.constants.SELF, csp.constants.NONCE],
+            "img-src": [csp.constants.SELF, "data:"],
+        }
+    }
 
     # Option: CDN
-    CSP_DEFAULT_SRC = ("'self'", "'unsafe-inline'", "cdn.jsdelivr.net")
-    CSP_IMG_SRC = ("'self'", "data:", "cdn.jsdelivr.net")
+    CONTENT_SECURITY_POLICY = {
+        "DIRECTIVES": {
+            "default-src": [csp.constants.SELF, "cdn.jsdelivr.net"],
+            "script-src": [csp.constants.SELF, csp.constants.NONCE, "cdn.jsdelivr.net"],
+            "img-src": [csp.constants.SELF, "data:", "cdn.jsdelivr.net"],
+        }
+    }
 
-.. note:: Depending on how paranoid you are, you may avoid having to use ``unsafe-inline`` by using
+.. note:: Depending on how paranoid you are, you may avoid having to use ``csp.constants.NONCE`` by using
   ``SpectacularSwaggerSplitView`` instead, which does a separate request for the script. Note however
   that some URL rewriting deployments will break it. Use this option only if you really need to.
 
@@ -55,13 +65,15 @@ Solution for Redoc:
         'REDOC_DIST': 'SIDECAR',
     }
     # Option: CDN
-    CSP_DEFAULT_SRC = ("'self'", "cdn.jsdelivr.net")
-
-    # required for both CDN and SIDECAR
-    CSP_WORKER_SRC = ("'self'", "blob:")
-    CSP_IMG_SRC = ("'self'", "data:", "cdn.redoc.ly")
-    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "fonts.googleapis.com")
-    CSP_FONT_SRC = ("'self'", "fonts.gstatic.com")
+    CONTENT_SECURITY_POLICY = {
+        "DIRECTIVES": {
+            "default-src": [csp.constants.SELF, "cdn.jsdelivr.net"],
+            # required for both CDN and SIDECAR
+            "img-src": [csp.constants.SELF, "data:", "cdn.redoc.ly"],
+            "style-src": [csp.constants.SELF, csp.constants.UNSAFE_INLINE, "fonts.googleapis.com"],
+            "font-src": [csp.constants.SELF, "fonts.gstatic.com"],
+        }
+    }
 
 I cannot use :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>` on library code
 --------------------------------------------------------------------------------------------
