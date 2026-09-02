@@ -35,7 +35,8 @@ Solution for Swagger UI:
     }
     CONTENT_SECURITY_POLICY = {
         "DIRECTIVES": {
-            "default-src": [csp.constants.SELF, csp.constants.UNSAFE_INLINE],
+            "default-src": [csp.constants.SELF],
+            "script-src": [csp.constants.SELF, csp.constants.NONCE],
             "img-src": [csp.constants.SELF, "data:"],
         }
     }
@@ -49,7 +50,7 @@ Solution for Swagger UI:
         }
     }
 
-.. note:: Depending on how paranoid you are, you may avoid having to use ``unsafe-inline`` by using
+.. note:: Depending on how paranoid you are, you may avoid having to use ``csp.constants.NONCE`` by using
   ``SpectacularSwaggerSplitView`` instead, which does a separate request for the script. Note however
   that some URL rewriting deployments will break it. Use this option only if you really need to.
 
