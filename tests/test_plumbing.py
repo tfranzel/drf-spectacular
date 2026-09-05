@@ -517,3 +517,49 @@ def test_get_doc_with_method_docstring(disable):
             assert doc == ""
         else:
             assert doc == "a docstring"
+
+
+def _schema_doc(schema, openapi='3.0.3'):
+    return {
+        'openapi': openapi,
+        'info': {'title': 't', 'version': '1.0.0'},
+        'paths': {},
+        'components': {'schemas': {'Thing': schema}},
+    }
+
+
+@pytest.mark.parametrize(['schema', 'keyword'], [
+    ({'type': 'object', 'propertyNames': {'enum': ['a']}}, 'propertyNames'),
+    ({'type': 'string', 'const': 'fixed'}, 'const'),
+    ({'type': 'array', 'prefixItems': [{'type': 'string'}]}, 'prefixItems'),
+])
+def test_validation_error_names_unsupported_json_schema_keyword(schema, keyword):
+    import jsonschema
+
+    with pytest.raises(jsonschema.exceptions.ValidationError) as exc_info:
+        validate_schema(_schema_doc(schema))
+
+    message = str(exc_info.value)
+    assert 'Hint:' in message
+    assert repr(keyword) in message
+    assert 'OpenAPI 3.0 Schema Object' in message
+
+
+def test_validation_error_hint_points_at_nested_location():
+    import jsonschema
+
+    schema = {'type': 'object', 'properties': {'x': {'type': 'string', 'const': 'v'}}}
+    with pytest.raises(jsonschema.exceptions.ValidationError) as exc_info:
+        validate_schema(_schema_doc(schema))
+
+    assert '#/components/schemas/Thing/properties/x' in str(exc_info.value)
+
+
+def test_validation_hint_ignores_field_named_like_a_keyword():
+    # A property legitimately named "const" is valid OpenAPI 3.0 and must not be
+    # mistaken for the ``const`` keyword.
+    validate_schema(_schema_doc({'type': 'object', 'properties': {'const': {'type': 'string'}}}))
+
+
+def test_validation_allows_json_schema_keywords_under_openapi_31():
+    validate_schema(_schema_doc({'type': 'string', 'const': 'fixed'}, openapi='3.1.0'))
