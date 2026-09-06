@@ -205,7 +205,7 @@ In addition, *drf-yasg* also supports `named sections`__, but these are not supp
 use the ``summary`` and ``description`` arguments of :py:func:`@extend_schema <drf_spectacular.utils.extend_schema>`
 instead:
 
-__ https://www.django-rest-framework.org/coreapi/schemas/#schemas-as-documentation
+__ https://github.com/encode/django-rest-framework/blob/3.14.0/docs/coreapi/schemas.md#schemas-as-documentation
 
 .. code-block:: python
 
