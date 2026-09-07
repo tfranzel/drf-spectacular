@@ -183,6 +183,7 @@ def get_view_method_names(view, schema=None) -> List[str]:
         item for item in dir(view) if callable(getattr(view, item, None)) and (
             item in view.http_method_names
             or item in schema.method_mapping.values()
+            or item in getattr(schema, 'async_action_mapping', {})
             or item == 'list'
             or hasattr(getattr(view, item, None), 'mapping')
         )
@@ -202,9 +203,14 @@ def isolate_view_method(view, method_name):
     if method_name in view.__dict__ and method.__name__ != 'handler':
         return method
 
-    @functools.wraps(method)
-    def wrapped_method(self, request, *args, **kwargs):
-        return method(self, request, *args, **kwargs)
+    if inspect.iscoroutinefunction(method):
+        @functools.wraps(method)
+        async def wrapped_method(self, request, *args, **kwargs):
+            return await method(self, request, *args, **kwargs)
+    else:
+        @functools.wraps(method)
+        def wrapped_method(self, request, *args, **kwargs):
+            return method(self, request, *args, **kwargs)
 
     # wraps() will only create a shallow copy of method.__dict__. Updates to "kwargs"
     # via @extend_schema would leak to the original method. Isolate by creating a copy.

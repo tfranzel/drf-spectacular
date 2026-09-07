@@ -460,6 +460,19 @@ modifies the given serializer.
         def list(self):
             pass
 
+Are async viewsets (e.g. adrf) supported?
+-----------------------------------------
+
+Async viewsets commonly name their actions with an ``a`` prefix, i.e. ``alist``, ``acreate``,
+``aretrieve``, ``aupdate``, ``partial_aupdate`` and ``adestroy``. This is the convention used by
+`adrf <https://github.com/em1208/adrf>`_. These actions are introspected exactly like their sync
+counterparts, so list detection, pagination and filter parameters, request and response bodies and
+operation ids come out the same as for a regular viewset. ``@extend_schema_view`` also accepts the
+async action names as keys.
+
+If your async actions follow a different naming scheme, extend ``AutoSchema.async_action_mapping``
+on your custom schema class.
+
 How to define a recursive ``Serializer`` field
 ----------------------------------------------
 

@@ -58,6 +58,15 @@ class AutoSchema(ViewInspector):
         'patch': 'partial_update',
         'delete': 'destroy',
     }
+    # async viewset actions (e.g. adrf) are introspected like their sync counterparts
+    async_action_mapping = {
+        'alist': 'list',
+        'acreate': 'create',
+        'aretrieve': 'retrieve',
+        'aupdate': 'update',
+        'partial_aupdate': 'partial_update',
+        'adestroy': 'destroy',
+    }
 
     def get_operation(
             self,
@@ -145,7 +154,7 @@ class AutoSchema(ViewInspector):
         if is_basic_type(serializer):
             return False
         if hasattr(self.view, 'action'):
-            return self.view.action == 'list'
+            return self._get_action() == 'list'
         # list responses are "usually" only returned by GET
         if self.method != 'GET':
             return False
@@ -162,11 +171,17 @@ class AutoSchema(ViewInspector):
     def _is_create_operation(self) -> bool:
         if self.method != 'POST':
             return False
-        if getattr(self.view, 'action', None) == 'create':
+        if self._get_action() == 'create':
             return True
         if isinstance(self.view, (ListCreateAPIView, CreateAPIView)):
             return True
         return False
+
+    def _get_action(self) -> Optional[str]:
+        action = getattr(self.view, 'action', None)
+        if action is None:
+            return None
+        return self.async_action_mapping.get(action, action)
 
     def get_override_parameters(self) -> List[Union[OpenApiParameter, _SerializerType]]:
         """ override this for custom behaviour """
