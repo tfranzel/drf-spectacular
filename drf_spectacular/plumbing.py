@@ -905,13 +905,15 @@ def deep_import_string(string: str) -> Any:
 
 
 def load_enum_name_overrides():
-    return _load_enum_name_overrides(get_language())
+    # The dict itself isn't hashable, so id() keys the cache per settings object instead.
+    return _load_enum_name_overrides(get_language(), id(spectacular_settings.ENUM_NAME_OVERRIDES))
 
 
 @functools.lru_cache()
-def _load_enum_name_overrides(language: str):
+def _load_enum_name_overrides(language: str, enum_name_overrides_id: int):
+    enum_name_overrides = spectacular_settings.ENUM_NAME_OVERRIDES
     overrides = {}
-    for name, choices in spectacular_settings.ENUM_NAME_OVERRIDES.items():
+    for name, choices in enum_name_overrides.items():
         if isinstance(choices, str):
             choices = deep_import_string(choices)
         if not choices:
@@ -944,7 +946,7 @@ def _load_enum_name_overrides(language: str):
         ]
         overrides[list_hash(hashable_values)] = name
 
-    if len(spectacular_settings.ENUM_NAME_OVERRIDES) != len(overrides):
+    if len(enum_name_overrides) != len(overrides):
         error(
             'ENUM_NAME_OVERRIDES has duplication issues. Encountered multiple names '
             'for the same choice set. Enum naming might be unexpected.'

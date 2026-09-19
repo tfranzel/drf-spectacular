@@ -157,6 +157,29 @@ def test_global_enum_naming_override_callable(no_warnings, clear_caches):
     assert len(schema['components']['schemas']) == 2
 
 
+def test_global_enum_naming_override_not_stale_across_settings_objects(no_warnings, clear_caches):
+    """
+    Regression test for #1244. load_enum_name_overrides() used to be cached only on
+    language, so loading overrides for one ENUM_NAME_OVERRIDES dict would poison the
+    cache for a *different* ENUM_NAME_OVERRIDES dict with the same language - exactly
+    what happens serving multiple schemas with per-schema custom_settings, since
+    SpectacularAPIView's custom_settings context manager doesn't clear this cache.
+    """
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
+        {'LanguageEnum': 'tests.test_postprocessing.language_choices'},
+    ):
+        overrides_a = load_enum_name_overrides()
+        assert overrides_a == {list_hash(list(language_choices)): 'LanguageEnum'}
+
+    with mock.patch(
+        'drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES',
+        {'VoteEnum': 'tests.test_postprocessing.vote_choices'},
+    ):
+        overrides_b = load_enum_name_overrides()
+        assert overrides_b == {list_hash(list(vote_choices)): 'VoteEnum'}
+
+
 @mock.patch('drf_spectacular.settings.spectacular_settings.ENUM_NAME_OVERRIDES', {
     'LanguageEnum': 'tests.test_postprocessing.blank_null_language_choices'
 })
