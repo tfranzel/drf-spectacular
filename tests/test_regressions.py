@@ -3372,8 +3372,8 @@ def test_basic_oas_3_1_nullable_cases(no_warnings, django_transforms):
     schema = generate_schema('m2', XViewset)
     assert schema['components']['schemas']['X']['properties'] == {
         'id': {'readOnly': True, 'type': 'integer'},
-        'field_json': {'oneOf': [{}, {'type': 'null'}]},
-        'field_json2': {'oneOf': [{}, {'type': 'null'}], 'description': 'field_json desc'},
+        'field_json': {},
+        'field_json2': {'description': 'field_json desc'},
         'field_method_hint': {
             'oneOf': [
                 {'type': 'integer'},

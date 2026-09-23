@@ -569,7 +569,7 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
             elif 'allOf' in schema:
                 schema['oneOf'] = [{'allOf': schema.pop('allOf')}, {'type': 'null'}]
             elif not schema:
-                schema = {'oneOf': [{}, {'type': 'null'}]}
+                schema = {}
             else:
                 assert False, 'Invalid nullable case'  # pragma: no cover
 
