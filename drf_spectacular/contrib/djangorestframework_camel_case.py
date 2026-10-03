@@ -54,7 +54,10 @@ def camelize_serializer_fields(result, generator, request, public):
         for url_schema in result["paths"].values():
             for method_schema in url_schema.values():
                 for parameter in method_schema.get("parameters", []):
-                    parameter["name"] = camelize_str(parameter["name"])
+                    # the middleware only underscoreizes query params. path params reach the
+                    # view as captured by the resolver and must match the path template.
+                    if parameter["in"] == "query":
+                        parameter["name"] = camelize_str(parameter["name"])
 
     # inplace modification of components also affect result dict, so regeneration is not necessary
     return result
