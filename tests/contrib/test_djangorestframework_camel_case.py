@@ -14,6 +14,7 @@ else:
     from typing_extensions import TypedDict
 
 from drf_spectacular.contrib.djangorestframework_camel_case import camelize_serializer_fields
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field
 from tests import assert_schema, generate_schema
 
@@ -114,6 +115,32 @@ def test_camelize_middleware(no_warnings):
     'django.conf.settings.MIDDLEWARE',
     ['djangorestframework_camel_case.middleware.CamelCaseMiddleWare'],
 )
+@mock.patch(
+    'django.conf.settings.MIDDLEWARE',
+    ['djangorestframework_camel_case.middleware.CamelCaseMiddleWare'],
+)
+@mock.patch(
+    'drf_spectacular.settings.spectacular_settings.POSTPROCESSING_HOOKS',
+    [camelize_serializer_fields]
+)
+@pytest.mark.contrib('djangorestframework_camel_case')
+def test_camelize_middleware_keeps_path_parameters(no_warnings):
+    # regression for #1537: path parameters must keep matching the path template
+
+    @extend_schema(
+        parameters=[OpenApiParameter("some_query", str, OpenApiParameter.QUERY)],
+        responses=OpenApiTypes.OBJECT,
+    )
+    @api_view(['GET'])
+    def view_func(request, book_id, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/books/<int:book_id>/', view_function=view_func)
+    operation = schema['paths']['/books/{book_id}/']['get']
+    parameters = {(p['in'], p['name']) for p in operation['parameters']}
+    assert parameters == {('path', 'book_id'), ('query', 'someQuery')}
+
+
 @mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
 @pytest.mark.contrib('djangorestframework_camel_case')
 def test_camelize_can_can_handle_tuples(no_warnings):
