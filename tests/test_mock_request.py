@@ -1,3 +1,7 @@
+import os
+import subprocess
+import sys
+
 import pytest
 import yaml
 from django.contrib.auth.models import User
@@ -102,3 +106,33 @@ def test_mock_request_symmetry_authentication(
         # offline generation as we have no request.
         assert len(schema_online['paths']) == 5
         assert len(schema_offline['paths']) == 3
+
+
+def test_importing_views_does_not_load_the_django_test_framework():
+    # APIRequestFactory is only needed while building a mock request.
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    script = (
+        "from django.conf import settings\n"
+        "settings.configure(INSTALLED_APPS=["
+        "'django.contrib.contenttypes', 'django.contrib.auth'])\n"
+        "import django\n"
+        "django.setup()\n"
+        "import sys\n"
+        "assert 'unittest' not in sys.modules\n"
+        "assert 'django.test.testcases' not in sys.modules\n"
+        "import drf_spectacular.views\n"
+        "assert 'unittest' not in sys.modules\n"
+        "assert 'django.test.testcases' not in sys.modules\n"
+        "assert 'rest_framework.test' not in sys.modules\n"
+    )
+    env = os.environ.copy()
+    env["PYTHONPATH"] = repo_root + os.pathsep + env.get("PYTHONPATH", "")
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=repo_root,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr + completed.stdout
