@@ -45,7 +45,6 @@ from rest_framework import exceptions, fields, mixins, serializers, versioning
 from rest_framework.compat import unicode_http_header
 from rest_framework.fields import empty
 from rest_framework.settings import api_settings
-from rest_framework.test import APIRequestFactory
 from rest_framework.utils.encoders import JSONEncoder
 from rest_framework.utils.mediatypes import _MediaType
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
@@ -1282,6 +1281,10 @@ def camelize_operation(path, operation):
 
 def build_mock_request(method, path, view, original_request, **kwargs):
     """ build a mocked request and use original request as reference if available """
+    # Import lazily. This module loads with the schema views, and APIRequestFactory
+    # pulls Django's test framework into every process that only imports those views.
+    from rest_framework.test import APIRequestFactory
+
     request = getattr(APIRequestFactory(), method.lower())(path=path)
     request = view.initialize_request(request)
     if original_request:
