@@ -1,5 +1,6 @@
 from unittest import mock
 
+import pytest
 from rest_framework import serializers, viewsets
 from rest_framework.views import APIView
 
@@ -88,4 +89,25 @@ def test_validator_addition_for_oas31(no_warnings):
             'field': {'maxLength': 40, 'type': ['string', 'null']}
         },
         'type': 'object'
+    }
+
+
+@pytest.mark.parametrize('oas_version', ['3.1.0', '3.2.0'])
+def test_enum_without_type(no_warnings, oas_version):
+    class XSerializer(serializers.Serializer):
+        # choices populated at runtime, so no type can be derived for the enum
+        foo = serializers.ChoiceField(choices=[])
+
+    class XAPIView(APIView):
+        @extend_schema(responses=XSerializer)
+        def get(self, request):
+            pass  # pragma: no cover
+
+    with mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', oas_version):
+        schema = generate_schema('x', view=XAPIView)
+
+    assert schema['components']['schemas']['FooEnum'] == {'enum': []}
+    assert schema['components']['schemas']['X']['properties']['foo'] == {
+        'allOf': [{'$ref': '#/components/schemas/FooEnum'}],
+        'description': '',
     }
