@@ -568,6 +568,10 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
                 schema['anyOf'].append({'type': 'null'})
             elif 'allOf' in schema:
                 schema['oneOf'] = [{'allOf': schema.pop('allOf')}, {'type': 'null'}]
+            elif 'enum' in schema:
+                # enum without type (choices of mixed or no type): null is admitted via the enum
+                if None not in schema['enum']:
+                    schema['enum'] = [*schema['enum'], None]
             elif not schema:
                 schema = {'oneOf': [{}, {'type': 'null'}]}
             else:

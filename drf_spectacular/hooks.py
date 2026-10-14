@@ -155,7 +155,7 @@ def postprocess_schema_enums(result, generator, **kwargs):
                         components.append(create_enum_component(f'Null{enum_suffix}', schema={'enum': [None]}))
 
             # undo OAS 3.1 type list NULL construction as we cover this in a separate component already
-            if is_jsonschema_compliant() and isinstance(enum_schema['type'], list):
+            if is_jsonschema_compliant() and isinstance(enum_schema.get('type'), list):
                 enum_schema['type'] = [t for t in enum_schema['type'] if t != 'null'][0]
 
             if len(components) == 1:
