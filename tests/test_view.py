@@ -126,6 +126,22 @@ def test_spectacular_ui_view(no_warnings, ui):
     assert b'"/api/v2/schema/"' in response.content
 
 
+@pytest.mark.parametrize('redoc_settings, expected', [
+    ({}, b'{}'),
+    ({'hideDownloadButton': True}, b'{\n  "hideDownloadButton": true\n}'),
+    ('{hideDownloadButton: true}', b'{hideDownloadButton: true}'),
+])
+@pytest.mark.urls(__name__)
+def test_spectacular_redoc_module_settings(no_warnings, redoc_settings, expected):
+    with mock.patch('drf_spectacular.settings.spectacular_settings.REDOC_UI_SETTINGS', redoc_settings):
+        response = APIClient().get('/api/v2/schema/redoc/?lang=en&version=v2')
+
+    assert response.status_code == 200
+    assert b'<script type="module">' in response.content
+    assert b'const redocSettings = ' + expected + b';' in response.content
+    assert b'"/api/v2/schema/?lang\\u003Den\\u0026version\\u003Dv2"' in response.content
+
+
 @pytest.mark.urls(__name__)
 def test_spectacular_swagger_ui_alternate(no_warnings):
     # first request for the html
