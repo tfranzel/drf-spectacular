@@ -16,17 +16,19 @@
   </head>
   <body>
     {% block body %}
-    {% if settings %}
     <div id="redoc-container"></div>
-    <script src="{{ redoc_standalone }}"></script>
-    <script>
-      const redocSettings = {{ settings|safe }};
-      Redoc.init("{{ schema_url }}", redocSettings, document.getElementById('redoc-container'))
+    <script type="module">
+      const Redoc = await import("{{ redoc_standalone|escapejs }}").catch(() => new Promise((resolve, reject) => {
+        // Redoc v2 bundles require a classic script and expose a global instead of module exports.
+        const script = document.createElement('script');
+        script.src = "{{ redoc_standalone|escapejs }}";
+        script.onload = () => resolve(window.Redoc);
+        script.onerror = reject;
+        document.head.appendChild(script);
+      }));
+      const redocSettings = {{ settings|default:"{}"|safe }};
+      Redoc.init("{{ schema_url|escapejs }}", redocSettings, document.getElementById('redoc-container'))
     </script>
-    {% else %}
-    <redoc spec-url="{{ schema_url }}"></redoc>
-    <script src="{{ redoc_standalone }}"></script>
-    {% endif %}
     {% endblock body %}
   </body>
 </html>
