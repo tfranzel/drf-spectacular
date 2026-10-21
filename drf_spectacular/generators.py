@@ -2,7 +2,7 @@ import posixpath
 import re
 import weakref
 
-from django.urls import URLPattern, URLResolver
+from django.urls import URLPattern, URLResolver, get_script_prefix
 from rest_framework import views, viewsets
 from rest_framework.schemas.generators import BaseSchemaGenerator
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
@@ -221,6 +221,14 @@ class SchemaGenerator(BaseSchemaGenerator):
         if not path_prefix.startswith('^'):
             path_prefix = '^' + path_prefix  # make sure regex only matches from the start
 
+        # When the application is served under a path prefix (WSGI
+        # ``SCRIPT_NAME`` or ASGI ``root_path``), Django exposes that prefix
+        # via get_script_prefix() for the duration of the request. The
+        # enumerated paths do not contain it (URL resolution strips it), so
+        # it is re-applied to the emitted paths below to make the schema
+        # reflect the URLs the API is actually served under.
+        script_prefix = get_script_prefix().rstrip('/')
+
         for path, path_regex, method, view in endpoints:
             # emit queued up warnings/error that happened prior to generation (decoration)
             for w in get_override(view, 'warnings', []):
@@ -274,6 +282,9 @@ class SchemaGenerator(BaseSchemaGenerator):
 
             if spectacular_settings.CAMELIZE_NAMES:
                 path, operation = camelize_operation(path, operation)
+
+            if script_prefix and not path.startswith(script_prefix + '/'):
+                path = script_prefix + path
 
             result.setdefault(path, {})
             result[path][method.lower()] = operation
