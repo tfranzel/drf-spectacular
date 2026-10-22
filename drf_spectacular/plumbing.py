@@ -259,6 +259,44 @@ def get_doc(obj) -> str:
     return ''
 
 
+def get_field_doc(field) -> str:
+    """Get the docstring of a custom serializer field class.
+
+    Unlike get_doc (which targets view/serializer classes), the walk
+    stops at the first class provided by rest_framework itself, so
+    docstrings of built-in DRF fields never leak into the schema,
+    while a user-defined field subclass can document itself with a
+    docstring like serializers do. Wrapper fields (many=True related
+    fields, list fields) are unwrapped to their child field first.
+    """
+    if spectacular_settings.DISABLE_DOCSTRING_DESCRIPTIONS:
+        return ''
+
+    from rest_framework import serializers
+
+    if not isinstance(field, serializers.Field):
+        # e.g. a serializer instance masquerading as a field through
+        # @extend_schema_field overrides - not a field docstring.
+        return ''
+
+    # Unwrap container fields to the field that carries the semantics.
+    for child_attr in ('child_relation', 'child'):
+        child = getattr(field, child_attr, None)
+        if child is not None:
+            field = child
+            break
+
+    lib_roots = ('rest_framework', 'drf_spectacular')
+    for cls in type(field).__mro__:
+        module = getattr(cls, '__module__', '') or ''
+        if any(module == root or module.startswith(root + '.') for root in lib_roots):
+            break
+        if cls.__doc__:
+            doc = inspect.cleandoc(cls.__doc__)
+            return '\n'.join(line.rstrip() for line in doc.rstrip().split('\n'))
+    return ''
+
+
 def get_type_hints(obj) -> Dict[str, Any]:
     """ unpack wrapped partial object and use actual func object """
     if isinstance(obj, functools.partial):
