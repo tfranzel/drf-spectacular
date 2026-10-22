@@ -35,7 +35,7 @@ from drf_spectacular.plumbing import (
     build_examples_list, build_generic_type, build_listed_example_value, build_media_type_object,
     build_mocked_view, build_object_type, build_parameter_type, build_serializer_context,
     filter_supported_arguments, follow_field_source, follow_model_field_lookup, force_instance,
-    get_doc, get_list_serializer, get_manager, get_type_hints, get_view_model, is_basic_serializer,
+    get_doc, get_field_doc, get_list_serializer, get_manager, get_type_hints, get_view_model, is_basic_serializer,
     is_basic_type, is_field, is_higher_order_type_hint, is_list_serializer,
     is_list_serializer_customized, is_patched_serializer, is_serializer,
     is_trivial_string_variation, modify_media_types_for_versioning, resolve_django_path_parameter,
@@ -1068,6 +1068,13 @@ class AutoSchema(ViewInspector):
             meta['title'] = str(field.label)
         if field.help_text:
             meta['description'] = str(field.help_text)
+        else:
+            # A custom field class may document itself with a docstring,
+            # the same way serializer classes do. Use it as the field's
+            # description when the instance carries no help_text.
+            field_doc = get_field_doc(field)
+            if field_doc:
+                meta['description'] = field_doc
         return meta
 
     def _map_basic_serializer(self, serializer, direction):
