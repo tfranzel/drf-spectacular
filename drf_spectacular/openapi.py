@@ -1188,7 +1188,7 @@ class AutoSchema(ViewInspector):
         ):
             outer_keys = {'readOnly', 'writeOnly', 'nullable', 'deprecated', 'description', 'title'}
             inner = {k: schema.pop(k) for k in list(schema) if k not in outer_keys}
-            schema['oneOf'] = [inner, {'type': 'string', 'maxLength': 0}]
+            schema['anyOf'] = [inner, {'type': 'string', 'maxLength': 0}]
 
     def _map_response_type_hint(self, method):
         hint = get_override(method, 'field') or get_type_hints(method).get('return')
