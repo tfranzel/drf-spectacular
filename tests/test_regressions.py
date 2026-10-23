@@ -3680,13 +3680,13 @@ def test_blank_handling_for_constraint_serializer_charfields(no_warnings):
     assert schema['components']['schemas']['X']["properties"] == {
         'f1': {'format': 'email', 'maxLength': 254, 'type': 'string'},
         'f2': {
-            'oneOf': [
+            'anyOf': [
                 {'format': 'email', 'maxLength': 254, 'type': 'string'},
                 {'maxLength': 0, 'type': 'string'}
             ]
         },
         'f3': {
-            'oneOf': [
+            'anyOf': [
                 {'format': 'email', 'maxLength': 254, 'type': ['string', 'null']},
                 {'maxLength': 0, 'type': 'string'},
             ]
