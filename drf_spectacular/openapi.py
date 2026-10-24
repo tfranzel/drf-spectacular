@@ -876,8 +876,12 @@ class AutoSchema(ViewInspector):
                 # fields (e.g. from a ModelSerializer's read_only_fields)
                 # carry no min/max at all, yet are still int64.
                 content['format'] = 'int64'
-            elif not all(-2147483648 <= int(content.get(key, 0)) <= 2147483647 for key in ('maximum', 'minimum')):
-                # Use int64 for format if value outside the 32-bit signed integer range [-2,147,483,648 to 2,147,483,647].
+            elif not all(
+                -2147483648 <= int(content.get(key, 0)) <= 2147483647
+                for key in ('maximum', 'minimum')
+            ):
+                # Use int64 for format if value outside the 32-bit signed
+                # integer range [-2,147,483,648 to 2,147,483,647].
                 content['format'] = 'int64'
             return append_meta(content, meta)
 
