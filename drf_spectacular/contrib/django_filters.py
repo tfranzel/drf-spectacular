@@ -240,7 +240,10 @@ class DjangoFilterExtension(OpenApiFilterExtension):
             return None
         path = filter_field.field_name.split('__')
         to_field_name = filter_field.extra.get("to_field_name")
-        if to_field_name is not None:
+        # field_name may already contain the to_field_name as its last segment
+        # (e.g. "groups__name" with to_field_name="name"). appending it again
+        # would produce an unresolvable path.
+        if to_field_name is not None and path[-1] != to_field_name:
             path.append(to_field_name)
         return follow_field_source(model, path, emit_warnings=False)
 
