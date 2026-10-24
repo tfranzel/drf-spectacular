@@ -87,7 +87,8 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
     warnings, in which case manual construction is advisable.
 
     ``map_serializer_field()`` is expected to return a valid `OpenAPI schema object
-    <https://spec.openapis.org/oas/v3.0.3#schema-object>`_.
+    <https://spec.openapis.org/oas/v3.0.3#schema-object>`_. Returning ``None`` excludes
+    the field from the schema.
     """
     _registry: List[Type['OpenApiSerializerFieldExtension']] = []
 
@@ -96,7 +97,7 @@ class OpenApiSerializerFieldExtension(OpenApiGeneratorExtension['OpenApiSerializ
         return None
 
     @abstractmethod
-    def map_serializer_field(self, auto_schema: 'AutoSchema', direction: Direction) -> _SchemaType:
+    def map_serializer_field(self, auto_schema: 'AutoSchema', direction: Direction) -> Optional[_SchemaType]:
         """ override for customized serializer field mapping """
         pass  # pragma: no cover
 
@@ -112,7 +113,7 @@ class OpenApiViewExtension(OpenApiGeneratorExtension['OpenApiViewExtension']):
     """
     _registry: List[Type['OpenApiViewExtension']] = []
 
-    def __init__(self, target_callback):
+    def __init__(self, target_callback: Any) -> None:
         super().__init__(target_callback.cls)
         self.target_callback = target_callback
 

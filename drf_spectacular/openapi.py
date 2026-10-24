@@ -980,7 +980,7 @@ class AutoSchema(ViewInspector):
             if 'exclusiveMinimum' in content:
                 del content['exclusiveMinimum']
 
-    def _map_serializer(self, serializer, direction, bypass_extensions=False):
+    def _map_serializer(self, serializer: Any, direction: Direction, bypass_extensions: bool = False) -> _SchemaType:
         serializer = force_instance(serializer)
         serializer_extension = OpenApiSerializerExtension.get_match(serializer)
 
@@ -1070,7 +1070,7 @@ class AutoSchema(ViewInspector):
             meta['description'] = str(field.help_text)
         return meta
 
-    def _map_basic_serializer(self, serializer, direction):
+    def _map_basic_serializer(self, serializer: Any, direction: Direction) -> _SchemaType:
         assert_basic_serializer(serializer)
         serializer = force_instance(serializer)
         # serializers provided through @extend_schema will not receive the mock context
@@ -1106,7 +1106,7 @@ class AutoSchema(ViewInspector):
             properties[field.field_name] = safe_ref(schema)
 
         if is_patched_serializer(serializer, direction):
-            required = []
+            required = set()
 
         return build_object_type(
             properties=properties,
