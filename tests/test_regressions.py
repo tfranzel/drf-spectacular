@@ -2585,6 +2585,65 @@ def test_int64_detection(kwargs, expected, no_warnings):
     assert schema['components']['schemas']['X']['properties']['field'] == expected
 
 
+@pytest.mark.parametrize('kwargs,expected', [
+    (
+        {},
+        {'type': 'integer', 'format': 'int64'},
+    ),
+    (
+        {'read_only': True},
+        {'type': 'integer', 'format': 'int64', 'readOnly': True},
+    ),
+    (
+        {'min_value': 0, 'max_value': 100},
+        {'type': 'integer', 'maximum': 100, 'minimum': 0, 'format': 'int64'},
+    ),
+])
+def test_bigint_field_int64_format(kwargs, expected, no_warnings):
+    # a BigIntegerField is int64 by definition, even when it carries no
+    # min/max values to detect the range from (e.g. read-only fields).
+    class XSerializer(serializers.Serializer):
+        field = serializers.BigIntegerField(**kwargs)
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    assert schema['components']['schemas']['X']['properties']['field'] == expected
+
+
+def test_readonly_model_bigint_int64_format(no_warnings):
+    # regression: a model BigIntegerField that is read-only in the
+    # serializer loses its min/max values in DRF, but must still be
+    # emitted with format int64 (while a plain IntegerField must not).
+    class X(models.Model):
+        field_big = models.BigIntegerField()
+        field_pos_big = models.PositiveBigIntegerField()
+        field_normal = models.IntegerField()
+
+        class Meta:
+            app_label = 'tests'
+
+    class XSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = X
+            fields = ['field_big', 'field_pos_big', 'field_normal']
+            read_only_fields = ['field_big', 'field_pos_big', 'field_normal']
+
+    @extend_schema(request=XSerializer, responses=XSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    properties = schema['components']['schemas']['X']['properties']
+    assert properties['field_big'] == {'type': 'integer', 'format': 'int64', 'readOnly': True}
+    assert properties['field_pos_big'] == {'type': 'integer', 'format': 'int64', 'readOnly': True}
+    assert properties['field_normal'] == {'type': 'integer', 'readOnly': True}
+
+
 def test_description_whitespace_stripping(no_warnings):
     class XViewset(viewsets.ModelViewSet):
         """ view: oneliner with leading/trailing whitespace """
@@ -3615,7 +3674,7 @@ def test_generated_field(no_warnings):
 
     assert schema['components']['schemas']['X']["properties"] == {
         'id': {'readOnly': True, 'type': 'integer'},
-        'area': {'readOnly': True, 'type': 'integer'},
+        'area': {'readOnly': True, 'type': 'integer', 'format': 'int64'},
         'area_decimal': {
             'format': 'decimal', 'pattern': '^-?\\d{0,13}(?:\\.\\d{0,2})?$', 'readOnly': True, 'type': 'string',
         },

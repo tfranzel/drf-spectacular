@@ -870,8 +870,18 @@ class AutoSchema(ViewInspector):
         if isinstance(field, serializers.IntegerField):
             content = build_basic_type(OpenApiTypes.INT)
             self._insert_min_max(field, content)
-            # Use int64 for format if value outside the 32-bit signed integer range [-2,147,483,648 to 2,147,483,647].
-            if not all(-2147483648 <= int(content.get(key, 0)) <= 2147483647 for key in ('maximum', 'minimum')):
+            if isinstance(field, serializers.BigIntegerField):
+                # A BigIntegerField is 64-bit by definition. Its min/max
+                # values cannot be relied on for detection: read-only
+                # fields (e.g. from a ModelSerializer's read_only_fields)
+                # carry no min/max at all, yet are still int64.
+                content['format'] = 'int64'
+            elif not all(
+                -2147483648 <= int(content.get(key, 0)) <= 2147483647
+                for key in ('maximum', 'minimum')
+            ):
+                # Use int64 for format if value outside the 32-bit signed
+                # integer range [-2,147,483,648 to 2,147,483,647].
                 content['format'] = 'int64'
             return append_meta(content, meta)
 
