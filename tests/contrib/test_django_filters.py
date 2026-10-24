@@ -498,3 +498,43 @@ def test_filterset_enum_includes_null_label(no_warnings):
 
     assert category_typed_multi_type_schema['name'] == 'category_typed_multi'
     assert category_typed_multi_type_schema['schema']['items']['enum'] == ["a", "b"]
+
+
+@pytest.mark.contrib('django_filter')
+def test_model_choice_filter_to_field_name_in_field_name(no_warnings):
+    # field_name may already carry the to_field_name as its last segment
+    # (e.g. "groups__name" with to_field_name="name"). the type of the
+    # targeted field must still be resolved instead of defaulting to string
+    # with a warning.
+    class XFilterSet(FilterSet):
+        sub_cat = ModelMultipleChoiceFilter(
+            field_name='subproduct__sub_category',
+            queryset=SubProduct.objects.all(),
+            to_field_name='sub_category',
+        )
+        sub_id = ModelChoiceFilter(
+            field_name='subproduct__id',
+            queryset=SubProduct.objects.all(),
+            to_field_name='id',
+        )
+
+        class Meta:
+            model = Product
+            fields = '__all__'
+
+    class XViewSet(viewsets.ModelViewSet):
+        queryset = Product.objects.all()
+        serializer_class = ProductSerializer
+        filter_backends = [DjangoFilterBackend]
+        filterset_class = XFilterSet
+
+    schema = generate_schema('/x', XViewSet)
+    parameters = {
+        parameter['name']: parameter
+        for parameter in schema['paths']['/x/']['get']['parameters']
+    }
+    assert parameters['sub_cat']['schema'] == {
+        'type': 'array',
+        'items': {'type': 'string', 'enum': ['C', 'D']},
+    }
+    assert parameters['sub_id']['schema'] == {'type': 'integer'}
