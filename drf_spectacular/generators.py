@@ -1,9 +1,11 @@
 import posixpath
 import re
 import weakref
+from typing import Any, List, Optional, Tuple
 
 from django.urls import URLPattern, URLResolver
 from rest_framework import views, viewsets
+from rest_framework.request import Request
 from rest_framework.schemas.generators import BaseSchemaGenerator
 from rest_framework.schemas.generators import EndpointEnumerator as BaseEndpointEnumerator
 from rest_framework.settings import api_settings
@@ -19,10 +21,13 @@ from drf_spectacular.plumbing import (
     operation_matches_version, process_webhooks, sanitize_result_object,
 )
 from drf_spectacular.settings import spectacular_settings
+from drf_spectacular.utils import _SchemaType
 
 
 class EndpointEnumerator(BaseEndpointEnumerator):
-    def get_api_endpoints(self, patterns=None, prefix=''):
+    def get_api_endpoints(  # type: ignore[override]
+            self, patterns: Any = None, prefix: str = ''
+    ) -> List[Tuple[str, str, str, Any]]:
         api_endpoints = self._get_api_endpoints(patterns, prefix)
 
         for hook in spectacular_settings.PREPROCESSING_HOOKS:
@@ -103,11 +108,11 @@ class EndpointEnumerator(BaseEndpointEnumerator):
 class SchemaGenerator(BaseSchemaGenerator):
     endpoint_inspector_cls = EndpointEnumerator
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.registry = ComponentRegistry()
         self.api_version = kwargs.pop('api_version', None)
-        self.inspector = None
-        self.schemas_storage = []
+        self.inspector: Any = None
+        self.schemas_storage: List[AutoSchema] = []
         super().__init__(*args, **kwargs)
 
     def coerce_path(self, path, method, view):
@@ -280,7 +285,7 @@ class SchemaGenerator(BaseSchemaGenerator):
 
         return result
 
-    def get_schema(self, request=None, public=False):
+    def get_schema(self, request: Optional[Request] = None, public: bool = False) -> _SchemaType:
         """ Generate a OpenAPI schema. """
         reset_generator_stats()
         result = build_root_object(

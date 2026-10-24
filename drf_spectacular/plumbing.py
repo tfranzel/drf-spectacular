@@ -114,7 +114,7 @@ def get_class(obj) -> type:
     return obj if inspect.isclass(obj) else obj.__class__
 
 
-def force_instance(serializer_or_field):
+def force_instance(serializer_or_field: Any) -> Any:
     if not inspect.isclass(serializer_or_field):
         return serializer_or_field
     elif issubclass(serializer_or_field, (serializers.BaseSerializer, fields.Field)):
@@ -838,11 +838,11 @@ class OpenApiGeneratorExtension(Generic[T], metaclass=ABCMeta):
     priority = 0
     optional = False
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
-        cls._registry.append(cls)
+        cls._registry.append(cls)  # type: ignore[arg-type]
 
-    def __init__(self, target):
+    def __init__(self, target: Any) -> None:
         self.target = target
 
     @classmethod
