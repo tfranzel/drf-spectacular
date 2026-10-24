@@ -22,8 +22,8 @@ from rest_framework import generics, serializers
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import (
     analyze_named_regex_pattern, build_basic_type, build_choice_field, detype_pattern,
-    follow_field_source, force_instance, get_doc, get_list_serializer, get_relative_url, is_field,
-    is_serializer, resolve_type_hint, safe_ref, set_query_parameters,
+    follow_field_source, force_instance, get_doc, get_list_serializer, get_relative_url,
+    get_type_hints, is_field, is_serializer, resolve_type_hint, safe_ref, set_query_parameters,
 )
 from drf_spectacular.validation import validate_schema
 from tests import generate_schema
@@ -91,6 +91,122 @@ def test_follow_field_source_forward_reverse(no_warnings):
     assert auto_schema._map_model_field(reverse_field, None)['type'] == 'number'
     assert auto_schema._map_model_field(forward_model, None)['type'] == 'string'
     assert auto_schema._map_model_field(reverse_model, None)['type'] == 'string'
+
+
+def test_follow_field_source_annotated_attribute(no_warnings):
+    class FFA1(models.Model):
+        annotated_int: int = 5
+        annotated_str: str = 'some text'
+        annotated_list: typing.List[int] = []
+
+    target_int = follow_field_source(FFA1, ['annotated_int'])
+    target_str = follow_field_source(FFA1, ['annotated_str'])
+    target_list = follow_field_source(FFA1, ['annotated_list'])
+
+    # annotated attributes surface as callables carrying the annotation as
+    # their return type hint, exactly like property getters do.
+    assert callable(target_int) and get_type_hints(target_int).get('return') is int
+    assert callable(target_str) and get_type_hints(target_str).get('return') is str
+    assert get_type_hints(target_list).get('return') == typing.List[int]
+
+    auto_schema = AutoSchema()
+    assert auto_schema._map_response_type_hint(target_int) == {'type': 'integer'}
+    assert auto_schema._map_response_type_hint(target_str) == {'type': 'string'}
+    assert auto_schema._map_response_type_hint(target_list) == {
+        'type': 'array', 'items': {'type': 'integer'}
+    }
+
+
+def test_follow_field_source_annotated_attribute_string_annotation(no_warnings):
+    class FFA2(models.Model):
+        annotated_float: 'float' = 1.5
+
+    target = follow_field_source(FFA2, ['annotated_float'])
+
+    assert callable(target) and get_type_hints(target).get('return') is float
+    assert AutoSchema()._map_response_type_hint(target) == {'type': 'number', 'format': 'double'}
+
+
+def test_follow_field_source_annotated_attribute_inherited(no_warnings):
+    class FFA3Base(models.Model):
+        annotated_bool: bool = True
+
+        class Meta:
+            abstract = True
+
+    class FFA3(FFA3Base):
+        pass
+
+    target = follow_field_source(FFA3, ['annotated_bool'])
+
+    assert callable(target) and get_type_hints(target).get('return') is bool
+    assert AutoSchema()._map_response_type_hint(target) == {'type': 'boolean'}
+
+
+def test_follow_field_source_descriptor_attribute(no_warnings):
+    class IntDescriptor:
+        def __get__(self, obj, objtype=None):
+            return 42
+
+        def __set__(self, obj, value):
+            pass
+
+    class FFA4(models.Model):
+        described: int = IntDescriptor()  # type: ignore[assignment]
+
+    target = follow_field_source(FFA4, ['described'])
+
+    assert callable(target) and get_type_hints(target).get('return') is int
+    assert AutoSchema()._map_response_type_hint(target) == {'type': 'integer'}
+
+
+def test_follow_field_source_unannotated_attribute_falls_back():
+    class FFA5(models.Model):
+        plain_attribute = 5
+
+    # without an annotation there is nothing to infer from, so the generic
+    # fallback (a dummy property defaulting to "string") must be preserved.
+    target = follow_field_source(FFA5, ['plain_attribute'])
+
+    assert callable(target) and get_type_hints(target).get('return') is str
+    assert AutoSchema()._map_response_type_hint(target) == {'type': 'string'}
+
+
+def test_follow_field_source_through_annotated_attribute(no_warnings):
+    class FFA6Inner(models.Model):
+        field_bool = models.BooleanField()
+
+    class FFA6(models.Model):
+        inner: FFA6Inner = None  # type: ignore[assignment]
+        opt_inner: typing.Optional[FFA6Inner] = None
+
+    forward_field = follow_field_source(FFA6, ['inner', 'field_bool'])
+    optional_field = follow_field_source(FFA6, ['opt_inner', 'field_bool'])
+
+    assert isinstance(forward_field, models.BooleanField)
+    assert isinstance(optional_field, models.BooleanField)
+
+
+def test_follow_field_source_annotated_attribute_schema_generation(no_warnings):
+    class FFA7(models.Model):
+        annotated_int: int = 5
+        name = models.CharField(max_length=20)
+
+    class FFA7Serializer(serializers.ModelSerializer):
+        annotated_int = serializers.ReadOnlyField()
+
+        class Meta:
+            model = FFA7
+            fields = ['name', 'annotated_int']
+
+    class FFA7View(generics.RetrieveAPIView):
+        serializer_class = FFA7Serializer
+        queryset = FFA7.objects.none()
+
+    schema = generate_schema('/ffa7', view=FFA7View)
+    properties = schema['components']['schemas']['FFA7']['properties']
+    assert properties['annotated_int'] == {'type': 'integer', 'readOnly': True}
+    assert properties['name'] == {'type': 'string', 'maxLength': 20}
 
 
 def test_detype_patterns_with_module_includes(no_warnings):
