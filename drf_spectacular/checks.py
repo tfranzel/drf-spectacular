@@ -19,8 +19,8 @@ def schema_check(app_configs, **kwargs):
             Error(f'Schema generation threw exception "{exc}"', id='drf_spectacular.E001')
         )
     if GENERATOR_STATS:
-        for w in GENERATOR_STATS._warn_cache:
+        for w in list(GENERATOR_STATS._warn_cache):  # snapshot: concurrent generation may mutate the cache
             errors.append(Warning(w, id='drf_spectacular.W001'))
-        for e in GENERATOR_STATS._error_cache:
+        for e in list(GENERATOR_STATS._error_cache):  # snapshot: see above
             errors.append(Warning(e, id='drf_spectacular.W002'))
     return errors

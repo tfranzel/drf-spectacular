@@ -2,6 +2,7 @@ import contextlib
 import functools
 import inspect
 import sys
+import threading
 from collections import defaultdict
 from typing import Any, Callable, DefaultDict, List, Optional, Tuple, TypeVar
 
@@ -21,27 +22,64 @@ F = TypeVar('F', bound=Callable[..., Any])
 
 
 class GeneratorStats:
-    _warn_cache: DefaultDict[str, int] = defaultdict(int)
-    _error_cache: DefaultDict[str, int] = defaultdict(int)
-    _traces: List[Tuple[Optional[str], Optional[str], str]] = []
-    _trace_lineno = False
+    """
+    Collects warnings/errors emitted during schema generation.
+
+    Schema generation may happen concurrently (e.g. ``SpectacularAPIView``
+    serving parallel requests), so all mutable state is guarded or isolated:
+
+    - the warn/error caches live on the instance (they were previously class
+      attributes shared by every instance) and every read/write of them is
+      serialized through a reentrant lock, so concurrent ``emit``/``reset``
+      calls cannot lose counts or corrupt the dicts;
+    - the trace stack and the ``silent`` flag are thread-local, because they
+      describe one in-flight generation: concurrent generations must not see
+      each other's breadcrumbs or silence each other.
+    """
 
     _blue = ''
     _red = ''
     _yellow = ''
     _clear = ''
 
+    def __init__(self) -> None:
+        self._warn_cache: DefaultDict[str, int] = defaultdict(int)
+        self._error_cache: DefaultDict[str, int] = defaultdict(int)
+        self._trace_lineno = False
+        self._lock = threading.RLock()
+        self._local = threading.local()
+
     def __getattr__(self, name):
-        if 'silent' not in self.__dict__:
-            from drf_spectacular.settings import spectacular_settings
-            self.silent = spectacular_settings.DISABLE_ERRORS_AND_WARNINGS
         try:
             return self.__dict__[name]
         except KeyError:
             raise AttributeError(name)
 
+    @property
+    def _traces(self) -> List[Tuple[Optional[str], Optional[str], str]]:
+        traces = getattr(self._local, 'traces', None)
+        if traces is None:
+            traces = self._local.traces = []
+        return traces
+
+    @_traces.setter
+    def _traces(self, value: List[Tuple[Optional[str], Optional[str], str]]) -> None:
+        self._local.traces = value
+
+    @property
+    def silent(self) -> bool:
+        if hasattr(self._local, 'silent'):
+            return self._local.silent
+        from drf_spectacular.settings import spectacular_settings
+        return spectacular_settings.DISABLE_ERRORS_AND_WARNINGS
+
+    @silent.setter
+    def silent(self, value: bool) -> None:
+        self._local.silent = value
+
     def __bool__(self):
-        return bool(self._warn_cache or self._error_cache)
+        with self._lock:
+            return bool(self._warn_cache or self._error_cache)
 
     @contextlib.contextmanager
     def silence(self):
@@ -52,8 +90,9 @@ class GeneratorStats:
             self.silent = tmp
 
     def reset(self) -> None:
-        self._warn_cache.clear()
-        self._error_cache.clear()
+        with self._lock:
+            self._warn_cache.clear()
+            self._error_cache.clear()
 
     def enable_color(self) -> None:
         self._blue = '\033[0;34m'
@@ -65,13 +104,14 @@ class GeneratorStats:
         self._trace_lineno = True
 
     def _get_current_trace(self) -> Tuple[Optional[str], str]:
-        source_locations = [t for t in self._traces if t[0]]
+        traces = list(self._traces)
+        source_locations = [t for t in traces if t[0]]
         if source_locations:
             sourcefile, lineno, _ = source_locations[-1]
             source_location = f'{sourcefile}:{lineno}' if lineno else sourcefile
         else:
             source_location = ''
-        breadcrumbs = ' > '.join(t[2] for t in self._traces)
+        breadcrumbs = ' > '.join(t[2] for t in traces)
         return source_location, breadcrumbs
 
     def emit(self, msg: str, severity: str) -> None:
@@ -85,16 +125,23 @@ class GeneratorStats:
         prefix += f' [{breadcrumbs}]: ' if breadcrumbs else ': '
 
         msg = prefix + self._clear + str(msg)
-        if not self.silent and msg not in cache:
-            print(msg, file=sys.stderr)
-        cache[msg] += 1
+        # the membership check, the print and the count increment must happen
+        # atomically, otherwise concurrent emitters lose counts or print
+        # duplicates of a message that should only be printed once.
+        with self._lock:
+            if not self.silent and msg not in cache:
+                print(msg, file=sys.stderr)
+            cache[msg] += 1
 
     def emit_summary(self) -> None:
-        if not self.silent and (self._warn_cache or self._error_cache):
+        with self._lock:
+            warn_cache = dict(self._warn_cache)
+            error_cache = dict(self._error_cache)
+        if not self.silent and (warn_cache or error_cache):
             print(
                 f'\nSchema generation summary:\n'
-                f'Warnings: {sum(self._warn_cache.values())} ({len(self._warn_cache)} unique)\n'
-                f'Errors:   {sum(self._error_cache.values())} ({len(self._error_cache)} unique)\n',
+                f'Warnings: {sum(warn_cache.values())} ({len(warn_cache)} unique)\n'
+                f'Errors:   {sum(error_cache.values())} ({len(error_cache)} unique)\n',
                 file=sys.stderr
             )
 
@@ -131,8 +178,12 @@ def add_trace_message(obj):
     """
     sourcefile, lineno = _get_source_location(obj)
     GENERATOR_STATS._traces.append((sourcefile, lineno, obj.__name__))
-    yield
-    GENERATOR_STATS._traces.pop()
+    try:
+        yield
+    finally:
+        # always unwind this thread's trace entry, even on exceptions, so a
+        # failed generation cannot leak breadcrumbs into later generations.
+        GENERATOR_STATS._traces.pop()
 
 
 @functools.lru_cache(maxsize=1000)
