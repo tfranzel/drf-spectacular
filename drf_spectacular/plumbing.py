@@ -25,6 +25,7 @@ else:
 import inflection
 import uritemplate
 from django.apps import apps
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields.related_descriptors import (
     ForwardManyToOneDescriptor, ManyToManyDescriptor, ReverseManyToOneDescriptor,
@@ -582,6 +583,72 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
     return safe_ref({**schema, **meta})
 
 
+def _get_model_attribute_type_hint(model, name):
+    """
+    Resolve the type annotation declared for a plain (non-field) model attribute.
+
+    Annotations may be inherited, so the whole MRO is considered. Resolution first
+    goes through ``typing.get_type_hints`` so string annotations (e.g. quoted
+    annotations or ``from __future__ import annotations``) are evaluated in the
+    defining module's namespace. If wholesale resolution fails because of an
+    unrelated annotation on the model, fall back to resolving only the requested
+    name from the raw ``__annotations__`` dicts. Returns ``None`` when the
+    attribute carries no (resolvable) annotation.
+    """
+    try:
+        hints = get_type_hints(model)
+    except Exception:
+        hints = None
+    if hints is not None:
+        return hints.get(name)
+
+    for klass in getattr(model, '__mro__', [model]):
+        annotations = klass.__dict__.get('__annotations__', {})
+        if name not in annotations:
+            continue
+        annotation = annotations[name]
+        if not isinstance(annotation, str):
+            return annotation
+        module = sys.modules.get(klass.__module__)
+        globalns = vars(module) if module is not None else {}
+        try:
+            return eval(annotation, globalns, dict(vars(model)))  # noqa: S307
+        except Exception:
+            return None
+    return None
+
+
+def _build_annotated_attribute(name, hint):
+    """
+    Wrap a resolved attribute annotation in a callable so downstream consumers
+    can treat it exactly like a property getter: they read the type back out
+    via ``get_type_hints(target).get('return')`` and resolve it from there.
+    """
+    def annotated_attribute(obj):  # pragma: no cover
+        pass
+
+    annotated_attribute.__name__ = name
+    annotated_attribute.__annotations__ = {'return': hint}
+    return annotated_attribute
+
+
+def _annotation_target_model(hint):
+    """ extract the model class an attribute annotation traverses to, if any """
+    origin, args = _get_type_hint_origin(hint)
+    if origin in UNION_TYPES:
+        type_args = [arg for arg in args if arg is not type(None)]  # noqa: E721
+        if len(type_args) != 1:
+            return None
+        return _annotation_target_model(type_args[0])
+    if origin in (list, set, frozenset, tuple):
+        if len(args) != 1:
+            return None
+        return _annotation_target_model(args[0])
+    if inspect.isclass(hint) and hasattr(hint, '_meta'):
+        return hint
+    return None
+
+
 def _follow_field_source(model, path: List[str]):
     """
         navigate through root model via given navigation path. supports forward/reverse relations.
@@ -608,7 +675,16 @@ def _follow_field_source(model, path: List[str]):
         elif isinstance(field_or_property, ForwardManyToOneDescriptor):
             return field_or_property.field.target_field  # o2o & foreign forward
         else:
-            field = model._meta.get_field(path[0])
+            try:
+                field = model._meta.get_field(path[0])
+            except FieldDoesNotExist:
+                # Not a model field: the attribute may be a plain annotated
+                # attribute (e.g. a value backed by a custom descriptor).
+                # Fall back to the type annotation declared on the model.
+                hint = _get_model_attribute_type_hint(model, path[0])
+                if hint is None:
+                    raise
+                return _build_annotated_attribute(path[0], hint)
             if isinstance(field, ForeignObjectRel):
                 # case only occurs when relations are traversed in reverse and
                 # not via the related_name (default: X_set) but the model name.
@@ -634,7 +710,21 @@ def _follow_field_source(model, path: List[str]):
                 )
             return _follow_field_source(target_model, path[1:])
         else:
-            target_model = model._meta.get_field(path[0]).related_model
+            try:
+                target_model = model._meta.get_field(path[0]).related_model
+            except FieldDoesNotExist:
+                # Not a model field: an annotated plain attribute may still
+                # point at the target model (directly or wrapped, e.g. in
+                # Optional[...] or List[...]).
+                hint = _get_model_attribute_type_hint(model, path[0])
+                target_model = _annotation_target_model(hint) if hint is not None else None
+                if target_model is None:
+                    raise UnableToProceedError(
+                        f'could not follow field source through intermediate attribute '
+                        f'"{path[0]}" on model {model}. Please add a type hint on the '
+                        f'model\'s attribute that resolves to a model class to enable '
+                        f'traversal of the source path "{".".join(path)}".'
+                    )
             return _follow_field_source(target_model, path[1:])
 
 
