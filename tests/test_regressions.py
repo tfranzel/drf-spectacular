@@ -3703,3 +3703,28 @@ def test_openapi_version_3_2_0(no_warnings):
 
     schema = generate_schema('x', XViewSet)
     assert schema["openapi"] == "3.2.0"
+
+
+@pytest.mark.skipif(DJANGO_VERSION < '6.2', reason='QUERY method introduced in 6.2')
+def test_query_method_is_excluded_from_schema(no_warnings):
+    class XListView(generics.ListAPIView):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+        def query(self, request, *args, **kwargs):
+            return self.list(request, *args, **kwargs)  # pragma: no cover
+
+    class XViewSet(viewsets.ModelViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = SimpleSerializer
+
+        def query(self, request, *args, **kwargs):
+            return self.list(request, *args, **kwargs)  # pragma: no cover
+
+    router = routers.SimpleRouter()
+    router.register('y', XViewSet)
+    urlpatterns = [path('x/', XListView.as_view()), *router.urls]
+
+    schema = generate_schema(None, patterns=urlpatterns)
+    assert list(schema['paths']['/x/']) == ['get']
+    assert sorted(schema['paths']['/y/']) == ['get', 'post']

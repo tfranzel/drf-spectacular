@@ -96,7 +96,7 @@ class EndpointEnumerator(BaseEndpointEnumerator):
 
         return [
             method for method in methods
-            if method not in ('OPTIONS', 'HEAD', 'TRACE', 'CONNECT')
+            if method not in ('OPTIONS', 'HEAD', 'TRACE', 'CONNECT', 'QUERY')
         ]
 
 
