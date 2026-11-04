@@ -558,14 +558,16 @@ def append_meta(schema: _SchemaType, meta: _SchemaType) -> _SchemaType:
             if 'type' in schema:
                 if isinstance(schema['type'], str):
                     schema['type'] = [schema['type'], 'null']
-                else:
+                elif 'null' not in schema['type']:
                     schema['type'] = [*schema['type'], 'null']
             elif '$ref' in schema:
                 schema = {'oneOf': [schema, {'type': 'null'}]}
             elif 'oneOf' in schema:
-                schema['oneOf'].append({'type': 'null'})
+                if {'type': 'null'} not in schema['oneOf']:
+                    schema['oneOf'].append({'type': 'null'})
             elif 'anyOf' in schema:
-                schema['anyOf'].append({'type': 'null'})
+                if {'type': 'null'} not in schema['anyOf']:
+                    schema['anyOf'].append({'type': 'null'})
             elif 'allOf' in schema:
                 schema['oneOf'] = [{'allOf': schema.pop('allOf')}, {'type': 'null'}]
             elif not schema:
@@ -1419,7 +1421,7 @@ def resolve_type_hint(hint):
         else:
             schema = resolve_type_hint(type_args[0])
         if type(None) in args:
-            schema['nullable'] = True
+            schema = append_meta(schema, {'nullable': True})
         return schema
     elif origin is collections.abc.Iterable:
         return build_array_type(resolve_type_hint(args[0]))
