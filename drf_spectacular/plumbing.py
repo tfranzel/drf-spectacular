@@ -1332,12 +1332,38 @@ def _get_type_hint_origin(hint):
         return origin, args
 
 
+def _get_typeddict_required_keys(hint) -> List[str]:
+    """
+    ``__required_keys__`` ignores ``Required``/``NotRequired`` when annotations are
+    postponed (``from __future__ import annotations``), because the class only sees
+    strings then (https://github.com/python/cpython/issues/97727). The resolved type
+    hints still carry them, so they take precedence.
+    """
+    if sys.version_info < (3, 11):
+        return list(hint.__required_keys__)
+
+    wrappers = tuple(w for w in (
+        typing.Annotated, typing.Required, typing.NotRequired, getattr(typing, 'ReadOnly', None)
+    ) if w is not None)
+    required = []
+    for key, annotation in typing.get_type_hints(hint, include_extras=True).items():
+        qualifiers = set()
+        while typing.get_origin(annotation) in wrappers:
+            qualifiers.add(typing.get_origin(annotation))
+            annotation = typing.get_args(annotation)[0]
+        if typing.NotRequired in qualifiers:
+            continue
+        if typing.Required in qualifiers or key in hint.__required_keys__:
+            required.append(key)
+    return required
+
+
 def _resolve_typeddict(hint):
     """resolve required fields for TypedDicts if on 3.9 or above"""
     required = None
 
     if hasattr(hint, '__required_keys__'):
-        required = [h for h in hint.__required_keys__]
+        required = _get_typeddict_required_keys(hint)
 
     return build_object_type(
         properties={
