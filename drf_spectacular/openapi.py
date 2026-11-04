@@ -1541,23 +1541,30 @@ class AutoSchema(ViewInspector):
 
             paginator = self._get_paginator()
 
-            if (
-                paginator
-                and is_serializer(serializer)
-                and (not is_list_serializer(serializer) or is_serializer(serializer.child))
-            ):
-                component = ResolvedComponent(
-                    name=self.get_paginated_name(self._get_serializer_name(serializer, 'response')),
-                    type=ResolvedComponent.SCHEMA,
-                    schema=paginator.get_paginated_response_schema(schema),
-                    object=self.get_serializer_identity(
-                        serializer.child if is_list_serializer(serializer) else serializer, 'response'
-                    )
-                )
-                self.registry.register_on_missing(component)
-                schema = component.ref
-            elif paginator:
+            if paginator:
                 schema = paginator.get_paginated_response_schema(schema)
+                if isinstance(schema, dict) and 'properties' in schema:
+                    schema = {
+                        **schema,
+                        'properties': {
+                            k: append_meta(v, {}) if isinstance(v, dict) else v
+                            for k, v in schema['properties'].items()
+                        },
+                    }
+                if (
+                    is_serializer(serializer)
+                    and (not is_list_serializer(serializer) or is_serializer(serializer.child))
+                ):
+                    component = ResolvedComponent(
+                        name=self.get_paginated_name(self._get_serializer_name(serializer, 'response')),
+                        type=ResolvedComponent.SCHEMA,
+                        schema=schema,
+                        object=self.get_serializer_identity(
+                            serializer.child if is_list_serializer(serializer) else serializer, 'response'
+                        )
+                    )
+                    self.registry.register_on_missing(component)
+                    schema = component.ref
 
         if not media_types:
             media_types = self.map_renderers('media_type')
