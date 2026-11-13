@@ -59,6 +59,9 @@ class AutoSchema(ViewInspector):
         'delete': 'destroy',
     }
 
+    # resolved per operation in get_operation, see _get_serializer
+    _resolved_serializer = None
+
     def get_operation(
             self,
             path: str,
@@ -72,6 +75,9 @@ class AutoSchema(ViewInspector):
         self.path_regex = path_regex
         self.path_prefix = path_prefix
         self.method = method.upper()
+        # the serializer resolution is a pure function of (view, path, method),
+        # so it is resolved once for this operation - see _get_serializer.
+        self._resolved_serializer = None
 
         if self.is_excluded():
             return None
@@ -1247,6 +1253,17 @@ class AutoSchema(ViewInspector):
         ]))
 
     def _get_serializer(self):
+        # The serializer resolution is a pure function of (view, path, method), but
+        # the surrounding probes (_is_list_view, the include/sparse-fieldset checks,
+        # the body/response derivation) all call through here, so the same answer is
+        # computed several times per operation. Resolving it once per operation is a
+        # large share of the generation time of a large document. A failed resolution
+        # is not memoized, which keeps the number of emitted warnings unchanged.
+        if self._resolved_serializer is None:
+            self._resolved_serializer = self._build_serializer()
+        return self._resolved_serializer
+
+    def _build_serializer(self):
         view = self.view
         context = build_serializer_context(view)
         try:

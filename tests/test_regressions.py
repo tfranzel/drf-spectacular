@@ -3703,3 +3703,60 @@ def test_openapi_version_3_2_0(no_warnings):
 
     schema = generate_schema('x', XViewSet)
     assert schema["openapi"] == "3.2.0"
+
+
+def test_serializer_is_resolved_once_per_operation(no_warnings):
+    """the serializer is resolved once per operation instead of once per probe"""
+
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+    class XView(generics.GenericAPIView):
+        serializer_class = XSerializer
+
+        def get(self, request):  # pragma: no cover
+            pass
+
+        def put(self, request):  # pragma: no cover
+            pass
+
+    resolutions = []
+    original = AutoSchema._build_serializer
+
+    def counting_build(self):
+        resolutions.append(self.method)
+        return original(self)
+
+    with mock.patch.object(AutoSchema, '_build_serializer', counting_build):
+        schema = generate_schema('x', view=XView)
+
+    assert [m for m in schema['paths']['/x'] if m != 'parameters'] == ['get', 'put']
+    assert resolutions == ['GET', 'PUT']
+
+
+def test_serializer_resolution_does_not_leak_into_next_operation(no_warnings):
+    """an AutoSchema instance can outlive the operation it was created for, so a
+    serializer resolved for one operation must not be reused for the next one"""
+
+    class GetSerializer(serializers.Serializer):
+        only_get = serializers.CharField()
+
+    class PutSerializer(serializers.Serializer):
+        only_put = serializers.CharField()
+
+    class XView(generics.GenericAPIView):
+        def get_serializer_class(self):
+            return GetSerializer if self.request.method == 'GET' else PutSerializer
+
+        def get(self, request):  # pragma: no cover
+            pass
+
+        def put(self, request):  # pragma: no cover
+            pass
+
+    schema = generate_schema('x', view=XView)
+
+    assert get_response_schema(schema['paths']['/x']['get']) == {'$ref': '#/components/schemas/Get'}
+    assert get_request_schema(schema['paths']['/x']['put']) == {'$ref': '#/components/schemas/Put'}
+    assert 'only_get' in schema['components']['schemas']['Get']['properties']
+    assert 'only_put' in schema['components']['schemas']['Put']['properties']
