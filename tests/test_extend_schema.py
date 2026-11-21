@@ -1,5 +1,6 @@
 from unittest import mock
 
+import pytest
 from django.utils.http import urlsafe_base64_encode
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.decorators import action, api_view
@@ -435,6 +436,46 @@ def test_extend_schema_field_with_serializer_as_override(no_warnings):
     property_field = schema['components']['schemas']['X']['properties']['field']
     assert 'Override' in property_field['allOf'][0]['$ref']
     assert property_field['readOnly']
+
+
+@pytest.mark.parametrize('has_fields', [False, True])
+@pytest.mark.parametrize('usage', ['method', 'nested', 'response'])
+def test_extend_schema_field_with_overridden_list_serializer(no_warnings, has_fields, usage):
+    class OverrideSerializer(serializers.Serializer):
+        value = serializers.UUIDField()
+
+    @extend_schema_field(OverrideSerializer)
+    class CustomSerializer(serializers.Serializer):
+        if has_fields:
+            ignored = serializers.CharField()
+
+    class XSerializer(serializers.Serializer):
+        field = (
+            serializers.SerializerMethodField()
+            if usage == 'method' else CustomSerializer(many=True)
+        )
+
+        @extend_schema_field(CustomSerializer(many=True))
+        def get_field(self, obj):
+            return []  # pragma: no cover
+
+    @extend_schema(responses=CustomSerializer(many=True) if usage == 'response' else XSerializer)
+    @api_view(['GET'])
+    def view_func(request):
+        pass  # pragma: no cover
+
+    schema = generate_schema('x', view_function=view_func)
+    if usage == 'response':
+        field_schema = get_response_schema(schema['paths']['/x']['get'])
+    else:
+        field_schema = schema['components']['schemas']['X']['properties']['field']
+        assert field_schema.get('readOnly', False) == (usage == 'method')
+    assert field_schema['type'] == 'array'
+    assert field_schema['items'] == {'$ref': '#/components/schemas/Override'}
+    assert schema['components']['schemas']['Override']['properties'] == {
+        'value': {'type': 'string', 'format': 'uuid'}
+    }
+    assert 'Custom' not in schema['components']['schemas']
 
 
 def test_extend_schema_field_custom_schema_with_without_breakout(no_warnings):

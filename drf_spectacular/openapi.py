@@ -1472,7 +1472,7 @@ class AutoSchema(ViewInspector):
             return {'200': self._get_response_for_code(schema, '200', direction=direction)}
 
     def _unwrap_list_serializer(self, serializer, direction: Direction) -> Optional[_SchemaType]:
-        if is_field(serializer):
+        if is_field(serializer) or has_override(serializer, 'field'):
             return self._map_serializer_field(serializer, direction)
         elif is_basic_serializer(serializer):
             component = self.resolve_serializer(serializer, direction)
