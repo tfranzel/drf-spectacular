@@ -1495,17 +1495,13 @@ class AutoSchema(ViewInspector):
         headers = self._get_response_headers_for_code(status_code, direction)
         headers = {'headers': headers} if headers else {}
 
-        if not serializer:
-            return {**headers, 'description': description or _('No response body')}
+        if serializer is None:
+            schema = None
         elif is_list_serializer(serializer):
             schema = self._unwrap_list_serializer(serializer.child, direction)
-            if not schema:
-                return {**headers, 'description': description or _('No response body')}
         elif is_serializer(serializer):
             component = self.resolve_serializer(serializer, direction)
-            if not component:
-                return {**headers, 'description': description or _('No response body')}
-            schema = component.ref
+            schema = component.ref if component else None
         elif is_basic_type(serializer):
             schema = build_basic_type(serializer)
         elif is_higher_order_type_hint(serializer):
@@ -1536,13 +1532,14 @@ class AutoSchema(ViewInspector):
                 and OpenApiSerializerExtension.get_match(get_list_serializer(serializer))
             ):
                 schema = self._map_serializer(get_list_serializer(serializer), direction)
-            else:
+            elif schema is not None:
                 schema = build_array_type(schema)
 
             paginator = self._get_paginator()
 
             if (
                 paginator
+                and schema
                 and is_serializer(serializer)
                 and (not is_list_serializer(serializer) or is_serializer(serializer.child))
             ):
@@ -1558,6 +1555,9 @@ class AutoSchema(ViewInspector):
                 schema = component.ref
             elif paginator:
                 schema = paginator.get_paginated_response_schema(schema)
+
+        if schema is None and not media_types:
+            return {**headers, 'description': description or _('No response body')}
 
         if not media_types:
             media_types = self.map_renderers('media_type')
