@@ -3,7 +3,7 @@ from unittest import mock
 from rest_framework import serializers, viewsets
 from rest_framework.views import APIView
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from tests import generate_schema
 from tests.models import SimpleModel
 
@@ -89,3 +89,25 @@ def test_validator_addition_for_oas31(no_warnings):
         },
         'type': 'object'
     }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')
+def test_binary_response_for_oas31(no_warnings):
+    class XSerializer(serializers.Serializer):
+        f = serializers.FloatField(allow_null=True)
+
+    class XAPIView(APIView):
+        @extend_schema(responses={
+            (200, 'image/jpg', 'image/jpeg'): OpenApiResponse(description='Image file'),
+            (200, 'image/png'): OpenApiResponse(description='PNG file'),
+            (200, 'application/json'): XSerializer,
+        })
+        def get(self, request):
+            pass  # pragma: no cover
+
+    response = generate_schema('x', view=XAPIView)['paths']['/x']['get']['responses']['200']
+    assert response['description'] == 'Image file'  # only the first description is used
+    assert response['content']['application/json'] == {'schema': {'$ref': '#/components/schemas/X'}}
+    assert response['content']['image/jpeg'] == {}
+    assert response['content']['image/jpg'] == {}
+    assert response['content']['image/png'] == {}

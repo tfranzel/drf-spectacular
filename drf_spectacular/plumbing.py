@@ -337,8 +337,8 @@ def build_object_type(
     return schema
 
 
-def build_media_type_object(schema, examples=None, encoding=None) -> _SchemaType:
-    media_type_object = {'schema': schema}
+def build_media_type_object(schema: Optional[_SchemaType], examples=None, encoding=None) -> _SchemaType:
+    media_type_object = {'schema': schema} if schema is not None else {}
     if examples:
         media_type_object['examples'] = examples
     if encoding:
