@@ -1,3 +1,5 @@
+import pytest
+
 from unittest import mock
 
 from django.utils.http import urlsafe_base64_encode
@@ -11,6 +13,7 @@ from drf_spectacular.utils import (
     OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
 )
 from tests import assert_schema, generate_schema, get_response_schema
+from tests.models import SimpleSerializer
 
 
 class AlphaSerializer(serializers.Serializer):
@@ -230,6 +233,30 @@ def test_extend_schema(no_warnings):
         generate_schema('doesitall', DoesItAllViewset),
         'tests/test_extend_schema.yml'
     )
+
+
+@pytest.mark.parametrize('auth, expected', (
+    # remove all auth types - regression test
+    ([], None),
+    # simple short hand renders a valid security specification
+    (["basicAuth"], [{"basicAuth": []}]),
+    # `None` is a shorthand for allowing unauthorized requests
+    ([None, "basicAuth"], [{}, {"basicAuth": []}]),
+    # allow specifying valid security specifications - this was the correct way
+    # to specify auth even though the typing suggested a list of strings.
+    ([{"tokenAuth": []}], [{"tokenAuth": []}]),
+))
+def test_extend_schema_security(no_warnings, auth, expected) -> None:
+    @extend_schema(auth=auth, responses=SimpleSerializer)
+    @api_view(['GET'])
+    def view_func(request, format=None):
+        pass  # pragma: no cover
+
+    schema = generate_schema('/x/', view_function=view_func)['paths']['/x/']['get']
+    if expected is None:
+        assert 'security' not in schema
+    else:
+        assert schema["security"] == expected
 
 
 @mock.patch('drf_spectacular.settings.spectacular_settings.OAS_VERSION', '3.1.0')

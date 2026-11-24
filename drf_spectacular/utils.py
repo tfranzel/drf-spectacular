@@ -1,7 +1,7 @@
 import copy
 import inspect
 import sys
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Union
 
 from django.utils.functional import Promise
 
@@ -349,7 +349,7 @@ def extend_schema(
         parameters: Optional[Sequence[Union[OpenApiParameter, _SerializerType]]] = None,
         request: Any = empty,
         responses: Any = empty,
-        auth: Optional[Sequence[str]] = None,
+        auth: Optional[Sequence[Optional[Union[str, Dict[str, List[str]]]]]] = None,
         description: Optional[_StrOrPromise] = None,
         summary: Optional[_StrOrPromise] = None,
         deprecated: Optional[bool] = None,
@@ -418,6 +418,12 @@ def extend_schema(
     """
     if methods is not None:
         methods = [method.upper() for method in methods]
+
+    if auth is not None:
+        auth = [
+            spec if isinstance(spec, dict) else ({} if spec is None else {spec: []})
+            for spec in auth
+        ]
 
     def decorator(f):
         BaseSchema = (
