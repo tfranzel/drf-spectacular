@@ -11,6 +11,7 @@ from drf_spectacular.utils import (
     OpenApiParameter, extend_schema, extend_schema_field, extend_schema_serializer,
 )
 from tests import assert_schema, generate_schema, get_response_schema
+from tests.models import SimpleModel
 
 
 class AlphaSerializer(serializers.Serializer):
@@ -485,3 +486,60 @@ def test_extend_schema_field_with_field_class(no_warnings) -> None:
         'properties': {'field': {'type': 'integer', 'readOnly': True}},
         'required': ['field']
     }
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_PATCH', True)
+def test_extend_schema_serializer_patch_component_name(no_warnings) -> None:
+    class PatchedXSerializer(serializers.Serializer):
+        field = serializers.IntegerField()
+
+    # customize the auto generated component schema name instead of requiring
+    # the other serializer to change its name.
+    @extend_schema_serializer(patch_component_name="PatchedActX")
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+    class Viewset(viewsets.GenericViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = PatchedXSerializer
+
+        @action(detail=True, methods=['PUT', 'PATCH'], serializer_class=XSerializer)
+        def act(self, request, pk=None):
+            pass  # pragma: no cover
+
+        @action(detail=True)
+        def get(self, request, pk=None):
+            pass  # pragma: no cover
+
+    schemas = generate_schema('x', viewset=Viewset)['components']['schemas']
+    assert schemas.keys() == {'PatchedActX', 'PatchedX', 'X'}
+    assert all(schemas[name]['properties']['field']['type'] == 'string' for name in ('PatchedActX', 'X'))
+    assert schemas['PatchedX']['properties']['field']['type'] == 'integer'
+
+
+@mock.patch('drf_spectacular.settings.spectacular_settings.COMPONENT_SPLIT_REQUEST', True)
+def test_extend_schema_serializer_request_component_name(no_warnings) -> None:
+    class XRequestSerializer(serializers.Serializer):
+        field = serializers.IntegerField()
+
+    # customize the auto generated component schema name instead of requiring
+    # the other serializer to change its name.
+    @extend_schema_serializer(request_component_name="ActXRequest")
+    class XSerializer(serializers.Serializer):
+        field = serializers.CharField()
+
+    class Viewset(viewsets.GenericViewSet):
+        queryset = SimpleModel.objects.all()
+        serializer_class = XRequestSerializer
+
+        def create(self, request, pk=None):
+            pass  # pragma: no cover
+
+        @action(detail=True, methods=['POST'], serializer_class=XSerializer)
+        def act(self, request, pk=None):
+            pass  # pragma: no cover
+
+    schemas = generate_schema('x', viewset=Viewset)['components']['schemas']
+    assert schemas.keys() == {'ActXRequest', 'X', 'XRequest', 'XRequestRequest'}
+    for type_, names in (('string', ('ActXRequest', 'X')), ('integer', ('XRequest', 'XRequestRequest'))):
+        assert all(schemas[name]['properties']['field']['type'] == type_ for name in names)
