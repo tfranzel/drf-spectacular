@@ -1667,10 +1667,10 @@ class AutoSchema(ViewInspector):
             name = name[:-10]
 
         if is_patched_serializer(serializer, direction):
-            name = 'Patched' + name
+            name = get_override(serializer, 'patch_component_name', f'Patched{name}')
 
         if direction == 'request' and spectacular_settings.COMPONENT_SPLIT_REQUEST:
-            name = name + 'Request'
+            name = get_override(serializer, 'request_component_name', f'{name}Request')
 
         if not re.match(r'^[\w.-]+$', name):
             warn(

@@ -603,6 +603,8 @@ def extend_schema_serializer(
         examples: Optional[Sequence[OpenApiExample]] = None,
         extensions: Optional[Dict[str, Any]] = None,
         component_name: Optional[str] = None,
+        request_component_name: Optional[str] = None,
+        patch_component_name: Optional[str] = None,
         description: Optional[_StrOrPromise] = None,
 ) -> Callable[[F], F]:
     """
@@ -617,6 +619,10 @@ def extend_schema_serializer(
     :param examples: define example data to serializer.
     :param extensions: specification extensions, e.g. ``x-is-dynamic``, etc.
     :param component_name: override default class name extraction.
+    :param request_component_name: override default auto generated "request" component name when
+        ``COMPONENT_SPLIT_REQUEST`` is enabled.
+    :param patch_component_name: override default auto generated "PATCH" endpoint component name when
+        ``COMPONENT_SPLIT_PATCH`` is enabled.
     :param description: override the class docstring for component description
     """
     def decorator(klass):
@@ -632,6 +638,10 @@ def extend_schema_serializer(
             set_override(klass, 'extensions', extensions)
         if component_name:
             set_override(klass, 'component_name', component_name)
+        if patch_component_name:
+            set_override(klass, 'patch_component_name', patch_component_name)
+        if request_component_name:
+            set_override(klass, 'request_component_name', request_component_name)
         if description is not None:
             set_override(klass, 'description', description)
         return klass
