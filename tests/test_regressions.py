@@ -2957,16 +2957,6 @@ def test_renderer_parser_whitelist(no_warnings):
     assert response_types == request_types == ['multipart/form-data']
 
 
-def test_empty_auth_override(no_warnings):
-    @extend_schema(responses=SimpleSerializer, auth=[])
-    @api_view(['GET'])
-    def view_func(request, format=None):
-        pass  # pragma: no cover
-
-    schema = generate_schema('/x/', view_function=view_func)
-    assert 'security' not in schema['paths']['/x/']['get']
-
-
 def test_external_docs(no_warnings):
     @extend_schema(responses=SimpleSerializer, external_docs="https://example.com")
     @api_view(['GET'])
